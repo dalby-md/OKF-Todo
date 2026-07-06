@@ -89,6 +89,22 @@ select.is-invalid {
   background: #edcbc4;
 }
 
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  min-width: 38px;
+  padding: 0;
+  color: #26514d;
+  background: #dbe9e6;
+  font-size: 1.12rem;
+  line-height: 1;
+}
+
+.icon-button:hover:not(:disabled) {
+  background: #c9ddd9;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
@@ -292,7 +308,8 @@ h2 {
 
 .field-label,
 .field-block span,
-.mode-field span {
+.mode-field span,
+.settings-field span {
   color: #3f4852;
   font-size: 0.84rem;
   font-weight: 800;
@@ -339,8 +356,6 @@ h2 {
 .body-header {
   display: flex;
   align-items: end;
-  justify-content: space-between;
-  gap: 12px;
   margin-top: 2px;
 }
 
@@ -433,6 +448,55 @@ h2 {
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(15 23 42 / 38%);
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.settings-dialog {
+  display: grid;
+  gap: 14px;
+  width: min(420px, 100%);
+  padding: 18px;
+  border: 1px solid #d8dee5;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 60px rgb(15 23 42 / 24%);
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings-header h2 {
+  margin: 0;
+  font-size: 1.12rem;
+}
+
+.settings-field {
+  display: grid;
+  gap: 6px;
+}
+
+.settings-help {
+  margin: 0;
+  color: #53606c;
+  font-size: 0.92rem;
+  line-height: 1.4;
 }
 
 @media (max-width: 900px) {

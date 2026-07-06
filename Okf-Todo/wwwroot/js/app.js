@@ -342,6 +342,7 @@
               <h2 id="task-editor-title">Select or create a task</h2>
             </div>
             <div class="app-actions" aria-label="Task actions">
+              <button id="settings-button" class="icon-button" type="button" aria-label="Settings" title="Settings">&#9881;</button>
               <span id="save-status" class="save-status is-ready" role="status">Ready</span>
               <button id="start-button" class="secondary-button" type="button" disabled>Start</button>
               <button id="complete-button" class="secondary-button" type="button" disabled>Complete</button>
@@ -390,19 +391,31 @@
 
             <div class="body-header">
               <label class="field-label" for="text-body">Body</label>
-              <label class="mode-field" for="editor-mode">
-                <span>Editor</span>
-                <select id="editor-mode" disabled>
-                  <option value="HTML">HTML</option>
-                  <option value="MARKDOWN">Markdown</option>
-                </select>
-              </label>
             </div>
             <div id="editor-host" class="editor-host">
               <textarea id="text-body"></textarea>
             </div>
           </form>
         </section>
+
+        <div id="settings-overlay" class="modal-overlay" hidden>
+          <section class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <header class="settings-header">
+              <h2 id="settings-title">Settings</h2>
+              <button id="settings-close-button" class="icon-button" type="button" aria-label="Close settings" title="Close">&times;</button>
+            </header>
+
+            <label class="settings-field" for="editor-mode">
+              <span>Editor mode</span>
+              <select id="editor-mode" disabled>
+                <option value="HTML">HTML</option>
+                <option value="MARKDOWN">Markdown</option>
+              </select>
+            </label>
+
+            <p class="settings-help">If you do not understand this option, choose HTML.</p>
+          </section>
+        </div>
       </main>
     `)
   }
@@ -584,6 +597,7 @@
     $('#task-source-url').val(task.sourceUrl || '')
     $('#editor-mode').val(task.bodyFormatCode || 'HTML')
     $('#task-form input, #task-form select').prop('disabled', false)
+    $('#editor-mode').prop('disabled', false)
     renderTaskHeaderAndActions(task)
     renderTaskList()
   }
@@ -604,6 +618,7 @@
     renderWaitingPanel(task)
 
     $('#task-form input, #task-form select').prop('disabled', false)
+    $('#editor-mode').prop('disabled', false)
     renderTaskHeaderAndActions(task)
 
     await initializeEditorForTask(task)
@@ -818,9 +833,32 @@
     setStatus('Waiting target cleared', 'saved')
   }
 
+  function openSettings() {
+    $('#settings-overlay').prop('hidden', false)
+    $('#settings-close-button').trigger('focus')
+  }
+
+  function closeSettings() {
+    $('#settings-overlay').prop('hidden', true)
+    $('#settings-button').trigger('focus')
+  }
+
   function bindEvents() {
     $('#new-task-button').on('click', function () {
       renderTaskEditor(createDraftTask()).catch(showFatalError)
+    })
+
+    $('#settings-button').on('click', openSettings)
+    $('#settings-close-button').on('click', closeSettings)
+    $('#settings-overlay').on('click', function (event) {
+      if (event.target === this) {
+        closeSettings()
+      }
+    })
+    $(document).on('keydown', function (event) {
+      if (event.key === 'Escape' && !$('#settings-overlay').prop('hidden')) {
+        closeSettings()
+      }
     })
 
     $('#task-list').on('click', '.task-row', function () {
