@@ -7,6 +7,8 @@
     completed: 'Completed',
     all: 'All'
   }
+  const supportedEditorImageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
+  const maxEditorImageBytes = 5 * 1024 * 1024
 
   let lookups = null
   let tasks = []
@@ -153,6 +155,69 @@
 
   function getErrorMessage(error, fallback) {
     return error && error.message ? error.message : fallback
+  }
+
+  function readBlobAsDataUrl(blob) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader()
+
+      reader.onload = function () {
+        resolve(reader.result)
+      }
+
+      reader.onerror = function () {
+        reject(new Error('Could not read selected image.'))
+      }
+
+      reader.readAsDataURL(blob)
+    })
+  }
+
+  function chooseEditorImageFile() {
+    return new Promise(function (resolve) {
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = supportedEditorImageTypes.join(',')
+      input.style.position = 'fixed'
+      input.style.left = '-10000px'
+      input.style.width = '1px'
+      input.style.height = '1px'
+
+      input.addEventListener('change', function () {
+        const file = input.files && input.files.length > 0 ? input.files[0] : null
+        input.remove()
+        resolve(file)
+      })
+
+      document.body.appendChild(input)
+      input.click()
+    })
+  }
+
+  async function pickEditorImage(blob) {
+    const imageBlob = blob || await chooseEditorImageFile()
+
+    if (!imageBlob) {
+      return null
+    }
+
+    if (!supportedEditorImageTypes.includes(imageBlob.type)) {
+      setStatus('Select a PNG, JPEG, GIF, or WebP image', 'error')
+      return null
+    }
+
+    if (imageBlob.size > maxEditorImageBytes) {
+      setStatus('Image must be 5 MB or smaller', 'error')
+      return null
+    }
+
+    const dataUrl = await readBlobAsDataUrl(imageBlob)
+    return {
+      src: dataUrl,
+      attributes: {
+        alt: imageBlob.name || 'image'
+      }
+    }
   }
 
   function setFieldInvalid(selector, isInvalid) {
@@ -378,7 +443,7 @@
     }
   }
 
-  async function initializeEditorForTask(task) {
+  async function initializeEditor(modeCode, initialContent, initialHtml) {
     if (!window.Editor) {
       throw new Error('Editor service did not load.')
     }
@@ -386,7 +451,6 @@
     isEditorReady = false
     $('#save-button').prop('disabled', true)
 
-    const modeCode = task.bodyFormatCode === 'MARKDOWN' ? 'MARKDOWN' : 'HTML'
     const editorMode = modeCode === 'MARKDOWN' ? 'markdown' : 'html'
 
     await window.Editor.initialize({
@@ -395,18 +459,21 @@
       hostSelector: '#editor-host',
       baseUrl: '/tinymce',
       minHeight: 360,
-      initialContent: task.body || '',
+      initialContent: initialContent || '',
+      initialHtml: initialHtml || '',
       contentStyle:
         'body { color: #202124; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.55; }',
-      onPickImage: async function () {
-        setStatus('Images are not part of this UI slice', 'error')
-        return null
-      }
+      onPickImage: pickEditorImage
     })
 
     window.Editor.markClean()
     isEditorReady = true
     $('#save-button').prop('disabled', false)
+  }
+
+  async function initializeEditorForTask(task) {
+    const modeCode = task.bodyFormatCode === 'MARKDOWN' ? 'MARKDOWN' : 'HTML'
+    await initializeEditor(modeCode, task.body || '', null)
   }
 
   function describeWaiting(waitingFor) {
@@ -447,7 +514,6 @@
     renderWaitingPanel(task)
 
     $('#task-form input, #task-form select').prop('disabled', false)
-    $('#editor-mode').prop('disabled', true)
     renderWaitingPanel(task)
     $('#start-button').prop('disabled', !(task.id && task.taskStatusCode === 'NEW'))
     $('#complete-button').prop('disabled', !(task.id && (task.taskStatusCode === 'NEW' || task.taskStatusCode === 'ACTIVE')))
@@ -477,6 +543,40 @@
       sourceReference: $('#task-source-reference').val().toString().trim() || null,
       sourceUrl: $('#task-source-url').val().toString().trim() || null,
       deadline: $('#task-deadline').val().toString() || null
+    }
+  }
+
+  async function switchEditorMode() {
+    if (!currentTask || !isEditorReady) {
+      return
+    }
+
+    const targetModeCode = $('#editor-mode').val().toString() === 'MARKDOWN' ? 'MARKDOWN' : 'HTML'
+    const activeModeCode = window.Editor.getMode() === 'markdown' ? 'MARKDOWN' : 'HTML'
+
+    if (targetModeCode === activeModeCode) {
+      return
+    }
+
+    isEditorReady = false
+    $('#save-button, #editor-mode').prop('disabled', true)
+    setStatus('Switching editor', 'ready')
+
+    try {
+      if (targetModeCode === 'MARKDOWN') {
+        await initializeEditor('MARKDOWN', '', window.Editor.getHtml())
+      } else {
+        await initializeEditor('HTML', window.Editor.getHtml(), null)
+      }
+
+      currentTask.bodyFormatCode = targetModeCode
+      $('#editor-mode').val(targetModeCode)
+      $('#editor-mode').prop('disabled', false)
+      markDirty()
+    } catch (error) {
+      $('#editor-mode').val(activeModeCode).prop('disabled', false)
+      isEditorReady = true
+      setStatus(getErrorMessage(error, 'Could not switch editor'), 'error')
     }
   }
 
@@ -617,6 +717,11 @@
 
     $('#task-search').on('input', renderTaskList)
     $('#task-form').on('input change', '#task-title, #task-type, #task-priority, #task-deadline, #task-source, #task-source-reference, #task-source-url', markDirty)
+    $('#editor-mode').on('change', function () {
+      switchEditorMode().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not switch editor'), 'error')
+      })
+    })
     $('#save-button').on('click', function () {
       saveTask().catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not save task'), 'error')
