@@ -66,6 +66,8 @@ namespace Photino.Okf_Todo
                 .SetSize(new Size(800, 600))
                 .Center()
                 .SetResizable(true)
+                .RegisterCustomSchemeHandler("app", (object sender, string scheme, string url, out string contentType) =>
+                    OpenCustomSchemeStream(services, startupLogger, url, out contentType))
                 .RegisterWebMessageReceivedHandler((object? sender, string message) =>
                 {
                     if (sender is not PhotinoWindow window)
@@ -83,6 +85,58 @@ namespace Photino.Okf_Todo
                 .Load(appUrl);
 
             window.WaitForClose();
+        }
+
+        private static Stream OpenCustomSchemeStream(
+            IServiceProvider services,
+            ILogger logger,
+            string url,
+            out string contentType)
+        {
+            contentType = "text/plain";
+
+            try
+            {
+                if (!TryGetImageId(url, out var imageId))
+                {
+                    logger.LogWarning("Rejected unsupported app custom scheme URL {Url}.", url);
+                    return Stream.Null;
+                }
+
+                using var scope = services.CreateScope();
+                var image = scope.ServiceProvider.GetRequiredService<ImageService>()
+                    .GetAsync(imageId, CancellationToken.None)
+                    .GetAwaiter()
+                    .GetResult();
+
+                contentType = image.MimeType;
+                return new MemoryStream(Convert.FromBase64String(image.Base64Data));
+            }
+            catch (Exception exception)
+            {
+                logger.LogWarning(exception, "Could not serve custom scheme URL {Url}.", url);
+                contentType = "text/plain";
+                return Stream.Null;
+            }
+        }
+
+        private static bool TryGetImageId(string url, out int imageId)
+        {
+            imageId = 0;
+
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            {
+                return false;
+            }
+
+            if (!string.Equals(uri.Scheme, "app", StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(uri.Host, "image", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var idText = uri.AbsolutePath.Trim('/');
+            return int.TryParse(idText, out imageId);
         }
 
         private static void ApplyMigrations(IServiceProvider services, ILogger logger)

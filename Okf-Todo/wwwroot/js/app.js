@@ -1,6 +1,7 @@
 (function ($) {
   const pendingRequests = new Map()
   const bridgeTimeoutMs = 15000
+  const imageBridgeTimeoutMs = 120000
   const viewLabels = {
     inbox: 'Inbox',
     active: 'Active',
@@ -16,7 +17,6 @@
   let currentView = 'active'
   let isEditorReady = false
   let isDirty = false
-  let editorImageStableSources = new Map()
 
   function createMessageId() {
     if (window.crypto && window.crypto.randomUUID) {
@@ -44,12 +44,15 @@
 
   function sendBridgeMessage(type, payload) {
     const messageId = createMessageId()
+    const timeoutMs = type === 'image.create' || type === 'image.get'
+      ? imageBridgeTimeoutMs
+      : bridgeTimeoutMs
 
     return new Promise(function (resolve, reject) {
       const timeoutId = window.setTimeout(function () {
         pendingRequests.delete(messageId)
         reject(new Error(`Timed out waiting for ${type}.`))
-      }, bridgeTimeoutMs)
+      }, timeoutMs)
 
       pendingRequests.set(messageId, {
         resolve: function (value) {
@@ -238,50 +241,16 @@
       height: null
     })
 
-    const displaySrc = await readBlobAsDataUrl(imageBlob)
-    editorImageStableSources.set(displaySrc, image.src)
-
     return {
-      src: displaySrc,
+      src: image.src,
       attributes: {
-        alt: imageBlob.name || 'image',
-        'data-app-src': image.src
+        alt: imageBlob.name || 'image'
       }
     }
   }
 
-  function getImageIdFromAppSrc(src) {
-    const match = String(src || '').match(/^app:\/\/image\/(\d+)$/i)
-    return match ? Number(match[1]) : null
-  }
-
-  async function getEditorDisplayBody(body, bodyFormatCode) {
-    if (!body || bodyFormatCode === 'MARKDOWN') {
-      return body || ''
-    }
-
-    const template = document.createElement('template')
-    template.innerHTML = body
-    const images = Array.from(template.content.querySelectorAll('img[src^="app://image/"]'))
-
-    await Promise.all(images.map(async function (image) {
-      const imageId = getImageIdFromAppSrc(image.getAttribute('src'))
-
-      if (!imageId) {
-        return
-      }
-
-      const storedImage = await sendBridgeMessage('image.get', {
-        id: imageId
-      })
-      const stableSrc = image.getAttribute('src')
-      const displaySrc = `data:${storedImage.mimeType};base64,${storedImage.base64Data}`
-      image.setAttribute('data-app-src', stableSrc)
-      image.setAttribute('src', displaySrc)
-      editorImageStableSources.set(displaySrc, stableSrc)
-    }))
-
-    return template.innerHTML
+  function getEditorDisplayBody(body) {
+    return body || ''
   }
 
   function getPersistedEditorBody() {
@@ -297,7 +266,7 @@
     const template = document.createElement('template')
     template.innerHTML = body
     template.content.querySelectorAll('img').forEach(function (image) {
-      const stableSrc = image.getAttribute('data-app-src') || editorImageStableSources.get(image.getAttribute('src'))
+      const stableSrc = image.getAttribute('data-app-src')
       if (!stableSrc) {
         return
       }
@@ -562,8 +531,7 @@
 
   async function initializeEditorForTask(task) {
     const modeCode = task.bodyFormatCode === 'MARKDOWN' ? 'MARKDOWN' : 'HTML'
-    editorImageStableSources = new Map()
-    await initializeEditor(modeCode, await getEditorDisplayBody(task.body, modeCode), null)
+    await initializeEditor(modeCode, getEditorDisplayBody(task.body), null)
   }
 
   function describeWaiting(waitingFor) {
@@ -586,13 +554,40 @@
     $('#waiting-text').prop('disabled', !canEditWaiting || !!waitingFor)
   }
 
+  function renderTaskHeaderAndActions(task) {
+    const isSavedTask = !!task.id
+    const isFinal = task.taskStatusCode === 'COMPLETED' || task.taskStatusCode === 'CANCELLED'
+    const canStart = isSavedTask && (task.taskStatusCode === 'NEW' || task.taskStatusCode === 'ACTIVE')
+    const canCompleteOrCancel = isSavedTask && !isFinal
+
+    $('#task-editor-title').text(task.id ? task.title : 'New task')
+    $('#task-status-label').text(task.taskStatusName || 'Draft')
+    $('#start-button').prop('disabled', !canStart)
+    $('#complete-button').prop('disabled', !canCompleteOrCancel)
+    $('#cancel-button').prop('disabled', !canCompleteOrCancel)
+    renderWaitingPanel(task)
+  }
+
+  function refreshCurrentTaskWithoutEditor(task) {
+    currentTask = task
+    $('#task-title').val(task.title || '')
+    $('#task-type').val(task.taskTypeCode || '')
+    $('#task-priority').val(task.taskPriorityCode || '')
+    $('#task-deadline').val(formatDate(task.deadline))
+    $('#task-source').val(task.taskSourceCode || '')
+    $('#task-source-reference').val(task.sourceReference || '')
+    $('#task-source-url').val(task.sourceUrl || '')
+    $('#editor-mode').val(task.bodyFormatCode || 'HTML')
+    $('#task-form input, #task-form select').prop('disabled', false)
+    renderTaskHeaderAndActions(task)
+    renderTaskList()
+  }
+
   async function renderTaskEditor(task) {
     currentTask = task
     isDirty = false
     clearValidationState()
 
-    $('#task-editor-title').text(task.id ? task.title : 'New task')
-    $('#task-status-label').text(task.taskStatusName || 'Draft')
     $('#task-title').val(task.title || '')
     $('#task-type').val(task.taskTypeCode || '')
     $('#task-priority').val(task.taskPriorityCode || '')
@@ -604,10 +599,7 @@
     renderWaitingPanel(task)
 
     $('#task-form input, #task-form select').prop('disabled', false)
-    renderWaitingPanel(task)
-    $('#start-button').prop('disabled', !(task.id && task.taskStatusCode === 'NEW'))
-    $('#complete-button').prop('disabled', !(task.id && (task.taskStatusCode === 'NEW' || task.taskStatusCode === 'ACTIVE')))
-    $('#cancel-button').prop('disabled', !(task.id && task.taskStatusCode !== 'COMPLETED' && task.taskStatusCode !== 'CANCELLED'))
+    renderTaskHeaderAndActions(task)
 
     await initializeEditorForTask(task)
     setStatus(task.id ? 'Loaded' : 'Draft', 'ready')
@@ -721,9 +713,16 @@
 
     try {
       const savedTask = await sendBridgeMessage(currentTask.id ? 'task.update' : 'task.create', payload)
-      await renderTaskEditor(savedTask)
+      if (currentTask.id) {
+        refreshCurrentTaskWithoutEditor(savedTask)
+      } else {
+        await renderTaskEditor(savedTask)
+      }
+
       await loadTasks({ keepSelection: true })
       isDirty = false
+      window.Editor.markClean()
+      $('#save-button').prop('disabled', false)
       setStatus('Saved', 'saved')
     } catch (error) {
       $('#save-button').prop('disabled', false)
@@ -739,7 +738,7 @@
     const task = await sendBridgeMessage(type, {
       id: currentTask.id
     })
-    await renderTaskEditor(task)
+    refreshCurrentTaskWithoutEditor(task)
     await loadTasks({ keepSelection: true })
     setStatus('Updated', 'saved')
   }
@@ -765,7 +764,7 @@
       label
     })
 
-    await renderTaskEditor(task)
+    refreshCurrentTaskWithoutEditor(task)
     await loadTasks({ keepSelection: true })
     setStatus('Waiting target added', 'saved')
   }
@@ -779,7 +778,7 @@
       id: currentTask.id
     })
 
-    await renderTaskEditor(task)
+    refreshCurrentTaskWithoutEditor(task)
     await loadTasks({ keepSelection: true })
     setStatus('Waiting target cleared', 'saved')
   }
