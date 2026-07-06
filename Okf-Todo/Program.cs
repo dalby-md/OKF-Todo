@@ -37,6 +37,11 @@ namespace Photino.Okf_Todo
                     logger.LogInformation("Applying SQLite migrations.");
                     ApplyMigrations(scope.ServiceProvider, logger);
                     logger.LogInformation("SQLite database is ready at {DatabasePath}.", DatabasePathProvider.GetDatabasePath());
+                    logger.LogInformation("Seeding lookup values.");
+                    scope.ServiceProvider.GetRequiredService<LookupSeedService>()
+                        .SeedAsync()
+                        .GetAwaiter()
+                        .GetResult();
                 }
                 catch (Exception exception)
                 {
@@ -173,6 +178,8 @@ namespace Photino.Okf_Todo
             });
             services.AddDbContext<AppDbContext>(options => options.UseSqlite($"Data Source={databasePath}"));
             services.AddSingleton<HtmlSanitizerService>();
+            services.AddScoped<LookupSeedService>();
+            services.AddScoped<TaskLifecycleService>();
             services.AddScoped<IssueService>();
             services.AddScoped<ImageService>();
             services.AddSingleton<BridgeMessageHandler>();

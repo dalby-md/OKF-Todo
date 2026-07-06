@@ -1,0 +1,126 @@
+{
+  "taskTypes": [
+    { "code": "CRITICAL_ERROR", "name": "Critical error", "sortOrder": 10 },
+    { "code": "ERROR", "name": "Error", "sortOrder": 20 },
+    { "code": "REQUEST", "name": "Request", "sortOrder": 30 },
+    { "code": "IDEA", "name": "Idea", "sortOrder": 40 },
+    { "code": "NOTE", "name": "Note", "sortOrder": 50 },
+    { "code": "INVESTIGATION", "name": "Investigation", "sortOrder": 60 },
+    { "code": "IMPROVEMENT", "name": "Improvement", "sortOrder": 70 }
+  ],
+  "taskStatuses": [
+    { "code": "NEW", "name": "New", "sortOrder": 10, "isSystem": true },
+    { "code": "ACTIVE", "name": "Active", "sortOrder": 20, "isSystem": true },
+    { "code": "WAITING", "name": "Waiting", "sortOrder": 30, "isSystem": true },
+    { "code": "COMPLETED", "name": "Completed", "sortOrder": 40, "isSystem": true },
+    { "code": "CANCELLED", "name": "Cancelled", "sortOrder": 50, "isSystem": true }
+  ],
+  "taskPriorities": [
+    { "code": "URGENT", "name": "Urgent", "sortOrder": 10 },
+    { "code": "NORMAL", "name": "Normal", "sortOrder": 20 },
+    { "code": "CAN_WAIT", "name": "Can wait", "sortOrder": 30 }
+  ],
+  "taskSources": [
+    { "code": "MANUAL", "name": "Manual", "sortOrder": 10 },
+    { "code": "SERVICEDESK", "name": "ServiceDesk", "sortOrder": 20 },
+    { "code": "EMAIL", "name": "Email", "sortOrder": 30 },
+    { "code": "TEAMS", "name": "Teams", "sortOrder": 40 },
+    { "code": "TFS_AZURE_DEVOPS", "name": "TFS / Azure DevOps", "sortOrder": 50 },
+    { "code": "ORACLE_APEX", "name": "Oracle APEX", "sortOrder": 60 },
+    { "code": "POWER_PLATFORM", "name": "Power Platform", "sortOrder": 70 },
+    { "code": "DEPLOYMENT", "name": "Deployment", "sortOrder": 80 },
+    { "code": "MONITORING_LOGS", "name": "Monitoring/logs", "sortOrder": 90 },
+    { "code": "USER_REPORT", "name": "User report", "sortOrder": 100 }
+  ],
+  "waitingForTypes": [
+    { "code": "PERSON", "name": "Person", "sortOrder": 10 },
+    { "code": "SERVICEDESK_CASE", "name": "ServiceDesk case", "sortOrder": 20 },
+    { "code": "VENDOR_CASE", "name": "Vendor case", "sortOrder": 30 },
+    { "code": "SYSTEM", "name": "System", "sortOrder": 40 },
+    { "code": "DEPLOYMENT", "name": "Deployment", "sortOrder": 50 },
+    { "code": "TEST_RESULT", "name": "Test result", "sortOrder": 60 },
+    { "code": "ACCESS_RIGHTS", "name": "Access rights", "sortOrder": 70 },
+    { "code": "CUSTOMER_USER_FEEDBACK", "name": "Customer/user feedback", "sortOrder": 80 },
+    { "code": "MYSELF", "name": "Myself", "sortOrder": 90 },
+    { "code": "OTHER", "name": "Other", "sortOrder": 100 }
+  ],
+  "attachmentKinds": [
+    { "code": "SCREENSHOT", "name": "Screenshot", "sortOrder": 10 },
+    { "code": "LOG_FILE", "name": "Log file", "sortOrder": 20 },
+    { "code": "DOCUMENT", "name": "Document", "sortOrder": 30 },
+    { "code": "EXPORT", "name": "Export", "sortOrder": 40 },
+    { "code": "SQL_SCRIPT", "name": "SQL script", "sortOrder": 50 },
+    { "code": "CONFIG_FILE", "name": "Config file", "sortOrder": 60 },
+    { "code": "SOURCE_CODE", "name": "Source code", "sortOrder": 70 },
+    { "code": "OTHER", "name": "Other", "sortOrder": 80 }
+  ],
+  "stakeholderTypes": [
+    { "code": "PERSON", "name": "Person", "sortOrder": 10 },
+    { "code": "TEAM", "name": "Team", "sortOrder": 20 },
+    { "code": "SYSTEM", "name": "System", "sortOrder": 30 },
+    { "code": "VENDOR", "name": "Vendor", "sortOrder": 40 },
+    { "code": "SERVICEDESK", "name": "ServiceDesk", "sortOrder": 50 },
+    { "code": "CUSTOMER_USER", "name": "Customer/user", "sortOrder": 60 },
+    { "code": "OTHER", "name": "Other", "sortOrder": 70 }
+  ],
+  "stakeholderRoles": [
+    { "code": "REQUESTER", "name": "Requester", "sortOrder": 10 },
+    { "code": "AFFECTED_USER", "name": "Affected user", "sortOrder": 20 },
+    { "code": "HELPER", "name": "Helper", "sortOrder": 30 },
+    { "code": "APPROVER", "name": "Approver", "sortOrder": 40 },
+    { "code": "TECHNICAL_CONTACT", "name": "Technical contact", "sortOrder": 50 },
+    { "code": "BUSINESS_CONTACT", "name": "Business contact", "sortOrder": 60 },
+    { "code": "EXTERNAL_CONTACT", "name": "External contact", "sortOrder": 70 },
+    { "code": "OTHER", "name": "Other", "sortOrder": 80 }
+  ],
+  "taskRelationTypes": [
+    { "code": "BLOCKS", "name": "Blocks", "reverseName": "Blocked by", "sortOrder": 10 },
+    { "code": "DEPENDS_ON", "name": "Depends on", "reverseName": "Required by", "sortOrder": 20 },
+    { "code": "DUPLICATE_OF", "name": "Duplicate of", "reverseName": "Has duplicate", "sortOrder": 30 },
+    { "code": "RELATED_TO", "name": "Related to", "reverseName": "Related to", "sortOrder": 40 },
+    { "code": "CREATED_FROM", "name": "Created from", "reverseName": "Created task", "sortOrder": 50 },
+    { "code": "FOLLOW_UP_TO", "name": "Follow-up to", "reverseName": "Has follow-up", "sortOrder": 60 }
+  ],
+  "taskLogTypes": [
+    { "code": "TASK_CREATED", "name": "Task created", "sortOrder": 10, "isSystem": true },
+    { "code": "STATUS_CHANGED", "name": "Status changed", "sortOrder": 20, "isSystem": true },
+    { "code": "TYPE_CHANGED", "name": "Type changed", "sortOrder": 30, "isSystem": true },
+    { "code": "PRIORITY_CHANGED", "name": "Priority changed", "sortOrder": 40, "isSystem": true },
+    { "code": "DEADLINE_CHANGED", "name": "Deadline changed", "sortOrder": 50, "isSystem": true },
+    { "code": "WAITING_FOR_CHANGED", "name": "Waiting for changed", "sortOrder": 60, "isSystem": true },
+    { "code": "WAITING_FOR_CLEARED", "name": "Waiting for cleared", "sortOrder": 70, "isSystem": true },
+    { "code": "CHECKLIST_ITEM_ADDED", "name": "Checklist item added", "sortOrder": 80, "isSystem": true },
+    { "code": "CHECKLIST_ITEM_COMPLETED", "name": "Checklist item completed", "sortOrder": 90, "isSystem": true },
+    { "code": "CHECKLIST_ITEM_REOPENED", "name": "Checklist item reopened", "sortOrder": 100, "isSystem": true },
+    { "code": "ATTACHMENT_ADDED", "name": "Attachment added", "sortOrder": 110, "isSystem": true },
+    { "code": "ATTACHMENT_REMOVED", "name": "Attachment removed", "sortOrder": 120, "isSystem": true },
+    { "code": "STAKEHOLDER_ADDED", "name": "Stakeholder added", "sortOrder": 130, "isSystem": true },
+    { "code": "STAKEHOLDER_REMOVED", "name": "Stakeholder removed", "sortOrder": 140, "isSystem": true },
+    { "code": "TAG_ADDED", "name": "Tag added", "sortOrder": 150, "isSystem": true },
+    { "code": "TAG_REMOVED", "name": "Tag removed", "sortOrder": 160, "isSystem": true },
+    { "code": "RELATION_ADDED", "name": "Relation added", "sortOrder": 170, "isSystem": true },
+    { "code": "RELATION_REMOVED", "name": "Relation removed", "sortOrder": 180, "isSystem": true },
+    { "code": "TASK_COMPLETED", "name": "Task completed", "sortOrder": 190, "isSystem": true },
+    { "code": "TASK_REOPENED", "name": "Task reopened", "sortOrder": 200, "isSystem": true },
+    { "code": "TASK_CANCELLED", "name": "Task cancelled", "sortOrder": 210, "isSystem": true },
+    { "code": "COMMENT_ADDED", "name": "Comment added", "sortOrder": 220, "isSystem": true }
+  ],
+  "bodyFormats": [
+    { "code": "MARKDOWN", "name": "Markdown", "sortOrder": 10, "isSystem": true },
+    { "code": "HTML", "name": "HTML", "sortOrder": 20, "isSystem": true }
+  ],
+  "taskTags": [
+    { "name": "Oracle APEX", "sortOrder": 10 },
+    { "name": ".NET", "sortOrder": 20 },
+    { "name": "Power Platform", "sortOrder": 30 },
+    { "name": "TFS", "sortOrder": 40 },
+    { "name": "SQL Server", "sortOrder": 50 },
+    { "name": "SQLite", "sortOrder": 60 },
+    { "name": "Deployment", "sortOrder": 70 },
+    { "name": "Build", "sortOrder": 80 },
+    { "name": "Bug", "sortOrder": 90 },
+    { "name": "Support", "sortOrder": 100 },
+    { "name": "Security", "sortOrder": 110 },
+    { "name": "Documentation", "sortOrder": 120 }
+  ]
+}

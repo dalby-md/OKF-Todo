@@ -8,6 +8,48 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<ImageAsset> Images => Set<ImageAsset>();
 
+    public DbSet<TaskItem> TaskItems => Set<TaskItem>();
+
+    public DbSet<TaskType> TaskTypes => Set<TaskType>();
+
+    public DbSet<TaskStatus> TaskStatuses => Set<TaskStatus>();
+
+    public DbSet<TaskPriority> TaskPriorities => Set<TaskPriority>();
+
+    public DbSet<TaskSource> TaskSources => Set<TaskSource>();
+
+    public DbSet<WaitingForType> WaitingForTypes => Set<WaitingForType>();
+
+    public DbSet<TaskWaitingFor> TaskWaitingFors => Set<TaskWaitingFor>();
+
+    public DbSet<TaskComment> TaskComments => Set<TaskComment>();
+
+    public DbSet<TaskLogEntry> TaskLogEntries => Set<TaskLogEntry>();
+
+    public DbSet<TaskLogType> TaskLogTypes => Set<TaskLogType>();
+
+    public DbSet<TaskChecklistItem> TaskChecklistItems => Set<TaskChecklistItem>();
+
+    public DbSet<TaskAttachment> TaskAttachments => Set<TaskAttachment>();
+
+    public DbSet<AttachmentKind> AttachmentKinds => Set<AttachmentKind>();
+
+    public DbSet<TaskStakeholder> TaskStakeholders => Set<TaskStakeholder>();
+
+    public DbSet<StakeholderType> StakeholderTypes => Set<StakeholderType>();
+
+    public DbSet<StakeholderRole> StakeholderRoles => Set<StakeholderRole>();
+
+    public DbSet<TaskTag> TaskTags => Set<TaskTag>();
+
+    public DbSet<TaskTaskTag> TaskTaskTags => Set<TaskTaskTag>();
+
+    public DbSet<TaskRelation> TaskRelations => Set<TaskRelation>();
+
+    public DbSet<TaskRelationType> TaskRelationTypes => Set<TaskRelationType>();
+
+    public DbSet<BodyFormat> BodyFormats => Set<BodyFormat>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Issue>(entity =>
@@ -32,5 +74,222 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(image => image.ImageData).IsRequired();
             entity.Property(image => image.CreatedUtc).IsRequired();
         });
+
+        ConfigureLookup<TaskType>(modelBuilder);
+        ConfigureLookup<TaskStatus>(modelBuilder);
+        ConfigureLookup<TaskPriority>(modelBuilder);
+        ConfigureLookup<TaskSource>(modelBuilder);
+        ConfigureLookup<WaitingForType>(modelBuilder);
+        ConfigureLookup<AttachmentKind>(modelBuilder);
+        ConfigureLookup<StakeholderType>(modelBuilder);
+        ConfigureLookup<StakeholderRole>(modelBuilder);
+        ConfigureLookup<TaskLogType>(modelBuilder);
+        ConfigureLookup<BodyFormat>(modelBuilder);
+
+        modelBuilder.Entity<TaskRelationType>(entity =>
+        {
+            ConfigureLookupEntity(entity);
+            entity.Property(relationType => relationType.ReverseName).IsRequired();
+        });
+
+        modelBuilder.Entity<TaskItem>(entity =>
+        {
+            entity.Property(task => task.Title).IsRequired();
+            entity.Property(task => task.CreatedAt).IsRequired();
+            entity.Property(task => task.UpdatedAt).IsRequired();
+
+            entity.HasOne(task => task.BodyFormat)
+                .WithMany(bodyFormat => bodyFormat.Tasks)
+                .HasForeignKey(task => task.BodyFormatId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(task => task.TaskType)
+                .WithMany(taskType => taskType.Tasks)
+                .HasForeignKey(task => task.TaskTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(task => task.TaskStatus)
+                .WithMany(taskStatus => taskStatus.Tasks)
+                .HasForeignKey(task => task.TaskStatusId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(task => task.TaskPriority)
+                .WithMany(priority => priority.Tasks)
+                .HasForeignKey(task => task.TaskPriorityId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(task => task.TaskSource)
+                .WithMany(source => source.Tasks)
+                .HasForeignKey(task => task.TaskSourceId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TaskWaitingFor>(entity =>
+        {
+            entity.Property(waitingFor => waitingFor.WaitingSince).IsRequired();
+            entity.Property(waitingFor => waitingFor.CreatedAt).IsRequired();
+            entity.Property(waitingFor => waitingFor.UpdatedAt).IsRequired();
+
+            entity.HasOne(waitingFor => waitingFor.Task)
+                .WithMany(task => task.WaitingTargets)
+                .HasForeignKey(waitingFor => waitingFor.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(waitingFor => waitingFor.WaitingForType)
+                .WithMany(type => type.WaitingTargets)
+                .HasForeignKey(waitingFor => waitingFor.WaitingForTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(waitingFor => waitingFor.Stakeholder)
+                .WithMany(stakeholder => stakeholder.WaitingTargets)
+                .HasForeignKey(waitingFor => waitingFor.StakeholderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(waitingFor => waitingFor.TaskId)
+                .IsUnique()
+                .HasFilter($"{nameof(TaskWaitingFor.ResolvedAt)} IS NULL");
+        });
+
+        modelBuilder.Entity<TaskComment>(entity =>
+        {
+            entity.Property(comment => comment.CommentText).IsRequired();
+            entity.Property(comment => comment.CreatedAt).IsRequired();
+
+            entity.HasOne(comment => comment.Task)
+                .WithMany(task => task.Comments)
+                .HasForeignKey(comment => comment.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TaskLogEntry>(entity =>
+        {
+            entity.Property(log => log.Message).IsRequired();
+            entity.Property(log => log.CreatedAt).IsRequired();
+
+            entity.HasOne(log => log.Task)
+                .WithMany(task => task.LogEntries)
+                .HasForeignKey(log => log.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(log => log.TaskLogType)
+                .WithMany(logType => logType.LogEntries)
+                .HasForeignKey(log => log.TaskLogTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TaskChecklistItem>(entity =>
+        {
+            entity.Property(item => item.Text).IsRequired();
+            entity.Property(item => item.CreatedAt).IsRequired();
+            entity.Property(item => item.UpdatedAt).IsRequired();
+
+            entity.HasOne(item => item.Task)
+                .WithMany(task => task.ChecklistItems)
+                .HasForeignKey(item => item.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TaskAttachment>(entity =>
+        {
+            entity.Property(attachment => attachment.FileName).IsRequired();
+            entity.Property(attachment => attachment.ContentBlob).IsRequired();
+            entity.Property(attachment => attachment.CreatedAt).IsRequired();
+
+            entity.HasOne(attachment => attachment.Task)
+                .WithMany(task => task.Attachments)
+                .HasForeignKey(attachment => attachment.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(attachment => attachment.AttachmentKind)
+                .WithMany(kind => kind.Attachments)
+                .HasForeignKey(attachment => attachment.AttachmentKindId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TaskStakeholder>(entity =>
+        {
+            entity.Property(stakeholder => stakeholder.Name).IsRequired();
+            entity.Property(stakeholder => stakeholder.CreatedAt).IsRequired();
+            entity.Property(stakeholder => stakeholder.UpdatedAt).IsRequired();
+
+            entity.HasOne(stakeholder => stakeholder.Task)
+                .WithMany(task => task.Stakeholders)
+                .HasForeignKey(stakeholder => stakeholder.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(stakeholder => stakeholder.StakeholderType)
+                .WithMany(type => type.Stakeholders)
+                .HasForeignKey(stakeholder => stakeholder.StakeholderTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(stakeholder => stakeholder.StakeholderRole)
+                .WithMany(role => role.Stakeholders)
+                .HasForeignKey(stakeholder => stakeholder.StakeholderRoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TaskTag>(entity =>
+        {
+            entity.Property(tag => tag.Name).IsRequired();
+            entity.Property(tag => tag.CreatedAt).IsRequired();
+            entity.Property(tag => tag.UpdatedAt).IsRequired();
+            entity.HasIndex(tag => tag.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<TaskTaskTag>(entity =>
+        {
+            entity.HasKey(taskTag => new { taskTag.TaskId, taskTag.TaskTagId });
+            entity.Property(taskTag => taskTag.CreatedAt).IsRequired();
+
+            entity.HasOne(taskTag => taskTag.Task)
+                .WithMany(task => task.TaskTags)
+                .HasForeignKey(taskTag => taskTag.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(taskTag => taskTag.TaskTag)
+                .WithMany(tag => tag.TaskTags)
+                .HasForeignKey(taskTag => taskTag.TaskTagId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TaskRelation>(entity =>
+        {
+            entity.Property(relation => relation.CreatedAt).IsRequired();
+
+            entity.ToTable(table => table.HasCheckConstraint(
+                "CK_TaskRelations_SourceTarget_Different",
+                $"{nameof(TaskRelation.SourceTaskId)} <> {nameof(TaskRelation.TargetTaskId)}"));
+
+            entity.HasOne(relation => relation.SourceTask)
+                .WithMany(task => task.SourceRelations)
+                .HasForeignKey(relation => relation.SourceTaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(relation => relation.TargetTask)
+                .WithMany(task => task.TargetRelations)
+                .HasForeignKey(relation => relation.TargetTaskId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(relation => relation.TaskRelationType)
+                .WithMany(type => type.Relations)
+                .HasForeignKey(relation => relation.TaskRelationTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureLookup<TLookup>(ModelBuilder modelBuilder)
+        where TLookup : LookupEntity
+    {
+        modelBuilder.Entity<TLookup>(ConfigureLookupEntity);
+    }
+
+    private static void ConfigureLookupEntity<TLookup>(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TLookup> entity)
+        where TLookup : LookupEntity
+    {
+        entity.Property(lookup => lookup.Code).IsRequired();
+        entity.Property(lookup => lookup.Name).IsRequired();
+        entity.Property(lookup => lookup.CreatedAt).IsRequired();
+        entity.Property(lookup => lookup.UpdatedAt).IsRequired();
+        entity.HasIndex(lookup => lookup.Code).IsUnique();
     }
 }
