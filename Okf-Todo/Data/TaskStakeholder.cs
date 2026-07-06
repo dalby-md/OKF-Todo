@@ -27,6 +27,4 @@ public sealed class TaskStakeholder
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }
-
-    public List<TaskWaitingFor> WaitingTargets { get; set; } = [];
 }

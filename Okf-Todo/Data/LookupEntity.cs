@@ -41,11 +41,6 @@ public sealed class TaskSource : LookupEntity
     public List<TaskItem> Tasks { get; set; } = [];
 }
 
-public sealed class WaitingForType : LookupEntity
-{
-    public List<TaskWaitingFor> WaitingTargets { get; set; } = [];
-}
-
 public sealed class AttachmentKind : LookupEntity
 {
     public List<TaskAttachment> Attachments { get; set; } = [];

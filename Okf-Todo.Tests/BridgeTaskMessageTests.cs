@@ -60,6 +60,18 @@ public sealed class BridgeTaskMessageTests
         var started = await fixture.SendAsync("task.start", new { id = taskId });
         Assert.Equal(TaskStatusCodes.Active, started.GetProperty("taskStatusCode").GetString());
 
+        var waiting = await fixture.SendAsync("task.waiting.add", new
+        {
+            taskId,
+            label = "INC789"
+        });
+        Assert.Equal(TaskStatusCodes.Waiting, waiting.GetProperty("taskStatusCode").GetString());
+        Assert.Equal("INC789", waiting.GetProperty("activeWaitingFor").GetProperty("label").GetString());
+
+        var cleared = await fixture.SendAsync("task.waiting.clear", new { id = taskId });
+        Assert.Equal(TaskStatusCodes.Active, cleared.GetProperty("taskStatusCode").GetString());
+        Assert.Equal(JsonValueKind.Null, cleared.GetProperty("activeWaitingFor").ValueKind);
+
         var completed = await fixture.SendAsync("task.complete", new { id = taskId });
         Assert.Equal(TaskStatusCodes.Completed, completed.GetProperty("taskStatusCode").GetString());
 

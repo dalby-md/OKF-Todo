@@ -22,7 +22,6 @@ namespace Photino.Okf_Todo.Migrations
             CreateLookupTable(migrationBuilder, "TaskSources");
             CreateLookupTable(migrationBuilder, "TaskStatuses");
             CreateLookupTable(migrationBuilder, "TaskTypes");
-            CreateLookupTable(migrationBuilder, "WaitingForTypes");
 
             migrationBuilder.CreateTable(
                 name: "TaskRelationTypes",
@@ -243,13 +242,8 @@ namespace Photino.Okf_Todo.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     TaskId = table.Column<int>(type: "INTEGER", nullable: false),
-                    WaitingForTypeId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Label = table.Column<string>(type: "TEXT", nullable: true),
-                    Reference = table.Column<string>(type: "TEXT", nullable: true),
-                    Url = table.Column<string>(type: "TEXT", nullable: true),
-                    StakeholderId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Label = table.Column<string>(type: "TEXT", nullable: false),
                     WaitingSince = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    FollowUpAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     ResolvedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
@@ -258,8 +252,6 @@ namespace Photino.Okf_Todo.Migrations
                 {
                     table.PrimaryKey("PK_TaskWaitingFors", x => x.Id);
                     table.ForeignKey("FK_TaskWaitingFors_TaskItems_TaskId", x => x.TaskId, "TaskItems", "Id", onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey("FK_TaskWaitingFors_TaskStakeholders_StakeholderId", x => x.StakeholderId, "TaskStakeholders", "Id", onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey("FK_TaskWaitingFors_WaitingForTypes_WaitingForTypeId", x => x.WaitingForTypeId, "WaitingForTypes", "Id", onDelete: ReferentialAction.Restrict);
                 });
 
             CreateIndexes(migrationBuilder);
@@ -279,7 +271,6 @@ namespace Photino.Okf_Todo.Migrations
             migrationBuilder.DropTable(name: "TaskRelationTypes");
             migrationBuilder.DropTable(name: "TaskTags");
             migrationBuilder.DropTable(name: "TaskStakeholders");
-            migrationBuilder.DropTable(name: "WaitingForTypes");
             migrationBuilder.DropTable(name: "StakeholderRoles");
             migrationBuilder.DropTable(name: "StakeholderTypes");
             migrationBuilder.DropTable(name: "TaskItems");
@@ -326,8 +317,7 @@ namespace Photino.Okf_Todo.Migrations
                 "TaskRelationTypes",
                 "TaskSources",
                 "TaskStatuses",
-                "TaskTypes",
-                "WaitingForTypes"
+                "TaskTypes"
             })
             {
                 migrationBuilder.CreateIndex($"IX_{tableName}_Code", tableName, "Code", unique: true);
@@ -352,9 +342,7 @@ namespace Photino.Okf_Todo.Migrations
             migrationBuilder.CreateIndex("IX_TaskStakeholders_TaskId", "TaskStakeholders", "TaskId");
             migrationBuilder.CreateIndex("IX_TaskTags_Name", "TaskTags", "Name", unique: true);
             migrationBuilder.CreateIndex("IX_TaskTaskTags_TaskTagId", "TaskTaskTags", "TaskTagId");
-            migrationBuilder.CreateIndex("IX_TaskWaitingFors_StakeholderId", "TaskWaitingFors", "StakeholderId");
             migrationBuilder.CreateIndex("IX_TaskWaitingFors_TaskId", "TaskWaitingFors", "TaskId", unique: true, filter: "ResolvedAt IS NULL");
-            migrationBuilder.CreateIndex("IX_TaskWaitingFors_WaitingForTypeId", "TaskWaitingFors", "WaitingForTypeId");
         }
     }
 }

@@ -105,6 +105,39 @@ public sealed class TaskServiceTests
     }
 
     [Fact]
+    public async Task AddAndClearWaitingFor_UsesLifecycleRulesAndReturnsActiveWaitingTarget()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var created = await database.Tasks.CreateAsync(CreateRequest("Task waiting on ServiceDesk"), CancellationToken.None);
+
+        var waiting = await database.Tasks.AddWaitingForAsync(new TaskWaitingForSaveRequest(
+            TaskId: created.Id,
+            Label: "INC123456"), CancellationToken.None);
+
+        Assert.Equal(TaskStatusCodes.Waiting, waiting.TaskStatusCode);
+        Assert.NotNull(waiting.ActiveWaitingFor);
+        Assert.Equal("INC123456", waiting.ActiveWaitingFor.Label);
+
+        var activeTasks = await database.Tasks.ListAsync(new TaskListRequest("active"), CancellationToken.None);
+        Assert.Contains(activeTasks, task => task.Id == created.Id && task.TaskStatusCode == TaskStatusCodes.Waiting);
+
+        var secondWait = await Assert.ThrowsAsync<ValidationException>(() =>
+            database.Tasks.AddWaitingForAsync(new TaskWaitingForSaveRequest(
+                created.Id,
+                "Anna"), CancellationToken.None));
+        Assert.Equal("waitingFor", secondWait.Field);
+
+        var cleared = await database.Tasks.ClearWaitingForAsync(created.Id, CancellationToken.None);
+        Assert.Equal(TaskStatusCodes.Active, cleared.TaskStatusCode);
+        Assert.Null(cleared.ActiveWaitingFor);
+
+        var savedTask = await database.LoadTaskAsync(created.Id);
+        Assert.Contains(savedTask.LogEntries, log => log.TaskLogType?.Code == TaskLogTypeCodes.WaitingForChanged);
+        Assert.Contains(savedTask.LogEntries, log => log.TaskLogType?.Code == TaskLogTypeCodes.WaitingForCleared);
+        Assert.Contains(savedTask.LogEntries, log => log.TaskLogType?.Code == TaskLogTypeCodes.StatusChanged);
+    }
+
+    [Fact]
     public async Task CreateAndUpdate_RejectMissingRequiredFields()
     {
         await using var database = await TestDatabase.CreateAsync();

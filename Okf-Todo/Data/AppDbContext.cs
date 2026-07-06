@@ -18,8 +18,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<TaskSource> TaskSources => Set<TaskSource>();
 
-    public DbSet<WaitingForType> WaitingForTypes => Set<WaitingForType>();
-
     public DbSet<TaskWaitingFor> TaskWaitingFors => Set<TaskWaitingFor>();
 
     public DbSet<TaskComment> TaskComments => Set<TaskComment>();
@@ -79,7 +77,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         ConfigureLookup<TaskStatus>(modelBuilder);
         ConfigureLookup<TaskPriority>(modelBuilder);
         ConfigureLookup<TaskSource>(modelBuilder);
-        ConfigureLookup<WaitingForType>(modelBuilder);
         ConfigureLookup<AttachmentKind>(modelBuilder);
         ConfigureLookup<StakeholderType>(modelBuilder);
         ConfigureLookup<StakeholderRole>(modelBuilder);
@@ -126,6 +123,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
         modelBuilder.Entity<TaskWaitingFor>(entity =>
         {
+            entity.Property(waitingFor => waitingFor.Label).IsRequired();
             entity.Property(waitingFor => waitingFor.WaitingSince).IsRequired();
             entity.Property(waitingFor => waitingFor.CreatedAt).IsRequired();
             entity.Property(waitingFor => waitingFor.UpdatedAt).IsRequired();
@@ -134,16 +132,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 .WithMany(task => task.WaitingTargets)
                 .HasForeignKey(waitingFor => waitingFor.TaskId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(waitingFor => waitingFor.WaitingForType)
-                .WithMany(type => type.WaitingTargets)
-                .HasForeignKey(waitingFor => waitingFor.WaitingForTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(waitingFor => waitingFor.Stakeholder)
-                .WithMany(stakeholder => stakeholder.WaitingTargets)
-                .HasForeignKey(waitingFor => waitingFor.StakeholderId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(waitingFor => waitingFor.TaskId)
                 .IsUnique()

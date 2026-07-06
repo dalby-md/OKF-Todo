@@ -30,12 +30,16 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         {
             "inbox" => query.Where(task => task.TaskStatus != null && task.TaskStatus.Code == TaskStatusCodes.New),
             "active" => query.Where(task => task.TaskStatus != null
-                && (task.TaskStatus.Code == TaskStatusCodes.New || task.TaskStatus.Code == TaskStatusCodes.Active)),
+                && (task.TaskStatus.Code == TaskStatusCodes.New
+                    || task.TaskStatus.Code == TaskStatusCodes.Active
+                    || task.TaskStatus.Code == TaskStatusCodes.Waiting)),
             "completed" => query.Where(task => task.TaskStatus != null
                 && (task.TaskStatus.Code == TaskStatusCodes.Completed || task.TaskStatus.Code == TaskStatusCodes.Cancelled)),
             "all" => query,
             _ => query.Where(task => task.TaskStatus != null
-                && (task.TaskStatus.Code == TaskStatusCodes.New || task.TaskStatus.Code == TaskStatusCodes.Active))
+                && (task.TaskStatus.Code == TaskStatusCodes.New
+                    || task.TaskStatus.Code == TaskStatusCodes.Active
+                    || task.TaskStatus.Code == TaskStatusCodes.Waiting))
         };
 
         return await query
@@ -64,6 +68,7 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
             .Include(item => item.TaskStatus)
             .Include(item => item.TaskPriority)
             .Include(item => item.TaskSource)
+            .Include(item => item.WaitingTargets.Where(target => target.ResolvedAt == null))
             .SingleOrDefaultAsync(item => item.Id == id, cancellationToken)
             ?? throw new ValidationException("Task was not found.", "taskId");
 
@@ -154,6 +159,24 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         return await GetAsync(id, cancellationToken);
     }
 
+    public async Task<TaskDetailDto> AddWaitingForAsync(
+        TaskWaitingForSaveRequest request,
+        CancellationToken cancellationToken)
+    {
+        await lifecycleService.AddWaitingForAsync(
+            request.TaskId,
+            new TaskWaitingForRequest(request.Label),
+            cancellationToken);
+
+        return await GetAsync(request.TaskId, cancellationToken);
+    }
+
+    public async Task<TaskDetailDto> ClearWaitingForAsync(int id, CancellationToken cancellationToken)
+    {
+        await lifecycleService.ClearWaitingForAsync(id, cancellationToken);
+        return await GetAsync(id, cancellationToken);
+    }
+
     private static async Task<IReadOnlyCollection<LookupItemDto>> GetLookupItemsAsync<TLookup>(
         DbSet<TLookup> dbSet,
         CancellationToken cancellationToken)
@@ -200,6 +223,10 @@ public sealed record TaskGetRequest(int Id);
 
 public sealed record TaskIdRequest(int Id);
 
+public sealed record TaskWaitingForSaveRequest(
+    int TaskId,
+    string? Label);
+
 public sealed record TaskSaveRequest(
     int? Id,
     string Title,
@@ -238,6 +265,7 @@ public sealed record TaskDetailDto(
     string? SourceReference,
     string? SourceUrl,
     DateTime? Deadline,
+    TaskWaitingForDto? ActiveWaitingFor,
     DateTime CreatedAt,
     DateTime UpdatedAt)
 {
@@ -259,7 +287,25 @@ public sealed record TaskDetailDto(
             task.SourceReference,
             task.SourceUrl,
             task.Deadline,
+            task.WaitingTargets
+                .Where(target => target.ResolvedAt is null)
+                .Select(TaskWaitingForDto.FromWaitingFor)
+                .SingleOrDefault(),
             task.CreatedAt,
             task.UpdatedAt);
+    }
+}
+
+public sealed record TaskWaitingForDto(
+    int Id,
+    string? Label,
+    DateTime WaitingSince)
+{
+    public static TaskWaitingForDto FromWaitingFor(TaskWaitingFor waitingFor)
+    {
+        return new TaskWaitingForDto(
+            waitingFor.Id,
+            waitingFor.Label,
+            waitingFor.WaitingSince);
     }
 }

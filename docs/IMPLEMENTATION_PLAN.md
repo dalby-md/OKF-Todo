@@ -209,14 +209,8 @@ Do not add attachments or image upload in this step unless already part of the e
 Scope:
 
 - Add one active wait target per task.
+- Waiting for is a single text field.
 - Direct entry must be possible, for example `INC123456`.
-- Optional structured fields:
-  - Type
-  - Label
-  - Reference
-  - URL
-  - Follow-up date
-  - Stakeholder
 
 Acceptance criteria:
 
@@ -224,7 +218,7 @@ Acceptance criteria:
 - Clearing wait target changes task status to `ACTIVE`.
 - Logs are created.
 - Only one active wait target is allowed per task.
-- Waiting follow-up date is visible.
+- Do not add waiting type, URL, follow-up date, stakeholder link, or other structured waiting fields.
 
 Suggested Codex prompt:
 
@@ -238,6 +232,7 @@ Rules:
 - Clearing a wait target changes status to ACTIVE.
 - Set/clear WaitingSince.
 - Create automatic log entries.
+- Do not add waiting type, URL, follow-up date, stakeholder link, or other structured waiting fields.
 
 Use the lifecycle service. Do not duplicate lifecycle logic in UI code.
 ```
@@ -478,7 +473,6 @@ Inbox / New
 Active tasks
 Urgent active tasks
 Waiting tasks
-Waiting follow-up due
 Overdue tasks
 Completed tasks
 All tasks
@@ -490,17 +484,16 @@ Suggested sort:
 1. Overdue tasks
 2. Urgent active tasks
 3. Active tasks
-4. Waiting follow-up due
-5. Waiting tasks
-6. Can wait
-7. Completed hidden by default
+4. Waiting tasks
+5. Can wait
+6. Completed hidden by default
 ```
 
 Acceptance criteria:
 
 - Views use lookup codes, not display names.
 - Completed tasks are hidden by default in active views.
-- Waiting follow-up due is easy to find.
+- Waiting tasks remain easy to find.
 
 ## Recommended first real Codex task
 

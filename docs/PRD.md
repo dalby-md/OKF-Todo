@@ -178,7 +178,7 @@ When a wait target is cleared:
 - `WaitingSince` is cleared.
 - Automatic log entries are created.
 
-The user must be able to enter a wait target directly, for example:
+Waiting for is a simple text field. The user must be able to enter direct text, for example:
 
 ```text
 INC123456
@@ -186,38 +186,7 @@ INC123456
 
 It should not be necessary to register the wait target elsewhere before it can be used.
 
-A wait target can optionally be structured with type, label, reference, URL, and optional stakeholder link.
-
-Initial waiting-for types:
-
-- Person
-- ServiceDesk case
-- Vendor case
-- System
-- Deployment
-- Test result
-- Access rights
-- Customer/user feedback
-- Myself
-- Other
-
-## Waiting follow-up
-
-The wait target should support a follow-up date.
-
-Example:
-
-```text
-Waiting for: INC123456
-Waiting since: 2026-07-03
-Follow up: 2026-07-08
-```
-
-Useful view:
-
-```text
-Waiting, but follow-up is due
-```
+Do not add waiting type, URL, follow-up date, stakeholder link, or other structured waiting fields in the first version.
 
 ## Source
 
@@ -416,7 +385,7 @@ Initial stakeholder roles:
 - External contact
 - Other
 
-A wait target can optionally point to a stakeholder.
+Waiting for is deliberately separate from stakeholders. Do not link waiting targets to stakeholders in the first version.
 
 ## Tags
 
@@ -523,7 +492,6 @@ Add a settings/admin area for lookup values:
 - Statuses
 - Priorities
 - Sources
-- Waiting-for types
 - Attachment kinds
 - Stakeholder types
 - Stakeholder roles
@@ -541,7 +509,6 @@ Inbox / New
 Active tasks
 Urgent active tasks
 Waiting tasks
-Waiting follow-up due
 Overdue tasks
 Completed tasks
 All tasks
@@ -555,13 +522,12 @@ Initial sorting can be simple:
 1. Overdue tasks
 2. Urgent active tasks
 3. Active tasks
-4. Waiting follow-up due
-5. Waiting tasks
-6. Can wait
-7. Completed hidden by default
+4. Waiting tasks
+5. Can wait
+6. Completed hidden by default
 ```
 
-Waiting tasks should not disappear. They should be easy to review, especially when follow-up is due.
+Waiting tasks should not disappear. They should be easy to review.
 
 ## Out of scope for first version
 

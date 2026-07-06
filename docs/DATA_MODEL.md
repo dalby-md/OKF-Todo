@@ -92,23 +92,6 @@ MONITORING_LOGS    Monitoring/logs
 USER_REPORT        User report
 ```
 
-### WaitingForType
-
-Initial values:
-
-```text
-PERSON                  Person
-SERVICEDESK_CASE        ServiceDesk case
-VENDOR_CASE             Vendor case
-SYSTEM                  System
-DEPLOYMENT              Deployment
-TEST_RESULT             Test result
-ACCESS_RIGHTS           Access rights
-CUSTOMER_USER_FEEDBACK  Customer/user feedback
-MYSELF                  Myself
-OTHER                   Other
-```
-
 ### AttachmentKind
 
 Initial values:
@@ -261,13 +244,8 @@ One task can have at most one active wait target.
 ```text
 Id
 TaskId
-WaitingForTypeId nullable
-Label nullable
-Reference nullable
-Url nullable
-StakeholderId nullable
+Label
 WaitingSince
-FollowUpAt nullable
 ResolvedAt nullable
 CreatedAt
 UpdatedAt
@@ -275,12 +253,13 @@ UpdatedAt
 
 Rules:
 
-- The user can enter direct text/reference, such as `INC123456`.
-- A wait target does not need to exist as a stakeholder.
+- `Label` stores the full "waiting for" text, such as `INC123456`.
+- A wait target does not need to exist in any other table.
 - If `ResolvedAt` is null, the wait target is active.
 - Enforce at most one active wait target per task.
 - Adding an active wait target sets task status to `WAITING`.
 - Clearing an active wait target sets `ResolvedAt`, clears `Task.WaitingSince`, and sets task status to `ACTIVE`.
+- Do not add waiting type, URL, follow-up date, stakeholder link, or other structured waiting fields in the first version.
 
 Suggested SQLite uniqueness rule:
 
@@ -467,7 +446,6 @@ TaskType
 TaskStatus
 TaskPriority
 TaskSource
-WaitingForType
 TaskWaitingFor
 TaskComment
 TaskLogEntry

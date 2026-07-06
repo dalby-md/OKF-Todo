@@ -78,7 +78,7 @@ public sealed class TaskLifecycleServiceTests
 
         await database.Lifecycle.AddWaitingForAsync(
             task.Id,
-            new TaskWaitingForRequest("SERVICEDESK_CASE", "ServiceDesk", "INC123456"));
+            new TaskWaitingForRequest("INC123456"));
 
         var savedTask = await database.LoadTaskAsync(task.Id);
         var activeTargets = await database.DbContext.TaskWaitingFors
@@ -88,7 +88,7 @@ public sealed class TaskLifecycleServiceTests
         Assert.Equal(TaskStatusCodes.Waiting, savedTask.TaskStatus?.Code);
         Assert.NotNull(savedTask.WaitingSince);
         Assert.Single(activeTargets);
-        AssertHasLog(savedTask, TaskLogTypeCodes.WaitingForChanged, "Waiting for changed to ServiceDesk case ServiceDesk INC123456");
+        AssertHasLog(savedTask, TaskLogTypeCodes.WaitingForChanged, "Waiting for changed to INC123456");
         AssertHasLog(savedTask, TaskLogTypeCodes.StatusChanged, "Status changed from Active to Waiting");
     }
 
@@ -106,7 +106,7 @@ public sealed class TaskLifecycleServiceTests
         Assert.Equal(TaskStatusCodes.Active, savedTask.TaskStatus?.Code);
         Assert.Null(savedTask.WaitingSince);
         Assert.NotNull(target.ResolvedAt);
-        AssertHasLog(savedTask, TaskLogTypeCodes.WaitingForCleared, "Waiting for ServiceDesk case ServiceDesk INC123456 was cleared");
+        AssertHasLog(savedTask, TaskLogTypeCodes.WaitingForCleared, "Waiting for INC123456 was cleared");
         AssertHasLog(savedTask, TaskLogTypeCodes.StatusChanged, "Status changed from Waiting to Active");
     }
 
@@ -145,7 +145,7 @@ public sealed class TaskLifecycleServiceTests
 
         var exception = await Assert.ThrowsAsync<ValidationException>(() => database.Lifecycle.AddWaitingForAsync(
             task.Id,
-            new TaskWaitingForRequest("PERSON", "Anna", null)));
+            new TaskWaitingForRequest("Anna")));
 
         Assert.Equal("waitingFor", exception.Field);
     }
@@ -216,7 +216,7 @@ internal sealed class TestDatabase : IAsyncDisposable
         await Lifecycle.StartTaskAsync(task.Id);
         await Lifecycle.AddWaitingForAsync(
             task.Id,
-            new TaskWaitingForRequest("SERVICEDESK_CASE", "ServiceDesk", "INC123456"));
+            new TaskWaitingForRequest("INC123456"));
 
         return task;
     }

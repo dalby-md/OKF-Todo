@@ -32,18 +32,6 @@
     { "code": "MONITORING_LOGS", "name": "Monitoring/logs", "sortOrder": 90 },
     { "code": "USER_REPORT", "name": "User report", "sortOrder": 100 }
   ],
-  "waitingForTypes": [
-    { "code": "PERSON", "name": "Person", "sortOrder": 10 },
-    { "code": "SERVICEDESK_CASE", "name": "ServiceDesk case", "sortOrder": 20 },
-    { "code": "VENDOR_CASE", "name": "Vendor case", "sortOrder": 30 },
-    { "code": "SYSTEM", "name": "System", "sortOrder": 40 },
-    { "code": "DEPLOYMENT", "name": "Deployment", "sortOrder": 50 },
-    { "code": "TEST_RESULT", "name": "Test result", "sortOrder": 60 },
-    { "code": "ACCESS_RIGHTS", "name": "Access rights", "sortOrder": 70 },
-    { "code": "CUSTOMER_USER_FEEDBACK", "name": "Customer/user feedback", "sortOrder": 80 },
-    { "code": "MYSELF", "name": "Myself", "sortOrder": 90 },
-    { "code": "OTHER", "name": "Other", "sortOrder": 100 }
-  ],
   "attachmentKinds": [
     { "code": "SCREENSHOT", "name": "Screenshot", "sortOrder": 10 },
     { "code": "LOG_FILE", "name": "Log file", "sortOrder": 20 },

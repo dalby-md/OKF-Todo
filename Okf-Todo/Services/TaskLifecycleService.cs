@@ -79,9 +79,9 @@ public sealed class TaskLifecycleService(
         TaskWaitingForRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(request.Label) && string.IsNullOrWhiteSpace(request.Reference))
+        if (string.IsNullOrWhiteSpace(request.Label))
         {
-            throw new ValidationException("Waiting target label or reference is required.", "waitingFor");
+            throw new ValidationException("Waiting for is required.", "waitingFor");
         }
 
         var hasActiveWaitTarget = await dbContext.TaskWaitingFors
@@ -94,20 +94,12 @@ public sealed class TaskLifecycleService(
 
         var task = await GetTaskWithStatusAsync(taskId, cancellationToken);
         var now = DateTime.UtcNow;
-        var waitingForType = string.IsNullOrWhiteSpace(request.WaitingForTypeCode)
-            ? null
-            : await GetLookupByCodeAsync(dbContext.WaitingForTypes, request.WaitingForTypeCode, cancellationToken);
 
         var waitingFor = new TaskWaitingFor
         {
             TaskId = task.Id,
-            WaitingForTypeId = waitingForType?.Id,
-            Label = NormalizeOptional(request.Label),
-            Reference = NormalizeOptional(request.Reference),
-            Url = NormalizeOptional(request.Url),
-            StakeholderId = request.StakeholderId,
+            Label = request.Label.Trim(),
             WaitingSince = now,
-            FollowUpAt = request.FollowUpAt,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -116,7 +108,7 @@ public sealed class TaskLifecycleService(
         task.WaitingSince = now;
         task.UpdatedAt = now;
 
-        var targetText = DescribeWaitingFor(waitingForType?.Name, waitingFor.Label, waitingFor.Reference);
+        var targetText = waitingFor.Label!;
         AddLog(
             task,
             await GetLogTypeAsync(TaskLogTypeCodes.WaitingForChanged, cancellationToken),
@@ -133,7 +125,6 @@ public sealed class TaskLifecycleService(
     {
         var task = await GetTaskWithStatusAsync(taskId, cancellationToken);
         var waitingFor = await dbContext.TaskWaitingFors
-            .Include(target => target.WaitingForType)
             .SingleOrDefaultAsync(target => target.TaskId == taskId && target.ResolvedAt == null, cancellationToken);
 
         if (waitingFor is null)
@@ -147,7 +138,7 @@ public sealed class TaskLifecycleService(
         task.WaitingSince = null;
         task.UpdatedAt = now;
 
-        var targetText = DescribeWaitingFor(waitingFor.WaitingForType?.Name, waitingFor.Label, waitingFor.Reference);
+        var targetText = waitingFor.Label ?? string.Empty;
         AddLog(
             task,
             await GetLogTypeAsync(TaskLogTypeCodes.WaitingForCleared, cancellationToken),
@@ -391,15 +382,6 @@ public sealed class TaskLifecycleService(
         });
     }
 
-    private static string DescribeWaitingFor(string? typeName, string? label, string? reference)
-    {
-        var parts = new[] { typeName, label, reference }
-            .Where(part => !string.IsNullOrWhiteSpace(part))
-            .Select(part => part!.Trim());
-
-        return string.Join(" ", parts);
-    }
-
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -417,13 +399,7 @@ public sealed record TaskCreateRequest(
     string? SourceUrl = null,
     DateTime? Deadline = null);
 
-public sealed record TaskWaitingForRequest(
-    string? WaitingForTypeCode,
-    string? Label,
-    string? Reference,
-    string? Url = null,
-    int? StakeholderId = null,
-    DateTime? FollowUpAt = null);
+public sealed record TaskWaitingForRequest(string? Label);
 
 public static class TaskStatusCodes
 {

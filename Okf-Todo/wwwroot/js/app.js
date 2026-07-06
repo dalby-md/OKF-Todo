@@ -160,7 +160,7 @@
   }
 
   function clearValidationState() {
-    $('#task-title, #task-type').removeClass('is-invalid')
+    $('#task-title, #task-type, #waiting-text').removeClass('is-invalid')
   }
 
   function markDirty() {
@@ -242,6 +242,27 @@
                 <input id="task-source-url" type="url" autocomplete="off" disabled>
               </label>
             </div>
+
+            <section class="waiting-panel" aria-labelledby="waiting-title">
+              <div class="waiting-header">
+                <div>
+                  <p class="eyebrow">Waiting target</p>
+                  <h3 id="waiting-title">Not waiting</h3>
+                </div>
+                <button id="clear-waiting-button" class="secondary-button danger-button" type="button" disabled>Clear waiting</button>
+              </div>
+
+              <div class="waiting-grid simple-waiting-grid">
+                <label class="field-block" for="waiting-text">
+                  <span>Waiting for</span>
+                  <input id="waiting-text" type="text" autocomplete="off" placeholder="INC123456" disabled>
+                </label>
+                <div class="field-block waiting-action">
+                  <span>&nbsp;</span>
+                  <button id="add-waiting-button" class="secondary-button" type="button" disabled>Add waiting</button>
+                </div>
+              </div>
+            </section>
 
             <div class="body-header">
               <label class="field-label" for="text-body">Body</label>
@@ -352,7 +373,8 @@
       taskSourceCode: '',
       sourceReference: '',
       sourceUrl: '',
-      deadline: null
+      deadline: null,
+      activeWaitingFor: null
     }
   }
 
@@ -387,6 +409,26 @@
     $('#save-button').prop('disabled', false)
   }
 
+  function describeWaiting(waitingFor) {
+    if (!waitingFor) {
+      return ''
+    }
+
+    return waitingFor.label || ''
+  }
+
+  function renderWaitingPanel(task) {
+    const waitingFor = task.activeWaitingFor
+    const canEditWaiting = !!(task.id && task.taskStatusCode !== 'COMPLETED' && task.taskStatusCode !== 'CANCELLED')
+
+    $('#waiting-text').val(waitingFor ? describeWaiting(waitingFor) : '')
+
+    $('#waiting-title').text(waitingFor ? describeWaiting(waitingFor) : 'Not waiting')
+    $('#clear-waiting-button').prop('disabled', !waitingFor)
+    $('#add-waiting-button').prop('disabled', !canEditWaiting || !!waitingFor)
+    $('#waiting-text').prop('disabled', !canEditWaiting || !!waitingFor)
+  }
+
   async function renderTaskEditor(task) {
     currentTask = task
     isDirty = false
@@ -402,9 +444,11 @@
     $('#task-source-reference').val(task.sourceReference || '')
     $('#task-source-url').val(task.sourceUrl || '')
     $('#editor-mode').val(task.bodyFormatCode || 'HTML')
+    renderWaitingPanel(task)
 
     $('#task-form input, #task-form select').prop('disabled', false)
     $('#editor-mode').prop('disabled', true)
+    renderWaitingPanel(task)
     $('#start-button').prop('disabled', !(task.id && task.taskStatusCode === 'NEW'))
     $('#complete-button').prop('disabled', !(task.id && (task.taskStatusCode === 'NEW' || task.taskStatusCode === 'ACTIVE')))
     $('#cancel-button').prop('disabled', !(task.id && task.taskStatusCode !== 'COMPLETED' && task.taskStatusCode !== 'CANCELLED'))
@@ -513,6 +557,46 @@
     setStatus('Updated', 'saved')
   }
 
+  async function addWaitingFor() {
+    if (!currentTask || !currentTask.id) {
+      setStatus('Save the task before adding waiting', 'error')
+      return
+    }
+
+    clearValidationState()
+    const label = $('#waiting-text').val().toString().trim()
+
+    if (!label) {
+      setFieldInvalid('#waiting-text', true)
+      setStatus('Waiting for is required', 'error')
+      $('#waiting-text').trigger('focus')
+      return
+    }
+
+    const task = await sendBridgeMessage('task.waiting.add', {
+      taskId: currentTask.id,
+      label
+    })
+
+    await renderTaskEditor(task)
+    await loadTasks({ keepSelection: true })
+    setStatus('Waiting target added', 'saved')
+  }
+
+  async function clearWaitingFor() {
+    if (!currentTask || !currentTask.id || !currentTask.activeWaitingFor) {
+      return
+    }
+
+    const task = await sendBridgeMessage('task.waiting.clear', {
+      id: currentTask.id
+    })
+
+    await renderTaskEditor(task)
+    await loadTasks({ keepSelection: true })
+    setStatus('Waiting target cleared', 'saved')
+  }
+
   function bindEvents() {
     $('#new-task-button').on('click', function () {
       renderTaskEditor(createDraftTask()).catch(showFatalError)
@@ -532,7 +616,7 @@
     })
 
     $('#task-search').on('input', renderTaskList)
-    $('#task-form').on('input change', 'input, select', markDirty)
+    $('#task-form').on('input change', '#task-title, #task-type, #task-priority, #task-deadline, #task-source, #task-source-reference, #task-source-url', markDirty)
     $('#save-button').on('click', function () {
       saveTask().catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not save task'), 'error')
@@ -551,6 +635,16 @@
     $('#cancel-button').on('click', function () {
       runLifecycleAction('task.cancel').catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not cancel task'), 'error')
+      })
+    })
+    $('#add-waiting-button').on('click', function () {
+      addWaitingFor().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not add waiting target'), 'error')
+      })
+    })
+    $('#clear-waiting-button').on('click', function () {
+      clearWaitingFor().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not clear waiting target'), 'error')
       })
     })
 
