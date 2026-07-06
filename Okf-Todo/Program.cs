@@ -63,9 +63,10 @@ namespace Photino.Okf_Todo
             var window = new PhotinoWindow()
                 .SetTitle("OKF Todo")
                 .SetUseOsDefaultSize(false)
-                .SetSize(new Size(800, 600))
+                .SetSize(new Size(1280, 800))
                 .Center()
                 .SetResizable(true)
+                .SetMaximized(true)
                 .RegisterCustomSchemeHandler("app", (object sender, string scheme, string url, out string contentType) =>
                     OpenCustomSchemeStream(services, startupLogger, url, out contentType))
                 .RegisterWebMessageReceivedHandler((object? sender, string message) =>

@@ -18,6 +18,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+  font-size: 14px;
 }
 
 button,
@@ -28,14 +29,14 @@ textarea {
 }
 
 button {
-  min-height: 36px;
-  padding: 0 14px;
+  min-height: 30px;
+  padding: 0 10px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 4px;
   color: #ffffff;
   background: #1f6f68;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 button:hover:not(:disabled) {
@@ -49,12 +50,12 @@ button:disabled {
 
 input,
 select {
-  min-height: 38px;
+  min-height: 32px;
   width: 100%;
   min-width: 0;
-  padding: 8px 10px;
+  padding: 5px 8px;
   border: 1px solid #c9d1d9;
-  border-radius: 6px;
+  border-radius: 4px;
   color: #202124;
   background: #ffffff;
 }
@@ -92,12 +93,12 @@ select.is-invalid {
 .icon-button {
   display: inline-grid;
   place-items: center;
-  width: 38px;
-  min-width: 38px;
+  width: 32px;
+  min-width: 32px;
   padding: 0;
   color: #26514d;
   background: #dbe9e6;
-  font-size: 1.12rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
@@ -107,16 +108,16 @@ select.is-invalid {
 
 .app-shell {
   display: grid;
-  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
   min-height: 100vh;
 }
 
 .task-sidebar {
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr);
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
-  padding: 18px;
+  padding: 12px;
   border-right: 1px solid #d8dee5;
   background: #ffffff;
 }
@@ -126,14 +127,14 @@ select.is-invalid {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 10px;
 }
 
 .eyebrow {
-  margin: 0 0 4px;
+  margin: 0 0 2px;
   color: #5f6872;
-  font-size: 0.76rem;
-  font-weight: 800;
+  font-size: 0.7rem;
+  font-weight: 600;
   letter-spacing: 0;
   text-transform: uppercase;
 }
@@ -146,13 +147,15 @@ h2 {
 }
 
 h1 {
-  font-size: 1.55rem;
+  font-size: 1.25rem;
+  font-weight: 500;
 }
 
 h2 {
   max-width: 760px;
   overflow: hidden;
-  font-size: 1.35rem;
+  font-size: 1.08rem;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -160,19 +163,19 @@ h2 {
 .view-tabs {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-  padding: 3px;
+  gap: 3px;
+  padding: 2px;
   border: 1px solid #d8dee5;
-  border-radius: 7px;
+  border-radius: 5px;
   background: #f4f6f8;
 }
 
 .view-tab {
-  min-height: 32px;
-  padding: 0 8px;
+  min-height: 28px;
+  padding: 0 6px;
   color: #4d5965;
   background: transparent;
-  font-size: 0.86rem;
+  font-size: 0.82rem;
 }
 
 .view-tab:hover:not(:disabled),
@@ -193,13 +196,13 @@ h2 {
 
 .task-row {
   display: grid;
-  gap: 5px;
+  gap: 4px;
   width: 100%;
-  min-height: 62px;
-  margin-bottom: 7px;
-  padding: 10px;
+  min-height: 50px;
+  margin-bottom: 5px;
+  padding: 7px;
   border: 1px solid #d8dee5;
-  border-radius: 7px;
+  border-radius: 5px;
   color: #202124;
   background: #ffffff;
   text-align: left;
@@ -213,7 +216,7 @@ h2 {
 
 .task-row-title {
   overflow: hidden;
-  font-weight: 800;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -221,13 +224,13 @@ h2 {
 .task-row-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px;
   color: #5f6872;
-  font-size: 0.8rem;
+  font-size: 0.74rem;
 }
 
 .task-badge {
-  padding: 2px 6px;
+  padding: 1px 5px;
   border-radius: 999px;
   color: #374151;
   background: #eef1f4;
@@ -236,10 +239,10 @@ h2 {
 .empty-list,
 .empty-state {
   display: grid;
-  gap: 4px;
-  padding: 20px;
+  gap: 3px;
+  padding: 14px;
   border: 1px dashed #c9d1d9;
-  border-radius: 7px;
+  border-radius: 5px;
   color: #5f6872;
   background: #f8fafb;
 }
@@ -251,10 +254,10 @@ h2 {
 .task-editor-panel {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 14px;
+  gap: 10px;
   min-width: 0;
   min-height: 100vh;
-  padding: 18px 22px;
+  padding: 12px 16px;
 }
 
 .editor-header {
@@ -265,18 +268,18 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .save-status {
-  min-height: 28px;
-  padding: 5px 10px;
+  min-height: 24px;
+  padding: 3px 8px;
   border-radius: 999px;
   color: #53606c;
   background: #e9edf1;
-  font-size: 0.84rem;
-  font-weight: 800;
+  font-size: 0.78rem;
+  font-weight: 500;
 }
 
 .save-status.is-ready {
@@ -302,7 +305,7 @@ h2 {
 .task-form {
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr);
-  gap: 10px;
+  gap: 8px;
   min-height: 0;
 }
 
@@ -311,45 +314,45 @@ h2 {
 .mode-field span,
 .settings-field span {
   color: #3f4852;
-  font-size: 0.84rem;
-  font-weight: 800;
+  font-size: 0.78rem;
+  font-weight: 500;
 }
 
 .title-input {
-  min-height: 44px;
-  padding: 10px 12px;
-  font-size: 1.08rem;
-  font-weight: 800;
+  min-height: 36px;
+  padding: 6px 9px;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .metadata-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .waiting-panel {
   display: grid;
   grid-template-columns: auto minmax(160px, 1fr) auto auto;
   align-items: end;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 6px;
+  padding: 6px 8px;
   border: 1px solid #d8dee5;
-  border-radius: 7px;
+  border-radius: 5px;
   background: #ffffff;
 }
 
 .waiting-label {
   align-self: center;
   color: #374151;
-  font-size: 0.88rem;
-  font-weight: 750;
+  font-size: 0.78rem;
+  font-weight: 500;
 }
 
 .field-block,
 .mode-field {
   display: grid;
-  gap: 5px;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -365,11 +368,11 @@ h2 {
 
 .editor-host {
   min-width: 0;
-  min-height: 360px;
+  min-height: 320px;
 }
 
 #text-body {
-  min-height: 360px;
+  min-height: 320px;
 }
 
 .sr-only {
@@ -386,23 +389,23 @@ h2 {
 .markdown-toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  padding: 8px;
+  gap: 3px;
+  padding: 5px;
   border: 1px solid #c9d1d9;
   border-bottom: 0;
-  border-radius: 8px 8px 0 0;
+  border-radius: 5px 5px 0 0;
   background: #ffffff;
 }
 
 .markdown-toolbar button {
   display: inline-grid;
   place-items: center;
-  width: 34px;
-  min-width: 34px;
-  min-height: 34px;
+  width: 28px;
+  min-width: 28px;
+  min-height: 28px;
   padding: 0;
   border: 1px solid #d7dde3;
-  border-radius: 5px;
+  border-radius: 4px;
   color: #202124;
   background: #f7f8fa;
 }
@@ -417,13 +420,13 @@ h2 {
 }
 
 .toolbar-icon {
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
 }
 
 .tox.tox-tinymce {
   border-color: #c9d1d9;
-  border-radius: 8px;
+  border-radius: 5px;
 }
 
 .tox .tox-toolbar,
@@ -466,11 +469,11 @@ h2 {
 
 .settings-dialog {
   display: grid;
-  gap: 14px;
+  gap: 10px;
   width: min(420px, 100%);
-  padding: 18px;
+  padding: 14px;
   border: 1px solid #d8dee5;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #ffffff;
   box-shadow: 0 18px 60px rgb(15 23 42 / 24%);
 }
@@ -479,23 +482,24 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 
 .settings-header h2 {
   margin: 0;
-  font-size: 1.12rem;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .settings-field {
   display: grid;
-  gap: 6px;
+  gap: 4px;
 }
 
 .settings-help {
   margin: 0;
   color: #53606c;
-  font-size: 0.92rem;
+  font-size: 0.82rem;
   line-height: 1.4;
 }
 
@@ -526,7 +530,7 @@ h2 {
 @media (max-width: 640px) {
   .task-sidebar,
   .task-editor-panel {
-    padding: 14px;
+    padding: 10px;
   }
 
   .sidebar-header,
