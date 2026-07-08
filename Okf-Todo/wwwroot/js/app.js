@@ -435,7 +435,7 @@
           <label class="sr-only" for="task-search">Search tasks</label>
           <input id="task-search" class="task-search" type="search" placeholder="Search tasks" autocomplete="off">
 
-          <div id="task-list" class="task-list" aria-label="Tasks"></div>
+          <div id="task-list" class="task-list" aria-label="Tasks" tabindex="0"></div>
         </aside>
 
         <div id="layout-resizer" class="layout-resizer" role="separator" aria-label="Resize task list" aria-orientation="vertical" tabindex="0"></div>
@@ -800,9 +800,14 @@
     window.setTimeout(preload, 1500)
   }
 
-  function renderTaskList() {
-    const query = $('#task-search').val().toString().trim().toLowerCase()
-    const visibleTasks = query
+  function getTaskSearchQuery() {
+    return $('#task-search').val().toString().trim().toLowerCase()
+  }
+
+  function getVisibleTasks() {
+    const query = getTaskSearchQuery()
+
+    return query
       ? tasks.filter(function (task) {
         return task.title.toLowerCase().includes(query)
           || task.taskTypeName.toLowerCase().includes(query)
@@ -811,6 +816,11 @@
           || (task.activeWaitingForLabel || '').toLowerCase().includes(query)
       })
       : tasks
+  }
+
+  function renderTaskList() {
+    const query = getTaskSearchQuery()
+    const visibleTasks = getVisibleTasks()
 
     $('.view-tab').removeClass('is-active')
     $(`.view-tab[data-view="${currentView}"]`).addClass('is-active')
@@ -855,6 +865,76 @@
         </button>
       `
     }).join(''))
+  }
+
+  function focusTaskRow(taskId) {
+    window.setTimeout(function () {
+      $(`#task-list .task-row[data-task-id="${taskId}"]`).trigger('focus')
+    }, 0)
+  }
+
+  function focusTaskSearchWithKey(key) {
+    const search = $('#task-search')
+    const currentValue = search.val().toString()
+    search.val(currentValue + key).trigger('input')
+    search.trigger('focus')
+
+    const element = search[0]
+    if (element && typeof element.setSelectionRange === 'function') {
+      const position = element.value.length
+      element.setSelectionRange(position, position)
+    }
+  }
+
+  function isTextEntryKey(event) {
+    return event.key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey
+  }
+
+  function selectVisibleTaskByIndex(index) {
+    const visibleTasks = getVisibleTasks()
+    if (visibleTasks.length === 0) {
+      return
+    }
+
+    const clampedIndex = Math.max(0, Math.min(visibleTasks.length - 1, index))
+    selectTaskWithUnsavedCheck(visibleTasks[clampedIndex].id)
+  }
+
+  function selectRelativeTask(offset) {
+    const visibleTasks = getVisibleTasks()
+    if (visibleTasks.length === 0) {
+      return
+    }
+
+    const currentIndex = currentTask && currentTask.id
+      ? visibleTasks.findIndex(function (task) {
+        return task.id === currentTask.id
+      })
+      : -1
+    const fallbackIndex = offset > 0 ? 0 : visibleTasks.length - 1
+    const nextIndex = currentIndex < 0 ? fallbackIndex : currentIndex + offset
+
+    selectVisibleTaskByIndex(nextIndex)
+  }
+
+  function selectTaskWithUnsavedCheck(taskId) {
+    if (currentTask && currentTask.id === taskId) {
+      focusTaskRow(taskId)
+      return Promise.resolve()
+    }
+
+    return allowContextSwitch().then(function (isAllowed) {
+      if (!isAllowed) {
+        return null
+      }
+
+      return selectTask(taskId).then(function () {
+        focusTaskRow(taskId)
+      })
+    }).catch(function (error) {
+      setStatus(getErrorMessage(error, 'Could not load task'), 'error')
+      return null
+    })
   }
 
   function createNewTaskPayload(title) {
@@ -1366,19 +1446,42 @@
 
     $('#task-list').on('click', '.task-row', function () {
       const taskId = Number($(this).attr('data-task-id'))
-      if (currentTask && currentTask.id === taskId) {
+      selectTaskWithUnsavedCheck(taskId)
+    })
+
+    $('#task-list').on('keydown', function (event) {
+      if ($(event.target).is('input, textarea, select')) {
         return
       }
 
-      allowContextSwitch().then(function (isAllowed) {
-        if (!isAllowed) {
-          return
-        }
+      if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+        event.preventDefault()
+        selectRelativeTask(1)
+        return
+      }
 
-        selectTask(taskId).catch(function (error) {
-          setStatus(getErrorMessage(error, 'Could not load task'), 'error')
-        })
-      })
+      if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+        event.preventDefault()
+        selectRelativeTask(-1)
+        return
+      }
+
+      if (event.key === 'Home') {
+        event.preventDefault()
+        selectVisibleTaskByIndex(0)
+        return
+      }
+
+      if (event.key === 'End') {
+        event.preventDefault()
+        selectVisibleTaskByIndex(getVisibleTasks().length - 1)
+        return
+      }
+
+      if (isTextEntryKey(event)) {
+        event.preventDefault()
+        focusTaskSearchWithKey(event.key)
+      }
     })
 
     $('.view-tab').on('click', function () {
