@@ -11,6 +11,11 @@
   const maxEditorImageBytes = 5 * 1024 * 1024
   const wideLayoutMediaQuery = window.matchMedia('(min-width: 901px)')
   const defaultTaskListWidth = 320
+  const layoutModeCodes = {
+    auto: 'AUTO',
+    sideBySide: 'SIDE_BY_SIDE',
+    stacked: 'STACKED'
+  }
 
   let lookups = null
   let tasks = []
@@ -21,7 +26,8 @@
   let preferredBodyFormatCode = 'HTML'
   let layoutPreference = {
     taskListWidth: defaultTaskListWidth,
-    taskListHeight: null
+    taskListHeight: null,
+    layoutMode: layoutModeCodes.auto
   }
   let layoutPreferenceSaveTimer = null
   let unsavedChangesDialogResolve = null
@@ -532,6 +538,15 @@
             </label>
 
             <p class="settings-help">If you do not understand this option, choose HTML.</p>
+
+            <label class="settings-field" for="layout-mode">
+              <span>Task layout</span>
+              <select id="layout-mode">
+                <option value="AUTO">Auto</option>
+                <option value="SIDE_BY_SIDE">Side by side</option>
+                <option value="STACKED">Stacked</option>
+              </select>
+            </label>
           </section>
         </div>
 
@@ -667,6 +682,16 @@
     return Number.isFinite(value) && value > 0 ? value : fallback
   }
 
+  function normalizeLayoutMode(layoutMode) {
+    const normalizedLayoutMode = String(layoutMode || '').trim().toUpperCase()
+
+    if (normalizedLayoutMode === layoutModeCodes.sideBySide || normalizedLayoutMode === layoutModeCodes.stacked) {
+      return normalizedLayoutMode
+    }
+
+    return layoutModeCodes.auto
+  }
+
   function saveLayoutPreference() {
     if (layoutPreferenceSaveTimer) {
       window.clearTimeout(layoutPreferenceSaveTimer)
@@ -675,9 +700,13 @@
 
     return sendBridgeMessage('layout.preference.save', {
       taskListWidth: layoutPreference.taskListWidth,
-      taskListHeight: layoutPreference.taskListHeight
+      taskListHeight: layoutPreference.taskListHeight,
+      layoutMode: layoutPreference.layoutMode
+    }).then(function () {
+      return true
     }).catch(function (error) {
       setStatus(getErrorMessage(error, 'Could not save layout preference'), 'error')
+      return false
     })
   }
 
@@ -693,6 +722,7 @@
     const preference = await sendBridgeMessage('layout.preference.get', {})
     layoutPreference.taskListWidth = preference.taskListWidth || defaultTaskListWidth
     layoutPreference.taskListHeight = preference.taskListHeight || Math.round(window.innerHeight * 0.42)
+    layoutPreference.layoutMode = normalizeLayoutMode(preference.layoutMode)
     applyStoredLayoutSplit(false)
   }
 
@@ -733,13 +763,39 @@
   }
 
   function isWideLayout() {
+    if (layoutPreference.layoutMode === layoutModeCodes.sideBySide) {
+      return true
+    }
+
+    if (layoutPreference.layoutMode === layoutModeCodes.stacked) {
+      return false
+    }
+
     return wideLayoutMediaQuery.matches
   }
 
+  function applyLayoutMode() {
+    $('html')
+      .toggleClass('layout-mode-side-by-side', layoutPreference.layoutMode === layoutModeCodes.sideBySide)
+      .toggleClass('layout-mode-stacked', layoutPreference.layoutMode === layoutModeCodes.stacked)
+    $('#layout-mode').val(layoutPreference.layoutMode)
+  }
+
   function applyStoredLayoutSplit(shouldSave) {
+    applyLayoutMode()
     setTaskListWidth(getLayoutPreferenceValue('taskListWidth', defaultTaskListWidth), shouldSave)
     setTaskListHeight(getLayoutPreferenceValue('taskListHeight', Math.round(window.innerHeight * 0.42)), shouldSave)
     $('#layout-resizer').attr('aria-orientation', isWideLayout() ? 'vertical' : 'horizontal')
+  }
+
+  function switchLayoutMode() {
+    layoutPreference.layoutMode = normalizeLayoutMode($('#layout-mode').val())
+    applyStoredLayoutSplit(false)
+    saveLayoutPreference().then(function (wasSaved) {
+      if (wasSaved) {
+        setStatus('Layout preference saved', 'saved')
+      }
+    })
   }
 
   function bindLayoutResizer() {
@@ -1521,6 +1577,7 @@
         setStatus(getErrorMessage(error, 'Could not switch editor'), 'error')
       })
     })
+    $('#layout-mode').on('change', switchLayoutMode)
     $('#save-button').on('click', function () {
       saveTask().catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not save task'), 'error')

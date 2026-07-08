@@ -11,6 +11,7 @@ public sealed class AppPreferenceService(
     ILogger<AppPreferenceService> logger)
 {
     private const string DefaultBodyFormatCode = "HTML";
+    private const string DefaultLayoutMode = LayoutPreferenceModes.Auto;
     private const double MinimumTaskListWidth = 160;
     private const double MaximumTaskListWidth = 2400;
     private const double MinimumTaskListHeight = 120;
@@ -47,8 +48,9 @@ public sealed class AppPreferenceService(
     public async Task<LayoutPreferenceDto> GetLayoutPreferenceAsync(CancellationToken cancellationToken)
     {
         var preferences = await ReadPreferencesAsync(cancellationToken);
+        var layoutMode = NormalizeOrDefaultLayoutMode(preferences.LayoutMode);
 
-        return new LayoutPreferenceDto(preferences.TaskListWidth, preferences.TaskListHeight);
+        return new LayoutPreferenceDto(preferences.TaskListWidth, preferences.TaskListHeight, layoutMode);
     }
 
     public async Task<LayoutPreferenceDto> SaveLayoutPreferenceAsync(
@@ -70,20 +72,25 @@ public sealed class AppPreferenceService(
                 MinimumTaskListHeight,
                 MaximumTaskListHeight,
                 "taskListHeight");
+        var layoutMode = request.LayoutMode is null
+            ? NormalizeOrDefaultLayoutMode(preferences.LayoutMode)
+            : NormalizeLayoutMode(request.LayoutMode);
 
         preferences = preferences with
         {
             TaskListWidth = taskListWidth,
-            TaskListHeight = taskListHeight
+            TaskListHeight = taskListHeight,
+            LayoutMode = layoutMode
         };
         await WritePreferencesAsync(preferences, cancellationToken);
 
         logger.LogInformation(
-            "Saved layout preference with task list width {TaskListWidth} and height {TaskListHeight}.",
+            "Saved layout preference with task list width {TaskListWidth}, height {TaskListHeight}, and mode {LayoutMode}.",
             taskListWidth,
-            taskListHeight);
+            taskListHeight,
+            layoutMode);
 
-        return new LayoutPreferenceDto(taskListWidth, taskListHeight);
+        return new LayoutPreferenceDto(taskListWidth, taskListHeight, layoutMode);
     }
 
     private async Task<StoredPreferences> ReadPreferencesAsync(CancellationToken cancellationToken)
@@ -91,7 +98,7 @@ public sealed class AppPreferenceService(
         var preferencesPath = pathProvider.GetPreferencesPath();
         if (!File.Exists(preferencesPath))
         {
-            return new StoredPreferences(DefaultBodyFormatCode, null, null);
+            return CreateDefaultPreferences();
         }
 
         try
@@ -100,17 +107,17 @@ public sealed class AppPreferenceService(
             return await JsonSerializer.DeserializeAsync<StoredPreferences>(
                 stream,
                 JsonOptions,
-                cancellationToken) ?? new StoredPreferences(DefaultBodyFormatCode, null, null);
+                cancellationToken) ?? CreateDefaultPreferences();
         }
         catch (JsonException exception)
         {
             logger.LogWarning(exception, "Could not read app preferences from {PreferencesPath}.", preferencesPath);
-            return new StoredPreferences(DefaultBodyFormatCode, null, null);
+            return CreateDefaultPreferences();
         }
         catch (IOException exception)
         {
             logger.LogWarning(exception, "Could not read app preferences from {PreferencesPath}.", preferencesPath);
-            return new StoredPreferences(DefaultBodyFormatCode, null, null);
+            return CreateDefaultPreferences();
         }
     }
 
@@ -176,6 +183,39 @@ public sealed class AppPreferenceService(
 
         return Math.Round(value.Value);
     }
+
+    private static StoredPreferences CreateDefaultPreferences()
+    {
+        return new StoredPreferences(DefaultBodyFormatCode, null, null, DefaultLayoutMode);
+    }
+
+    private static string NormalizeOrDefaultLayoutMode(string? layoutMode)
+    {
+        try
+        {
+            return NormalizeLayoutMode(layoutMode);
+        }
+        catch (ValidationException)
+        {
+            return DefaultLayoutMode;
+        }
+    }
+
+    private static string NormalizeLayoutMode(string? layoutMode)
+    {
+        var normalizedLayoutMode = string.IsNullOrWhiteSpace(layoutMode)
+            ? DefaultLayoutMode
+            : layoutMode.Trim().ToUpperInvariant();
+
+        if (normalizedLayoutMode is LayoutPreferenceModes.Auto
+            or LayoutPreferenceModes.SideBySide
+            or LayoutPreferenceModes.Stacked)
+        {
+            return normalizedLayoutMode;
+        }
+
+        throw new ValidationException("Layout mode is invalid.", "layoutMode");
+    }
 }
 
 public interface IAppPreferencePathProvider
@@ -198,11 +238,19 @@ public sealed record EditorPreferenceDto(string BodyFormatCode);
 
 public sealed record EditorPreferenceSaveRequest(string? BodyFormatCode);
 
-public sealed record LayoutPreferenceDto(double? TaskListWidth, double? TaskListHeight);
+public static class LayoutPreferenceModes
+{
+    public const string Auto = "AUTO";
+    public const string SideBySide = "SIDE_BY_SIDE";
+    public const string Stacked = "STACKED";
+}
 
-public sealed record LayoutPreferenceSaveRequest(double? TaskListWidth, double? TaskListHeight);
+public sealed record LayoutPreferenceDto(double? TaskListWidth, double? TaskListHeight, string LayoutMode);
+
+public sealed record LayoutPreferenceSaveRequest(double? TaskListWidth, double? TaskListHeight, string? LayoutMode);
 
 internal sealed record StoredPreferences(
     string? EditorBodyFormatCode,
     double? TaskListWidth,
-    double? TaskListHeight);
+    double? TaskListHeight,
+    string? LayoutMode);
