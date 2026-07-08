@@ -942,7 +942,7 @@
     const canReopen = isSavedTask && isFinal
     const canCompleteOrCancel = isSavedTask && !isFinal
 
-    $('#task-editor-title').text(task.id ? task.title : 'New task')
+    $('#task-editor-title').text(task.id ? 'Task details' : 'New task')
     $('#task-status-label').text(task.taskStatusName || 'Draft')
     $('#complete-button')
       .text(canReopen ? 'Reopen' : 'Complete')
