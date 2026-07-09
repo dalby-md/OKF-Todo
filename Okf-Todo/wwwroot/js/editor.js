@@ -276,6 +276,10 @@
         return ''
       },
 
+      getMarkdownEditType: function () {
+        return 'MARKDOWN'
+      },
+
       insertImage: function (src, attributes) {
         const imageAttributes = Object.assign({}, attributes || {}, { src })
         const attributeHtml = toAttributeHtml(imageAttributes)
@@ -340,9 +344,44 @@
       }
     }
 
+    function getCurrentMarkdownEditType() {
+      if (!editor) {
+        return initialMarkdownEditType === 'wysiwyg' ? 'WYSIWYG' : 'MARKDOWN'
+      }
+
+      return editor.isWysiwygMode && editor.isWysiwygMode() ? 'WYSIWYG' : 'MARKDOWN'
+    }
+
+    function notifyMarkdownEditTypeChanged(markdownEditType) {
+      if (typeof options.onMarkdownEditTypeChanged === 'function') {
+        options.onMarkdownEditTypeChanged(markdownEditType || getCurrentMarkdownEditType())
+      }
+    }
+
     function handleModeSwitchIntent(event) {
-      if (event.target && event.target.closest && event.target.closest('.te-switch-button')) {
-        suppressModeSwitchChanges()
+      if (!event.target || !event.target.closest) {
+        return
+      }
+
+      if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') {
+        return
+      }
+
+      const button = event.target.closest('.te-switch-button')
+      if (!button) {
+        return
+      }
+
+      suppressModeSwitchChanges()
+
+      const markdownEditType = button.classList.contains('wysiwyg')
+        ? 'WYSIWYG'
+        : button.classList.contains('markdown')
+          ? 'MARKDOWN'
+          : null
+
+      if (markdownEditType) {
+        notifyMarkdownEditTypeChanged(markdownEditType)
       }
     }
 
@@ -480,6 +519,14 @@
           editor.setHtml(options.initialHtml, false)
         }
 
+        if (initialMarkdownEditType === 'wysiwyg' && editor.isMarkdownMode && editor.isMarkdownMode()) {
+          suppressModeSwitchChanges()
+          editor.changeMode('wysiwyg', true)
+        } else if (initialMarkdownEditType === 'markdown' && editor.isWysiwygMode && editor.isWysiwygMode()) {
+          suppressModeSwitchChanges()
+          editor.changeMode('markdown', true)
+        }
+
         editor.on('changeModeBefore', function () {
           suppressModeSwitchChanges()
         })
@@ -487,9 +534,7 @@
         editor.on('changeMode', function (mode) {
           suppressModeSwitchChanges()
           const markdownEditType = mode === 'wysiwyg' ? 'WYSIWYG' : 'MARKDOWN'
-          if (typeof options.onMarkdownEditTypeChanged === 'function') {
-            options.onMarkdownEditTypeChanged(markdownEditType)
-          }
+          notifyMarkdownEditTypeChanged(markdownEditType)
         })
 
         editor.on('change', function () {
@@ -512,6 +557,10 @@
 
       getMarkdown: function () {
         return editor.getMarkdown()
+      },
+
+      getMarkdownEditType: function () {
+        return getCurrentMarkdownEditType()
       },
 
       insertImage: function (src, attributes) {
@@ -617,6 +666,10 @@
 
     getMarkdown: function () {
       return requireAdapter().getMarkdown()
+    },
+
+    getMarkdownEditType: function () {
+      return requireAdapter().getMarkdownEditType()
     },
 
     insertImage: function (src, attributes) {

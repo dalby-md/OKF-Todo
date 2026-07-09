@@ -285,6 +285,29 @@ public sealed class BridgeTaskMessageTests
     }
 
     [Fact]
+    public async Task Bridge_PersistsMarkdownEditTypeWithoutChangingBodyFormat()
+    {
+        await using var fixture = await BridgeFixture.CreateAsync();
+
+        await fixture.SendAsync("editor.preference.save", new
+        {
+            bodyFormatCode = "MARKDOWN"
+        });
+
+        var saved = await fixture.SendAsync("editor.preference.save", new
+        {
+            markdownEditType = "WYSIWYG"
+        });
+
+        Assert.Equal("MARKDOWN", saved.GetProperty("bodyFormatCode").GetString());
+        Assert.Equal("WYSIWYG", saved.GetProperty("markdownEditType").GetString());
+
+        var loaded = await fixture.SendAsync("editor.preference.get", new { });
+        Assert.Equal("MARKDOWN", loaded.GetProperty("bodyFormatCode").GetString());
+        Assert.Equal("WYSIWYG", loaded.GetProperty("markdownEditType").GetString());
+    }
+
+    [Fact]
     public async Task Bridge_PersistsLayoutPreference()
     {
         await using var fixture = await BridgeFixture.CreateAsync();

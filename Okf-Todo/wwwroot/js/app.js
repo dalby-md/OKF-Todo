@@ -1002,10 +1002,6 @@
   function saveMarkdownEditTypePreference(markdownEditType) {
     const nextMarkdownEditType = getSupportedMarkdownEditType(markdownEditType)
 
-    if (nextMarkdownEditType === preferredMarkdownEditType) {
-      return Promise.resolve()
-    }
-
     preferredMarkdownEditType = nextMarkdownEditType
 
     return sendBridgeMessage('editor.preference.save', {
@@ -1447,6 +1443,10 @@
     window.Editor.markClean()
     isEditorReady = true
     $('#save-button').prop('disabled', false)
+
+    if (modeCode === 'MARKDOWN' && typeof window.Editor.getMarkdownEditType === 'function') {
+      handleMarkdownEditTypeChanged(window.Editor.getMarkdownEditType())
+    }
   }
 
   async function initializeEditorForTask(task) {
