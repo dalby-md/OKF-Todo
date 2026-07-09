@@ -549,10 +549,10 @@
     $('#complete-wait-overlay').prop('hidden', true)
   }
 
-  function showCompleteWaitDialog() {
+  function showCompleteWaitDialog(waitingLabel) {
     return new Promise(function (resolve) {
       completeWaitDialogResolve = resolve
-      $('#complete-wait-target').text(describeWaiting(currentTask.activeWaitingFor))
+      $('#complete-wait-target').text(waitingLabel)
       $('#complete-wait-overlay').prop('hidden', false)
       $('#complete-wait-clear-button').trigger('focus')
     })
@@ -1470,6 +1470,21 @@
     return waitingFor.label || ''
   }
 
+  function getVisibleWaitingLabel() {
+    return $('#waiting-text').val().toString().trim()
+  }
+
+  function getCurrentWaitingLabel() {
+    const visibleWaitingLabel = getVisibleWaitingLabel()
+    if (visibleWaitingLabel) {
+      return visibleWaitingLabel
+    }
+
+    return currentTask && currentTask.activeWaitingFor
+      ? describeWaiting(currentTask.activeWaitingFor)
+      : ''
+  }
+
   function renderWaitingPanel(task) {
     const waitingFor = task.activeWaitingFor
     const canEditWaiting = !!(task.id && task.taskStatusCode === 'ACTIVE')
@@ -1843,14 +1858,17 @@
   }
 
   async function confirmCompleteWaitClear() {
-    if (!currentTask || currentTask.taskStatusCode !== 'ACTIVE' || !currentTask.activeWaitingFor) {
+    const waitingLabel = getCurrentWaitingLabel()
+
+    if (!currentTask || currentTask.taskStatusCode !== 'ACTIVE' || !waitingLabel) {
       return true
     }
 
-    const choice = await showCompleteWaitDialog()
+    const choice = await showCompleteWaitDialog(waitingLabel)
     closeCompleteWaitDialog()
 
     if (choice === 'clear') {
+      $('#waiting-text').val('')
       return true
     }
 
