@@ -51,18 +51,24 @@ public sealed class LookupSeedService(AppDbContext dbContext, ILogger<LookupSeed
             return;
         }
 
-        dbSet.AddRange(seedItems.Select(item => new TLookup
+        dbSet.AddRange(seedItems.Select(item =>
         {
-            Code = item.Code,
-            Name = item.Name,
-            Description = item.Description,
-            BackgroundColor = item.BackgroundColor,
-            ForegroundColor = item.ForegroundColor,
-            SortOrder = item.SortOrder,
-            IsActive = item.IsActive,
-            IsSystem = item.IsSystem,
-            CreatedAt = now,
-            UpdatedAt = now
+            var lookup = new TLookup
+            {
+                Code = item.Code,
+                Name = item.Name,
+                Description = item.Description,
+                BackgroundColor = item.BackgroundColor,
+                ForegroundColor = item.ForegroundColor,
+                IsSelected = item.IsSelected,
+                SortOrder = item.SortOrder,
+                IsActive = item.IsActive,
+                IsSystem = item.IsSystem,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+
+            return lookup;
         }));
     }
 
@@ -133,7 +139,8 @@ public sealed record LookupSeedItem(
     bool IsActive = true,
     string? Description = null,
     string? BackgroundColor = null,
-    string? ForegroundColor = null);
+    string? ForegroundColor = null,
+    bool IsSelected = false);
 
 public sealed record TaskRelationTypeSeedItem(
     string Code,

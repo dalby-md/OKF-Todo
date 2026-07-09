@@ -1008,7 +1008,8 @@
   }
 
   function createNewTaskPayload(title) {
-    const firstTaskType = lookups.taskTypes && lookups.taskTypes[0]
+    const selectedTaskType = getSelectedLookupItem(lookups.taskTypes)
+    const selectedTaskPriority = getSelectedLookupItem(lookups.taskPriorities)
     const bodyFormatCode = getSupportedBodyFormatCode(preferredBodyFormatCode)
 
     return {
@@ -1016,14 +1017,24 @@
       title,
       body: '',
       bodyFormatCode,
-      taskTypeCode: firstTaskType ? firstTaskType.code : '',
-      taskPriorityCode: '',
+      taskTypeCode: selectedTaskType ? selectedTaskType.code : '',
+      taskPriorityCode: selectedTaskPriority ? selectedTaskPriority.code : '',
       taskSourceCode: '',
       sourceReference: '',
       sourceUrl: '',
       deadline: null,
       activeWaitingFor: null
     }
+  }
+
+  function getSelectedLookupItem(items) {
+    if (!items || !items.length) {
+      return null
+    }
+
+    return items.find(function (item) {
+      return item.isSelected === true
+    }) || items[0]
   }
 
   async function initializeEditor(modeCode, initialContent, initialHtml) {

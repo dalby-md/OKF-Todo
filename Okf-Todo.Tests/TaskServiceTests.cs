@@ -15,7 +15,9 @@ public sealed class TaskServiceTests
         Assert.Contains(lookups.TaskTypes, item => item.Code == "ERROR" && item.Name == "Error");
         Assert.Contains(lookups.TaskTypes, item =>
             item.Code == "ERROR" && item.BackgroundColor == "#facc15" && item.ForegroundColor == "#111827");
+        Assert.Contains(lookups.TaskTypes, item => item.Code == "REQUEST" && item.IsSelected);
         Assert.Contains(lookups.TaskPriorities, item => item.Code == "NORMAL" && item.Name == "Normal");
+        Assert.Contains(lookups.TaskPriorities, item => item.Code == "NORMAL" && item.IsSelected);
         Assert.Contains(lookups.TaskPriorities, item =>
             item.Code == "URGENT" && item.BackgroundColor == "#b42318" && item.ForegroundColor == "#ffffff");
         Assert.Contains(lookups.TaskSources, item => item.Code == "EMAIL" && item.Name == "Email");
@@ -92,6 +94,27 @@ public sealed class TaskServiceTests
         Assert.Contains(savedTask.LogEntries, log => log.TaskLogType?.Code == TaskLogTypeCodes.TypeChanged);
         Assert.Contains(savedTask.LogEntries, log => log.TaskLogType?.Code == TaskLogTypeCodes.PriorityChanged);
         Assert.Contains(savedTask.LogEntries, log => log.TaskLogType?.Code == TaskLogTypeCodes.DeadlineChanged);
+    }
+
+    [Fact]
+    public async Task Create_UsesSelectedLookupDefaultsWhenTypeAndPriorityAreOmitted()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+
+        var created = await database.Tasks.CreateAsync(new TaskSaveRequest(
+            Id: null,
+            Title: "Created with defaults",
+            TaskTypeCode: "",
+            Body: null,
+            BodyFormatCode: "HTML",
+            TaskPriorityCode: null,
+            TaskSourceCode: null,
+            SourceReference: null,
+            SourceUrl: null,
+            Deadline: null), CancellationToken.None);
+
+        Assert.Equal("REQUEST", created.TaskTypeCode);
+        Assert.Equal("NORMAL", created.TaskPriorityCode);
     }
 
     [Fact]

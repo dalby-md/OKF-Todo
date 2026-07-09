@@ -82,12 +82,15 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
 
     public async Task<TaskDetailDto> CreateAsync(TaskSaveRequest request, CancellationToken cancellationToken)
     {
+        var taskTypeCode = await GetDefaultTaskTypeCodeAsync(request.TaskTypeCode, cancellationToken);
+        var taskPriorityCode = await GetDefaultTaskPriorityCodeAsync(request.TaskPriorityCode, cancellationToken);
+
         var task = await lifecycleService.CreateTaskAsync(new TaskCreateRequest(
             request.Title,
-            request.TaskTypeCode,
+            taskTypeCode,
             request.Body,
             request.BodyFormatCode,
-            request.TaskPriorityCode,
+            taskPriorityCode,
             request.TaskSourceCode,
             request.SourceReference,
             request.SourceUrl,
@@ -208,7 +211,8 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
                 lookup.Code,
                 lookup.Name,
                 lookup.BackgroundColor,
-                lookup.ForegroundColor))
+                lookup.ForegroundColor,
+                lookup.IsSelected))
             .ToListAsync(cancellationToken);
     }
 
@@ -222,6 +226,41 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
 
         return await dbSet.SingleOrDefaultAsync(lookup => lookup.Code == normalizedCode, cancellationToken)
             ?? throw new ValidationException($"Lookup code '{normalizedCode}' was not found.", typeof(TLookup).Name);
+    }
+
+    private async Task<string> GetDefaultTaskTypeCodeAsync(string? requestedCode, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(requestedCode))
+        {
+            return requestedCode;
+        }
+
+        var selectedCode = await dbContext.TaskTypes
+            .AsNoTracking()
+            .Where(type => type.IsActive)
+            .OrderByDescending(type => type.IsSelected)
+            .ThenBy(type => type.SortOrder)
+            .ThenBy(type => type.Name)
+            .Select(type => type.Code)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return selectedCode ?? throw new ValidationException("Task type is required.", "taskTypeCode");
+    }
+
+    private async Task<string?> GetDefaultTaskPriorityCodeAsync(string? requestedCode, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(requestedCode))
+        {
+            return requestedCode;
+        }
+
+        return await dbContext.TaskPriorities
+            .AsNoTracking()
+            .Where(priority => priority.IsActive && priority.IsSelected)
+            .OrderBy(priority => priority.SortOrder)
+            .ThenBy(priority => priority.Name)
+            .Select(priority => priority.Code)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     private static string? NormalizeOptional(string? value)
@@ -240,7 +279,8 @@ public sealed record LookupItemDto(
     string Code,
     string Name,
     string? BackgroundColor,
-    string? ForegroundColor);
+    string? ForegroundColor,
+    bool IsSelected);
 
 public sealed record TaskListRequest(string? View);
 

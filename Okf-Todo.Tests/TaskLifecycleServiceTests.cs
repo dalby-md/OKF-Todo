@@ -16,10 +16,14 @@ public sealed class TaskLifecycleServiceTests
         var taskTypeCount = await database.DbContext.TaskTypes.CountAsync();
         var statusCount = await database.DbContext.TaskStatuses.CountAsync();
         var tagCount = await database.DbContext.TaskTags.CountAsync();
+        var selectedTaskType = await database.DbContext.TaskTypes.SingleAsync(type => type.IsSelected);
+        var selectedTaskPriority = await database.DbContext.TaskPriorities.SingleAsync(priority => priority.IsSelected);
 
         Assert.True(taskTypeCount > 0);
         Assert.True(statusCount > 0);
         Assert.True(tagCount > 0);
+        Assert.Equal("REQUEST", selectedTaskType.Code);
+        Assert.Equal("NORMAL", selectedTaskPriority.Code);
 
         var activeStatus = await database.DbContext.TaskStatuses.SingleAsync(status => status.Code == TaskStatusCodes.Active);
         activeStatus.Name = "Renamed Active";
@@ -33,6 +37,55 @@ public sealed class TaskLifecycleServiceTests
 
         var unchangedStatus = await database.DbContext.TaskStatuses.SingleAsync(status => status.Code == TaskStatusCodes.Active);
         Assert.Equal("Renamed Active", unchangedStatus.Name);
+    }
+
+    [Fact]
+    public async Task SelectableLookups_ClearPreviousSelectedRowWhenAnotherRowIsSelected()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+
+        var errorType = await database.DbContext.TaskTypes.SingleAsync(type => type.Code == "ERROR");
+        errorType.IsSelected = true;
+        await database.DbContext.SaveChangesAsync();
+
+        database.DbContext.ChangeTracker.Clear();
+
+        var selectedTaskTypes = await database.DbContext.TaskTypes
+            .Where(type => type.IsSelected)
+            .Select(type => type.Code)
+            .ToListAsync();
+
+        Assert.Equal(["ERROR"], selectedTaskTypes);
+
+        var urgentPriority = await database.DbContext.TaskPriorities.SingleAsync(priority => priority.Code == "URGENT");
+        urgentPriority.IsSelected = true;
+        await database.DbContext.SaveChangesAsync();
+
+        database.DbContext.ChangeTracker.Clear();
+
+        var selectedTaskPriorities = await database.DbContext.TaskPriorities
+            .Where(priority => priority.IsSelected)
+            .Select(priority => priority.Code)
+            .ToListAsync();
+
+        Assert.Equal(["URGENT"], selectedTaskPriorities);
+
+        var emailSource = await database.DbContext.TaskSources.SingleAsync(source => source.Code == "EMAIL");
+        emailSource.IsSelected = true;
+        await database.DbContext.SaveChangesAsync();
+
+        var teamsSource = await database.DbContext.TaskSources.SingleAsync(source => source.Code == "TEAMS");
+        teamsSource.IsSelected = true;
+        await database.DbContext.SaveChangesAsync();
+
+        database.DbContext.ChangeTracker.Clear();
+
+        var selectedTaskSources = await database.DbContext.TaskSources
+            .Where(source => source.IsSelected)
+            .Select(source => source.Code)
+            .ToListAsync();
+
+        Assert.Equal(["TEAMS"], selectedTaskSources);
     }
 
     [Fact]

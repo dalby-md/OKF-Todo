@@ -2,7 +2,7 @@
   "taskTypes": [
     { "code": "CRITICAL_ERROR", "name": "Critical error", "sortOrder": 10, "backgroundColor": "#b42318", "foregroundColor": "#ffffff" },
     { "code": "ERROR", "name": "Error", "sortOrder": 20, "backgroundColor": "#facc15", "foregroundColor": "#111827" },
-    { "code": "REQUEST", "name": "Request", "sortOrder": 30, "backgroundColor": "#6b7280", "foregroundColor": "#ffffff" },
+    { "code": "REQUEST", "name": "Request", "sortOrder": 30, "backgroundColor": "#6b7280", "foregroundColor": "#ffffff", "isSelected": true },
     { "code": "IDEA", "name": "Idea", "sortOrder": 40, "backgroundColor": "#6b7280", "foregroundColor": "#ffffff" },
     { "code": "NOTE", "name": "Note", "sortOrder": 50, "backgroundColor": "#6b7280", "foregroundColor": "#ffffff" },
     { "code": "INVESTIGATION", "name": "Investigation", "sortOrder": 60, "backgroundColor": "#6b7280", "foregroundColor": "#ffffff" },
@@ -15,7 +15,7 @@
   ],
   "taskPriorities": [
     { "code": "URGENT", "name": "Urgent", "sortOrder": 10, "backgroundColor": "#b42318", "foregroundColor": "#ffffff" },
-    { "code": "NORMAL", "name": "Normal", "sortOrder": 20, "backgroundColor": "#6b7280", "foregroundColor": "#ffffff" },
+    { "code": "NORMAL", "name": "Normal", "sortOrder": 20, "backgroundColor": "#6b7280", "foregroundColor": "#ffffff", "isSelected": true },
     { "code": "CAN_WAIT", "name": "Can wait", "sortOrder": 30, "backgroundColor": "#6b7280", "foregroundColor": "#ffffff" }
   ],
   "taskSources": [

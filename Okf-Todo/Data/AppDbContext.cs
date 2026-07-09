@@ -48,6 +48,20 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<BodyFormat> BodyFormats => Set<BodyFormat>();
 
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        await NormalizeSelectedLookupsAsync(cancellationToken);
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override async Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+    {
+        await NormalizeSelectedLookupsAsync(cancellationToken);
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Issue>(entity =>
@@ -299,6 +313,55 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         entity.Property(lookup => lookup.UpdatedAt).IsRequired();
         entity.Property(lookup => lookup.BackgroundColor).HasMaxLength(32);
         entity.Property(lookup => lookup.ForegroundColor).HasMaxLength(32);
+        entity.Property(lookup => lookup.IsSelected).HasDefaultValue(false);
         entity.HasIndex(lookup => lookup.Code).IsUnique();
+    }
+
+    private async Task NormalizeSelectedLookupsAsync(CancellationToken cancellationToken)
+    {
+        await NormalizeSelectedLookupAsync<AttachmentKind>(cancellationToken);
+        await NormalizeSelectedLookupAsync<BodyFormat>(cancellationToken);
+        await NormalizeSelectedLookupAsync<StakeholderRole>(cancellationToken);
+        await NormalizeSelectedLookupAsync<StakeholderType>(cancellationToken);
+        await NormalizeSelectedLookupAsync<TaskLogType>(cancellationToken);
+        await NormalizeSelectedLookupAsync<TaskType>(cancellationToken);
+        await NormalizeSelectedLookupAsync<TaskStatus>(cancellationToken);
+        await NormalizeSelectedLookupAsync<TaskPriority>(cancellationToken);
+        await NormalizeSelectedLookupAsync<TaskRelationType>(cancellationToken);
+        await NormalizeSelectedLookupAsync<TaskSource>(cancellationToken);
+    }
+
+    private async Task NormalizeSelectedLookupAsync<TLookup>(CancellationToken cancellationToken)
+        where TLookup : LookupEntity
+    {
+        var selectedEntries = ChangeTracker.Entries<TLookup>()
+            .Where(entry => entry.Entity.IsSelected
+                && entry.State is EntityState.Added or EntityState.Modified)
+            .ToList();
+
+        if (selectedEntries.Count == 0)
+        {
+            return;
+        }
+
+        var selectedEntity = selectedEntries[^1].Entity;
+
+        foreach (var entry in ChangeTracker.Entries<TLookup>()
+            .Where(entry => !ReferenceEquals(entry.Entity, selectedEntity) && entry.Entity.IsSelected))
+        {
+            entry.Entity.IsSelected = false;
+            if (entry.State == EntityState.Unchanged)
+            {
+                entry.State = EntityState.Modified;
+            }
+        }
+
+        var query = selectedEntity.Id == 0
+            ? Set<TLookup>().Where(lookup => lookup.IsSelected)
+            : Set<TLookup>().Where(lookup => lookup.Id != selectedEntity.Id && lookup.IsSelected);
+
+        await query.ExecuteUpdateAsync(
+            updates => updates.SetProperty(lookup => lookup.IsSelected, false),
+            cancellationToken);
     }
 }

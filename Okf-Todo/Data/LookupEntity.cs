@@ -14,6 +14,8 @@ public abstract class LookupEntity
 
     public string? ForegroundColor { get; set; }
 
+    public bool IsSelected { get; set; }
+
     public int SortOrder { get; set; }
 
     public bool IsActive { get; set; } = true;
