@@ -9,6 +9,56 @@ namespace Okf_Todo.Tests;
 public sealed class TaskLifecycleServiceTests
 {
     [Fact]
+    public async Task SchemaMaintenance_DropsStaleWaitingForTypesArtifacts()
+    {
+        var databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        var loggerFactory = LoggerFactory.Create(_ => { });
+
+        try
+        {
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlite($"Data Source={databasePath};Pooling=False")
+                .Options;
+
+            await using (var dbContext = new AppDbContext(options))
+            {
+                await dbContext.Database.EnsureCreatedAsync();
+                await dbContext.Database.ExecuteSqlRawAsync("ALTER TABLE \"TaskWaitingFors\" ADD COLUMN \"WaitingForTypeId\" INTEGER NULL");
+                await dbContext.Database.ExecuteSqlRawAsync("CREATE INDEX \"IX_TaskWaitingFors_WaitingForTypeId\" ON \"TaskWaitingFors\" (\"WaitingForTypeId\")");
+                await dbContext.Database.ExecuteSqlRawAsync("""
+                    CREATE TABLE "WaitingForTypes" (
+                        "Id" INTEGER NOT NULL CONSTRAINT "PK_WaitingForTypes" PRIMARY KEY AUTOINCREMENT,
+                        "Code" TEXT NOT NULL,
+                        "Name" TEXT NOT NULL
+                    )
+                    """);
+            }
+
+            SqliteSchemaMaintenance.CleanupCurrentDatabase(
+                databasePath,
+                loggerFactory.CreateLogger(nameof(SqliteSchemaMaintenance)));
+
+            await using (var dbContext = new AppDbContext(options))
+            {
+                var tableCount = await dbContext.Database
+                    .SqlQueryRaw<int>("SELECT COUNT(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'WaitingForTypes'")
+                    .SingleAsync();
+                var waitingForTypeColumnCount = await dbContext.Database
+                    .SqlQueryRaw<int>("SELECT COUNT(*) AS Value FROM pragma_table_info('TaskWaitingFors') WHERE name = 'WaitingForTypeId'")
+                    .SingleAsync();
+
+                Assert.Equal(0, tableCount);
+                Assert.Equal(0, waitingForTypeColumnCount);
+            }
+        }
+        finally
+        {
+            loggerFactory.Dispose();
+            File.Delete(databasePath);
+        }
+    }
+
+    [Fact]
     public async Task LookupSeeding_InsertsValuesOnlyWhenTablesAreEmpty()
     {
         await using var database = await TestDatabase.CreateAsync();

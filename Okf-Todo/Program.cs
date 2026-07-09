@@ -7,7 +7,6 @@ using Photino.Okf_Todo.Bridge;
 using Photino.Okf_Todo.Data;
 using Photino.Okf_Todo.Services;
 using System.Drawing;
-using Microsoft.Data.Sqlite;
 
 namespace Photino.Okf_Todo
 {
@@ -36,8 +35,8 @@ namespace Photino.Okf_Todo
 
                 try
                 {
-                    logger.LogInformation("Applying SQLite migrations.");
-                    ApplyMigrations(scope.ServiceProvider, logger);
+                    logger.LogInformation("Ensuring SQLite database schema.");
+                    EnsureDatabase(scope.ServiceProvider, logger);
                     logger.LogInformation("SQLite database is ready at {DatabasePath}.", DatabasePathProvider.GetDatabasePath());
                     logger.LogInformation("Seeding lookup values.");
                     scope.ServiceProvider.GetRequiredService<LookupSeedService>()
@@ -47,7 +46,7 @@ namespace Photino.Okf_Todo
                 }
                 catch (Exception exception)
                 {
-                    logger.LogError(exception, "Database migration failed.");
+                    logger.LogError(exception, "Database initialization failed.");
                     throw;
                 }
             }
@@ -212,47 +211,27 @@ namespace Photino.Okf_Todo
             return int.TryParse(idText, out imageId);
         }
 
-        private static void ApplyMigrations(IServiceProvider services, ILogger logger)
+        private static void EnsureDatabase(IServiceProvider services, ILogger logger)
         {
-            try
-            {
-                services.GetRequiredService<AppDbContext>().Database.Migrate();
-            }
-            catch (SqliteException exception) when (TryRepairIncompleteInitialMigration(logger, exception))
-            {
-                services.GetRequiredService<AppDbContext>().Database.Migrate();
-            }
+            RepairIncompleteDatabase(logger);
+
+            var dbContext = services.GetRequiredService<AppDbContext>();
+            dbContext.Database.EnsureCreated();
+            SqliteSchemaMaintenance.CleanupCurrentDatabase(DatabasePathProvider.GetDatabasePath(), logger);
         }
 
-        private static bool TryRepairIncompleteInitialMigration(ILogger logger, SqliteException exception)
+        private static void RepairIncompleteDatabase(ILogger logger)
         {
-            if (!exception.Message.Contains("__EFMigrationsHistory", StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
             var databasePath = DatabasePathProvider.GetDatabasePath();
-            if (!File.Exists(databasePath) || HasTable(databasePath, "Issues"))
+            if (!File.Exists(databasePath)
+                || SqliteSchemaMaintenance.HasTable(databasePath, "Issues")
+                || !SqliteSchemaMaintenance.HasTable(databasePath, "__EFMigrationsHistory"))
             {
-                return false;
+                return;
             }
 
-            logger.LogWarning(exception, "Removing incomplete initial SQLite database at {DatabasePath}.", databasePath);
+            logger.LogWarning("Removing incomplete SQLite database at {DatabasePath}.", databasePath);
             File.Delete(databasePath);
-
-            return true;
-        }
-
-        private static bool HasTable(string databasePath, string tableName)
-        {
-            using var connection = new SqliteConnection($"Data Source={databasePath}");
-            connection.Open();
-
-            using var command = connection.CreateCommand();
-            command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = $tableName";
-            command.Parameters.AddWithValue("$tableName", tableName);
-
-            return Convert.ToInt32(command.ExecuteScalar()) > 0;
         }
 
         private static async Task WaitForStaticFileServerAsync(string appUrl, ILogger logger)
