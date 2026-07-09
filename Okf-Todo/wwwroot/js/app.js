@@ -44,6 +44,7 @@
   }
   let layoutPreferenceSaveTimer = null
   let unsavedChangesDialogResolve = null
+  let completeWaitDialogResolve = null
   let dirtyTrackingSuppressions = 0
 
   function createMessageId() {
@@ -445,6 +446,29 @@
     }
   }
 
+  function resolveCompleteWaitDialog(choice) {
+    if (!completeWaitDialogResolve) {
+      return
+    }
+
+    const resolve = completeWaitDialogResolve
+    completeWaitDialogResolve = null
+    resolve(choice)
+  }
+
+  function closeCompleteWaitDialog() {
+    $('#complete-wait-overlay').prop('hidden', true)
+  }
+
+  function showCompleteWaitDialog() {
+    return new Promise(function (resolve) {
+      completeWaitDialogResolve = resolve
+      $('#complete-wait-target').text(describeWaiting(currentTask.activeWaitingFor))
+      $('#complete-wait-overlay').prop('hidden', false)
+      $('#complete-wait-clear-button').trigger('focus')
+    })
+  }
+
   function renderShell() {
     $('#app').html(`
       <main class="app-shell">
@@ -672,6 +696,21 @@
               <button id="unsaved-cancel-button" class="secondary-button" type="button">Cancel</button>
               <button id="unsaved-discard-button" class="secondary-button danger-button" type="button">Discard</button>
               <button id="unsaved-save-button" type="button">Save</button>
+            </div>
+          </section>
+        </div>
+
+        <div id="complete-wait-overlay" class="modal-overlay" hidden>
+          <section class="settings-dialog unsaved-dialog" role="dialog" aria-modal="true" aria-labelledby="complete-wait-title">
+            <header class="settings-header">
+              <h2 id="complete-wait-title">Clear waiting?</h2>
+            </header>
+
+            <p class="settings-help">This task is waiting for <strong id="complete-wait-target"></strong>. Completing it will clear the waiting target.</p>
+
+            <div class="modal-actions">
+              <button id="complete-wait-cancel-button" class="secondary-button" type="button">Cancel</button>
+              <button id="complete-wait-clear-button" type="button">Clear waiting and complete</button>
             </div>
           </section>
         </div>
@@ -1666,11 +1705,6 @@
       return
     }
 
-    if (!confirmActiveWaitClearBeforeLeavingActive(type)) {
-      setStatus('Task remains active', 'ready')
-      return
-    }
-
     const task = await sendBridgeMessage(type, {
       id: currentTask.id
     })
@@ -1680,21 +1714,32 @@
     setStatus('Updated', 'saved')
   }
 
-  function confirmActiveWaitClearBeforeLeavingActive(type) {
-    const leavesActive = type === 'task.complete' || type === 'task.cancel'
-    if (!leavesActive || !currentTask || currentTask.taskStatusCode !== 'ACTIVE' || !currentTask.activeWaitingFor) {
+  async function confirmCompleteWaitClear() {
+    if (!currentTask || currentTask.taskStatusCode !== 'ACTIVE' || !currentTask.activeWaitingFor) {
       return true
     }
 
-    return window.confirm('This task has a waiting target. Clear waiting and continue?')
+    const choice = await showCompleteWaitDialog()
+    closeCompleteWaitDialog()
+
+    if (choice === 'clear') {
+      return true
+    }
+
+    setStatus('Task remains active', 'ready')
+    return false
   }
 
-  function runCompleteButtonAction() {
+  async function runCompleteButtonAction() {
     const type = currentTask && (currentTask.taskStatusCode === 'COMPLETED' || currentTask.taskStatusCode === 'CANCELLED')
       ? 'task.reopen'
       : 'task.complete'
 
-    return runLifecycleAction(type)
+    if (type === 'task.complete' && !await confirmCompleteWaitClear()) {
+      return
+    }
+
+    await runLifecycleAction(type)
   }
 
   function openSettings() {
@@ -1844,6 +1889,17 @@
         resolveUnsavedChangesDialog('cancel')
       }
     })
+    $('#complete-wait-clear-button').on('click', function () {
+      resolveCompleteWaitDialog('clear')
+    })
+    $('#complete-wait-cancel-button').on('click', function () {
+      resolveCompleteWaitDialog('cancel')
+    })
+    $('#complete-wait-overlay').on('click', function (event) {
+      if (event.target === this) {
+        resolveCompleteWaitDialog('cancel')
+      }
+    })
     $('#new-task-cancel-button').on('click', closeNewTaskDialog)
     $('#new-task-save-button').on('click', function () {
       createTaskFromDialog().catch(function (error) {
@@ -1873,6 +1929,9 @@
       }
       if (event.key === 'Escape' && !$('#unsaved-changes-overlay').prop('hidden')) {
         resolveUnsavedChangesDialog('cancel')
+      }
+      if (event.key === 'Escape' && !$('#complete-wait-overlay').prop('hidden')) {
+        resolveCompleteWaitDialog('cancel')
       }
       if (event.key === 'Escape' && !$('#settings-overlay').prop('hidden')) {
         closeSettings()
