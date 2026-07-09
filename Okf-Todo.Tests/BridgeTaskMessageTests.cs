@@ -77,7 +77,17 @@ public sealed class BridgeTaskMessageTests
             createdLookupSettings.GetProperty("taskTypes").EnumerateArray(),
             item => item.GetProperty("code").GetString() == "QUESTION"
                 && item.GetProperty("name").GetString() == "Question"
-                && item.GetProperty("foregroundColor").GetString() == "#0f172a");
+                && item.GetProperty("foregroundColor").GetString() == "#0f172a"
+                && item.GetProperty("canDelete").GetBoolean());
+
+        var deletedLookupSettings = await fixture.SendAsync("lookup.settings.delete", new
+        {
+            group = "taskTypes",
+            code = "QUESTION"
+        });
+        Assert.DoesNotContain(
+            deletedLookupSettings.GetProperty("taskTypes").EnumerateArray(),
+            item => item.GetProperty("code").GetString() == "QUESTION");
 
         var loaded = await fixture.SendAsync("task.get", new { id = taskId });
         Assert.Equal("<p>Created through bridge</p>", loaded.GetProperty("body").GetString());

@@ -16,10 +16,30 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
 
     public async Task<TaskLookupSettingsDto> GetLookupSettingsAsync(CancellationToken cancellationToken)
     {
+        var usedTaskTypeIds = (await dbContext.TaskItems
+            .AsNoTracking()
+            .Select(task => task.TaskTypeId)
+            .Distinct()
+            .ToListAsync(cancellationToken))
+            .ToHashSet();
+        var usedTaskPriorityIds = (await dbContext.TaskItems
+            .AsNoTracking()
+            .Where(task => task.TaskPriorityId.HasValue)
+            .Select(task => task.TaskPriorityId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken))
+            .ToHashSet();
+        var usedTaskStatusIds = (await dbContext.TaskItems
+            .AsNoTracking()
+            .Select(task => task.TaskStatusId)
+            .Distinct()
+            .ToListAsync(cancellationToken))
+            .ToHashSet();
+
         return new TaskLookupSettingsDto(
-            await GetLookupSettingsItemsAsync(dbContext.TaskTypes, cancellationToken),
-            await GetLookupSettingsItemsAsync(dbContext.TaskPriorities, cancellationToken),
-            await GetLookupSettingsItemsAsync(dbContext.TaskStatuses, cancellationToken));
+            await GetLookupSettingsItemsAsync(dbContext.TaskTypes, usedTaskTypeIds, cancellationToken),
+            await GetLookupSettingsItemsAsync(dbContext.TaskPriorities, usedTaskPriorityIds, cancellationToken),
+            await GetLookupSettingsItemsAsync(dbContext.TaskStatuses, usedTaskStatusIds, cancellationToken));
     }
 
     public async Task<TaskLookupSettingsDto> UpdateLookupAsync(
@@ -38,6 +58,43 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
                 break;
             case "taskStatuses":
                 await UpdateTaskStatusLookupAsync(request, cancellationToken);
+                break;
+            default:
+                throw new ValidationException("Lookup group is not supported.", "group");
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return await GetLookupSettingsAsync(cancellationToken);
+    }
+
+    public async Task<TaskLookupSettingsDto> DeleteLookupAsync(
+        LookupDeleteRequest request,
+        CancellationToken cancellationToken)
+    {
+        var group = request.Group.Trim();
+
+        switch (group)
+        {
+            case "taskTypes":
+                await DeleteLookupAsync(
+                    dbContext.TaskTypes,
+                    request.Code,
+                    (id, token) => dbContext.TaskItems.AnyAsync(task => task.TaskTypeId == id, token),
+                    cancellationToken);
+                break;
+            case "taskPriorities":
+                await DeleteLookupAsync(
+                    dbContext.TaskPriorities,
+                    request.Code,
+                    (id, token) => dbContext.TaskItems.AnyAsync(task => task.TaskPriorityId == id, token),
+                    cancellationToken);
+                break;
+            case "taskStatuses":
+                await DeleteLookupAsync(
+                    dbContext.TaskStatuses,
+                    request.Code,
+                    (id, token) => dbContext.TaskItems.AnyAsync(task => task.TaskStatusId == id, token),
+                    cancellationToken);
                 break;
             default:
                 throw new ValidationException("Lookup group is not supported.", "group");
@@ -276,13 +333,30 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
 
     private static async Task<IReadOnlyCollection<LookupSettingsItemDto>> GetLookupSettingsItemsAsync<TLookup>(
         DbSet<TLookup> dbSet,
+        IReadOnlySet<int> usedLookupIds,
         CancellationToken cancellationToken)
         where TLookup : LookupEntity
     {
-        return await dbSet
+        var rows = await dbSet
             .AsNoTracking()
             .OrderBy(lookup => lookup.SortOrder)
             .ThenBy(lookup => lookup.Name)
+            .Select(lookup => new
+            {
+                lookup.Id,
+                lookup.Code,
+                lookup.Name,
+                lookup.Description,
+                lookup.SortOrder,
+                lookup.IsActive,
+                lookup.IsSystem,
+                lookup.IsSelected,
+                lookup.BackgroundColor,
+                lookup.ForegroundColor
+            })
+            .ToListAsync(cancellationToken);
+
+        return rows
             .Select(lookup => new LookupSettingsItemDto(
                 lookup.Code,
                 lookup.Name,
@@ -292,8 +366,9 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
                 lookup.IsSystem,
                 lookup.IsSelected,
                 lookup.BackgroundColor,
-                lookup.ForegroundColor))
-            .ToListAsync(cancellationToken);
+                lookup.ForegroundColor,
+                !lookup.IsSystem && !usedLookupIds.Contains(lookup.Id)))
+            .ToList();
     }
 
     private async Task UpdateTaskStatusLookupAsync(
@@ -364,6 +439,31 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         lookup.BackgroundColor = NormalizeColor(request.BackgroundColor, nameof(request.BackgroundColor));
         lookup.ForegroundColor = NormalizeColor(request.ForegroundColor, nameof(request.ForegroundColor));
         lookup.UpdatedAt = now;
+    }
+
+    private static async Task DeleteLookupAsync<TLookup>(
+        DbSet<TLookup> dbSet,
+        string code,
+        Func<int, CancellationToken, Task<bool>> isUsedAsync,
+        CancellationToken cancellationToken)
+        where TLookup : LookupEntity
+    {
+        var lookup = await dbSet.SingleOrDefaultAsync(
+            item => item.Code == NormalizeLookupCode(code),
+            cancellationToken)
+            ?? throw new ValidationException("Lookup item was not found.", "code");
+
+        if (lookup.IsSystem)
+        {
+            throw new ValidationException("System lookup values cannot be deleted.", "code");
+        }
+
+        if (await isUsedAsync(lookup.Id, cancellationToken))
+        {
+            throw new ValidationException("Lookup value is used by a task and cannot be deleted.", "code");
+        }
+
+        dbSet.Remove(lookup);
     }
 
     private static async Task<TLookup> GetLookupByCodeAsync<TLookup>(
@@ -485,7 +585,8 @@ public sealed record LookupSettingsItemDto(
     bool IsSystem,
     bool IsSelected,
     string? BackgroundColor,
-    string? ForegroundColor);
+    string? ForegroundColor,
+    bool CanDelete);
 
 public sealed record LookupUpdateRequest(
     string Group,
@@ -508,6 +609,10 @@ public sealed record LookupCreateRequest(
     bool IsSelected,
     string? BackgroundColor,
     string? ForegroundColor);
+
+public sealed record LookupDeleteRequest(
+    string Group,
+    string Code);
 
 public sealed record TaskListRequest(string? View);
 

@@ -682,6 +682,7 @@ h2 {
 .lookup-preview .task-badge,
 .lookup-edit-preview .task-badge {
   padding-right: 8px;
+  padding-bottom: 5px;
   padding-left: 8px;
   transform: translateY(1px);
 }
@@ -758,6 +759,10 @@ h2 {
 
 .lookup-edit-preview {
   margin-left: auto;
+}
+
+.lookup-delete-button {
+  margin-right: auto;
 }
 
 .empty-lookup-settings {

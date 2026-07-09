@@ -188,6 +188,7 @@ public sealed class TaskServiceTests
         Assert.True(createdPriority.IsActive);
         Assert.True(createdPriority.IsSelected);
         Assert.False(createdPriority.IsSystem);
+        Assert.True(createdPriority.CanDelete);
         Assert.Equal("#d1fae5", createdPriority.BackgroundColor);
         Assert.Equal("#064e3b", createdPriority.ForegroundColor);
         Assert.DoesNotContain(settings.TaskPriorities, priority => priority.Code == "NORMAL" && priority.IsSelected);
@@ -205,6 +206,10 @@ public sealed class TaskServiceTests
             Deadline: null), CancellationToken.None);
 
         Assert.Equal("LOW_RISK", createdTask.TaskPriorityCode);
+
+        settings = await database.Tasks.GetLookupSettingsAsync(CancellationToken.None);
+        createdPriority = Assert.Single(settings.TaskPriorities, priority => priority.Code == "LOW_RISK");
+        Assert.False(createdPriority.CanDelete);
     }
 
     [Fact]
@@ -225,6 +230,69 @@ public sealed class TaskServiceTests
                 ForegroundColor: "#111827"), CancellationToken.None));
 
         Assert.Equal("code", exception.Field);
+    }
+
+    [Fact]
+    public async Task LookupSettings_DeleteRemovesUnusedCustomLookup()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+
+        await database.Tasks.CreateLookupAsync(new LookupCreateRequest(
+            Group: "taskTypes",
+            Code: "QUESTION",
+            Name: "Question",
+            Description: null,
+            SortOrder: 90,
+            IsActive: true,
+            IsSelected: false,
+            BackgroundColor: "#e0f2fe",
+            ForegroundColor: "#0f172a"), CancellationToken.None);
+
+        var settings = await database.Tasks.DeleteLookupAsync(new LookupDeleteRequest(
+            Group: "taskTypes",
+            Code: "QUESTION"), CancellationToken.None);
+
+        Assert.DoesNotContain(settings.TaskTypes, type => type.Code == "QUESTION");
+    }
+
+    [Fact]
+    public async Task LookupSettings_DeleteRejectsSystemOrUsedLookup()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+
+        var systemException = await Assert.ThrowsAsync<ValidationException>(() =>
+            database.Tasks.DeleteLookupAsync(new LookupDeleteRequest(
+                Group: "taskStatuses",
+                Code: TaskStatusCodes.Active), CancellationToken.None));
+        Assert.Equal("code", systemException.Field);
+
+        await database.Tasks.CreateLookupAsync(new LookupCreateRequest(
+            Group: "taskPriorities",
+            Code: "LOW_RISK",
+            Name: "Low risk",
+            Description: null,
+            SortOrder: 90,
+            IsActive: true,
+            IsSelected: false,
+            BackgroundColor: "#d1fae5",
+            ForegroundColor: "#064e3b"), CancellationToken.None);
+        await database.Tasks.CreateAsync(new TaskSaveRequest(
+            Id: null,
+            Title: "Uses low risk",
+            TaskTypeCode: "ERROR",
+            Body: null,
+            BodyFormatCode: "HTML",
+            TaskPriorityCode: "LOW_RISK",
+            TaskSourceCode: null,
+            SourceReference: null,
+            SourceUrl: null,
+            Deadline: null), CancellationToken.None);
+
+        var usedException = await Assert.ThrowsAsync<ValidationException>(() =>
+            database.Tasks.DeleteLookupAsync(new LookupDeleteRequest(
+                Group: "taskPriorities",
+                Code: "LOW_RISK"), CancellationToken.None));
+        Assert.Equal("code", usedException.Field);
     }
 
     [Fact]

@@ -636,6 +636,7 @@
             <p id="lookup-edit-error" class="form-error" hidden></p>
 
             <div class="modal-actions">
+              <button id="lookup-edit-delete-button" class="secondary-button danger-button lookup-delete-button" type="button" hidden>Delete</button>
               <button id="lookup-edit-cancel-button" class="secondary-button" type="button">Cancel</button>
               <button id="lookup-edit-save-button" type="button">Save</button>
             </div>
@@ -744,6 +745,7 @@
       const activeText = item.isActive ? 'Active' : 'Inactive'
       const selectedText = item.isSelected ? '<span class="lookup-state-pill">Default</span>' : ''
       const systemText = item.isSystem ? '<span class="lookup-state-pill">System</span>' : ''
+      const usedText = !item.canDelete && !item.isSystem ? '<span class="lookup-state-pill">Used</span>' : ''
 
       return `
         <article class="lookup-list-row">
@@ -756,6 +758,7 @@
             <span>${activeText}</span>
             ${selectedText}
             ${systemText}
+            ${usedText}
             <span>Sort ${item.sortOrder}</span>
           </div>
           <button class="lookup-list-edit-button secondary-button" type="button" data-code="${encodeAttribute(item.code)}">Edit</button>
@@ -805,6 +808,9 @@
     $('#lookup-edit-background-color').val(getColorInputValue(item && item.backgroundColor, '#6b7280'))
     $('#lookup-edit-foreground-color').val(getColorInputValue(item && item.foregroundColor, '#ffffff'))
     $('#lookup-edit-error').prop('hidden', true).text('')
+    $('#lookup-edit-delete-button')
+      .prop('hidden', !(item && item.canDelete))
+      .prop('disabled', false)
     $('#lookup-edit-save-button, #lookup-edit-cancel-button').prop('disabled', false)
     updateLookupEditPreview()
 
@@ -1394,6 +1400,36 @@
     }
   }
 
+  async function deleteLookupEdit() {
+    if (!editingLookupCode) {
+      return
+    }
+
+    const item = findActiveLookupItem(editingLookupCode)
+    if (!item || !item.canDelete) {
+      $('#lookup-edit-error').text('Only unused custom lookup values can be deleted.').prop('hidden', false)
+      setStatus('Lookup value cannot be deleted', 'error')
+      return
+    }
+
+    $('#lookup-edit-delete-button, #lookup-edit-save-button, #lookup-edit-cancel-button').prop('disabled', true)
+
+    try {
+      lookupSettings = await sendBridgeMessage('lookup.settings.delete', {
+        group: activeLookupSettingsGroup,
+        code: editingLookupCode
+      })
+
+      renderLookupSettings()
+      renderLookupList()
+      closeLookupEdit()
+      await refreshLookupDependentUi()
+      setStatus('Lookup deleted', 'saved')
+    } finally {
+      $('#lookup-edit-delete-button, #lookup-edit-save-button, #lookup-edit-cancel-button').prop('disabled', false)
+    }
+  }
+
   function renderTaskHeaderAndActions(task) {
     const isSavedTask = !!task.id
     const isFinal = task.taskStatusCode === 'COMPLETED' || task.taskStatusCode === 'CANCELLED'
@@ -1815,6 +1851,12 @@
       saveLookupEdit().catch(function (error) {
         $('#lookup-edit-error').text(getErrorMessage(error, 'Could not save lookup')).prop('hidden', false)
         setStatus(getErrorMessage(error, 'Could not save lookup'), 'error')
+      })
+    })
+    $('#lookup-edit-delete-button').on('click', function () {
+      deleteLookupEdit().catch(function (error) {
+        $('#lookup-edit-error').text(getErrorMessage(error, 'Could not delete lookup')).prop('hidden', false)
+        setStatus(getErrorMessage(error, 'Could not delete lookup'), 'error')
       })
     })
     $('#lookup-edit-overlay').on('keydown', 'input', function (event) {
