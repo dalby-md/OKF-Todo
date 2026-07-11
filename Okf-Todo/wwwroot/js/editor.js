@@ -201,6 +201,42 @@
     activeAdapter = null
   }
 
+  function setHostEditorHeight(host, height) {
+    const nextHeight = Math.round(Number(height))
+    if (!Number.isFinite(nextHeight) || nextHeight <= 0) {
+      return null
+    }
+
+    host.style.setProperty('--editor-height', `${nextHeight}px`)
+    host.style.height = `${nextHeight}px`
+    host.style.minHeight = `${nextHeight}px`
+    return nextHeight
+  }
+
+  function clearHostEditorHeight(host) {
+    host.style.removeProperty('--editor-height')
+    host.style.height = ''
+    host.style.minHeight = ''
+  }
+
+  function getOuterBlockSize(element) {
+    if (!element) {
+      return 0
+    }
+
+    const rect = element.getBoundingClientRect()
+    const style = window.getComputedStyle(element)
+    const marginTop = parseFloat(style.marginTop) || 0
+    const marginBottom = parseFloat(style.marginBottom) || 0
+
+    return Math.ceil(rect.height + marginTop + marginBottom)
+  }
+
+  function getToastUiEditorHeight(host, totalHeight) {
+    const toolbarHeight = getOuterBlockSize(host.querySelector('.markdown-toolbar'))
+    return Math.max(120, totalHeight - toolbarHeight)
+  }
+
   function createTinyMceAdapter(options) {
     let editor = null
     const selector = options.selector || defaultSelector
@@ -312,8 +348,8 @@
       },
 
       setHeight: function (height) {
-        const nextHeight = Math.round(Number(height))
-        if (!Number.isFinite(nextHeight) || nextHeight <= 0 || !editor) {
+        const nextHeight = setHostEditorHeight(host, height)
+        if (!nextHeight || !editor) {
           return
         }
 
@@ -341,6 +377,8 @@
       },
 
       destroy: function () {
+        clearHostEditorHeight(host)
+
         if (editor) {
           if (typeof editor.destroy === 'function') {
             editor.destroy()
@@ -511,9 +549,16 @@
           )
         }
 
+        const initialHeight = setHostEditorHeight(host, options.minHeight || 420) || 420
+        const initialToastUiHeight = getToastUiEditorHeight(host, initialHeight)
+        const markdownBody = host.querySelector('#markdown-body')
+        if (markdownBody) {
+          markdownBody.style.height = `${initialToastUiHeight}px`
+        }
+
         editor = new window.toastui.Editor({
           el: document.querySelector('#markdown-body'),
-          height: `${options.minHeight || 420}px`,
+          height: `${initialToastUiHeight}px`,
           initialEditType: initialMarkdownEditType,
           previewStyle: 'vertical',
           initialValue: options.initialContent || '',
@@ -626,20 +671,26 @@
       },
 
       setHeight: function (height) {
-        const nextHeight = Math.round(Number(height))
-        if (!Number.isFinite(nextHeight) || nextHeight <= 0 || !editor) {
+        const nextHeight = setHostEditorHeight(host, height)
+        if (!nextHeight || !editor) {
           return
         }
 
+        const toastUiHeight = getToastUiEditorHeight(host, nextHeight)
+        const markdownBody = host.querySelector('#markdown-body')
+        if (markdownBody) {
+          markdownBody.style.height = `${toastUiHeight}px`
+        }
+
         if (typeof editor.setHeight === 'function') {
-          editor.setHeight(nextHeight)
+          editor.setHeight(toastUiHeight)
           return
         }
 
         const editorElement = host.querySelector('.toastui-editor-defaultUI')
           || host.querySelector('#markdown-body')
         if (editorElement) {
-          editorElement.style.height = `${nextHeight}px`
+          editorElement.style.height = `${toastUiHeight}px`
         }
       },
 
@@ -648,6 +699,8 @@
       },
 
       destroy: function () {
+        clearHostEditorHeight(host)
+
         if (editor) {
           host.removeEventListener('pointerdown', handleModeSwitchIntent, true)
           host.removeEventListener('keydown', handleModeSwitchIntent, true)

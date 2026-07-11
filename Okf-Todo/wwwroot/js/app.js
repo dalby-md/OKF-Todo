@@ -626,6 +626,20 @@
                 <span>Deadline</span>
                 <input id="task-deadline" type="date" disabled>
               </label>
+              <label class="field-block waiting-field" for="waiting-text">
+                <span>Waiting for</span>
+                <input id="waiting-text" type="text" autocomplete="off" disabled>
+              </label>
+            </div>
+
+            <div class="body-header">
+              <label class="field-label" for="text-body">Body</label>
+            </div>
+            <div id="editor-host" class="editor-host">
+              <textarea id="text-body"></textarea>
+            </div>
+
+            <div class="source-grid">
               <label class="field-block" for="task-source">
                 <span>Source</span>
                 <select id="task-source" disabled></select>
@@ -638,17 +652,6 @@
                 <span>Source URL</span>
                 <input id="task-source-url" type="url" autocomplete="off" disabled>
               </label>
-              <label class="field-block waiting-field" for="waiting-text">
-                <span>Waiting for</span>
-                <input id="waiting-text" type="text" autocomplete="off" disabled>
-              </label>
-            </div>
-
-            <div class="body-header">
-              <label class="field-label" for="text-body">Body</label>
-            </div>
-            <div id="editor-host" class="editor-host">
-              <textarea id="text-body"></textarea>
             </div>
           </form>
         </section>
