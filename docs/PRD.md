@@ -47,7 +47,7 @@ Each task should support:
 - Task status
 - Task type
 - Deadline
-- Tags
+- Optional tag stored as plain text
 - Completed state/timestamp
 - Checklist items
 - Task relationships
@@ -325,33 +325,9 @@ Initial attachment kinds:
 
 A soft size limit should be considered, for example 25–50 MB per attachment.
 
-## Tags
+## Tag
 
-Tags are table rows.
-
-Tags should be user-created and editable.
-
-Initial seeded tags may be useful:
-
-- Oracle APEX
-- .NET
-- Power Platform
-- TFS
-- SQL Server
-- SQLite
-- Deployment
-- Build
-- Bug
-- Support
-- Security
-- Documentation
-
-Tags should support:
-
-- Name
-- Color nullable
-- SortOrder
-- IsActive
+A task can have one optional tag. A tag is only a plain string expression stored directly on the task.
 
 ## Task relationships
 
@@ -438,7 +414,6 @@ Add a settings/admin area for lookup values:
 - Sources
 - Attachment kinds
 - Relation types
-- Tags
 - Body formats
 - Log types
 

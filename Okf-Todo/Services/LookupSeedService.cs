@@ -31,7 +31,6 @@ public sealed class LookupSeedService(AppDbContext dbContext, ILogger<LookupSeed
         await SeedLookupAsync(dbContext.TaskLogTypes, seed.TaskLogTypes, now, cancellationToken);
         await SeedLookupAsync(dbContext.BodyFormats, seed.BodyFormats, now, cancellationToken);
         await SeedRelationTypesAsync(seed.TaskRelationTypes, now, cancellationToken);
-        await SeedTagsAsync(seed.TaskTags, now, cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Lookup seeding completed from {SeedPath}.", seedPath);
@@ -94,26 +93,6 @@ public sealed class LookupSeedService(AppDbContext dbContext, ILogger<LookupSeed
         }));
     }
 
-    private async Task SeedTagsAsync(
-        IReadOnlyCollection<TaskTagSeedItem> seedItems,
-        DateTime now,
-        CancellationToken cancellationToken)
-    {
-        if (await dbContext.TaskTags.AnyAsync(cancellationToken))
-        {
-            return;
-        }
-
-        dbContext.TaskTags.AddRange(seedItems.Select(item => new TaskTag
-        {
-            Name = item.Name,
-            Color = item.Color,
-            SortOrder = item.SortOrder,
-            IsActive = item.IsActive,
-            CreatedAt = now,
-            UpdatedAt = now
-        }));
-    }
 }
 
 public sealed record LookupSeedConfiguration(
@@ -124,8 +103,7 @@ public sealed record LookupSeedConfiguration(
     IReadOnlyCollection<LookupSeedItem> AttachmentKinds,
     IReadOnlyCollection<TaskRelationTypeSeedItem> TaskRelationTypes,
     IReadOnlyCollection<LookupSeedItem> TaskLogTypes,
-    IReadOnlyCollection<LookupSeedItem> BodyFormats,
-    IReadOnlyCollection<TaskTagSeedItem> TaskTags);
+    IReadOnlyCollection<LookupSeedItem> BodyFormats);
 
 public sealed record LookupSeedItem(
     string Code,
@@ -146,9 +124,3 @@ public sealed record TaskRelationTypeSeedItem(
     bool IsSystem = false,
     bool IsActive = true,
     string? Description = null);
-
-public sealed record TaskTagSeedItem(
-    string Name,
-    int SortOrder,
-    bool IsActive = true,
-    string? Color = null);

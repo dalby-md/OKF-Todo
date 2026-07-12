@@ -61,8 +61,6 @@
     { "code": "CHECKLIST_ITEM_REOPENED", "name": "Checklist item reopened", "sortOrder": 100, "isSystem": true },
     { "code": "ATTACHMENT_ADDED", "name": "Attachment added", "sortOrder": 110, "isSystem": true },
     { "code": "ATTACHMENT_REMOVED", "name": "Attachment removed", "sortOrder": 120, "isSystem": true },
-    { "code": "TAG_ADDED", "name": "Tag added", "sortOrder": 150, "isSystem": true },
-    { "code": "TAG_REMOVED", "name": "Tag removed", "sortOrder": 160, "isSystem": true },
     { "code": "RELATION_ADDED", "name": "Relation added", "sortOrder": 170, "isSystem": true },
     { "code": "RELATION_REMOVED", "name": "Relation removed", "sortOrder": 180, "isSystem": true },
     { "code": "TASK_COMPLETED", "name": "Task completed", "sortOrder": 190, "isSystem": true },
@@ -73,19 +71,5 @@
   "bodyFormats": [
     { "code": "MARKDOWN", "name": "Markdown", "sortOrder": 10, "isSystem": true },
     { "code": "HTML", "name": "HTML", "sortOrder": 20, "isSystem": true }
-  ],
-  "taskTags": [
-    { "name": "Oracle APEX", "sortOrder": 10 },
-    { "name": ".NET", "sortOrder": 20 },
-    { "name": "Power Platform", "sortOrder": 30 },
-    { "name": "TFS", "sortOrder": 40 },
-    { "name": "SQL Server", "sortOrder": 50 },
-    { "name": "SQLite", "sortOrder": 60 },
-    { "name": "Deployment", "sortOrder": 70 },
-    { "name": "Build", "sortOrder": 80 },
-    { "name": "Bug", "sortOrder": 90 },
-    { "name": "Support", "sortOrder": 100 },
-    { "name": "Security", "sortOrder": 110 },
-    { "name": "Documentation", "sortOrder": 120 }
   ]
 }

@@ -639,6 +639,10 @@
                 <span>Deadline</span>
                 <input id="task-deadline" type="date" disabled>
               </label>
+              <label class="field-block" for="task-tag">
+                <span>Tag</span>
+                <input id="task-tag" type="text" autocomplete="off" disabled>
+              </label>
               <label class="field-block waiting-field" for="waiting-text">
                 <span>Waiting for</span>
                 <input id="waiting-text" type="text" autocomplete="off" disabled>
@@ -1164,6 +1168,7 @@
     $('#task-source').val('')
     $('#task-source-reference').val('')
     $('#task-source-url').val('')
+    $('#task-tag').val('')
     $('#editor-mode').val(getSupportedBodyFormatCode(preferredBodyFormatCode))
     $('#waiting-text').val('')
     $('#task-form input, #task-form select').prop('disabled', true)
@@ -1733,6 +1738,7 @@
     $('#task-type').val(currentTask.taskTypeCode || '')
     $('#task-priority').val(currentTask.taskPriorityCode || '')
     $('#task-source').val(currentTask.taskSourceCode || '')
+    $('#task-tag').val(currentTask.tag || '')
     $('#editor-mode').val(getSupportedBodyFormatCode(preferredBodyFormatCode))
   }
 
@@ -1859,6 +1865,7 @@
       $('#task-source').val(task.taskSourceCode || '')
       $('#task-source-reference').val(task.sourceReference || '')
       $('#task-source-url').val(task.sourceUrl || '')
+      $('#task-tag').val(task.tag || '')
       $('#editor-mode').val(getSupportedBodyFormatCode(preferredBodyFormatCode))
       $('#task-form input, #task-form select').prop('disabled', false)
       $('#editor-mode').prop('disabled', false)
@@ -1885,6 +1892,7 @@
       $('#task-source').val(task.taskSourceCode || '')
       $('#task-source-reference').val(task.sourceReference || '')
       $('#task-source-url').val(task.sourceUrl || '')
+      $('#task-tag').val(task.tag || '')
       $('#editor-mode').val(getSupportedBodyFormatCode(preferredBodyFormatCode))
       renderWaitingPanel(task)
 
@@ -1920,7 +1928,8 @@
       sourceReference: $('#task-source-reference').val().toString().trim() || null,
       sourceUrl: $('#task-source-url').val().toString().trim() || null,
       deadline: $('#task-deadline').val().toString() || null,
-      activeWaitingForLabel: $('#waiting-text').val().toString().trim() || null
+      activeWaitingForLabel: $('#waiting-text').val().toString().trim() || null,
+      tag: $('#task-tag').val().toString().trim() || null
     }
   }
 
@@ -2397,7 +2406,7 @@
     })
 
     $('#task-search').on('input', renderTaskList)
-    $('#task-form').on('input change', '#task-title, #task-type, #task-priority, #task-deadline, #task-source, #task-source-reference, #task-source-url, #waiting-text', markDirty)
+    $('#task-form').on('input change', '#task-title, #task-type, #task-priority, #task-deadline, #task-tag, #task-source, #task-source-reference, #task-source-url, #waiting-text', markDirty)
     $('#comment-add-button').on('click', function () {
       addComment().catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not add comment'), 'error')

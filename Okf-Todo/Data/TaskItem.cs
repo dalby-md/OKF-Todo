@@ -34,6 +34,8 @@ public sealed class TaskItem
 
     public DateTime? Deadline { get; set; }
 
+    public string? Tag { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }
@@ -57,8 +59,6 @@ public sealed class TaskItem
     public List<TaskAttachment> Attachments { get; set; } = [];
 
     public List<ImageAsset> Images { get; set; } = [];
-
-    public List<TaskTaskTag> TaskTags { get; set; } = [];
 
     public List<TaskRelation> SourceRelations { get; set; } = [];
 

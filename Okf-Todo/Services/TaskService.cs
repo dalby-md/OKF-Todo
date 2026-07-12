@@ -234,7 +234,8 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
             request.TaskSourceCode,
             request.SourceReference,
             request.SourceUrl,
-            request.Deadline), cancellationToken);
+            request.Deadline,
+            request.Tag), cancellationToken);
 
         await ApplyWaitingForAsync(task.Id, request.ActiveWaitingForLabel, cancellationToken);
 
@@ -281,6 +282,7 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         task.TaskSourceId = source?.Id;
         task.SourceReference = NormalizeOptional(request.SourceReference);
         task.SourceUrl = NormalizeOptional(request.SourceUrl);
+        task.Tag = NormalizeOptional(request.Tag);
         task.UpdatedAt = now;
 
         await lifecycleService.ChangeTypeAsync(task.Id, request.TaskTypeCode, cancellationToken);
@@ -864,7 +866,8 @@ public sealed record TaskSaveRequest(
     string? SourceReference,
     string? SourceUrl,
     DateTime? Deadline,
-    string? ActiveWaitingForLabel = null);
+    string? ActiveWaitingForLabel = null,
+    string? Tag = null);
 
 public sealed record TaskListItemDto(
     int Id,
@@ -899,6 +902,7 @@ public sealed record TaskDetailDto(
     string? SourceReference,
     string? SourceUrl,
     DateTime? Deadline,
+    string? Tag,
     TaskWaitingForDto? ActiveWaitingFor,
     DateTime CreatedAt,
     DateTime UpdatedAt)
@@ -921,6 +925,7 @@ public sealed record TaskDetailDto(
             task.SourceReference,
             task.SourceUrl,
             task.Deadline,
+            task.Tag,
             task.WaitingTargets
                 .Where(target => target.ResolvedAt is null)
                 .Select(TaskWaitingForDto.FromWaitingFor)

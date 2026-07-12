@@ -151,8 +151,6 @@ CHECKLIST_ITEM_COMPLETED     Checklist item completed
 CHECKLIST_ITEM_REOPENED      Checklist item reopened
 ATTACHMENT_ADDED             Attachment added
 ATTACHMENT_REMOVED           Attachment removed
-TAG_ADDED                    Tag added
-TAG_REMOVED                  Tag removed
 RELATION_ADDED               Relation added
 RELATION_REMOVED             Relation removed
 TASK_COMPLETED               Task completed
@@ -186,6 +184,7 @@ TaskSourceId nullable
 SourceReference nullable
 SourceUrl nullable
 Deadline nullable
+Tag nullable
 CreatedAt
 UpdatedAt
 ActivatedAt nullable
@@ -319,53 +318,6 @@ Notes:
 - Consider a soft max file size, for example 25–50 MB.
 - Store hash to detect duplicate attachments.
 
-## TaskTag
-
-```text
-Id
-Name
-Color nullable
-SortOrder
-IsActive
-CreatedAt
-UpdatedAt
-```
-
-Initial seeded tags may be inserted if the tag table is empty.
-
-Suggested initial tags:
-
-```text
-Oracle APEX
-.NET
-Power Platform
-TFS
-SQL Server
-SQLite
-Deployment
-Build
-Bug
-Support
-Security
-Documentation
-```
-
-## TaskTaskTag
-
-Many-to-many relation between tasks and tags.
-
-```text
-TaskId
-TaskTagId
-CreatedAt
-```
-
-Composite key:
-
-```text
-TaskId, TaskTagId
-```
-
 ## TaskRelation
 
 ```text
@@ -399,8 +351,6 @@ TaskLogType
 TaskChecklistItem
 TaskAttachment
 AttachmentKind
-TaskTag
-TaskTaskTag
 TaskRelation
 TaskRelationType
 BodyFormat

@@ -18,7 +18,7 @@ Do not ask Codex to build everything in one pass. Use small vertical slices.
 7. Add waiting target behavior
 8. Add comments and timeline
 9. Add checklist items
-10. Add tags
+10. Add a plain-text tag field
 11. Add attachments as SQLite BLOBs
 12. Add task relationships
 13. Add lookup management UI
@@ -74,7 +74,7 @@ Implement the initial SQLite/EF Core data model for the local task system.
 
 Scope:
 - Add lookup tables with common fields: Id, Code, Name, Description, SortOrder, IsActive, IsSystem, CreatedAt, UpdatedAt.
-- Add TaskItem, TaskWaitingFor, TaskComment, TaskLogEntry, TaskChecklistItem, TaskAttachment, TaskTag, TaskTaskTag, TaskRelation, TaskRelationType.
+- Add TaskItem, TaskWaitingFor, TaskComment, TaskLogEntry, TaskChecklistItem, TaskAttachment, TaskRelation, TaskRelationType.
 - Add startup seeding from configuration: only seed a lookup table if it is empty.
 - Do not hard-delete used lookup rows. Use deactivation for values that have existing references.
 - Allow hard deletion only for unused non-system lookup rows.
@@ -172,7 +172,7 @@ Optional fields:
 - Source reference
 - Source URL
 
-Do not implement attachments, checklist items, tags, or relationships in this step.
+Do not implement attachments, checklist items, the tag field, or relationships in this step.
 Use the existing lifecycle/logging service.
 ```
 
@@ -296,35 +296,23 @@ Do not make checklist items into full tasks.
 Add log entries for checklist item added/completed/reopened.
 ```
 
-## Milestone 9 — Tags
+## Milestone 9 — Tag
 
 Scope:
 
-- Add task tags.
-- Add tag management.
-- Add filtering by tag.
+- Add one optional plain-text tag field to tasks.
 
 Acceptance criteria:
 
-- User can add/remove tags on a task.
-- User can create/deactivate tags.
-- Inactive tags remain visible on existing tasks.
-- Used tags are not hard-deleted.
-- Unused non-system tags can be hard-deleted.
+- User can enter, edit, or clear a tag as plain text.
+- No tag lookup table or tag metadata is used.
 
 Suggested Codex prompt:
 
 ```text
-Add tags.
+Add one optional Tag string field to tasks.
 
-Requirements:
-- TaskTag table is used.
-- TaskTaskTag many-to-many table is used.
-- Tags can be created and deactivated.
-- Used tags are not hard-deleted.
-- Unused non-system tags can be hard-deleted.
-- Inactive tags remain visible on existing tasks but are not offered as normal new selections.
-- Add log entries for tag added/removed.
+The value is plain text. Do not add tag lookup rows, metadata, colors, activation state, or a join table.
 ```
 
 ## Milestone 10 — Attachments

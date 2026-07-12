@@ -65,13 +65,11 @@ public sealed class TaskLifecycleServiceTests
 
         var taskTypeCount = await database.DbContext.TaskTypes.CountAsync();
         var statusCount = await database.DbContext.TaskStatuses.CountAsync();
-        var tagCount = await database.DbContext.TaskTags.CountAsync();
         var selectedTaskType = await database.DbContext.TaskTypes.SingleAsync(type => type.IsSelected);
         var selectedTaskPriority = await database.DbContext.TaskPriorities.SingleAsync(priority => priority.IsSelected);
 
         Assert.True(taskTypeCount > 0);
         Assert.True(statusCount > 0);
-        Assert.True(tagCount > 0);
         Assert.Equal("REQUEST", selectedTaskType.Code);
         Assert.Equal("NORMAL", selectedTaskPriority.Code);
 
@@ -83,7 +81,6 @@ public sealed class TaskLifecycleServiceTests
 
         Assert.Equal(taskTypeCount, await database.DbContext.TaskTypes.CountAsync());
         Assert.Equal(statusCount, await database.DbContext.TaskStatuses.CountAsync());
-        Assert.Equal(tagCount, await database.DbContext.TaskTags.CountAsync());
 
         var unchangedStatus = await database.DbContext.TaskStatuses.SingleAsync(status => status.Code == TaskStatusCodes.Active);
         Assert.Equal("Renamed Active", unchangedStatus.Name);
@@ -147,7 +144,8 @@ public sealed class TaskLifecycleServiceTests
             Title: "Fix failed deployment",
             TaskTypeCode: "ERROR",
             BodyFormatCode: "HTML",
-            TaskPriorityCode: "NORMAL"));
+            TaskPriorityCode: "NORMAL",
+            Tag: "deployment"));
 
         var savedTask = await database.LoadTaskAsync(task.Id);
 
@@ -155,6 +153,7 @@ public sealed class TaskLifecycleServiceTests
         Assert.NotNull(savedTask.ActivatedAt);
         Assert.NotEqual(default, savedTask.CreatedAt);
         Assert.NotEqual(default, savedTask.UpdatedAt);
+        Assert.Equal("deployment", savedTask.Tag);
         AssertHasLog(savedTask, TaskLogTypeCodes.TaskCreated, "Task created");
     }
 

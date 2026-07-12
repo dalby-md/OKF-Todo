@@ -15,6 +15,34 @@ public static class SqliteSchemaMaintenance
         using var connection = new SqliteConnection($"Data Source={databasePath};Pooling=False");
         connection.Open();
 
+        if (HasTable(connection, "TaskItems") && !HasColumn(connection, "TaskItems", "Tag"))
+        {
+            logger.LogInformation("Adding plain-text Tag column to TaskItems.");
+            Execute(connection, "ALTER TABLE \"TaskItems\" ADD COLUMN \"Tag\" TEXT NULL");
+        }
+
+        if (HasTable(connection, "TaskTaskTags") && HasTable(connection, "TaskTags"))
+        {
+            logger.LogInformation("Migrating task tag names to the plain-text Tag value.");
+            Execute(connection, """
+                UPDATE "TaskItems"
+                SET "Tag" = (
+                    SELECT group_concat("TaskTags"."Name", ', ')
+                    FROM "TaskTaskTags"
+                    INNER JOIN "TaskTags" ON "TaskTags"."Id" = "TaskTaskTags"."TaskTagId"
+                    WHERE "TaskTaskTags"."TaskId" = "TaskItems"."Id"
+                )
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM "TaskTaskTags"
+                    WHERE "TaskTaskTags"."TaskId" = "TaskItems"."Id"
+                )
+                """);
+        }
+
+        DropTableIfExists(connection, "TaskTaskTags");
+        DropTableIfExists(connection, "TaskTags");
+
         if (HasTable(connection, "TaskStakeholders"))
         {
             logger.LogInformation("Dropping removed task stakeholder tables.");
@@ -31,13 +59,13 @@ public static class SqliteSchemaMaintenance
                 WHERE "TaskLogTypeId" IN (
                     SELECT "Id"
                     FROM "TaskLogTypes"
-                    WHERE "Code" IN ('STAKEHOLDER_ADDED', 'STAKEHOLDER_REMOVED')
+                    WHERE "Code" IN ('STAKEHOLDER_ADDED', 'STAKEHOLDER_REMOVED', 'TAG_ADDED', 'TAG_REMOVED')
                 )
                 """);
 
             Execute(connection, """
                 DELETE FROM "TaskLogTypes"
-                WHERE "Code" IN ('STAKEHOLDER_ADDED', 'STAKEHOLDER_REMOVED')
+                WHERE "Code" IN ('STAKEHOLDER_ADDED', 'STAKEHOLDER_REMOVED', 'TAG_ADDED', 'TAG_REMOVED')
                 """);
         }
 
