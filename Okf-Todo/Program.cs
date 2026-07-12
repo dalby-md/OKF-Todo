@@ -288,6 +288,7 @@ namespace Photino.Okf_Todo
             services.AddScoped<LookupSeedService>();
             services.AddScoped<TaskLifecycleService>();
             services.AddScoped<TaskService>();
+            services.AddScoped<TaskAttachmentService>();
             services.AddScoped<AppPreferenceService>();
             services.AddScoped<IssueService>();
             services.AddScoped<ImageService>();

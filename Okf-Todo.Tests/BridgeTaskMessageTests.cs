@@ -108,11 +108,33 @@ public sealed class BridgeTaskMessageTests
         var loaded = await fixture.SendAsync("task.get", new { id = taskId });
         Assert.Equal("<p>Created through bridge</p>", loaded.GetProperty("body").GetString());
 
+        var attachmentBytes = new byte[] { 10, 20, 30 };
+        var attachments = await fixture.SendAsync("task.attachment.create", new
+        {
+            taskId,
+            fileName = "build.log",
+            contentType = "text/plain",
+            base64Data = Convert.ToBase64String(attachmentBytes),
+            attachmentKindCode = "LOG_FILE",
+            description = (string?)null
+        });
+        var attachment = Assert.Single(attachments.EnumerateArray());
+        var attachmentId = attachment.GetProperty("id").GetInt32();
+        Assert.Equal("build.log", attachment.GetProperty("fileName").GetString());
+
+        var attachmentContent = await fixture.SendAsync("task.attachment.get", new { attachmentId });
+        Assert.Equal(Convert.ToBase64String(attachmentBytes), attachmentContent.GetProperty("base64Data").GetString());
+
+        attachments = await fixture.SendAsync("task.attachment.delete", new { taskId, attachmentId });
+        Assert.Empty(attachments.EnumerateArray());
+
         var initialTimeline = await fixture.SendAsync("task.timeline.get", new { taskId });
         Assert.Contains(
             initialTimeline.EnumerateArray(),
             item => item.GetProperty("kind").GetString() == "log"
                 && item.GetProperty("logTypeCode").GetString() == TaskLogTypeCodes.TaskCreated);
+        Assert.Contains(initialTimeline.EnumerateArray(), item => item.GetProperty("logTypeCode").GetString() == "ATTACHMENT_ADDED");
+        Assert.Contains(initialTimeline.EnumerateArray(), item => item.GetProperty("logTypeCode").GetString() == "ATTACHMENT_REMOVED");
 
         var timelineWithComment = await fixture.SendAsync("task.comment.create", new
         {
@@ -502,6 +524,7 @@ public sealed class BridgeTaskMessageTests
             serviceCollection.AddScoped<LookupSeedService>();
             serviceCollection.AddScoped<TaskLifecycleService>();
             serviceCollection.AddScoped<TaskService>();
+            serviceCollection.AddScoped<TaskAttachmentService>();
             serviceCollection.AddScoped<AppPreferenceService>();
             serviceCollection.AddScoped<ImageService>();
 

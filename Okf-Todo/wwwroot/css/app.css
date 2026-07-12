@@ -520,6 +520,75 @@ h2 {
   margin-top: 10px;
 }
 
+.attachments-section {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.attachments-header,
+.attachment-actions,
+.attachment-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.attachments-header {
+  justify-content: space-between;
+}
+
+.attachments-header h3 {
+  margin: 0;
+  color: #3f4852;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+#attachment-kind {
+  width: 150px;
+}
+
+.attachment-list {
+  display: grid;
+  gap: 3px;
+}
+
+.attachment-row {
+  min-height: 30px;
+  padding: 3px 0;
+  border-bottom: 1px solid #e0e5ea;
+  color: #5f6872;
+  font-size: 0.74rem;
+}
+
+.attachment-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  color: #1f6f68;
+  background: transparent;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-name:hover:not(:disabled) {
+  background: transparent;
+  text-decoration: underline;
+}
+
+.attachment-delete-button {
+  min-height: 24px;
+  padding: 0 6px;
+}
+
+.empty-attachments {
+  color: #5f6872;
+  font-size: 0.72rem;
+}
+
 .timeline-header {
   display: flex;
   align-items: center;

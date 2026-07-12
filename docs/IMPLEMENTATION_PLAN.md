@@ -320,6 +320,8 @@ Use a Select2 multi-select with `tags: true`. Put it on the same row as Waiting 
 
 ## Milestone 10 — Attachments
 
+Status: implemented.
+
 Scope:
 
 - Store files in SQLite as BLOBs.

@@ -680,6 +680,18 @@
               </label>
             </div>
 
+            <section class="attachments-section" aria-labelledby="attachments-title">
+              <div class="attachments-header">
+                <h3 id="attachments-title">Attachments</h3>
+                <div class="attachment-actions">
+                  <select id="attachment-kind" aria-label="Attachment kind" disabled></select>
+                  <input id="attachment-file" class="sr-only" type="file" disabled>
+                  <button id="attachment-add-button" class="secondary-button" type="button" disabled>Add file</button>
+                </div>
+              </div>
+              <div id="attachment-list" class="attachment-list"><span class="empty-attachments">No attachments.</span></div>
+            </section>
+
             <section class="timeline-section" aria-labelledby="timeline-title">
               <div class="timeline-header">
                 <h3 id="timeline-title">Timeline</h3>
@@ -874,7 +886,93 @@
     renderLookupOptions('#task-priority', lookups.taskPriorities, true)
     renderLookupOptions('#task-source', lookups.taskSources, true)
     renderLookupOptions('#editor-mode', lookups.bodyFormats, false)
+    renderLookupOptions('#attachment-kind', lookups.attachmentKinds, true)
     renderTagOptions(lookups.tags || [])
+  }
+
+  function formatFileSize(size) {
+    if (size < 1024) return `${size} B`
+    if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`
+  }
+
+  function renderAttachments(items) {
+    if (!items || items.length === 0) {
+      $('#attachment-list').html('<span class="empty-attachments">No attachments.</span>')
+      return
+    }
+
+    $('#attachment-list').html(items.map(function (item) {
+      return `<div class="attachment-row">
+        <button class="attachment-download-button attachment-name" type="button" data-attachment-id="${item.id}">${encodeText(item.fileName)}</button>
+        <span>${encodeText(item.attachmentKindName || '')}</span>
+        <span>${formatFileSize(item.fileSize)}</span>
+        <button class="attachment-delete-button secondary-button danger-button" type="button" data-attachment-id="${item.id}" aria-label="Remove ${encodeAttribute(item.fileName)}">Remove</button>
+      </div>`
+    }).join(''))
+  }
+
+  async function loadAttachments(taskId) {
+    if (!taskId) {
+      renderAttachments([])
+      return
+    }
+    renderAttachments(await sendBridgeMessage('task.attachment.list', { taskId }))
+  }
+
+  function readFileAsBase64(file) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader()
+      reader.onload = function () { resolve(reader.result.toString().split(',')[1] || '') }
+      reader.onerror = function () { reject(new Error('Could not read the selected file.')) }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  async function addAttachment() {
+    if (!currentTask || !currentTask.id) return
+    const file = $('#attachment-file')[0].files[0]
+    if (!file) return
+    if (file.size > 25 * 1024 * 1024) throw new Error('Attachments cannot exceed 25 MB.')
+
+    $('#attachment-add-button').prop('disabled', true).text('Adding')
+    try {
+      const items = await sendBridgeMessage('task.attachment.create', {
+        taskId: currentTask.id,
+        fileName: file.name,
+        contentType: file.type || null,
+        base64Data: await readFileAsBase64(file),
+        attachmentKindCode: $('#attachment-kind').val().toString() || null,
+        description: null
+      })
+      renderAttachments(items)
+      $('#attachment-file').val('')
+      await loadTimeline(currentTask.id)
+      setStatus('Attachment added', 'saved')
+    } finally {
+      $('#attachment-add-button').prop('disabled', false).text('Add file')
+    }
+  }
+
+  async function downloadAttachment(attachmentId) {
+    const item = await sendBridgeMessage('task.attachment.get', { attachmentId })
+    const bytes = Uint8Array.from(atob(item.base64Data), function (character) { return character.charCodeAt(0) })
+    const url = URL.createObjectURL(new Blob([bytes], { type: item.contentType }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = item.fileName
+    link.click()
+    window.setTimeout(function () { URL.revokeObjectURL(url) }, 1000)
+  }
+
+  async function deleteAttachment(attachmentId) {
+    const items = await sendBridgeMessage('task.attachment.delete', {
+      taskId: currentTask.id,
+      attachmentId
+    })
+    renderAttachments(items)
+    await loadTimeline(currentTask.id)
+    setStatus('Attachment removed', 'saved')
   }
 
   function renderTagOptions(values) {
@@ -1216,6 +1314,7 @@
     $('#editor-host').html('<div class="empty-editor">Select a task to edit the body.</div>')
     $('#comment-text').val('').removeClass('is-invalid')
     setCommentControlsEnabled(false)
+    renderAttachments([])
     renderTimeline([])
     setStatus('Ready', 'ready')
     renderTaskList()
@@ -1889,6 +1988,7 @@
       .text(canReopen ? 'Reopen' : 'Complete')
       .prop('disabled', !(canCompleteOrCancel || canReopen))
     $('#cancel-button').prop('disabled', !canCompleteOrCancel)
+    $('#attachment-add-button, #attachment-kind, #attachment-file').prop('disabled', !isSavedTask)
     renderWaitingPanel(task)
   }
 
@@ -1940,6 +2040,7 @@
       renderTaskHeaderAndActions(task)
 
       await initializeEditorForTask(task)
+      await loadAttachments(task.id)
       await loadTimeline(task.id)
       isDirty = false
       setCleanTaskSnapshot()
@@ -2445,6 +2546,16 @@
     })
 
     $('#task-search').on('input', renderTaskList)
+    $('#attachment-add-button').on('click', function () { $('#attachment-file').trigger('click') })
+    $('#attachment-file').on('change', function () {
+      addAttachment().catch(function (error) { setStatus(getErrorMessage(error, 'Could not add attachment'), 'error') })
+    })
+    $('#attachment-list').on('click', '.attachment-download-button', function () {
+      downloadAttachment(Number($(this).attr('data-attachment-id'))).catch(function (error) { setStatus(getErrorMessage(error, 'Could not download attachment'), 'error') })
+    })
+    $('#attachment-list').on('click', '.attachment-delete-button', function () {
+      deleteAttachment(Number($(this).attr('data-attachment-id'))).catch(function (error) { setStatus(getErrorMessage(error, 'Could not remove attachment'), 'error') })
+    })
     $('#task-form').on('input change', '#task-title, #task-type, #task-priority, #task-deadline, #task-tags, #task-source, #task-source-reference, #task-source-url, #waiting-text', markDirty)
     $('#comment-add-button').on('click', function () {
       addComment().catch(function (error) {

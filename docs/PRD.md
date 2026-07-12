@@ -325,6 +325,8 @@ Initial attachment kinds:
 
 A soft size limit should be considered, for example 25–50 MB per attachment.
 
+The initial UI supports adding, downloading, and removing attachments. Attachments are limited to 25 MB and appear above the task timeline.
+
 ## Tags
 
 A task can have zero or more tags. Each tag is only a string expression with no color, order, activation state, or other metadata.
