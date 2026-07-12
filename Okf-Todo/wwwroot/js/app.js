@@ -10,20 +10,12 @@
   const lookupSettingsGroups = {
     taskTypes: 'Task types',
     taskPriorities: 'Priorities',
-    taskStatuses: 'Statuses',
-    taskSources: 'Sources',
-    taskRelationTypes: 'Relationship types',
-    bodyFormats: 'Body formats',
-    taskLogTypes: 'Log types'
+    taskStatuses: 'Statuses'
   }
   const lookupSettingsGroupNouns = {
     taskTypes: 'task type',
     taskPriorities: 'priority',
-    taskStatuses: 'status',
-    taskSources: 'source',
-    taskRelationTypes: 'relationship type',
-    bodyFormats: 'body format',
-    taskLogTypes: 'log type'
+    taskStatuses: 'status'
   }
   const supportedEditorImageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
   const maxEditorImageBytes = 5 * 1024 * 1024
@@ -812,10 +804,6 @@
                 <span>Description</span>
                 <input id="lookup-edit-description" type="text" autocomplete="off">
               </label>
-              <label id="lookup-edit-reverse-field" class="settings-field" for="lookup-edit-reverse-name" hidden>
-                <span>Reverse name</span>
-                <input id="lookup-edit-reverse-name" type="text" autocomplete="off">
-              </label>
               <label class="settings-field" for="lookup-edit-background-color">
                 <span>Background</span>
                 <input id="lookup-edit-background-color" type="color">
@@ -1364,7 +1352,6 @@
     editingLookupCode = code || null
     const item = editingLookupCode ? findActiveLookupItem(editingLookupCode) : null
     const isReadOnly = !!(item && item.isReadOnly)
-    const hasReverseName = activeLookupSettingsGroup === 'taskRelationTypes'
 
     $('#lookup-edit-title').text(editingLookupCode
       ? `Edit ${lookupSettingsGroupNouns[activeLookupSettingsGroup]}`
@@ -1375,8 +1362,6 @@
       .removeClass('is-invalid')
     $('#lookup-edit-name').val(item ? item.name : '').prop('disabled', isReadOnly).removeClass('is-invalid')
     $('#lookup-edit-description').val(item && item.description ? item.description : '').prop('disabled', isReadOnly)
-    $('#lookup-edit-reverse-field').prop('hidden', !hasReverseName)
-    $('#lookup-edit-reverse-name').val(item && item.reverseName ? item.reverseName : '').prop('disabled', isReadOnly).removeClass('is-invalid')
     $('#lookup-edit-is-active')
       .prop('checked', item ? item.isActive : true)
       .prop('disabled', isReadOnly || !!(item && activeLookupSettingsGroup === 'taskStatuses' && item.isSystem))
@@ -2181,13 +2166,6 @@
       return
     }
 
-    const reverseName = $('#lookup-edit-reverse-name').val().toString().trim()
-    if (activeLookupSettingsGroup === 'taskRelationTypes' && !reverseName) {
-      $('#lookup-edit-reverse-name').addClass('is-invalid').trigger('focus')
-      $('#lookup-edit-error').text('Reverse name is required.').prop('hidden', false)
-      return
-    }
-
     const $button = $('#lookup-edit-save-button')
     $button.prop('disabled', true).text('Saving')
     $('#lookup-edit-cancel-button').prop('disabled', true)
@@ -2202,7 +2180,7 @@
       isSelected: $('#lookup-edit-is-selected').prop('checked'),
       backgroundColor: $('#lookup-edit-background-color').val().toString(),
       foregroundColor: $('#lookup-edit-foreground-color').val().toString(),
-      reverseName: reverseName || null
+      reverseName: null
     }
 
     try {

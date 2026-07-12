@@ -405,17 +405,13 @@ The user may rename `Active` to `Open`, but the code remains `ACTIVE`.
 
 ## Lookup management UI
 
-Add a settings/admin area for lookup values:
+Add a settings/admin area for editable lookup values:
 
 - Task types
 - Statuses
 - Priorities
-- Sources
-- Relation types
-- Body formats
-- Log types
 
-Task sources and relationship types are editable and reorderable. Relationship types include editable forward and reverse names. Body formats and log types are visible as read-only system-managed values.
+Task sources, relationship types, body formats, and log types are system-managed in the first version and are not editable in the preferences UI.
 
 ## First useful views
 

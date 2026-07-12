@@ -398,15 +398,18 @@ Scope:
 - Add settings screens for lookup tables.
 - Allow rename, description edit, sort order edit, activation/deactivation.
 - Protect system codes.
+- Expose only task types, priorities, and statuses in the preferences UI.
+- Keep sources, relationship types, body formats, and log types system-managed in the preferences UI.
 
 Acceptance criteria:
 
-- Lookup values can be edited in the app.
+- Task type, priority, and status lookup values can be edited in the app.
 - Used lookup values are not hard-deleted.
 - Unused non-system lookup values can be hard-deleted.
 - System lookup codes cannot be changed in normal UI.
 - System values required by lifecycle cannot be deactivated.
 - Inactive values are not offered for new selections.
+- Source, relationship type, body format, and log type values are not exposed as editable preference groups.
 
 Suggested Codex prompt:
 

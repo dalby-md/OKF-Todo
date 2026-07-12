@@ -72,14 +72,8 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
             case "taskStatuses":
                 await UpdateTaskStatusLookupAsync(request, cancellationToken);
                 break;
-            case "taskSources":
-                await UpdateLookupAsync(dbContext.TaskSources, request, cancellationToken);
-                break;
-            case "taskRelationTypes":
-                await UpdateRelationTypeAsync(request, cancellationToken);
-                break;
             default:
-                throw new ValidationException("Lookup group is not supported.", "group");
+                throw new ValidationException("Lookup group is not editable.", "group");
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -115,16 +109,8 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
                     (id, token) => dbContext.TaskItems.AnyAsync(task => task.TaskStatusId == id, token),
                     cancellationToken);
                 break;
-            case "taskSources":
-                await DeleteLookupAsync(dbContext.TaskSources, request.Code,
-                    (id, token) => dbContext.TaskItems.AnyAsync(task => task.TaskSourceId == id, token), cancellationToken);
-                break;
-            case "taskRelationTypes":
-                await DeleteLookupAsync(dbContext.TaskRelationTypes, request.Code,
-                    (id, token) => dbContext.TaskRelations.AnyAsync(relation => relation.TaskRelationTypeId == id, token), cancellationToken);
-                break;
             default:
-                throw new ValidationException("Lookup group is not supported.", "group");
+                throw new ValidationException("Lookup group is not editable.", "group");
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -148,14 +134,8 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
             case "taskStatuses":
                 await ReorderLookupAsync(dbContext.TaskStatuses, request, cancellationToken);
                 break;
-            case "taskSources":
-                await ReorderLookupAsync(dbContext.TaskSources, request, cancellationToken);
-                break;
-            case "taskRelationTypes":
-                await ReorderLookupAsync(dbContext.TaskRelationTypes, request, cancellationToken);
-                break;
             default:
-                throw new ValidationException("Lookup group is not supported.", "group");
+                throw new ValidationException("Lookup group is not editable.", "group");
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -179,14 +159,8 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
             case "taskStatuses":
                 await CreateLookupAsync(dbContext.TaskStatuses, request, cancellationToken);
                 break;
-            case "taskSources":
-                await CreateLookupAsync(dbContext.TaskSources, request, cancellationToken);
-                break;
-            case "taskRelationTypes":
-                await CreateRelationTypeAsync(request, cancellationToken);
-                break;
             default:
-                throw new ValidationException("Lookup group is not supported.", "group");
+                throw new ValidationException("Lookup group is not editable.", "group");
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -542,25 +516,6 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
                 item.IsSelected, item.BackgroundColor, item.ForegroundColor,
                 !item.IsSystem && !usedLookupIds.Contains(item.Id), item.ReverseName, false))
             .ToListAsync(cancellationToken);
-    }
-
-    private async Task UpdateRelationTypeAsync(LookupUpdateRequest request, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(request.ReverseName))
-            throw new ValidationException("Reverse name is required.", "reverseName");
-        await UpdateLookupAsync(dbContext.TaskRelationTypes, request, cancellationToken);
-        var item = await dbContext.TaskRelationTypes.SingleAsync(
-            relationType => relationType.Code == NormalizeLookupCode(request.Code), cancellationToken);
-        item.ReverseName = request.ReverseName.Trim();
-    }
-
-    private async Task CreateRelationTypeAsync(LookupCreateRequest request, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(request.ReverseName))
-            throw new ValidationException("Reverse name is required.", "reverseName");
-        await CreateLookupAsync(dbContext.TaskRelationTypes, request, cancellationToken);
-        var item = dbContext.ChangeTracker.Entries<TaskRelationType>().Last().Entity;
-        item.ReverseName = request.ReverseName.Trim();
     }
 
     private async Task UpdateTaskStatusLookupAsync(
