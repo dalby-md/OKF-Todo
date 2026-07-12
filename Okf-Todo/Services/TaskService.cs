@@ -799,6 +799,8 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
                 comment.Id,
                 comment.CommentText,
                 null,
+                null,
+                null,
                 comment.CreatedAt,
                 true))
             .ToListAsync(cancellationToken);
@@ -812,6 +814,8 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
                 log.Id,
                 log.Message,
                 log.TaskLogType == null ? null : log.TaskLogType.Code,
+                log.OldValue,
+                log.NewValue,
                 log.CreatedAt,
                 false))
             .ToListAsync(cancellationToken);
@@ -1010,5 +1014,7 @@ public sealed record TaskTimelineItemDto(
     int Id,
     string Text,
     string? LogTypeCode,
+    string? OldValue,
+    string? NewValue,
     DateTime CreatedAt,
     bool CanDelete);

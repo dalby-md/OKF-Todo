@@ -1782,6 +1782,27 @@
     $('#comment-text, #comment-add-button').prop('disabled', !isEnabled)
   }
 
+  function formatDeadlineLogValue(value) {
+    if (!value) return '(none)'
+    const dateOnlyMatch = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/)
+    const parsed = dateOnlyMatch
+      ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
+      : new Date(value)
+    if (Number.isNaN(parsed.getTime())) return value
+    return new Intl.DateTimeFormat(undefined, {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
+    }).format(parsed)
+  }
+
+  function getTimelineText(item) {
+    if (item.logTypeCode === 'DEADLINE_CHANGED') {
+      return `Deadline changed from ${formatDeadlineLogValue(item.oldValue)} to ${formatDeadlineLogValue(item.newValue)}`
+    }
+    return item.text
+  }
+
   function renderTimeline(items) {
     const timelineItems = Array.isArray(items) ? items : []
 
@@ -1800,7 +1821,7 @@
         <article class="timeline-entry timeline-entry-${encodeAttribute(item.kind)}">
           <span class="timeline-kind">${encodeText(kindLabel)}</span>
           <div class="timeline-entry-main">
-            <p>${encodeText(item.text)}</p>
+            <p>${encodeText(getTimelineText(item))}</p>
             <time datetime="${encodeAttribute(item.createdAt)}">${encodeText(formatDateTime(item.createdAt))}</time>
           </div>
           ${deleteButton}
