@@ -174,6 +174,55 @@ public sealed class TaskServiceTests
     }
 
     [Fact]
+    public async Task List_FiltersUsefulViewsAndAppliesWorkPriorityOrder()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var today = DateTime.UtcNow.Date;
+
+        var overdue = await database.Tasks.CreateAsync(CreateRequest("Overdue") with
+        {
+            Deadline = today.AddDays(-1)
+        }, CancellationToken.None);
+        var urgent = await database.Tasks.CreateAsync(CreateRequest("Urgent") with
+        {
+            TaskPriorityCode = TaskPriorityCodes.Urgent
+        }, CancellationToken.None);
+        var active = await database.Tasks.CreateAsync(CreateRequest("Active"), CancellationToken.None);
+        var waiting = await database.Tasks.CreateAsync(CreateRequest("Waiting"), CancellationToken.None);
+        await database.Tasks.AddWaitingForAsync(
+            new TaskWaitingForSaveRequest(waiting.Id, "External response"),
+            CancellationToken.None);
+        var canWait = await database.Tasks.CreateAsync(CreateRequest("Can wait") with
+        {
+            TaskPriorityCode = TaskPriorityCodes.CanWait
+        }, CancellationToken.None);
+        var completed = await database.Tasks.CreateAsync(CreateRequest("Completed"), CancellationToken.None);
+        await database.Tasks.CompleteAsync(completed.Id, CancellationToken.None);
+
+        var activeTasks = await database.Tasks.ListAsync(new TaskListRequest("active"), CancellationToken.None);
+        Assert.Equal(
+            [overdue.Id, urgent.Id, active.Id, waiting.Id, canWait.Id],
+            activeTasks.Select(task => task.Id));
+
+        var urgentTasks = await database.Tasks.ListAsync(new TaskListRequest("urgent"), CancellationToken.None);
+        Assert.Equal([urgent.Id], urgentTasks.Select(task => task.Id));
+
+        var waitingTasks = await database.Tasks.ListAsync(new TaskListRequest("waiting"), CancellationToken.None);
+        Assert.Equal([waiting.Id], waitingTasks.Select(task => task.Id));
+
+        var overdueTasks = await database.Tasks.ListAsync(new TaskListRequest("overdue"), CancellationToken.None);
+        Assert.Equal([overdue.Id], overdueTasks.Select(task => task.Id));
+
+        var completedTasks = await database.Tasks.ListAsync(new TaskListRequest("completed"), CancellationToken.None);
+        Assert.Equal([completed.Id], completedTasks.Select(task => task.Id));
+
+        var allTasks = await database.Tasks.ListAsync(new TaskListRequest("all"), CancellationToken.None);
+        Assert.Equal(
+            [overdue.Id, urgent.Id, active.Id, waiting.Id, canWait.Id, completed.Id],
+            allTasks.Select(task => task.Id));
+    }
+
+    [Fact]
     public async Task Create_UsesSelectedLookupDefaultsWhenTypeAndPriorityAreOmitted()
     {
         await using var database = await TestDatabase.CreateAsync();
@@ -514,7 +563,10 @@ public sealed class TaskServiceTests
 
         var completedTasks = await database.Tasks.ListAsync(new TaskListRequest("completed"), CancellationToken.None);
         Assert.Contains(completedTasks, task => task.Id == completed.Id && task.TaskStatusCode == TaskStatusCodes.Completed);
-        Assert.Contains(completedTasks, task => task.Id == cancelled.Id && task.TaskStatusCode == TaskStatusCodes.Cancelled);
+        Assert.DoesNotContain(completedTasks, task => task.Id == cancelled.Id);
+
+        var allTasks = await database.Tasks.ListAsync(new TaskListRequest("all"), CancellationToken.None);
+        Assert.Contains(allTasks, task => task.Id == cancelled.Id && task.TaskStatusCode == TaskStatusCodes.Cancelled);
     }
 
     [Fact]

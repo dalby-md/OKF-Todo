@@ -350,6 +350,16 @@ public sealed class BridgeTaskMessageTests
 
         var cancelled = await fixture.SendAsync("task.cancel", new { id = cancellable.GetProperty("id").GetInt32() });
         Assert.Equal(TaskStatusCodes.Cancelled, cancelled.GetProperty("taskStatusCode").GetString());
+
+        var completedAfterCancel = await fixture.SendAsync("task.list", new { view = "completed" });
+        Assert.DoesNotContain(
+            completedAfterCancel.EnumerateArray(),
+            task => task.GetProperty("id").GetInt32() == cancelled.GetProperty("id").GetInt32());
+
+        var allAfterCancel = await fixture.SendAsync("task.list", new { view = "all" });
+        Assert.Contains(
+            allAfterCancel.EnumerateArray(),
+            task => task.GetProperty("id").GetInt32() == cancelled.GetProperty("id").GetInt32());
     }
 
     [Fact]
@@ -373,6 +383,59 @@ public sealed class BridgeTaskMessageTests
         Assert.False(response.RootElement.GetProperty("ok").GetBoolean());
         Assert.Equal("ValidationFailed", response.RootElement.GetProperty("error").GetProperty("code").GetString());
         Assert.Equal("title", response.RootElement.GetProperty("error").GetProperty("details").GetProperty("field").GetString());
+    }
+
+    [Fact]
+    public async Task Bridge_ListsUrgentWaitingAndOverdueViews()
+    {
+        await using var fixture = await BridgeFixture.CreateAsync();
+
+        var urgent = await fixture.SendAsync("task.create", new
+        {
+            title = "Urgent bridge task",
+            taskTypeCode = "REQUEST",
+            body = "",
+            bodyFormatCode = "HTML",
+            taskPriorityCode = TaskPriorityCodes.Urgent,
+            taskSourceCode = (string?)null,
+            sourceReference = (string?)null,
+            sourceUrl = (string?)null,
+            deadline = (DateTime?)null
+        });
+        var waiting = await fixture.SendAsync("task.create", new
+        {
+            title = "Waiting bridge task",
+            taskTypeCode = "REQUEST",
+            body = "",
+            bodyFormatCode = "HTML",
+            taskPriorityCode = "NORMAL",
+            taskSourceCode = (string?)null,
+            sourceReference = (string?)null,
+            sourceUrl = (string?)null,
+            deadline = (DateTime?)null,
+            activeWaitingForLabel = "External response"
+        });
+        var overdue = await fixture.SendAsync("task.create", new
+        {
+            title = "Overdue bridge task",
+            taskTypeCode = "REQUEST",
+            body = "",
+            bodyFormatCode = "HTML",
+            taskPriorityCode = "NORMAL",
+            taskSourceCode = (string?)null,
+            sourceReference = (string?)null,
+            sourceUrl = (string?)null,
+            deadline = DateTime.UtcNow.Date.AddDays(-1)
+        });
+
+        var urgentList = await fixture.SendAsync("task.list", new { view = "urgent" });
+        Assert.Equal(urgent.GetProperty("id").GetInt32(), Assert.Single(urgentList.EnumerateArray()).GetProperty("id").GetInt32());
+
+        var waitingList = await fixture.SendAsync("task.list", new { view = "waiting" });
+        Assert.Equal(waiting.GetProperty("id").GetInt32(), Assert.Single(waitingList.EnumerateArray()).GetProperty("id").GetInt32());
+
+        var overdueList = await fixture.SendAsync("task.list", new { view = "overdue" });
+        Assert.Equal(overdue.GetProperty("id").GetInt32(), Assert.Single(overdueList.EnumerateArray()).GetProperty("id").GetInt32());
     }
 
     [Fact]

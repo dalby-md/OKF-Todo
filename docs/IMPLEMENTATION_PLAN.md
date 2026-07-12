@@ -300,6 +300,8 @@ Add log entries for checklist item added/completed/reopened.
 
 ## Milestone 9 — Tags
 
+Status: implemented.
+
 Scope:
 
 - Add zero or more string-only tags to tasks.
@@ -428,6 +430,8 @@ Requirements:
 
 ## Milestone 13 — Views and sorting
 
+Status: implemented.
+
 Scope:
 
 Add first useful views:
@@ -456,6 +460,7 @@ Acceptance criteria:
 
 - Views use lookup codes, not display names.
 - Completed tasks are hidden by default in active views.
+- Cancelled tasks appear in All, not Completed, and use red struck-through titles with gray pills in the list.
 - Waiting tasks remain easy to find.
 
 ## Recommended first real Codex task

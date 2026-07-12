@@ -297,6 +297,25 @@ h2 {
   white-space: normal;
 }
 
+.task-row.is-cancelled,
+.task-row.is-cancelled:hover,
+.task-row.is-cancelled:hover:not(:disabled),
+.task-row.is-cancelled.is-selected,
+.task-row.is-cancelled.is-selected:hover,
+.task-row.is-cancelled.is-selected:hover:not(:disabled) {
+  color: #b42318;
+  background: #f6f7f8;
+}
+
+.task-row.is-cancelled .task-row-title {
+  text-decoration: line-through;
+}
+
+.task-row.is-cancelled .task-badge {
+  color: #5f6872 !important;
+  background: #e5e7eb !important;
+}
+
 .task-row-meta {
   display: flex;
   flex-wrap: wrap;

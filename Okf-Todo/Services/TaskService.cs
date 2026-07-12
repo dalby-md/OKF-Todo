@@ -172,6 +172,7 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         CancellationToken cancellationToken)
     {
         var view = string.IsNullOrWhiteSpace(request.View) ? "active" : request.View.Trim().ToLowerInvariant();
+        var today = DateTime.UtcNow.Date;
         var query = dbContext.TaskItems
             .AsNoTracking()
             .Include(task => task.TaskType)
@@ -183,15 +184,45 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         {
             "active" => query.Where(task => task.TaskStatus != null
                 && task.TaskStatus.Code == TaskStatusCodes.Active),
+            "urgent" => query.Where(task => task.TaskStatus != null
+                && task.TaskStatus.Code == TaskStatusCodes.Active
+                && task.TaskPriority != null
+                && task.TaskPriority.Code == TaskPriorityCodes.Urgent),
+            "waiting" => query.Where(task => task.TaskStatus != null
+                && task.TaskStatus.Code == TaskStatusCodes.Active
+                && task.WaitingTargets.Any(waitingFor => waitingFor.ResolvedAt == null)),
+            "overdue" => query.Where(task => task.TaskStatus != null
+                && task.TaskStatus.Code == TaskStatusCodes.Active
+                && task.Deadline != null
+                && task.Deadline < today),
             "completed" => query.Where(task => task.TaskStatus != null
-                && (task.TaskStatus.Code == TaskStatusCodes.Completed || task.TaskStatus.Code == TaskStatusCodes.Cancelled)),
+                && task.TaskStatus.Code == TaskStatusCodes.Completed),
             "all" => query,
             _ => query.Where(task => task.TaskStatus != null
                 && task.TaskStatus.Code == TaskStatusCodes.Active)
         };
 
         return await query
-            .OrderBy(task => task.TaskStatus!.SortOrder)
+            .OrderBy(task => task.TaskStatus!.Code == TaskStatusCodes.Active
+                    && task.Deadline != null
+                    && task.Deadline < today
+                ? 0
+                : task.TaskStatus.Code == TaskStatusCodes.Active
+                    && task.TaskPriority != null
+                    && task.TaskPriority.Code == TaskPriorityCodes.Urgent
+                ? 1
+                : task.TaskStatus.Code == TaskStatusCodes.Active
+                    && !task.WaitingTargets.Any(waitingFor => waitingFor.ResolvedAt == null)
+                    && (task.TaskPriority == null || task.TaskPriority.Code != TaskPriorityCodes.CanWait)
+                ? 2
+                : task.TaskStatus.Code == TaskStatusCodes.Active
+                    && task.WaitingTargets.Any(waitingFor => waitingFor.ResolvedAt == null)
+                ? 3
+                : task.TaskStatus.Code == TaskStatusCodes.Active
+                    && task.TaskPriority != null
+                    && task.TaskPriority.Code == TaskPriorityCodes.CanWait
+                ? 4
+                : 5)
             .ThenBy(task => task.Deadline == null)
             .ThenBy(task => task.Deadline)
             .ThenByDescending(task => task.UpdatedAt)

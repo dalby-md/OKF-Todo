@@ -426,6 +426,8 @@ Completed tasks
 All tasks
 ```
 
+Cancelled tasks appear only in `All tasks`, where their titles use red struck-through text and all pills are gray. They do not appear in `Completed tasks`.
+
 ## Sorting ideas
 
 Initial sorting can be simple:

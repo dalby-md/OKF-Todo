@@ -4,6 +4,9 @@
   const imageBridgeTimeoutMs = 120000
   const viewLabels = {
     active: 'Active',
+    urgent: 'Urgent',
+    waiting: 'Waiting',
+    overdue: 'Overdue',
     completed: 'Completed',
     all: 'All'
   }
@@ -242,8 +245,12 @@
   function getViewForTask(task) {
     const statusCode = task && task.taskStatusCode
 
-    if (statusCode === 'COMPLETED' || statusCode === 'CANCELLED') {
+    if (statusCode === 'COMPLETED') {
       return 'completed'
+    }
+
+    if (statusCode === 'CANCELLED') {
+      return 'all'
     }
 
     return 'active'
@@ -1781,6 +1788,7 @@
     $('#task-list').html(visibleTasks.map(function (task) {
       const selectedClass = currentTask && currentTask.id === task.id ? ' is-selected' : ''
       const waitingClass = task.activeWaitingForLabel ? ' is-waiting' : ''
+      const cancelledClass = task.taskStatusCode === 'CANCELLED' ? ' is-cancelled' : ''
       const priority = task.taskPriorityName
         ? renderBadge(task.taskPriorityName, task.taskPriorityBackgroundColor, task.taskPriorityForegroundColor)
         : ''
@@ -1795,7 +1803,7 @@
         : ''
 
       return `
-        <button class="task-row${selectedClass}${waitingClass}" type="button" data-task-id="${task.id}">
+        <button class="task-row${selectedClass}${waitingClass}${cancelledClass}" type="button" data-task-id="${task.id}">
           <span class="task-row-title">${encodeText(task.title)}</span>
           <span class="task-row-meta">
             ${renderBadge(task.taskTypeName, task.taskTypeBackgroundColor, task.taskTypeForegroundColor)}

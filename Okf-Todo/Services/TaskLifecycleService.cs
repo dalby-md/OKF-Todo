@@ -430,6 +430,12 @@ public static class TaskStatusCodes
     public const string Cancelled = "CANCELLED";
 }
 
+public static class TaskPriorityCodes
+{
+    public const string Urgent = "URGENT";
+    public const string CanWait = "CAN_WAIT";
+}
+
 public static class TaskLogTypeCodes
 {
     public const string TaskCreated = "TASK_CREATED";
