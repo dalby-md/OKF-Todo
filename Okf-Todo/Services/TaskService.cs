@@ -15,6 +15,127 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
             await dbContext.TaskTags.AsNoTracking().OrderBy(tag => tag.Value).Select(tag => tag.Value).ToListAsync(cancellationToken));
     }
 
+    public async Task<IReadOnlyCollection<TagSettingsItemDto>> GetTagSettingsAsync(
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.TaskTags
+            .AsNoTracking()
+            .OrderBy(tag => tag.Value)
+            .Select(tag => new TagSettingsItemDto(tag.Id, tag.Value, tag.Tasks.Count))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<TagSettingsItemDto>> RenameTagAsync(
+        TagRenameRequest request,
+        CancellationToken cancellationToken)
+    {
+        var value = NormalizeTagValue(request.Value);
+        var tag = await dbContext.TaskTags
+            .SingleOrDefaultAsync(item => item.Id == request.TagId, cancellationToken)
+            ?? throw new ValidationException("Tag was not found.", "tagId");
+
+        if (await dbContext.TaskTags.AnyAsync(
+            item => item.Id != tag.Id && item.Value == value,
+            cancellationToken))
+        {
+            throw new ValidationException("A tag with this value already exists. Merge the tags instead.", "value");
+        }
+
+        tag.Value = value;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return await GetTagSettingsAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<TagSettingsItemDto>> DeleteTagAsync(
+        TagDeleteRequest request,
+        CancellationToken cancellationToken)
+    {
+        var tag = await dbContext.TaskTags
+            .Include(item => item.Tasks)
+            .SingleOrDefaultAsync(item => item.Id == request.TagId, cancellationToken)
+            ?? throw new ValidationException("Tag was not found.", "tagId");
+
+        if (tag.Tasks.Count != 0)
+        {
+            throw new ValidationException("A used tag cannot be deleted. Merge it into another tag instead.", "tagId");
+        }
+
+        dbContext.TaskTags.Remove(tag);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return await GetTagSettingsAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<TagSettingsItemDto>> MergeTagAsync(
+        TagMergeRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.SourceTagId == request.TargetTagId)
+        {
+            throw new ValidationException("Select a different target tag.", "targetTagId");
+        }
+
+        var source = await dbContext.TaskTags
+            .SingleOrDefaultAsync(item => item.Id == request.SourceTagId, cancellationToken)
+            ?? throw new ValidationException("Source tag was not found.", "sourceTagId");
+        var target = await dbContext.TaskTags
+            .SingleOrDefaultAsync(item => item.Id == request.TargetTagId, cancellationToken)
+            ?? throw new ValidationException("Target tag was not found.", "targetTagId");
+        var affectedTaskIds = await dbContext.TaskTaskTags
+            .Where(item => item.TaskTagId == source.Id)
+            .Select(item => item.TaskId)
+            .ToListAsync(cancellationToken);
+        var affectedTasks = await dbContext.TaskItems
+            .Include(task => task.Tags)
+                .ThenInclude(taskTag => taskTag.TaskTag)
+            .Where(task => affectedTaskIds.Contains(task.Id))
+            .ToListAsync(cancellationToken);
+        var updateLogType = affectedTasks.Count == 0
+            ? null
+            : await GetOrCreateTaskUpdatedLogTypeAsync(cancellationToken);
+        var now = DateTime.UtcNow;
+
+        foreach (var task in affectedTasks)
+        {
+            var oldValues = task.Tags
+                .Where(item => item.TaskTag is not null)
+                .Select(item => item.TaskTag!.Value)
+                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var sourceLink = task.Tags.Single(item => item.TaskTagId == source.Id);
+            var hasTarget = task.Tags.Any(item => item.TaskTagId == target.Id);
+
+            dbContext.TaskTaskTags.Remove(sourceLink);
+            if (!hasTarget)
+            {
+                task.Tags.Add(new TaskTaskTag
+                {
+                    TaskTagId = target.Id,
+                    TaskTag = target
+                });
+            }
+
+            var newValues = oldValues
+                .Where(value => !string.Equals(value, source.Value, StringComparison.OrdinalIgnoreCase))
+                .Append(target.Value)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            AddFieldChangeLog(
+                task,
+                updateLogType!,
+                "Tags",
+                string.Join(", ", oldValues),
+                string.Join(", ", newValues),
+                now);
+            task.UpdatedAt = now;
+        }
+
+        dbContext.TaskTags.Remove(source);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return await GetTagSettingsAsync(cancellationToken);
+    }
+
     public async Task<TaskLookupSettingsDto> GetLookupSettingsAsync(CancellationToken cancellationToken)
     {
         var usedTaskTypeIds = (await dbContext.TaskItems
@@ -967,6 +1088,12 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
+    private static string NormalizeTagValue(string? value)
+    {
+        return NormalizeOptional(value)
+            ?? throw new ValidationException("Tag value is required.", "value");
+    }
+
     private async Task EnsureTaskExistsAsync(int taskId, CancellationToken cancellationToken)
     {
         if (!await dbContext.TaskItems.AnyAsync(task => task.Id == taskId, cancellationToken))
@@ -1087,6 +1214,14 @@ public sealed record LookupReorderRequest(
     IReadOnlyList<string> OrderedCodes);
 
 public sealed record TaskListRequest(string? View);
+
+public sealed record TagSettingsItemDto(int Id, string Value, int UsageCount);
+
+public sealed record TagRenameRequest(int TagId, string Value);
+
+public sealed record TagDeleteRequest(int TagId);
+
+public sealed record TagMergeRequest(int SourceTagId, int TargetTagId);
 
 public sealed record TaskGetRequest(int Id);
 

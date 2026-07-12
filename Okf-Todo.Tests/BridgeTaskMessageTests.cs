@@ -439,6 +439,44 @@ public sealed class BridgeTaskMessageTests
     }
 
     [Fact]
+    public async Task Bridge_DispatchesTagAdministrationMessages()
+    {
+        await using var fixture = await BridgeFixture.CreateAsync();
+        await fixture.SendAsync("task.create", new
+        {
+            title = "Tagged bridge task",
+            taskTypeCode = "REQUEST",
+            body = "",
+            bodyFormatCode = "HTML",
+            taskPriorityCode = "NORMAL",
+            taskSourceCode = (string?)null,
+            sourceReference = (string?)null,
+            sourceUrl = (string?)null,
+            deadline = (DateTime?)null,
+            tags = new[] { "Source", "Target" }
+        });
+
+        var tags = await fixture.SendAsync("tag.settings.list", new { });
+        var source = tags.EnumerateArray().Single(tag => tag.GetProperty("value").GetString() == "Source");
+        var target = tags.EnumerateArray().Single(tag => tag.GetProperty("value").GetString() == "Target");
+
+        tags = await fixture.SendAsync("tag.settings.rename", new
+        {
+            tagId = target.GetProperty("id").GetInt32(),
+            value = "Destination"
+        });
+        target = tags.EnumerateArray().Single(tag => tag.GetProperty("value").GetString() == "Destination");
+
+        tags = await fixture.SendAsync("tag.settings.merge", new
+        {
+            sourceTagId = source.GetProperty("id").GetInt32(),
+            targetTagId = target.GetProperty("id").GetInt32()
+        });
+        Assert.DoesNotContain(tags.EnumerateArray(), tag => tag.GetProperty("value").GetString() == "Source");
+        Assert.Equal(1, Assert.Single(tags.EnumerateArray()).GetProperty("usageCount").GetInt32());
+    }
+
+    [Fact]
     public async Task Bridge_DispatchesTaskEditorImageMessages()
     {
         await using var fixture = await BridgeFixture.CreateAsync();

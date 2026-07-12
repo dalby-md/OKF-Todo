@@ -326,6 +326,8 @@ A task can have zero or more tags. Each tag is only a string expression with no 
 
 Entering a new value creates the tag and attaches it to the task. Removing a tag chip detaches it from the task.
 
+User preferences provide tag administration. A tag value can be renamed. An unused tag can be permanently deleted. A used tag can be merged into another tag; every task association moves to the target tag without duplicates, and the source tag is deleted.
+
 ## Task relationships
 
 Tasks can be related to other tasks.

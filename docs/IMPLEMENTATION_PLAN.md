@@ -313,6 +313,9 @@ Acceptance criteria:
 - User can select existing tag values.
 - User can remove a tag association using the chip's remove control.
 - Tags have no metadata beyond their string value.
+- User preferences show tag usage counts and allow renaming tags.
+- Unused tags can be hard-deleted.
+- Used tags can be merged into another tag, moving all task associations without duplicates and deleting the source tag.
 
 Suggested Codex prompt:
 

@@ -311,6 +311,12 @@ Value
 
 `Value` is required and unique case-insensitively. Tags have no additional metadata.
 
+Tag administration rules:
+
+- Renaming preserves existing task associations.
+- Hard deletion is allowed only when the tag has no task associations.
+- Merging moves every source association to the target tag, removes duplicate task/tag pairs, and deletes the source tag.
+
 ## TaskTaskTag
 
 ```text

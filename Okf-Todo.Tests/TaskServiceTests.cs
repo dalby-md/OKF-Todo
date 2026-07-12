@@ -174,6 +174,63 @@ public sealed class TaskServiceTests
     }
 
     [Fact]
+    public async Task TagSettings_RenamesDeletesUnusedAndMergesUsedTags()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var first = await database.Tasks.CreateAsync(CreateRequest("First tagged task") with
+        {
+            Tags = ["Alpha", "Beta"]
+        }, CancellationToken.None);
+        var second = await database.Tasks.CreateAsync(CreateRequest("Second tagged task") with
+        {
+            Tags = ["Alpha"]
+        }, CancellationToken.None);
+        var unusedTask = await database.Tasks.CreateAsync(CreateRequest("Unused tag task") with
+        {
+            Tags = ["Orphan"]
+        }, CancellationToken.None);
+        await database.Tasks.UpdateAsync(CreateRequest("Unused tag task") with
+        {
+            Id = unusedTask.Id,
+            Tags = []
+        }, CancellationToken.None);
+
+        var settings = await database.Tasks.GetTagSettingsAsync(CancellationToken.None);
+        var alpha = Assert.Single(settings, tag => tag.Value == "Alpha");
+        var beta = Assert.Single(settings, tag => tag.Value == "Beta");
+        var orphan = Assert.Single(settings, tag => tag.Value == "Orphan");
+        Assert.Equal(2, alpha.UsageCount);
+        Assert.Equal(1, beta.UsageCount);
+        Assert.Equal(0, orphan.UsageCount);
+
+        settings = await database.Tasks.RenameTagAsync(
+            new TagRenameRequest(orphan.Id, " Unused "),
+            CancellationToken.None);
+        var unused = Assert.Single(settings, tag => tag.Value == "Unused");
+
+        var usedDeleteException = await Assert.ThrowsAsync<ValidationException>(() =>
+            database.Tasks.DeleteTagAsync(new TagDeleteRequest(alpha.Id), CancellationToken.None));
+        Assert.Equal("tagId", usedDeleteException.Field);
+
+        settings = await database.Tasks.MergeTagAsync(
+            new TagMergeRequest(alpha.Id, beta.Id),
+            CancellationToken.None);
+        Assert.DoesNotContain(settings, tag => tag.Id == alpha.Id);
+        Assert.Equal(2, Assert.Single(settings, tag => tag.Id == beta.Id).UsageCount);
+        Assert.Equal(["Beta"], (await database.Tasks.GetAsync(first.Id, CancellationToken.None)).Tags);
+        Assert.Equal(["Beta"], (await database.Tasks.GetAsync(second.Id, CancellationToken.None)).Tags);
+        Assert.Equal(2, await database.DbContext.TaskTaskTags.CountAsync());
+        Assert.Contains(
+            await database.Tasks.GetTimelineAsync(new TaskTimelineRequest(second.Id), CancellationToken.None),
+            item => item.Text == "Tags: Changed 'Alpha' to 'Beta'");
+
+        settings = await database.Tasks.DeleteTagAsync(
+            new TagDeleteRequest(unused.Id),
+            CancellationToken.None);
+        Assert.DoesNotContain(settings, tag => tag.Id == unused.Id);
+    }
+
+    [Fact]
     public async Task List_FiltersUsefulViewsAndAppliesWorkPriorityOrder()
     {
         await using var database = await TestDatabase.CreateAsync();

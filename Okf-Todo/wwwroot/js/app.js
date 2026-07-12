@@ -44,8 +44,10 @@
   let preferredMarkdownEditType = 'MARKDOWN'
   let preferredEditorHeight = defaultEditorHeight
   let lookupSettings = null
+  let tagSettings = null
   let activeLookupSettingsGroup = 'taskTypes'
   let editingLookupCode = null
+  let editingTagId = null
   let layoutPreference = {
     taskListWidth: defaultTaskListWidth,
     taskListHeight: null,
@@ -772,6 +774,10 @@
             <section class="lookup-settings-panel" aria-labelledby="lookup-settings-title">
               <h3 id="lookup-settings-title">Lookup values</h3>
               <div id="lookup-settings-groups" class="lookup-group-buttons" aria-label="Lookup groups"></div>
+              <button id="tag-settings-button" class="lookup-group-button secondary-button" type="button">
+                Tags
+                <span id="tag-settings-count"></span>
+              </button>
             </section>
           </section>
         </div>
@@ -839,6 +845,51 @@
               <button id="lookup-edit-delete-button" class="secondary-button danger-button lookup-delete-button" type="button" hidden>Delete</button>
               <button id="lookup-edit-cancel-button" class="secondary-button" type="button">Cancel</button>
               <button id="lookup-edit-save-button" type="button">Save</button>
+            </div>
+          </section>
+        </div>
+
+        <div id="tag-list-overlay" class="modal-overlay" hidden>
+          <section class="settings-dialog tag-list-dialog" role="dialog" aria-modal="true" aria-labelledby="tag-list-title">
+            <header class="settings-header">
+              <h2 id="tag-list-title">Tags</h2>
+              <button id="tag-list-close-button" class="icon-button" type="button" aria-label="Close tag list" title="Close">&times;</button>
+            </header>
+
+            <div id="tag-list-items" class="tag-list-items"></div>
+
+            <div class="modal-actions">
+              <button id="tag-list-done-button" class="secondary-button" type="button">Close</button>
+            </div>
+          </section>
+        </div>
+
+        <div id="tag-edit-overlay" class="modal-overlay" hidden>
+          <section class="settings-dialog tag-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="tag-edit-title">
+            <header class="settings-header">
+              <h2 id="tag-edit-title">Edit tag</h2>
+            </header>
+
+            <label class="settings-field" for="tag-edit-value">
+              <span>Tag</span>
+              <input id="tag-edit-value" type="text" autocomplete="off" required>
+            </label>
+
+            <p id="tag-edit-usage" class="settings-help"></p>
+
+            <label class="settings-field" for="tag-merge-target">
+              <span>Merge into</span>
+              <select id="tag-merge-target"></select>
+            </label>
+
+            <p class="settings-help">Merge moves every task to the selected tag and permanently deletes this tag.</p>
+            <p id="tag-edit-error" class="form-error" hidden></p>
+
+            <div class="modal-actions">
+              <button id="tag-edit-delete-button" class="secondary-button danger-button tag-delete-button" type="button" hidden>Delete</button>
+              <button id="tag-edit-cancel-button" class="secondary-button" type="button">Cancel</button>
+              <button id="tag-edit-merge-button" class="secondary-button" type="button">Merge and delete</button>
+              <button id="tag-edit-save-button" type="button">Save</button>
             </div>
           </section>
         </div>
@@ -1233,6 +1284,213 @@
     $('#lookup-settings-groups').html('<div class="empty-lookup-settings">Loading lookup values.</div>')
     lookupSettings = await sendBridgeMessage('lookup.settings.get', {})
     renderLookupSettings()
+  }
+
+  function renderTagSettingsCount() {
+    $('#tag-settings-count').text(tagSettings ? tagSettings.length : '')
+  }
+
+  async function loadTagSettings() {
+    $('#tag-settings-count').text('...')
+    tagSettings = await sendBridgeMessage('tag.settings.list', {})
+    renderTagSettingsCount()
+  }
+
+  function findTagSetting(tagId) {
+    return (tagSettings || []).find(function (tag) {
+      return tag.id === tagId
+    }) || null
+  }
+
+  function renderTagList() {
+    const items = tagSettings || []
+    if (items.length === 0) {
+      $('#tag-list-items').html('<div class="empty-lookup-settings">No tags.</div>')
+      return
+    }
+
+    $('#tag-list-items').html(items.map(function (tag) {
+      const usageText = tag.usageCount === 1 ? '1 task' : `${tag.usageCount} tasks`
+      return `
+        <article class="tag-list-row">
+          <span class="tag-list-value">${encodeText(tag.value)}</span>
+          <span class="lookup-state-pill">${usageText}</span>
+          <button class="tag-list-edit-button secondary-button" type="button" data-tag-id="${tag.id}">Edit</button>
+        </article>
+      `
+    }).join(''))
+  }
+
+  async function openTagList() {
+    if (!tagSettings) {
+      await loadTagSettings()
+    }
+
+    renderTagList()
+    $('#tag-list-overlay').prop('hidden', false)
+    $('#tag-list-close-button').trigger('focus')
+  }
+
+  function closeTagList() {
+    $('#tag-list-overlay').prop('hidden', true)
+    $('#tag-settings-button').trigger('focus')
+  }
+
+  function openTagEdit(tagId) {
+    editingTagId = tagId
+    const tag = findTagSetting(tagId)
+    if (!tag) {
+      return
+    }
+
+    const mergeTargets = (tagSettings || []).filter(function (candidate) {
+      return candidate.id !== tag.id
+    })
+    const usageText = tag.usageCount === 1
+      ? 'Used by 1 task.'
+      : `Used by ${tag.usageCount} tasks.`
+
+    $('#tag-edit-value').val(tag.value).removeClass('is-invalid')
+    $('#tag-edit-usage').text(usageText)
+    $('#tag-merge-target').html(
+      '<option value="">Select tag</option>'
+      + mergeTargets.map(function (candidate) {
+        return `<option value="${candidate.id}">${encodeText(candidate.value)}</option>`
+      }).join(''))
+    $('#tag-edit-delete-button').prop('hidden', tag.usageCount !== 0).prop('disabled', false)
+    $('#tag-edit-merge-button').prop('disabled', mergeTargets.length === 0)
+    $('#tag-edit-save-button, #tag-edit-cancel-button').prop('disabled', false)
+    $('#tag-edit-error').text('').prop('hidden', true)
+    $('#tag-edit-overlay').prop('hidden', false)
+
+    window.setTimeout(function () {
+      const input = $('#tag-edit-value')[0]
+      input.focus()
+      input.select()
+    }, 0)
+  }
+
+  function closeTagEdit() {
+    $('#tag-edit-overlay').prop('hidden', true)
+    editingTagId = null
+    $('#tag-list-close-button').trigger('focus')
+  }
+
+  function replaceTagValue(values, oldValue, newValue) {
+    const normalizedOld = String(oldValue || '').toLocaleLowerCase()
+    const replaced = (values || []).map(function (value) {
+      return String(value).toLocaleLowerCase() === normalizedOld ? newValue : value
+    }).filter(Boolean)
+
+    return replaced.filter(function (value, index) {
+      return replaced.findIndex(function (candidate) {
+        return String(candidate).toLocaleLowerCase() === String(value).toLocaleLowerCase()
+      }) === index
+    }).sort(function (left, right) {
+      return String(left).localeCompare(String(right), undefined, { sensitivity: 'base' })
+    })
+  }
+
+  async function refreshTagDependentUi(oldValue, newValue) {
+    const wasDirty = isDirty
+    const selectedTags = currentTask
+      ? ($('#task-tags').val() || currentTask.tags || [])
+      : []
+    const currentTaskWasAffected = selectedTags.some(function (value) {
+      return String(value).toLocaleLowerCase() === String(oldValue || '').toLocaleLowerCase()
+    })
+    const nextSelectedTags = replaceTagValue(selectedTags, oldValue, newValue)
+
+    lookups = await sendBridgeMessage('task.lookups.get', {})
+    renderTagOptions(lookups.tags || [])
+
+    if (currentTask) {
+      currentTask.tags = nextSelectedTags
+      setTaskTags(nextSelectedTags)
+      if (cleanTaskSnapshot) {
+        cleanTaskSnapshot.tags = replaceTagValue(cleanTaskSnapshot.tags, oldValue, newValue)
+      }
+      isDirty = wasDirty
+    }
+
+    await loadTasks({ keepSelection: true })
+    if (currentTaskWasAffected && currentTask && currentTask.id) {
+      await loadTimeline(currentTask.id)
+    }
+  }
+
+  async function saveTagEdit() {
+    const tag = findTagSetting(editingTagId)
+    const value = $('#tag-edit-value').val().toString().trim()
+    if (!tag || !value) {
+      $('#tag-edit-value').addClass('is-invalid').trigger('focus')
+      $('#tag-edit-error').text('Tag value is required.').prop('hidden', false)
+      return
+    }
+
+    $('#tag-edit-save-button, #tag-edit-delete-button, #tag-edit-merge-button, #tag-edit-cancel-button').prop('disabled', true)
+    try {
+      tagSettings = await sendBridgeMessage('tag.settings.rename', {
+        tagId: tag.id,
+        value
+      })
+      await refreshTagDependentUi(tag.value, value)
+      renderTagSettingsCount()
+      renderTagList()
+      closeTagEdit()
+      setStatus('Tag renamed', 'saved')
+    } finally {
+      $('#tag-edit-save-button, #tag-edit-delete-button, #tag-edit-merge-button, #tag-edit-cancel-button').prop('disabled', false)
+    }
+  }
+
+  async function deleteTagEdit() {
+    const tag = findTagSetting(editingTagId)
+    if (!tag || tag.usageCount !== 0) {
+      return
+    }
+
+    if (!await showConfirmationDialog('Delete tag?', `Delete “${tag.value}”? This cannot be undone.`, 'Delete tag')) {
+      return
+    }
+
+    tagSettings = await sendBridgeMessage('tag.settings.delete', { tagId: tag.id })
+    await refreshTagDependentUi(tag.value, null)
+    renderTagSettingsCount()
+    renderTagList()
+    closeTagEdit()
+    setStatus('Tag deleted', 'saved')
+  }
+
+  async function mergeTagEdit() {
+    const source = findTagSetting(editingTagId)
+    const targetTagId = Number($('#tag-merge-target').val())
+    const target = findTagSetting(targetTagId)
+    if (!source || !target) {
+      $('#tag-merge-target').addClass('is-invalid').trigger('focus')
+      $('#tag-edit-error').text('Select a target tag.').prop('hidden', false)
+      return
+    }
+
+    const message = `Move ${source.usageCount} task association${source.usageCount === 1 ? '' : 's'} from “${source.value}” to “${target.value}” and delete “${source.value}”?`
+    if (!await showConfirmationDialog('Merge tags?', message, 'Merge tags')) {
+      return
+    }
+
+    $('#tag-edit-save-button, #tag-edit-delete-button, #tag-edit-merge-button, #tag-edit-cancel-button').prop('disabled', true)
+    try {
+      tagSettings = await sendBridgeMessage('tag.settings.merge', {
+        sourceTagId: source.id,
+        targetTagId: target.id
+      })
+      await refreshTagDependentUi(source.value, target.value)
+      renderTagSettingsCount()
+      renderTagList()
+      closeTagEdit()
+      setStatus('Tags merged', 'saved')
+    } finally {
+      $('#tag-edit-save-button, #tag-edit-delete-button, #tag-edit-merge-button, #tag-edit-cancel-button').prop('disabled', false)
+    }
   }
 
   function getActiveLookupItems() {
@@ -2560,6 +2818,10 @@
       setStatus(getErrorMessage(error, 'Could not load lookup settings'), 'error')
       $('#lookup-settings-groups').html('<div class="empty-lookup-settings">Could not load lookup values.</div>')
     })
+    loadTagSettings().catch(function (error) {
+      setStatus(getErrorMessage(error, 'Could not load tags'), 'error')
+      $('#tag-settings-count').text('!')
+    })
   }
 
   function closeSettings() {
@@ -2632,10 +2894,57 @@
         closeSettings()
       }
     })
-    $('#settings-overlay').on('click', '.lookup-group-button', function () {
+    $('#settings-overlay').on('click', '.lookup-group-button[data-lookup-group]', function () {
       openLookupList($(this).attr('data-lookup-group')).catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not open lookup values'), 'error')
       })
+    })
+    $('#tag-settings-button').on('click', function () {
+      openTagList().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not load tags'), 'error')
+      })
+    })
+    $('#tag-list-close-button, #tag-list-done-button').on('click', closeTagList)
+    $('#tag-list-overlay').on('click', function (event) {
+      if (event.target === this) closeTagList()
+    })
+    $('#tag-list-items').on('click', '.tag-list-edit-button', function () {
+      openTagEdit(Number($(this).attr('data-tag-id')))
+    })
+    $('#tag-edit-cancel-button').on('click', closeTagEdit)
+    $('#tag-edit-overlay').on('click', function (event) {
+      if (event.target === this) closeTagEdit()
+    })
+    $('#tag-edit-value, #tag-merge-target').on('input change', function () {
+      $(this).removeClass('is-invalid')
+      $('#tag-edit-error').text('').prop('hidden', true)
+    })
+    $('#tag-edit-save-button').on('click', function () {
+      saveTagEdit().catch(function (error) {
+        $('#tag-edit-error').text(getErrorMessage(error, 'Could not rename tag')).prop('hidden', false)
+        setStatus(getErrorMessage(error, 'Could not rename tag'), 'error')
+      })
+    })
+    $('#tag-edit-delete-button').on('click', function () {
+      deleteTagEdit().catch(function (error) {
+        $('#tag-edit-error').text(getErrorMessage(error, 'Could not delete tag')).prop('hidden', false)
+        setStatus(getErrorMessage(error, 'Could not delete tag'), 'error')
+      })
+    })
+    $('#tag-edit-merge-button').on('click', function () {
+      mergeTagEdit().catch(function (error) {
+        $('#tag-edit-error').text(getErrorMessage(error, 'Could not merge tags')).prop('hidden', false)
+        setStatus(getErrorMessage(error, 'Could not merge tags'), 'error')
+      })
+    })
+    $('#tag-edit-value').on('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        saveTagEdit().catch(function (error) {
+          $('#tag-edit-error').text(getErrorMessage(error, 'Could not rename tag')).prop('hidden', false)
+          setStatus(getErrorMessage(error, 'Could not rename tag'), 'error')
+        })
+      }
     })
     $('#lookup-list-close-button, #lookup-list-done-button').on('click', closeLookupList)
     $('#lookup-list-overlay').on('click', function (event) {
@@ -2742,6 +3051,14 @@
       }
       if (event.key === 'Escape' && !$('#lookup-edit-overlay').prop('hidden')) {
         closeLookupEdit()
+        return
+      }
+      if (event.key === 'Escape' && !$('#tag-edit-overlay').prop('hidden')) {
+        closeTagEdit()
+        return
+      }
+      if (event.key === 'Escape' && !$('#tag-list-overlay').prop('hidden')) {
+        closeTagList()
         return
       }
       if (event.key === 'Escape' && !$('#lookup-list-overlay').prop('hidden')) {
