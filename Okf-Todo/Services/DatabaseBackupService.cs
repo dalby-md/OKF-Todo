@@ -14,7 +14,7 @@ public sealed class DatabaseBackupService(
 {
     public async Task<DatabaseBackupResult> CreateAsync(CancellationToken cancellationToken)
     {
-        var suggestedFileName = $"okf-todo-backup-{DateTime.Now:yyyyMMdd-HHmmss}.db";
+        var suggestedFileName = $"okf-todo-backup-{DateTime.Now:yyyyMMdd-HHmm}.db";
         var initialDirectory = await preferenceService.GetBackupDirectoryAsync(cancellationToken);
         var selectedPath = await destinationPicker.PickAsync(
             suggestedFileName,

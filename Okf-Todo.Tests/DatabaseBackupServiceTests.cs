@@ -51,6 +51,9 @@ public sealed class DatabaseBackupServiceTests
             Assert.True(result.FileSize > 0);
             Assert.True(File.Exists(backupPath));
             Assert.Equal(1, await dbContext.Issues.CountAsync());
+            Assert.Matches(
+                "^okf-todo-backup-[0-9]{8}-[0-9]{4}\\.db$",
+                picker.SuggestedFileNames.Single());
             Assert.Null(picker.InitialDirectories.Single());
             Assert.Equal(
                 Path.GetFullPath(directory),
@@ -127,11 +130,14 @@ public sealed class DatabaseBackupServiceTests
 
         public List<string?> InitialDirectories { get; } = [];
 
+        public List<string> SuggestedFileNames { get; } = [];
+
         public Task<string?> PickAsync(
             string suggestedFileName,
             string? initialDirectory,
             CancellationToken cancellationToken)
         {
+            SuggestedFileNames.Add(suggestedFileName);
             InitialDirectories.Add(initialDirectory);
             return Task.FromResult(SelectedPath);
         }
