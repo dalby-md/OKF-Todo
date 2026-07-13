@@ -15,7 +15,7 @@ OKF is the knowledge and navigation layer; SQLite remains the source of task dat
 
 The same database remains fully usable through the desktop interface. AI assistance is optional, local data stays under the user's control, and no hosted service is required.
 
-A dedicated **OKF Todo CLI** is coming soon. It will provide direct terminal access for people, scripts, and AI agents, with supported commands for querying and updating tasks without writing ad hoc SQL. The CLI is also planned as the foundation for **Model Context Protocol (MCP) support**, allowing MCP-compatible AI clients to discover task capabilities and work with local data through structured tools.
+A dedicated **OKF Todo CLI** is being considered. It will provide direct terminal access for people, scripts, and AI agents, with supported commands for querying and updating tasks without writing ad hoc SQL. The CLI is also planned as the foundation for **Model Context Protocol (MCP) support**, allowing MCP-compatible AI clients to discover task capabilities and work with local data through structured tools.
 
 ![OKF Todo task workspace showing task views, rich task details, tags, waiting status, Markdown editing, and a checklist](docs/images/okf-todo-task-workspace.png)\
 <sub>Data are created by Codex directly.</sub>
@@ -24,10 +24,15 @@ A dedicated **OKF Todo CLI** is coming soon. It will provide direct terminal acc
 
 Planned for the next few days:
 
-- An OKF Todo CLI for direct task queries and updates from terminals, scripts, and AI workflows.
-- MCP support built on the CLI and OKF context graph for structured AI-tool integration.
 - Improved filtering and sorting of tasks.
 - A Windows MSIX installer for easier installation and updates. Installers for Mac and Linux planned.
+
+Plans for the future:
+
+- An OKF Todo CLI for direct task queries and updates from terminals, scripts, and AI workflows.
+- MCP support built on the CLI and OKF context graph for structured AI-tool integration.
+- Installers for Mac and Linux planned.
+
 
 It is designed for the work that often falls between formal systems: production errors, support cases, deployment checks, investigations, ideas, notes, requests, and follow-up tasks. The application runs locally, requires no account or cloud service, and keeps tasks, history, images, and attachments together in one SQLite database.
 
