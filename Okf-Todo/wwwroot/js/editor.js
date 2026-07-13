@@ -5,6 +5,7 @@
   let activeAdapter = null
   let activeMode = 'html'
   let activeInitialization = 0
+  let activeColorScheme = 'LIGHT'
   let pickImage = null
   const loadedAssets = new Map()
 
@@ -297,7 +298,7 @@
           setup: function (tinyEditor) {
             editor = tinyEditor
             tinyEditor.on('init', function () {
-              applyColorScheme(options.colorScheme)
+              applyColorScheme(activeColorScheme)
             })
             tinyEditor.on('change keyup undo redo setcontent', notifyChanged)
           }
@@ -308,7 +309,7 @@
           throw new Error('TinyMCE did not attach to the editor textarea.')
         }
 
-        applyColorScheme(options.colorScheme)
+        applyColorScheme(activeColorScheme)
 
         const loading = host.querySelector('.editor-loading')
         if (loading) {
@@ -744,6 +745,9 @@
     initialize: async function (options) {
       const editorOptions = options || {}
       activeMode = editorOptions.mode === 'markdown' ? 'markdown' : 'html'
+      activeColorScheme = String(editorOptions.colorScheme || activeColorScheme).toUpperCase() === 'DARK'
+        ? 'DARK'
+        : 'LIGHT'
       pickImage = editorOptions.onPickImage || null
 
       const initializationId = ++activeInitialization
@@ -817,8 +821,9 @@
     },
 
     setColorScheme: function (colorScheme) {
+      activeColorScheme = String(colorScheme || '').toUpperCase() === 'DARK' ? 'DARK' : 'LIGHT'
       if (activeAdapter && typeof activeAdapter.setColorScheme === 'function') {
-        activeAdapter.setColorScheme(colorScheme)
+        activeAdapter.setColorScheme(activeColorScheme)
       }
     },
 

@@ -4,11 +4,11 @@
 - Implementation screenshot: `C:\git\Okf-Todo\artifacts\design-qa\theme-native.png`
 - Combined comparison: `C:\git\Okf-Todo\artifacts\design-qa\theme-comparison.png`
 - Viewport: 1920 x 1200 desktop
-- State: Active task selected with HTML editor initialized
+- State: Dark color scheme, active task selected with HTML editor initialized
 
 **Full-View Comparison Evidence**
 
-The reference and implementation were compared together in `theme-comparison.png`. The implementation carries over the requested palette rather than the reference page composition: near-black page surfaces, neutral charcoal controls, thin gray borders, off-white text, and amber primary actions and selection indicators. Existing semantic task colors remain visible.
+The reference and implementation were compared together in `theme-comparison.png`. The optional Dark color scheme carries over the requested palette rather than the reference page composition: near-black page surfaces, neutral charcoal controls, thin gray borders, off-white text, and amber primary actions and selection indicators. Existing semantic task colors remain visible. The original Light color scheme remains the application default.
 
 **Focused Region Evidence**
 
@@ -28,9 +28,9 @@ No actionable P0, P1, or P2 visual differences remain for the requested color-sc
 
 **Comparison History**
 
-1. Initial native capture: P1, TinyMCE document canvas remained white. Fixed by loading the dark TinyMCE skin and dark content styling.
+1. Initial native capture: P1, TinyMCE document canvas remained white. Fixed by applying the selected color scheme to the TinyMCE document canvas.
 2. Second native capture: P2, TinyMCE used a blue-black tint inconsistent with the reference's neutral charcoal. Fixed with neutral toolbar, status bar, iframe, and editor-content colors.
-3. Final native capture: editor chrome and content now use neutral charcoal/near-black surfaces with readable off-white controls and text.
+3. Final native capture: in Dark mode, editor chrome and content use neutral charcoal/near-black surfaces with readable off-white controls and text.
 
 **Follow-up Polish**
 
