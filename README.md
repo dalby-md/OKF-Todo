@@ -17,8 +17,7 @@ The same database remains fully usable through the desktop interface. AI assista
 
 A dedicated **OKF Todo CLI** is coming soon. It will provide direct terminal access for people, scripts, and AI agents, with supported commands for querying and updating tasks without writing ad hoc SQL. The CLI is also planned as the foundation for **Model Context Protocol (MCP) support**, allowing MCP-compatible AI clients to discover task capabilities and work with local data through structured tools.
 
-![OKF Todo task workspace showing task views, rich task details, tags, waiting status, Markdown editing, and a checklist](docs/images/okf-todo-task-workspace.png)
-
+![OKF Todo task workspace showing task views, rich task details, tags, waiting status, Markdown editing, and a checklist](docs/images/okf-todo-task-workspace.png)\
 <sub>Data are created by Codex directly.</sub>
 
 ## Coming Next
