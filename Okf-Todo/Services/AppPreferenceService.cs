@@ -214,6 +214,33 @@ public sealed class AppPreferenceService(
         return new WindowPreferenceDto(left, top, width, height, isMaximized);
     }
 
+    public async Task<string?> GetBackupDirectoryAsync(CancellationToken cancellationToken)
+    {
+        var preferences = await ReadPreferencesAsync(cancellationToken);
+        return !string.IsNullOrWhiteSpace(preferences.BackupDirectory)
+            && Directory.Exists(preferences.BackupDirectory)
+                ? Path.GetFullPath(preferences.BackupDirectory)
+                : null;
+    }
+
+    public async Task SaveBackupDirectoryAsync(
+        string backupDirectory,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(backupDirectory) || !Directory.Exists(backupDirectory))
+        {
+            throw new ValidationException("Backup directory is invalid.", "backupDirectory");
+        }
+
+        var normalizedDirectory = Path.GetFullPath(backupDirectory);
+        var preferences = await ReadPreferencesAsync(cancellationToken);
+        await WritePreferencesAsync(
+            preferences with { BackupDirectory = normalizedDirectory },
+            cancellationToken);
+
+        logger.LogInformation("Saved backup directory preference {BackupDirectory}.", normalizedDirectory);
+    }
+
     private async Task<StoredPreferences> ReadPreferencesAsync(CancellationToken cancellationToken)
     {
         var preferencesPath = pathProvider.GetPreferencesPath();
@@ -321,7 +348,8 @@ public sealed class AppPreferenceService(
             null,
             null,
             DefaultWindowIsMaximized,
-            DefaultColorScheme);
+            DefaultColorScheme,
+            null);
     }
 
     private static string NormalizeOrDefaultLayoutMode(string? layoutMode)
@@ -547,4 +575,5 @@ internal sealed record StoredPreferences(
     int? WindowWidth,
     int? WindowHeight,
     bool? WindowIsMaximized,
-    string? ColorScheme);
+    string? ColorScheme,
+    string? BackupDirectory = null);

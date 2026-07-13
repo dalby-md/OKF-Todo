@@ -853,7 +853,10 @@ public sealed class BridgeTaskMessageTests
     {
         public string? Path { get; } = path;
 
-        public Task<string?> PickAsync(string suggestedFileName, CancellationToken cancellationToken)
+        public Task<string?> PickAsync(
+            string suggestedFileName,
+            string? initialDirectory,
+            CancellationToken cancellationToken)
         {
             return Task.FromResult(Path);
         }

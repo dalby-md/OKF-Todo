@@ -37,9 +37,11 @@ public sealed class DatabaseBackupServiceTests
 
             var picker = new TestBackupDestinationPicker(backupPath);
             using var loggerFactory = LoggerFactory.Create(_ => { });
+            var preferenceService = CreatePreferenceService(dbContext, directory, loggerFactory);
             var service = new DatabaseBackupService(
                 dbContext,
                 picker,
+                preferenceService,
                 loggerFactory.CreateLogger<DatabaseBackupService>());
 
             var result = await service.CreateAsync(CancellationToken.None);
@@ -49,6 +51,19 @@ public sealed class DatabaseBackupServiceTests
             Assert.True(result.FileSize > 0);
             Assert.True(File.Exists(backupPath));
             Assert.Equal(1, await dbContext.Issues.CountAsync());
+            Assert.Null(picker.InitialDirectories.Single());
+            Assert.Equal(
+                Path.GetFullPath(directory),
+                await preferenceService.GetBackupDirectoryAsync(CancellationToken.None));
+
+            var secondBackupPath = Path.Combine(directory, "second-backup.db");
+            picker.SelectedPath = secondBackupPath;
+            var secondResult = await service.CreateAsync(CancellationToken.None);
+
+            Assert.False(secondResult.Cancelled);
+            Assert.True(File.Exists(secondBackupPath));
+            Assert.Equal(2, picker.InitialDirectories.Count);
+            Assert.Equal(Path.GetFullPath(directory), picker.InitialDirectories[1]);
 
             await using var backupConnection = new SqliteConnection($"Data Source={backupPath};Mode=ReadOnly;Pooling=False");
             await backupConnection.OpenAsync();
@@ -73,23 +88,57 @@ public sealed class DatabaseBackupServiceTests
             .Options;
         await using var dbContext = new AppDbContext(options);
         using var loggerFactory = LoggerFactory.Create(_ => { });
+        var preferenceDirectory = Path.Combine(Path.GetTempPath(), "Okf-Todo.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(preferenceDirectory);
         var service = new DatabaseBackupService(
             dbContext,
             new TestBackupDestinationPicker(null),
+            CreatePreferenceService(dbContext, preferenceDirectory, loggerFactory),
             loggerFactory.CreateLogger<DatabaseBackupService>());
 
-        var result = await service.CreateAsync(CancellationToken.None);
+        try
+        {
+            var result = await service.CreateAsync(CancellationToken.None);
 
-        Assert.True(result.Cancelled);
-        Assert.Null(result.FilePath);
-        Assert.Null(result.FileSize);
+            Assert.True(result.Cancelled);
+            Assert.Null(result.FilePath);
+            Assert.Null(result.FileSize);
+        }
+        finally
+        {
+            Directory.Delete(preferenceDirectory, true);
+        }
     }
 
-    private sealed class TestBackupDestinationPicker(string? path) : IBackupDestinationPicker
+    private static AppPreferenceService CreatePreferenceService(
+        AppDbContext dbContext,
+        string directory,
+        ILoggerFactory loggerFactory)
     {
-        public Task<string?> PickAsync(string suggestedFileName, CancellationToken cancellationToken)
+        return new AppPreferenceService(
+            dbContext,
+            new TestPreferencePathProvider(Path.Combine(directory, "preferences.json")),
+            loggerFactory.CreateLogger<AppPreferenceService>());
+    }
+
+    private sealed class TestBackupDestinationPicker(string? selectedPath) : IBackupDestinationPicker
+    {
+        public string? SelectedPath { get; set; } = selectedPath;
+
+        public List<string?> InitialDirectories { get; } = [];
+
+        public Task<string?> PickAsync(
+            string suggestedFileName,
+            string? initialDirectory,
+            CancellationToken cancellationToken)
         {
-            return Task.FromResult(path);
+            InitialDirectories.Add(initialDirectory);
+            return Task.FromResult(SelectedPath);
         }
+    }
+
+    private sealed class TestPreferencePathProvider(string path) : IAppPreferencePathProvider
+    {
+        public string GetPreferencesPath() => path;
     }
 }

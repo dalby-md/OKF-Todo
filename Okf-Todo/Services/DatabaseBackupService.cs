@@ -9,12 +9,17 @@ namespace Photino.Okf_Todo.Services;
 public sealed class DatabaseBackupService(
     AppDbContext dbContext,
     IBackupDestinationPicker destinationPicker,
+    AppPreferenceService preferenceService,
     ILogger<DatabaseBackupService> logger)
 {
     public async Task<DatabaseBackupResult> CreateAsync(CancellationToken cancellationToken)
     {
         var suggestedFileName = $"okf-todo-backup-{DateTime.Now:yyyyMMdd-HHmmss}.db";
-        var selectedPath = await destinationPicker.PickAsync(suggestedFileName, cancellationToken);
+        var initialDirectory = await preferenceService.GetBackupDirectoryAsync(cancellationToken);
+        var selectedPath = await destinationPicker.PickAsync(
+            suggestedFileName,
+            initialDirectory,
+            cancellationToken);
         if (string.IsNullOrWhiteSpace(selectedPath))
         {
             return new DatabaseBackupResult(true, null, null);
@@ -54,6 +59,17 @@ public sealed class DatabaseBackupService(
 
             File.Move(temporaryPath, destinationPath, true);
             var fileSize = new FileInfo(destinationPath).Length;
+
+            try
+            {
+                await preferenceService.SaveBackupDirectoryAsync(destinationDirectory, cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                logger.LogWarning(
+                    exception,
+                    "Database backup succeeded, but the backup directory preference could not be saved.");
+            }
 
             logger.LogInformation(
                 "Created SQLite database backup at {BackupPath} with {BackupSize} bytes.",

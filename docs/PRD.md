@@ -327,6 +327,8 @@ The initial UI supports adding, downloading, and removing attachments. Attachmen
 
 User preferences provide a database backup command. The user selects the destination with the native save-file dialog. Backup uses SQLite's online backup API, validates the generated database, and replaces the selected destination only after validation succeeds.
 
+After a successful backup, the selected directory is remembered and used as the starting directory for the next backup. Cancelling or failing a backup does not change this preference.
+
 The backup contains the complete SQLite database, including tasks, body images, attachments, lookups, tags, relationships, comments, checklists, and history. Application preferences stored outside SQLite are not included. Restore is manual in the first version: close the application and replace the active database with a backup copy.
 
 ## Tags

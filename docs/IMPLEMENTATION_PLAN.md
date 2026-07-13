@@ -485,6 +485,7 @@ Acceptance criteria:
 - Cancelling the native dialog creates no file.
 - A failed backup does not replace an existing valid backup.
 - Success and failure are reported in the application status.
+- The directory from the last successful backup is used as the next dialog's starting directory.
 
 ## Recommended first real Codex task
 
