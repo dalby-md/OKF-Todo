@@ -19,7 +19,7 @@ A dedicated **OKF Todo CLI** is coming soon. It will provide direct terminal acc
 
 ![OKF Todo task workspace showing task views, rich task details, tags, waiting status, Markdown editing, and a checklist](docs/images/okf-todo-task-workspace.png)
 
-*OKF Todo 0.1 alpha: local task views and a detailed workspace with classification, waiting state, rich content, tags, and checklist progress.*
+<sub>Data are created by Codex directly.</sub>
 
 ## Coming Next
 
