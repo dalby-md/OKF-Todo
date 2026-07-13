@@ -2,7 +2,7 @@
 
 > **Version 0.1 alpha - work in progress.** Expect incomplete features and changes to the data model and user interface.
 
-OKF Todo is an **AI-first, local-first desktop task system**. It is built with .NET and Photino for Windows, macOS, and Linux, and gives both people and AI assistants a transparent way to work with the same local data.
+OKF Todo is a task manager for Windows, macOS, and Linux. It works like a familiar task tool for everyday users, while its OKF-described data interface allows local AI assistants to read and update the same tasks alongside you.
 
 ## AI-First Data
 
