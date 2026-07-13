@@ -36,13 +36,28 @@ namespace Photino.Okf_Todo
                 try
                 {
                     logger.LogInformation("Ensuring SQLite database schema.");
-                    EnsureDatabase(scope.ServiceProvider, logger);
+                    EnsureDatabase(scope.ServiceProvider);
                     logger.LogInformation("SQLite database is ready at {DatabasePath}.", DatabasePathProvider.GetDatabasePath());
                     logger.LogInformation("Seeding lookup values.");
                     scope.ServiceProvider.GetRequiredService<LookupSeedService>()
                         .SeedAsync()
                         .GetAwaiter()
                         .GetResult();
+
+                    if (args.Any(argument => string.Equals(
+                        argument,
+                        "--seed-sample-tasks",
+                        StringComparison.OrdinalIgnoreCase)))
+                    {
+                        var result = scope.ServiceProvider.GetRequiredService<SampleDataSeeder>()
+                            .SeedAsync()
+                            .GetAwaiter()
+                            .GetResult();
+                        logger.LogInformation(
+                            "Sample-data command completed with {TaskCount} tasks.",
+                            result.TaskCount);
+                        return;
+                    }
                 }
                 catch (Exception exception)
                 {
@@ -213,27 +228,10 @@ namespace Photino.Okf_Todo
             return int.TryParse(idText, out imageId);
         }
 
-        private static void EnsureDatabase(IServiceProvider services, ILogger logger)
+        private static void EnsureDatabase(IServiceProvider services)
         {
-            RepairIncompleteDatabase(logger);
-
             var dbContext = services.GetRequiredService<AppDbContext>();
             dbContext.Database.EnsureCreated();
-            SqliteSchemaMaintenance.CleanupCurrentDatabase(DatabasePathProvider.GetDatabasePath(), logger);
-        }
-
-        private static void RepairIncompleteDatabase(ILogger logger)
-        {
-            var databasePath = DatabasePathProvider.GetDatabasePath();
-            if (!File.Exists(databasePath)
-                || SqliteSchemaMaintenance.HasTable(databasePath, "Issues")
-                || !SqliteSchemaMaintenance.HasTable(databasePath, "__EFMigrationsHistory"))
-            {
-                return;
-            }
-
-            logger.LogWarning("Removing incomplete SQLite database at {DatabasePath}.", databasePath);
-            File.Delete(databasePath);
         }
 
         private static async Task WaitForStaticFileServerAsync(string appUrl, ILogger logger)
@@ -273,7 +271,6 @@ namespace Photino.Okf_Todo
         private static ServiceProvider CreateServices()
         {
             var services = new ServiceCollection();
-            var databasePath = DatabasePathProvider.GetDatabasePath();
 
             services.AddLogging(builder =>
             {
@@ -284,7 +281,7 @@ namespace Photino.Okf_Todo
                 });
                 builder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
             });
-            services.AddDbContext<AppDbContext>(options => options.UseSqlite($"Data Source={databasePath}"));
+            services.AddDbContext<AppDbContext>(options => options.UseSqlite(DatabasePathProvider.GetConnectionString()));
             services.AddSingleton<HtmlSanitizerService>();
             services.AddSingleton<IAppPreferencePathProvider, AppPreferencePathProvider>();
             services.AddSingleton<PhotinoBackupDestinationPicker>();
@@ -300,6 +297,7 @@ namespace Photino.Okf_Todo
             services.AddScoped<IssueService>();
             services.AddScoped<ImageService>();
             services.AddScoped<DatabaseBackupService>();
+            services.AddScoped<SampleDataSeeder>();
             services.AddSingleton<BridgeMessageHandler>();
 
             return services.BuildServiceProvider();

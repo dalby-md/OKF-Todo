@@ -8,7 +8,7 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
     public AppDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-        optionsBuilder.UseSqlite($"Data Source={DatabasePathProvider.GetDatabasePath()}");
+        optionsBuilder.UseSqlite(DatabasePathProvider.GetConnectionString());
 
         return new AppDbContext(optionsBuilder.Options);
     }

@@ -127,6 +127,7 @@ public sealed class DatabaseBackupService(
         var connectionString = new SqliteConnectionStringBuilder
         {
             DataSource = temporaryPath,
+            ForeignKeys = true,
             Mode = SqliteOpenMode.ReadWriteCreate,
             Pooling = false
         }.ToString();

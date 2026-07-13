@@ -49,16 +49,20 @@ Scope:
 
 - Add EF Core entities.
 - Add SQLite DbContext.
-- Add migrations or database creation flow.
+- Create the current schema with `Database.EnsureCreated()`.
 - Add lookup entities.
 - Add initial config seed objects.
 - Add startup seeding from config.
+
+Schema-version migrations and upgrades of old database files are out of scope. Delete the development database explicitly and recreate it when the model changes. A normal build or startup must not delete user data automatically.
 
 Do not build the full UI yet.
 
 Acceptance criteria:
 
 - App starts with SQLite database.
+- SQLite foreign-key enforcement is enabled explicitly.
+- Orphan rows are rejected, used lookups are restricted, and task-owned rows cascade.
 - Empty lookup tables are seeded from config.
 - Non-empty lookup tables are not changed.
 - Used lookup rows are not hard-deleted.
@@ -76,13 +80,15 @@ Scope:
 - Add lookup tables with common fields: Id, Code, Name, Description, SortOrder, IsActive, IsSystem, CreatedAt, UpdatedAt.
 - Add TaskItem, TaskWaitingFor, TaskComment, TaskLogEntry, TaskChecklistItem, TaskAttachment, TaskTag, TaskTaskTag, TaskRelation, TaskRelationType.
 - Add startup seeding from configuration: only seed a lookup table if it is empty.
+- Use `Database.EnsureCreated()` and explicit SQLite foreign-key enforcement.
+- Add integration tests for foreign keys, restrict behavior, cascade behavior, unique indexes, and check constraints.
 - Do not hard-delete used lookup rows. Use deactivation for values that have existing references.
 - Allow hard deletion only for unused non-system lookup rows.
 - Do not build UI in this step except what is necessary to compile.
 
 After implementation:
 - Show changed files.
-- Explain how to create/update the SQLite database.
+- Explain how to create or explicitly reset the SQLite database.
 - Add or update tests where appropriate.
 ```
 
@@ -510,3 +516,13 @@ This creates the foundation before the UI grows.
 - Use editable lookup `Name` values for display.
 - Use deactivation for lookup values that have existing references.
 - Allow hard deletion only for unused non-system lookup values.
+
+## Development sample data
+
+With the app closed, create the representative 50-task sample set with:
+
+```cmd
+dotnet run --project .\Okf-Todo\Okf-Todo.csproj -- --seed-sample-tasks
+```
+
+The command appends data without changing existing tasks, wraps the operation in one transaction, tags every generated task with `sample-data`, and refuses to run again while tasks using that tag exist. It exits after seeding without opening the Photino window.

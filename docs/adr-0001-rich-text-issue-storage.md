@@ -22,7 +22,7 @@ Store images as SQLite BLOBs. Issue HTML references images by stable application
 
 Use the Photino message bridge for application operations between JavaScript and C#. Use structured JSON envelopes for every bridge request and response.
 
-Use EF Core with SQLite migrations. Run migrations at startup and fail with a clear logged error if the database cannot be upgraded.
+Use EF Core with SQLite and create new database files from the current model with `Database.EnsureCreated()`. Enable foreign-key enforcement explicitly on every SQLite connection. Do not support migrations or upgrades of old database schemas; development databases may be explicitly deleted and recreated when the model changes.
 
 Do not implement export formats in v1. Do not include Markdown import, export, or internal conversion in v1.
 

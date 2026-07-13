@@ -123,11 +123,11 @@ The important distinction: static asset loading and application/data communicati
 
 11. Database access
 
-   Use EF Core with SQLite and migrations. Schema changes are expected while the issue/image model settles, and migrations make that explicit.
+   Use EF Core with SQLite. Create a fresh database from the current model with `Database.EnsureCreated()` and enable SQLite foreign-key enforcement explicitly on every connection.
 
-12. Migrations
+12. Schema changes
 
-   Run EF Core migrations at startup, log failures, and block app launch with a friendly error if migration fails.
+   Do not support migrations or upgrades of old database schemas. During development, explicitly delete and recreate the database when the model changes. Never delete the database automatically during a normal build or application startup.
 
 13. Export
 
@@ -145,7 +145,7 @@ Build this first:
 - TinyMCE vendored under `Okf-Todo/wwwroot/tinymce`.
 - Photino window with no REST API.
 - JSON request/response message bridge.
-- SQLite database with `Issues` and `Images` through EF Core migrations.
+- SQLite database with `Issues` and `Images` created from the current EF Core model.
 - HTML body stored as TinyMCE HTML.
 - Image paste/drop/import stored as SQLite BLOBs.
 - Editor load/save with image reference normalization.
@@ -237,7 +237,7 @@ Failed responses:
 }
 ```
 
-Use stable error codes: `ValidationFailed`, `NotFound`, `Conflict`, `ImageTooLarge`, `UnsupportedImageType`, `DatabaseUnavailable`, `MigrationFailed`, `UnexpectedError`.
+Use stable error codes: `ValidationFailed`, `NotFound`, `Conflict`, `ImageTooLarge`, `UnsupportedImageType`, `DatabaseUnavailable`, `SchemaInitializationFailed`, `UnexpectedError`.
 
 ## Decision Checklist
 
@@ -245,7 +245,7 @@ Use stable error codes: `ValidationFailed`, `NotFound`, `Conflict`, `ImageTooLar
 - [x] Keep REST, ASP.NET, IIS, and dynamic localhost APIs out of the app.
 - [x] Resolve `app://image/{id}` through bridge-loaded temporary editor URLs.
 - [x] Use `Issues` as the domain model name for v1.
-- [x] Use EF Core with SQLite migrations.
+- [x] Use EF Core with SQLite `EnsureCreated()` and explicit foreign-key enforcement.
 - [x] Keep images in SQLite BLOBs and owned by one issue in v1.
 - [x] Do not implement export formats in v1.
 - [x] Do not consider Markdown in v1.

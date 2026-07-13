@@ -2,11 +2,25 @@
 
 ## Overview
 
-Database target: SQLite. IMPORTANT: Use contraints and referential integrity. Describe datamodel using  ([OKF](https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/okf))
+Database target: SQLite. Use constraints and referential integrity. Describe the data model using ([OKF](https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/okf)).
 
 The model is optimized for a personal local task system built with modern .NET, EF Core, and Photino.
 
 All controlled values are lookup tables. Initial lookup values are seeded from configuration only when the corresponding table is empty.
+
+## Schema lifecycle and integrity
+
+- Create new databases from the current EF Core model with `Database.EnsureCreated()`.
+- EF Core migrations and upgrades of old database schemas are out of scope.
+- During development, delete `%LOCALAPPDATA%\Okf-Todo\okf-todo.db` explicitly when a schema change requires a fresh database.
+- Do not delete the database automatically during a normal build or application startup.
+- Enable SQLite foreign-key enforcement explicitly on every connection.
+- Define required relationships as non-null foreign keys.
+- Use `DeleteBehavior.Restrict` for lookup and history references that must remain valid.
+- Use `DeleteBehavior.Cascade` for rows wholly owned by a task, such as comments, checklist items, attachments, images, waiting targets, and task/tag associations.
+- Use unique indexes and check constraints for invariants that foreign keys cannot express.
+
+Fresh-database integration tests must verify that foreign keys are enabled, orphan inserts fail, referenced lookups cannot be deleted, and owned rows cascade when their task is deleted.
 
 ## Common lookup columns
 
