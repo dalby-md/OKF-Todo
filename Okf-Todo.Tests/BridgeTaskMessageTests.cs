@@ -363,6 +363,48 @@ public sealed class BridgeTaskMessageTests
     }
 
     [Fact]
+    public async Task OkfCommandRunner_UsesSharedApplicationServiceAndCreatesTaskLogs()
+    {
+        await using var fixture = await BridgeFixture.CreateAsync();
+        var created = await fixture.SendAsync("task.create", new
+        {
+            title = "Shared command task",
+            taskTypeCode = "REQUEST",
+            body = "",
+            bodyFormatCode = "HTML",
+            taskPriorityCode = "NORMAL",
+            taskSourceCode = (string?)null,
+            sourceReference = (string?)null,
+            sourceUrl = (string?)null,
+            deadline = (DateTime?)null
+        });
+        var taskId = created.GetProperty("id").GetInt32();
+
+        var updated = await fixture.SendOkfAsync("task.update", new
+        {
+            id = taskId,
+            title = "Updated through OKF command",
+            taskTypeCode = "REQUEST",
+            body = "",
+            bodyFormatCode = "HTML",
+            taskPriorityCode = "NORMAL",
+            taskSourceCode = (string?)null,
+            sourceReference = (string?)null,
+            sourceUrl = (string?)null,
+            deadline = (DateTime?)null
+        });
+
+        Assert.Equal("Updated through OKF command", updated.GetProperty("title").GetString());
+
+        var timeline = await fixture.SendOkfAsync("task.timeline.get", new { taskId });
+        Assert.Contains(
+            timeline.EnumerateArray(),
+            item => item.GetProperty("logTypeCode").GetString() == TaskLogTypeCodes.TaskUpdated
+                && item.GetProperty("oldValue").GetString() == "Shared command task"
+                && item.GetProperty("newValue").GetString() == "Updated through OKF command");
+    }
+
+    [Fact]
     public async Task Bridge_ReturnsValidationErrorForInvalidTaskPayload()
     {
         await using var fixture = await BridgeFixture.CreateAsync();
@@ -746,6 +788,7 @@ public sealed class BridgeTaskMessageTests
         private readonly string preferencesDirectory;
         private readonly ServiceProvider services;
         private readonly BridgeMessageHandler handler;
+        private readonly OkfCommandRunner okfCommandRunner;
         private readonly TestBackupDestinationPicker backupDestinationPicker;
 
         private BridgeFixture(
@@ -753,12 +796,14 @@ public sealed class BridgeTaskMessageTests
             string preferencesDirectory,
             ServiceProvider services,
             BridgeMessageHandler handler,
+            OkfCommandRunner okfCommandRunner,
             TestBackupDestinationPicker backupDestinationPicker)
         {
             this.connection = connection;
             this.preferencesDirectory = preferencesDirectory;
             this.services = services;
             this.handler = handler;
+            this.okfCommandRunner = okfCommandRunner;
             this.backupDestinationPicker = backupDestinationPicker;
         }
 
@@ -787,6 +832,9 @@ public sealed class BridgeTaskMessageTests
             serviceCollection.AddScoped<AppPreferenceService>();
             serviceCollection.AddScoped<ImageService>();
             serviceCollection.AddScoped<DatabaseBackupService>();
+            serviceCollection.AddSingleton<ApplicationCommandService>();
+            serviceCollection.AddSingleton<BridgeMessageHandler>();
+            serviceCollection.AddSingleton<OkfCommandRunner>();
 
             var services = serviceCollection.BuildServiceProvider();
 
@@ -797,15 +845,15 @@ public sealed class BridgeTaskMessageTests
                 await scope.ServiceProvider.GetRequiredService<LookupSeedService>().SeedAsync();
             }
 
-            var handler = new BridgeMessageHandler(
-                services,
-                services.GetRequiredService<ILogger<BridgeMessageHandler>>());
+            var handler = services.GetRequiredService<BridgeMessageHandler>();
+            var okfCommandRunner = services.GetRequiredService<OkfCommandRunner>();
 
             return new BridgeFixture(
                 connection,
                 preferencesDirectory,
                 services,
                 handler,
+                okfCommandRunner,
                 backupDestinationPicker);
         }
 
@@ -827,6 +875,21 @@ public sealed class BridgeTaskMessageTests
 
             var response = await handler.HandleAsync(request);
             return JsonDocument.Parse(response);
+        }
+
+        public async Task<JsonElement> SendOkfAsync(string type, object payload)
+        {
+            var request = JsonSerializer.Serialize(new
+            {
+                messageId = Guid.NewGuid().ToString("N"),
+                type,
+                payload
+            }, JsonOptions);
+            var result = await okfCommandRunner.RunAsync(request);
+
+            using var response = JsonDocument.Parse(result.ResponseJson);
+            Assert.True(result.Succeeded, response.RootElement.ToString());
+            return response.RootElement.GetProperty("payload").Clone();
         }
 
         public async ValueTask DisposeAsync()

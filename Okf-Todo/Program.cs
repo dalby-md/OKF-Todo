@@ -3,6 +3,7 @@ using Photino.NET.Server;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Photino.Okf_Todo.Bridge;
 using Photino.Okf_Todo.Data;
 using Photino.Okf_Todo.Services;
@@ -17,7 +18,11 @@ namespace Photino.Okf_Todo
         [STAThread]
         static void Main(string[] args)
         {
-            using var singleInstanceMutex = new Mutex(true, "OkfTodoSingleInstance", out var isFirstInstance);
+            var isOkfCommandMode = args.Any(argument => string.Equals(
+                argument,
+                "--okf-command",
+                StringComparison.OrdinalIgnoreCase));
+            using var singleInstanceMutex = CreateSingleInstanceMutex(isOkfCommandMode, out var isFirstInstance);
             if (!isFirstInstance)
             {
                 return;
@@ -25,7 +30,7 @@ namespace Photino.Okf_Todo
 
             Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
-            using var services = CreateServices();
+            using var services = CreateServices(isOkfCommandMode);
             var startupLogger = services.GetRequiredService<ILogger<Program>>();
             startupLogger.LogInformation("Starting OKF-Todo from {BaseDirectory}", AppContext.BaseDirectory);
 
@@ -64,6 +69,12 @@ namespace Photino.Okf_Todo
                     logger.LogError(exception, "Database initialization failed.");
                     throw;
                 }
+            }
+
+            if (isOkfCommandMode)
+            {
+                RunOkfCommand(services, startupLogger);
+                return;
             }
 
             PhotinoServer
@@ -113,6 +124,36 @@ namespace Photino.Okf_Todo
             window.Load(appUrl);
 
             window.WaitForClose();
+        }
+
+        private static Mutex? CreateSingleInstanceMutex(bool bypass, out bool isFirstInstance)
+        {
+            if (bypass)
+            {
+                isFirstInstance = true;
+                return null;
+            }
+
+            return new Mutex(true, "OkfTodoSingleInstance", out isFirstInstance);
+        }
+
+        private static void RunOkfCommand(IServiceProvider services, ILogger logger)
+        {
+            var requestJson = Console.In.ReadToEnd();
+            if (string.IsNullOrWhiteSpace(requestJson))
+            {
+                logger.LogError("The --okf-command option requires one JSON command on standard input.");
+                Environment.ExitCode = 2;
+                return;
+            }
+
+            var result = services.GetRequiredService<OkfCommandRunner>()
+                .RunAsync(requestJson)
+                .GetAwaiter()
+                .GetResult();
+
+            Console.Out.WriteLineAsync(result.ResponseJson).GetAwaiter().GetResult();
+            Environment.ExitCode = result.Succeeded ? 0 : 1;
         }
 
         private static WindowPreferenceDto LoadWindowPreference(IServiceProvider services, ILogger logger)
@@ -268,7 +309,7 @@ namespace Photino.Okf_Todo
             throw new InvalidOperationException($"Static UI did not become ready at {appUrl}.", lastException);
         }
 
-        private static ServiceProvider CreateServices()
+        private static ServiceProvider CreateServices(bool logToStandardError = false)
         {
             var services = new ServiceCollection();
 
@@ -281,6 +322,11 @@ namespace Photino.Okf_Todo
                 });
                 builder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
             });
+            if (logToStandardError)
+            {
+                services.Configure<ConsoleLoggerOptions>(options =>
+                    options.LogToStandardErrorThreshold = LogLevel.Trace);
+            }
             services.AddDbContext<AppDbContext>(options => options.UseSqlite(DatabasePathProvider.GetConnectionString()));
             services.AddSingleton<HtmlSanitizerService>();
             services.AddSingleton<IAppPreferencePathProvider, AppPreferencePathProvider>();
@@ -298,7 +344,9 @@ namespace Photino.Okf_Todo
             services.AddScoped<ImageService>();
             services.AddScoped<DatabaseBackupService>();
             services.AddScoped<SampleDataSeeder>();
+            services.AddSingleton<ApplicationCommandService>();
             services.AddSingleton<BridgeMessageHandler>();
+            services.AddSingleton<OkfCommandRunner>();
 
             return services.BuildServiceProvider();
         }

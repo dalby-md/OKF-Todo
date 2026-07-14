@@ -1,11 +1,12 @@
 using System.Text.Json;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Photino.Okf_Todo.Services;
 
 namespace Photino.Okf_Todo.Bridge;
 
-public sealed class BridgeMessageHandler(IServiceProvider services, ILogger<BridgeMessageHandler> logger)
+public sealed class BridgeMessageHandler(
+    ApplicationCommandService commandService,
+    ILogger<BridgeMessageHandler> logger)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -23,8 +24,9 @@ public sealed class BridgeMessageHandler(IServiceProvider services, ILogger<Brid
 
             logger.LogInformation("Handling bridge request {MessageType} ({MessageId}).", request.Type, request.MessageId);
 
-            await using var scope = services.CreateAsyncScope();
-            var payload = await DispatchAsync(scope.ServiceProvider, request, cancellationToken);
+            var payload = await commandService.ExecuteAsync(
+                new ApplicationCommand(request.Type, request.Payload),
+                cancellationToken);
 
             logger.LogInformation("Bridge request {MessageType} ({MessageId}) succeeded.", request.Type, request.MessageId);
 
@@ -47,122 +49,6 @@ public sealed class BridgeMessageHandler(IServiceProvider services, ILogger<Brid
         }
     }
 
-    private static async Task<object> DispatchAsync(
-        IServiceProvider scopedServices,
-        BridgeRequest request,
-        CancellationToken cancellationToken)
-    {
-        return request.Type switch
-        {
-            "issue.get" => await scopedServices.GetRequiredService<IssueService>()
-                .GetOrCreateAsync(GetPayload<IssueGetRequest>(request).Id, cancellationToken),
-            "issue.save" => await scopedServices.GetRequiredService<IssueService>()
-                .SaveAsync(GetPayload<IssueSaveRequest>(request), cancellationToken),
-            "image.create" => await scopedServices.GetRequiredService<ImageService>()
-                .CreateAsync(GetPayload<ImageCreateRequest>(request), cancellationToken),
-            "image.get" => await scopedServices.GetRequiredService<ImageService>()
-                .GetAsync(GetPayload<ImageGetRequest>(request).Id, cancellationToken),
-            "editor.preference.get" => await scopedServices.GetRequiredService<AppPreferenceService>()
-                .GetEditorPreferenceAsync(cancellationToken),
-            "editor.preference.save" => await scopedServices.GetRequiredService<AppPreferenceService>()
-                .SaveEditorPreferenceAsync(GetPayload<EditorPreferenceSaveRequest>(request), cancellationToken),
-            "layout.preference.get" => await scopedServices.GetRequiredService<AppPreferenceService>()
-                .GetLayoutPreferenceAsync(cancellationToken),
-            "layout.preference.save" => await scopedServices.GetRequiredService<AppPreferenceService>()
-                .SaveLayoutPreferenceAsync(GetPayload<LayoutPreferenceSaveRequest>(request), cancellationToken),
-            "database.backup.create" => await scopedServices.GetRequiredService<DatabaseBackupService>()
-                .CreateAsync(cancellationToken),
-            "task.lookups.get" => await scopedServices.GetRequiredService<TaskService>()
-                .GetLookupsAsync(cancellationToken),
-            "lookup.settings.get" => await scopedServices.GetRequiredService<TaskService>()
-                .GetLookupSettingsAsync(cancellationToken),
-            "lookup.settings.update" => await scopedServices.GetRequiredService<TaskService>()
-                .UpdateLookupAsync(GetPayload<LookupUpdateRequest>(request), cancellationToken),
-            "lookup.settings.create" => await scopedServices.GetRequiredService<TaskService>()
-                .CreateLookupAsync(GetPayload<LookupCreateRequest>(request), cancellationToken),
-            "lookup.settings.delete" => await scopedServices.GetRequiredService<TaskService>()
-                .DeleteLookupAsync(GetPayload<LookupDeleteRequest>(request), cancellationToken),
-            "lookup.settings.reorder" => await scopedServices.GetRequiredService<TaskService>()
-                .ReorderLookupAsync(GetPayload<LookupReorderRequest>(request), cancellationToken),
-            "tag.settings.list" => await scopedServices.GetRequiredService<TaskService>()
-                .GetTagSettingsAsync(cancellationToken),
-            "tag.settings.rename" => await scopedServices.GetRequiredService<TaskService>()
-                .RenameTagAsync(GetPayload<TagRenameRequest>(request), cancellationToken),
-            "tag.settings.delete" => await scopedServices.GetRequiredService<TaskService>()
-                .DeleteTagAsync(GetPayload<TagDeleteRequest>(request), cancellationToken),
-            "tag.settings.merge" => await scopedServices.GetRequiredService<TaskService>()
-                .MergeTagAsync(GetPayload<TagMergeRequest>(request), cancellationToken),
-            "task.list" => await scopedServices.GetRequiredService<TaskService>()
-                .ListAsync(GetPayload<TaskListRequest>(request), cancellationToken),
-            "task.get" => await scopedServices.GetRequiredService<TaskService>()
-                .GetAsync(GetPayload<TaskGetRequest>(request).Id, cancellationToken),
-            "task.create" => await scopedServices.GetRequiredService<TaskService>()
-                .CreateAsync(GetPayload<TaskSaveRequest>(request), cancellationToken),
-            "task.update" => await scopedServices.GetRequiredService<TaskService>()
-                .UpdateAsync(GetPayload<TaskSaveRequest>(request), cancellationToken),
-            "task.start" => await scopedServices.GetRequiredService<TaskService>()
-                .StartAsync(GetPayload<TaskIdRequest>(request).Id, cancellationToken),
-            "task.undoStart" => await scopedServices.GetRequiredService<TaskService>()
-                .UndoStartAsync(GetPayload<TaskIdRequest>(request).Id, cancellationToken),
-            "task.complete" => await scopedServices.GetRequiredService<TaskService>()
-                .CompleteAsync(GetPayload<TaskIdRequest>(request).Id, cancellationToken),
-            "task.reopen" => await scopedServices.GetRequiredService<TaskService>()
-                .ReopenAsync(GetPayload<TaskIdRequest>(request).Id, cancellationToken),
-            "task.cancel" => await scopedServices.GetRequiredService<TaskService>()
-                .CancelAsync(GetPayload<TaskIdRequest>(request).Id, cancellationToken),
-            "task.waiting.add" => await scopedServices.GetRequiredService<TaskService>()
-                .AddWaitingForAsync(GetPayload<TaskWaitingForSaveRequest>(request), cancellationToken),
-            "task.waiting.clear" => await scopedServices.GetRequiredService<TaskService>()
-                .ClearWaitingForAsync(GetPayload<TaskIdRequest>(request).Id, cancellationToken),
-            "task.timeline.get" => await scopedServices.GetRequiredService<TaskService>()
-                .GetTimelineAsync(GetPayload<TaskTimelineRequest>(request), cancellationToken),
-            "task.comment.create" => await scopedServices.GetRequiredService<TaskService>()
-                .AddCommentAsync(GetPayload<TaskCommentCreateRequest>(request), cancellationToken),
-            "task.comment.delete" => await scopedServices.GetRequiredService<TaskService>()
-                .DeleteCommentAsync(GetPayload<TaskCommentDeleteRequest>(request), cancellationToken),
-            "task.checklist.list" => await scopedServices.GetRequiredService<TaskChecklistService>()
-                .ListAsync(GetPayload<TaskChecklistListRequest>(request).TaskId, cancellationToken),
-            "task.checklist.create" => await scopedServices.GetRequiredService<TaskChecklistService>()
-                .CreateAsync(GetPayload<TaskChecklistCreateRequest>(request), cancellationToken),
-            "task.checklist.update" => await scopedServices.GetRequiredService<TaskChecklistService>()
-                .UpdateAsync(GetPayload<TaskChecklistUpdateRequest>(request), cancellationToken),
-            "task.checklist.complete" => await scopedServices.GetRequiredService<TaskChecklistService>()
-                .SetCompletedAsync(GetPayload<TaskChecklistCompleteRequest>(request), cancellationToken),
-            "task.checklist.reorder" => await scopedServices.GetRequiredService<TaskChecklistService>()
-                .ReorderAsync(GetPayload<TaskChecklistReorderRequest>(request), cancellationToken),
-            "task.checklist.delete" => await scopedServices.GetRequiredService<TaskChecklistService>()
-                .DeleteAsync(GetPayload<TaskChecklistDeleteRequest>(request), cancellationToken),
-            "task.relation.options" => await scopedServices.GetRequiredService<TaskRelationService>()
-                .GetOptionsAsync(GetPayload<TaskRelationOptionsRequest>(request).TaskId, cancellationToken),
-            "task.relation.list" => await scopedServices.GetRequiredService<TaskRelationService>()
-                .ListAsync(GetPayload<TaskRelationListRequest>(request).TaskId, cancellationToken),
-            "task.relation.create" => await scopedServices.GetRequiredService<TaskRelationService>()
-                .CreateAsync(GetPayload<TaskRelationCreateRequest>(request), cancellationToken),
-            "task.relation.delete" => await scopedServices.GetRequiredService<TaskRelationService>()
-                .DeleteAsync(GetPayload<TaskRelationDeleteRequest>(request), cancellationToken),
-            "task.attachment.list" => await scopedServices.GetRequiredService<TaskAttachmentService>()
-                .ListAsync(GetPayload<TaskAttachmentListRequest>(request).TaskId, cancellationToken),
-            "task.attachment.create" => await scopedServices.GetRequiredService<TaskAttachmentService>()
-                .CreateAsync(GetPayload<TaskAttachmentCreateRequest>(request), cancellationToken),
-            "task.attachment.get" => await scopedServices.GetRequiredService<TaskAttachmentService>()
-                .GetAsync(GetPayload<TaskAttachmentGetRequest>(request).AttachmentId, cancellationToken),
-            "task.attachment.delete" => await scopedServices.GetRequiredService<TaskAttachmentService>()
-                .DeleteAsync(GetPayload<TaskAttachmentDeleteRequest>(request), cancellationToken),
-            _ => throw new BridgeException("InvalidMessage", $"Unsupported bridge message type '{request.Type}'.")
-        };
-    }
-
-    private static TPayload GetPayload<TPayload>(BridgeRequest request)
-    {
-        if (request.Payload is null)
-        {
-            throw new BridgeException("InvalidMessage", "Bridge message payload is required.");
-        }
-
-        var payload = request.Payload.Value.Deserialize<TPayload>(JsonOptions);
-        return payload ?? throw new BridgeException("InvalidMessage", "Bridge message payload is invalid.");
-    }
-
     private static string SerializeError(BridgeRequest? request, string code, string message, object? details = null)
     {
         return JsonSerializer.Serialize(
@@ -177,8 +63,6 @@ public sealed class BridgeMessageHandler(IServiceProvider services, ILogger<Brid
 }
 
 public sealed record BridgeRequest(string MessageId, string Type, JsonElement? Payload);
-
-public sealed record ImageGetRequest(int Id);
 
 public sealed record BridgeResponse(
     string? MessageId,
