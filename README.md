@@ -2,7 +2,7 @@
 
 > **Version 0.1 alpha - work in progress.** Expect incomplete features and changes to the user interface. Database will be migrated to newest version if necessary.
 
-OKF-Todo is a task manager for Windows, macOS, and Linux. It works like a familiar task tool for everyday users, while its OKF-described data interface allows local AI assistants to read and update the same tasks alongside you.
+OKF-Todo is a task manager for Windows, macOS, and Linux. It works like a familiar task tool for everyday users, while its OKF-interface and its MCP server allows local AI assistants to read and update the same tasks alongside you.
 
 ## AI-First Data
 
