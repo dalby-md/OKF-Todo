@@ -55,10 +55,9 @@ Windows users can install the self-contained application with [OKF-Todo 0.1.0 fo
 
 ### Requirements
 
-The current alpha is run from source. You need:
-
+The current alpha is run from source. You need. 
 - Windows 10 or later, macOS 10.15 or later, or a current Linux desktop distribution.
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
+- If you want to use dotnet builder and runner. You should use [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0). 
 - The platform webview used by Photino: WebView2 on Windows, the system WebKit view on macOS, or GTK/WebKit on Linux.
 
 Windows is the primary tested platform for version 0.1. The application architecture and Photino shell are cross-platform, but macOS and Linux packaging and verification are still in progress.
