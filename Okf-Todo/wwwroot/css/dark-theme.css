@@ -433,12 +433,13 @@ textarea.is-invalid {
   background: var(--theme-surface);
 }
 
-.help-topic-button:hover {
+.help-topic-button:hover:not(:disabled) {
   border-color: #5a5d63;
   background: var(--theme-surface-hover);
 }
 
-.help-topic-button.is-active {
+.help-topic-button.is-active,
+.help-topic-button.is-active:hover:not(:disabled) {
   border-color: var(--theme-accent);
   color: var(--theme-text);
   background: #243c39;
@@ -450,6 +451,10 @@ textarea.is-invalid {
 .help-load-error,
 .help-document .help-lead {
   color: var(--theme-muted);
+}
+
+.help-topic-button.is-active span {
+  color: #c8d3d1;
 }
 
 .help-content {

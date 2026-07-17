@@ -1092,12 +1092,13 @@ body.is-resizing-editor * {
   text-align: left;
 }
 
-.help-topic-button:hover {
+.help-topic-button:hover:not(:disabled) {
   border-color: #aeb8c2;
   background: #eef2f5;
 }
 
-.help-topic-button.is-active {
+.help-topic-button.is-active,
+.help-topic-button.is-active:hover:not(:disabled) {
   border-color: #2f6f69;
   color: #173e3a;
   background: #e0efec;
@@ -1114,6 +1115,10 @@ body.is-resizing-editor * {
   font-size: 0.76rem;
   font-weight: 400;
   line-height: 1.35;
+}
+
+.help-topic-button.is-active span {
+  color: #4f625f;
 }
 
 .help-content {
