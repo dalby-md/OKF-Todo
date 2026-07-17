@@ -39,8 +39,8 @@
   }
   const colorSchemeStorageKey = 'okf-todo-color-scheme'
   const helpTopics = {
-    'okf-layer': '/help/okf-layer.html?v=20260717-help-1',
-    'mcp-server': '/help/mcp-server.html?v=20260717-help-1'
+    'okf-layer': '/help/okf-layer.md?v=20260717-help-markdown-1',
+    'mcp-server': '/help/mcp-server.md?v=20260717-help-markdown-1'
   }
 
   let lookups = null
@@ -3224,7 +3224,34 @@
       return
     }
 
-    $('#help-content').html(html).scrollTop(0)
+    const article = document.createElement('article')
+    article.className = 'help-document'
+    article.innerHTML = html
+
+    article.querySelectorAll('a[href]').forEach(function (link) {
+      const href = link.getAttribute('href') || ''
+      const linkedTopic = href.includes('mcp-server.md')
+        ? 'mcp-server'
+        : href.includes('okf-layer.md')
+          ? 'okf-layer'
+          : null
+
+      if (linkedTopic) {
+        link.setAttribute('href', `#help-${linkedTopic}`)
+        link.setAttribute('data-help-topic-link', linkedTopic)
+        return
+      }
+
+      if (!/^[a-z][a-z\d+.-]*:/i.test(href) && !href.startsWith('#')) {
+        const reference = document.createElement('span')
+        reference.className = 'help-reference-text'
+        reference.textContent = link.textContent
+        reference.title = 'Open this reference from the repository or installed OKF bundle.'
+        link.replaceWith(reference)
+      }
+    })
+
+    $('#help-content').empty().append(article).scrollTop(0)
   }
 
   async function loadHelpTopic(topic, forceReload) {
@@ -3253,7 +3280,8 @@
         throw new Error(`Help request failed with status ${response.status}.`)
       }
 
-      const html = await response.text()
+      const markdown = await response.text()
+      const html = await window.Editor.renderMarkdown(markdown)
       helpDocumentCache.set(topic, html)
       renderHelpDocument(topic, html)
     } catch (error) {
@@ -3370,6 +3398,10 @@
     })
     $('#help-content').on('click', '.help-retry-button', function () {
       loadHelpTopic($(this).attr('data-help-retry'), true)
+    })
+    $('#help-content').on('click', 'a[data-help-topic-link]', function (event) {
+      event.preventDefault()
+      loadHelpTopic($(this).attr('data-help-topic-link'), false)
     })
 
     $('#settings-button').on('click', openSettings)

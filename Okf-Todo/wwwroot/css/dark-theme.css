@@ -488,14 +488,21 @@ textarea.is-invalid {
   background: #303236;
 }
 
-.help-note {
+.help-note,
+.help-document blockquote {
   border-left-color: var(--theme-accent);
+  color: var(--theme-text);
   background: #243c39;
 }
 
 .help-warning {
   border-left-color: #d8a443;
   background: #453921;
+}
+
+.help-reference-text {
+  border-bottom-color: var(--theme-muted);
+  color: var(--theme-muted);
 }
 
 .lookup-list-row,

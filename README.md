@@ -6,16 +6,22 @@ An open-source, offline To-Do application for developers and supporters built wi
 
 ## AI-First Data
 
-OKF-Todo is designed so an AI assistant can read, analyze, and update task data without depending on a proprietary cloud API. There are four complementary access paths:
+OKF-Todo is designed to help an AI coding harness turn unstructured work into practical artifacts. Give Codex, Claude Code, or another compatible harness a customer mail thread, support transcript, meeting notes, or diagnostic output and ask it to prepare an internal task, investigation plan, customer reply, handover, status update, or other useful artifact.
+
+The recommended workflow is **draft, review, save, verify**: ask the harness to analyze the source without changing anything, review its proposal, explicitly approve any task creation or update, and read the saved result back afterward. Start with the [OKF user guide](docs/help/okf-layer.md) and [MCP user guide](docs/help/mcp-server.md) for complete examples and reusable prompts.
+
+Four complementary access paths support that workflow:
 
 - **[OKF-guided access](docs/help/okf-layer.md):** the repository's [Open Knowledge Format context graph](docs/okf/todo-database/) describes the database concepts, schema, relationships, integrity rules, and lifecycle conventions so an AI can discover and reason about the data before working with SQLite.
 - **[MCP server](docs/help/mcp-server.md):** MCP-compatible AI clients can list, read, create, and update tasks and inspect their timelines through structured tools.
 - **[CLI commands](docs/okf/todo-database/references/application-command-interface.md):** people, scripts, and agents can execute the same application commands from a terminal.
 - **SQLite for inspection:** the application database contains the actual tasks, lookups, comments, history, tags, relationships, images, and attachments.
 
-OKF is the knowledge and navigation layer; SQLite remains the source of task data. Supported writes should go through the desktop app, CLI, or MCP server so validation, lifecycle rules, and automatic task history run consistently. Direct SQLite access is intended for read-only inspection and diagnostics; direct writes can bypass application behavior.
+The AI harness reads the source and generates the artifacts. OKF is its knowledge and navigation layer, MCP is the optional action bridge, and SQLite remains the source of task data. Supported writes should go through the desktop app, CLI, or MCP server so validation, lifecycle rules, and automatic task history run consistently. Direct SQLite access is intended for read-only inspection and diagnostics; direct writes can bypass application behavior.
 
 The same database remains fully usable through the desktop interface. AI assistance is optional, local data stays under the user's control, and no hosted service is required.
+
+The [OKF](docs/help/okf-layer.md) and [MCP](docs/help/mcp-server.md) Markdown guides are also the source for the offline in-app Help. The desktop build copies and renders them locally, so the repository and application guidance stay synchronized.
 
 The CLI and MCP server are thin adapters over the same shared application command service used by the Photino bridge. A task created or updated through any supported interface therefore follows the same business rules and produces the same task history.
 

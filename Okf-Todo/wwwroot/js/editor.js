@@ -86,6 +86,29 @@
     return activeAdapter
   }
 
+  async function renderMarkdown(markdown) {
+    await ensureToastUiLoaded()
+
+    if (!window.toastui || !window.toastui.Editor || typeof window.toastui.Editor.factory !== 'function') {
+      throw new Error('TOAST UI Markdown viewer is unavailable.')
+    }
+
+    const host = document.createElement('div')
+    const viewer = window.toastui.Editor.factory({
+      el: host,
+      viewer: true,
+      initialValue: String(markdown || ''),
+      usageStatistics: false
+    })
+    const html = host.innerHTML
+
+    if (viewer && typeof viewer.destroy === 'function') {
+      viewer.destroy()
+    }
+
+    return html
+  }
+
   function getElementId(selector) {
     return selector.replace(/^#/, '')
   }
@@ -842,6 +865,8 @@
     preloadHtml: function () {
       return ensureTinyMceLoaded()
     },
+
+    renderMarkdown: renderMarkdown,
 
     onChanged: function (callback) {
       changedCallbacks.push(callback)

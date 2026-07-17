@@ -33,6 +33,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Include="..\docs\help\okf-layer.md" Link="wwwroot\help\okf-layer.md">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+	  </None>
+	  <None Include="..\docs\help\mcp-server.md" Link="wwwroot\help\mcp-server.md">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+	  </None>
 	  <None Update="wwwroot\**">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>

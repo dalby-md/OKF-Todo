@@ -22,6 +22,18 @@ Those files are authoritative for product behavior, data model rules, lifecycle 
 
 Keep `AGENTS.md` focused on how Codex should work in this repo. Do not duplicate detailed product requirements here unless they are needed as stable repo operating constraints.
 
+## Help Audience — Hard Rule
+
+`docs/help/okf-layer.md` and `docs/help/mcp-server.md` are end-user guides and are the canonical source for the application's offline Help.
+
+- Write them for a user who wants to use a harness such as Codex or Claude Code to turn customer email, support transcripts, notes, logs, and similar source material into useful artifacts.
+- Lead with outcomes, practical workflows, prompt examples, review and approval steps, privacy guidance, and current product boundaries.
+- Preserve the draft-review-save-verify workflow: analyze first, let the user review, require explicit approval for writes, and verify saved results.
+- Explain OKF as the context layer and MCP as the optional local action bridge. Do not imply that either component is an AI model, email connector, or autonomous ingestion service.
+- Do not make schemas, JSON envelopes, CLI commands, source builds, database paths, or other implementation details prerequisites for understanding or using the guides.
+- Keep necessary technical material in clearly marked advanced-reference sections and link to the detailed OKF or command documentation instead of allowing it to dominate the user guidance.
+- When changing related implementation details, update these guides without changing their end-user target.
+
 ## Technology Assumptions
 
 - Modern .NET / C#.

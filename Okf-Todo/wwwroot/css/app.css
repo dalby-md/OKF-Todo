@@ -1235,11 +1235,25 @@ body.is-resizing-editor * {
 }
 
 .help-note,
-.help-warning {
+.help-warning,
+.help-document blockquote {
   padding: 11px 13px;
   border-left: 4px solid #2f6f69;
   border-radius: 3px;
   background: #edf7f5;
+}
+
+.help-document blockquote {
+  margin: 12px 0;
+  color: #303841;
+}
+
+.help-document blockquote p:first-child {
+  margin-top: 0;
+}
+
+.help-document blockquote p:last-child {
+  margin-bottom: 0;
 }
 
 .help-warning {
@@ -1251,6 +1265,12 @@ body.is-resizing-editor * {
 .help-warning strong {
   display: inline-block;
   margin-right: 3px;
+}
+
+.help-reference-text {
+  border-bottom: 1px dotted #7b8793;
+  color: #44515d;
+  cursor: help;
 }
 
 .unsaved-dialog {

@@ -175,12 +175,18 @@ try {
     Assert-FileExists -Path (Join-Path $coreStaging 'Okf-Todo.exe')
     Assert-FileExists -Path (Join-Path $coreStaging 'lookup-seed.json')
     Assert-FileExists -Path (Join-Path $coreStaging 'wwwroot\index.html')
+    Assert-FileExists -Path (Join-Path $coreStaging 'wwwroot\help\okf-layer.md')
+    Assert-FileExists -Path (Join-Path $coreStaging 'wwwroot\help\mcp-server.md')
     Assert-FileExists -Path (Join-Path $mcpStaging 'Okf-Todo.Mcp.exe')
     Assert-FileExists -Path (Join-Path $mcpStaging 'lookup-seed.json')
     Assert-FileExists -Path (Join-Path $okfStaging 'index.md')
 
     if (Test-Path -LiteralPath (Join-Path $mcpStaging 'wwwroot')) {
         throw 'MCP staging unexpectedly contains wwwroot after frontend pruning.'
+    }
+
+    if (Get-ChildItem -LiteralPath (Join-Path $coreStaging 'wwwroot\help') -Filter '*.html' -File) {
+        throw 'GUI staging unexpectedly contains authored HTML Help. Markdown files are the canonical Help source.'
     }
 
     Invoke-SignFile -Path (Join-Path $coreStaging 'Okf-Todo.exe')
