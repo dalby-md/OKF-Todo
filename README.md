@@ -8,8 +8,8 @@ An open-source, offline To-Do application for developers and supporters built wi
 
 OKF-Todo is designed so an AI assistant can read, analyze, and update task data without depending on a proprietary cloud API. There are four complementary access paths:
 
-- **OKF-guided access:** the repository's [Open Knowledge Format context graph](docs/okf/todo-database/) describes the database concepts, schema, relationships, integrity rules, and lifecycle conventions so an AI can discover and reason about the data before working with SQLite.
-- **MCP server:** MCP-compatible AI clients can list, read, create, and update tasks and inspect their timelines through structured tools.
+- **[OKF-guided access](docs/help/okf-layer.md):** the repository's [Open Knowledge Format context graph](docs/okf/todo-database/) describes the database concepts, schema, relationships, integrity rules, and lifecycle conventions so an AI can discover and reason about the data before working with SQLite.
+- **[MCP server](docs/help/mcp-server.md):** MCP-compatible AI clients can list, read, create, and update tasks and inspect their timelines through structured tools.
 - **[CLI commands](docs/okf/todo-database/references/application-command-interface.md):** people, scripts, and agents can execute the same application commands from a terminal.
 - **SQLite for inspection:** the application database contains the actual tasks, lookups, comments, history, tags, relationships, images, and attachments.
 
