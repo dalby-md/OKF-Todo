@@ -9,6 +9,68 @@ namespace Okf_Todo.Tests;
 public sealed class AppPreferenceServiceTests
 {
     [Fact]
+    public async Task EditorPreference_AllowsTwoHundredPixelMinimum()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+
+        var preferencesDirectory = Path.Combine(
+            Path.GetTempPath(),
+            "Okf-Todo.Tests",
+            Guid.NewGuid().ToString("N"));
+        var preferencesPath = Path.Combine(preferencesDirectory, "app-preferences.json");
+
+        try
+        {
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlite(connection)
+                .Options;
+
+            await using var dbContext = new AppDbContext(options);
+            await dbContext.Database.EnsureCreatedAsync();
+
+            var now = DateTime.UtcNow;
+            dbContext.BodyFormats.Add(new BodyFormat
+            {
+                Code = "HTML",
+                Name = "HTML",
+                SortOrder = 10,
+                IsActive = true,
+                IsSystem = true,
+                IsSelected = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+            await dbContext.SaveChangesAsync();
+
+            var service = new AppPreferenceService(
+                dbContext,
+                new TestAppPreferencePathProvider(preferencesPath),
+                NullLogger<AppPreferenceService>.Instance);
+
+            var saved = await service.SaveEditorPreferenceAsync(
+                new EditorPreferenceSaveRequest("HTML", MarkdownEditTypes.Markdown, 200),
+                CancellationToken.None);
+
+            Assert.Equal(200, saved.EditorHeight);
+
+            var exception = await Assert.ThrowsAsync<ValidationException>(() =>
+                service.SaveEditorPreferenceAsync(
+                    new EditorPreferenceSaveRequest("HTML", MarkdownEditTypes.Markdown, 199),
+                    CancellationToken.None));
+
+            Assert.Equal("editorHeight", exception.Field);
+        }
+        finally
+        {
+            if (Directory.Exists(preferencesDirectory))
+            {
+                Directory.Delete(preferencesDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public async Task WindowPreference_PreservesRestoredBoundsWhenSavedAsMaximized()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");

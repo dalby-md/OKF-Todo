@@ -24,7 +24,7 @@
   const maxEditorImageBytes = 5 * 1024 * 1024
   const wideLayoutMediaQuery = window.matchMedia('(min-width: 901px)')
   const defaultEditorHeight = 360
-  const minimumEditorHeight = 240
+  const minimumEditorHeight = 200
   const maximumEditorHeight = 1800
   const editorHeightStep = 40
   const defaultTaskListWidth = 320
@@ -66,6 +66,7 @@
   }
   let layoutPreferenceSaveTimer = null
   let editorHeightPreferenceSaveTimer = null
+  let editorHeightDragState = null
   let unsavedChangesDialogResolve = null
   let completeWaitDialogResolve = null
   let confirmationDialogResolve = null
@@ -703,14 +704,21 @@
             <div id="editor-host" class="editor-host">
               <textarea id="text-body"></textarea>
             </div>
-            <div id="editor-height-control" class="editor-height-control" aria-label="Editor height" hidden>
-              <button id="editor-height-decrease" class="editor-height-adjust-button" type="button" aria-label="Decrease editor height" title="Decrease editor height" disabled>&minus;</button>
-              <label class="editor-height-range-label" for="editor-height-range">
-                <span class="sr-only">Editor height</span>
-                <input id="editor-height-range" type="range" min="${minimumEditorHeight}" max="${maximumEditorHeight}" step="${editorHeightStep}" value="${defaultEditorHeight}" disabled>
-              </label>
-              <button id="editor-height-increase" class="editor-height-adjust-button" type="button" aria-label="Increase editor height" title="Increase editor height" disabled>+</button>
-              <output id="editor-height-value" for="editor-height-range">Comfortable · ${defaultEditorHeight} px</output>
+            <div
+              id="editor-height-resizer"
+              class="editor-height-resizer"
+              role="separator"
+              aria-label="Resize editor height"
+              aria-orientation="horizontal"
+              aria-valuemin="${minimumEditorHeight}"
+              aria-valuemax="${maximumEditorHeight}"
+              aria-valuenow="${defaultEditorHeight}"
+              aria-valuetext="${defaultEditorHeight} pixels"
+              aria-disabled="true"
+              tabindex="-1"
+              title="Drag vertically to resize the editor"
+              hidden>
+              <span class="editor-height-resizer-grip" aria-hidden="true"></span>
             </div>
 
             <div class="source-grid" hidden>
@@ -1814,34 +1822,22 @@
     return Math.min(maximumEditorHeight, Math.max(minimumEditorHeight, height))
   }
 
-  function describeEditorHeight(height) {
-    if (height <= 320) {
-      return 'Compact'
-    }
-
-    if (height <= 480) {
-      return 'Comfortable'
-    }
-
-    if (height <= 720) {
-      return 'Spacious'
-    }
-
-    return 'Extra tall'
-  }
-
   function syncEditorHeightControls() {
-    const description = describeEditorHeight(preferredEditorHeight)
     $('#editor-height').val(preferredEditorHeight)
-    $('#editor-height-range')
-      .val(preferredEditorHeight)
-      .attr('aria-valuetext', `${description}, ${preferredEditorHeight} pixels`)
-    $('#editor-height-value').text(`${description} · ${preferredEditorHeight} px`)
+    $('#editor-height-resizer')
+      .attr('aria-valuenow', preferredEditorHeight)
+      .attr('aria-valuetext', `${preferredEditorHeight} pixels`)
   }
 
   function setEditorHeightControlEnabled(enabled) {
-    $('#editor-height-control').prop('hidden', !enabled)
-    $('#editor-height-range, #editor-height-decrease, #editor-height-increase').prop('disabled', !enabled)
+    if (!enabled && editorHeightDragState) {
+      cancelEditorHeightResize()
+    }
+
+    $('#editor-height-resizer')
+      .prop('hidden', !enabled)
+      .attr('aria-disabled', String(!enabled))
+      .attr('tabindex', enabled ? '0' : '-1')
   }
 
   async function loadEditorPreference() {
@@ -1944,8 +1940,106 @@
     }, 400)
   }
 
-  function adjustEditorHeightPreference(direction) {
-    const nextHeight = preferredEditorHeight + (direction * editorHeightStep)
+  function beginEditorHeightResize(event) {
+    if (event.button !== 0 || $('#editor-height-resizer').attr('aria-disabled') === 'true') {
+      return
+    }
+
+    if (editorHeightPreferenceSaveTimer) {
+      window.clearTimeout(editorHeightPreferenceSaveTimer)
+      editorHeightPreferenceSaveTimer = null
+    }
+
+    editorHeightDragState = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startHeight: preferredEditorHeight
+    }
+
+    event.currentTarget.setPointerCapture(event.pointerId)
+    $(event.currentTarget).addClass('is-dragging')
+    $('body').addClass('is-resizing-editor')
+    event.preventDefault()
+  }
+
+  function updateEditorHeightResize(event) {
+    if (!editorHeightDragState || editorHeightDragState.pointerId !== event.pointerId) {
+      return
+    }
+
+    const delta = Math.round(event.clientY - editorHeightDragState.startY)
+    previewEditorHeightPreference(editorHeightDragState.startHeight + delta)
+    event.preventDefault()
+  }
+
+  function finishEditorHeightResize(event) {
+    if (!editorHeightDragState || editorHeightDragState.pointerId !== event.pointerId) {
+      return
+    }
+
+    const startHeight = editorHeightDragState.startHeight
+    editorHeightDragState = null
+    $(event.currentTarget).removeClass('is-dragging')
+    $('body').removeClass('is-resizing-editor')
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    if (preferredEditorHeight !== startHeight) {
+      saveEditorHeightPreferenceFromControl().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not save editor height'), 'error')
+      })
+    }
+  }
+
+  function cancelEditorHeightResize() {
+    if (!editorHeightDragState) {
+      return
+    }
+
+    const dragState = editorHeightDragState
+    const resizer = document.getElementById('editor-height-resizer')
+    editorHeightDragState = null
+    $('#editor-height-resizer').removeClass('is-dragging')
+    $('body').removeClass('is-resizing-editor')
+
+    if (resizer && resizer.hasPointerCapture(dragState.pointerId)) {
+      resizer.releasePointerCapture(dragState.pointerId)
+    }
+
+    previewEditorHeightPreference(dragState.startHeight)
+  }
+
+  function resizeEditorFromKeyboard(event) {
+    let nextHeight = null
+
+    switch (event.key) {
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        nextHeight = preferredEditorHeight - editorHeightStep
+        break
+      case 'ArrowDown':
+      case 'ArrowRight':
+        nextHeight = preferredEditorHeight + editorHeightStep
+        break
+      case 'PageUp':
+        nextHeight = preferredEditorHeight - (editorHeightStep * 4)
+        break
+      case 'PageDown':
+        nextHeight = preferredEditorHeight + (editorHeightStep * 4)
+        break
+      case 'Home':
+        nextHeight = minimumEditorHeight
+        break
+      case 'End':
+        nextHeight = maximumEditorHeight
+        break
+      default:
+        return
+    }
+
+    event.preventDefault()
     previewEditorHeightPreference(nextHeight)
     queueEditorHeightPreferenceSave()
   }
@@ -3505,21 +3599,17 @@
         })
       }
     })
-    $('#editor-height-range').on('input', function () {
-      previewEditorHeightPreference($(this).val())
-      queueEditorHeightPreferenceSave()
+    const editorHeightResizer = document.getElementById('editor-height-resizer')
+    editorHeightResizer.addEventListener('pointerdown', beginEditorHeightResize)
+    editorHeightResizer.addEventListener('pointermove', updateEditorHeightResize)
+    editorHeightResizer.addEventListener('pointerup', finishEditorHeightResize)
+    editorHeightResizer.addEventListener('pointercancel', cancelEditorHeightResize)
+    editorHeightResizer.addEventListener('lostpointercapture', function (event) {
+      if (editorHeightDragState && editorHeightDragState.pointerId === event.pointerId) {
+        finishEditorHeightResize(event)
+      }
     })
-    $('#editor-height-range').on('change', function () {
-      saveEditorHeightPreferenceFromControl().catch(function (error) {
-        setStatus(getErrorMessage(error, 'Could not save editor height'), 'error')
-      })
-    })
-    $('#editor-height-decrease').on('click', function () {
-      adjustEditorHeightPreference(-1)
-    })
-    $('#editor-height-increase').on('click', function () {
-      adjustEditorHeightPreference(1)
-    })
+    $('#editor-height-resizer').on('keydown', resizeEditorFromKeyboard)
     $('#layout-mode').on('change', switchLayoutMode)
     $('#color-scheme').on('change', switchColorScheme)
     $('#show-source-fields, #show-relationships').on('change', saveTaskSectionVisibility)

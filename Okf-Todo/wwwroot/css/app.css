@@ -578,73 +578,47 @@ h2 {
   min-height: 0;
 }
 
-.editor-height-control {
+.editor-height-resizer {
   display: grid;
-  grid-template-columns: 28px minmax(120px, 1fr) 28px minmax(132px, auto);
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
+  width: 100%;
+  min-height: 12px;
+  place-items: center;
   margin-top: -3px;
-  padding: 4px 6px;
+  padding: 0;
   border: 1px solid #d8dee5;
+  border-top: 0;
   border-radius: 0 0 5px 5px;
-  color: #53606c;
-  background: #f8fafb;
+  color: #7b8793;
+  background: #e9edf1;
+  cursor: row-resize;
+  touch-action: none;
+  user-select: none;
 }
 
-.editor-height-control[hidden] {
+.editor-height-resizer[hidden] {
   display: none;
 }
 
-.editor-height-adjust-button {
-  width: 28px;
-  min-width: 28px;
-  min-height: 24px;
-  padding: 0;
-  border: 1px solid #d7dde3;
-  color: #26514d;
-  background: #ffffff;
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.editor-height-adjust-button:hover:not(:disabled),
-.editor-height-adjust-button:focus-visible {
-  border-color: #1f6f68;
-  color: #153f3b;
-  background: #e8f2ef;
+.editor-height-resizer:hover,
+.editor-height-resizer:focus-visible,
+.editor-height-resizer.is-dragging {
+  color: #ffffff;
+  background: #1f6f68;
   outline: none;
 }
 
-.editor-height-range-label {
-  display: flex;
-  min-width: 0;
+.editor-height-resizer-grip {
+  width: 42px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 -3px 0 currentColor, 0 3px 0 currentColor;
 }
 
-#editor-height-range {
-  width: 100%;
-  min-height: 24px;
-  padding: 0;
-  border: 0;
-  outline: 0;
-  accent-color: #1f6f68;
-  background: transparent;
-  cursor: ew-resize;
-}
-
-#editor-height-range:focus-visible {
-  outline: 3px solid rgb(31 111 104 / 18%);
-  outline-offset: 2px;
-}
-
-#editor-height-value {
-  min-width: 0;
-  overflow: hidden;
-  font-size: 0.72rem;
-  font-weight: 500;
-  text-align: right;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+body.is-resizing-editor,
+body.is-resizing-editor * {
+  cursor: row-resize !important;
+  user-select: none !important;
 }
 
 .timeline-section {
@@ -1499,12 +1473,4 @@ h2 {
     width: 100%;
   }
 
-  .editor-height-control {
-    grid-template-columns: 28px minmax(80px, 1fr) 28px;
-  }
-
-  #editor-height-value {
-    grid-column: 1 / -1;
-    text-align: center;
-  }
 }

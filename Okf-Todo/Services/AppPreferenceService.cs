@@ -17,7 +17,7 @@ public sealed class AppPreferenceService(
     private const bool DefaultShowSourceFields = false;
     private const bool DefaultShowRelationships = false;
     private const int DefaultEditorHeight = 360;
-    private const int MinimumEditorHeight = 240;
+    private const int MinimumEditorHeight = 200;
     private const int MaximumEditorHeight = 1800;
     private const double MinimumTaskListWidth = 160;
     private const double MaximumTaskListWidth = 2400;
