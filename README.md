@@ -25,9 +25,6 @@ The [OKF](docs/help/okf-layer.md) and [MCP](docs/help/mcp-server.md) Markdown gu
 
 The CLI and MCP server are thin adapters over the same shared application command service used by the Photino bridge. A task created or updated through any supported interface therefore follows the same business rules and produces the same task history.
 
-![OKF-Todo task workspace showing task views, rich task details, tags, waiting status, Markdown editing, and a checklist](docs/images/okf-todo-task-workspace.png)\
-<sub>Data was created by Codex directly.</sub>
-
 ## Coming Next
 
 Planned improvements:
@@ -61,6 +58,20 @@ Windows users can install the self-contained application with [OKF-Todo 0.1.0 fo
 [OKF-Todo 0.1 installer for Windows x64](https://github.com/dalby-md/OKF-Todo/releases/download/latest-alpha/Okf-Todo-0.1-win-x64-setup.exe). 
 
 The installer includes the desktop application and OKF context layer. Installing the MCP server is offered as a user choice and is selected by default.). The installer includes the desktop application and OKF context layer. Installing the MCP server is offered as a user choice and is selected by default. You don't need to be a local administrator to install this.
+
+## Screenshots
+
+| Workspace and task workflow | Help and integrations |
+| --- | --- |
+| [![OKF-Todo light workspace with task list and rich-text editor](docs/images/promotional/01-workspace-light.png)](docs/images/promotional/01-workspace-light.png) | [![OKF layer Help guide](docs/images/promotional/03-help-okf-layer.png)](docs/images/promotional/03-help-okf-layer.png) |
+| [![Task relationships, checklist, attachments, and timeline](docs/images/promotional/02-task-workflow.png)](docs/images/promotional/02-task-workflow.png) | [![MCP server Help guide](docs/images/promotional/04-help-mcp-server.png)](docs/images/promotional/04-help-mcp-server.png) |
+
+| Preferences | Dark mode |
+| --- | --- |
+| [![Data and values preferences](docs/images/promotional/05-preferences-data-values.png)](docs/images/promotional/05-preferences-data-values.png) | [![Dark-mode appearance preferences](docs/images/promotional/07-preferences-appearance-dark.png)](docs/images/promotional/07-preferences-appearance-dark.png) |
+| [![Database backup preferences](docs/images/promotional/06-preferences-backup.png)](docs/images/promotional/06-preferences-backup.png) | [![OKF-Todo dark workspace](docs/images/promotional/08-workspace-dark.png)](docs/images/promotional/08-workspace-dark.png) |
+
+All screenshots use fictional demonstration data. See the [promotional screenshot index](docs/images/promotional/README.md) for descriptions.
 
 ## Getting Started
 
