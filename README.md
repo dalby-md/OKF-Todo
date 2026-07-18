@@ -75,6 +75,18 @@ The installer includes the desktop application and OKF context layer. Installing
 
 ## Section for IT professionals
 
+### Database file
+The database is stored under the operating system's local application-data directory:
+
+| Platform | Typical database path |
+| --- | --- |
+| Windows | `%LOCALAPPDATA%\Okf-Todo\okf-todo.db` |
+| macOS | `~/Library/Application Support/Okf-Todo/okf-todo.db` |
+| Linux | `$XDG_DATA_HOME/Okf-Todo/okf-todo.db`, or `~/.local/share/Okf-Todo/okf-todo.db` when `XDG_DATA_HOME` is unset or relative |
+
+Do not delete this file unless you intentionally want to remove all application data.
+
+
 ### Requirements
 
 The current alpha is run from source. You need. 
@@ -111,16 +123,6 @@ All following `dotnet` commands in this README assume the current directory is t
 On first launch, OKF-Todo creates its database and initial lookup values automatically. No setup wizard or account is required.
 
 On later releases, pending EF Core migrations are applied automatically before the application reads or writes task data.
-
-The database is stored under the operating system's local application-data directory:
-
-| Platform | Typical database path |
-| --- | --- |
-| Windows | `%LOCALAPPDATA%\Okf-Todo\okf-todo.db` |
-| macOS | `~/Library/Application Support/Okf-Todo/okf-todo.db` |
-| Linux | `$XDG_DATA_HOME/Okf-Todo/okf-todo.db`, or `~/.local/share/Okf-Todo/okf-todo.db` when `XDG_DATA_HOME` is unset or relative |
-
-Do not delete this file unless you intentionally want to remove all application data.
 
 ### Connect an MCP client
 
