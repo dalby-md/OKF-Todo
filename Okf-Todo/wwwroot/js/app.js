@@ -51,8 +51,8 @@
   }
   const colorSchemeStorageKey = 'okf-todo-color-scheme'
   const helpTopics = {
-    'okf-layer': '/help/okf-layer.md?v=20260717-help-markdown-1',
-    'mcp-server': '/help/mcp-server.md?v=20260717-help-markdown-1'
+    'okf-layer': '/help/okf-layer.md',
+    'mcp-server': '/help/mcp-server.md'
   }
 
   let lookups = null
@@ -3337,7 +3337,8 @@
     $('#help-content').html('<p class="help-loading">Loading help...</p>')
 
     try {
-      const response = await window.fetch(helpTopics[topic])
+      const helpUrl = `${helpTopics[topic]}?v=${Date.now()}`
+      const response = await window.fetch(helpUrl, { cache: 'no-store' })
       if (!response.ok) {
         throw new Error(`Help request failed with status ${response.status}.`)
       }
@@ -3364,7 +3365,7 @@
   function openHelp() {
     $('#help-overlay').prop('hidden', false)
     $('#help-close-button').trigger('focus')
-    loadHelpTopic(activeHelpTopic, false)
+    loadHelpTopic(activeHelpTopic, true)
   }
 
   function closeHelp() {
