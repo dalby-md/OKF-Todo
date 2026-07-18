@@ -63,7 +63,7 @@ It is designed for the work that often falls between formal systems: production 
 
 Windows users can install the self-contained application with the 
 
-[OKF-Todo 0.1 installer for Windows x64](https://github.com/dalby-md/OKF-Todo/releases/download/latest-alpha/Okf-Todo-0.1-win-x64-setup.exe).
+[OKF-Todo 0.1 installer for Windows x64](https://github.com/dalby-md/OKF-Todo/releases/latest/download/Okf-Todo-0.1-win-x64-setup.exe).
 
 The installer includes the desktop application and OKF context layer. Installing the MCP server is offered as a user choice and is selected by default.
 
