@@ -526,3 +526,33 @@ dotnet run --project .\Okf-Todo\Okf-Todo.csproj -- --seed-sample-tasks
 ```
 
 The command appends data without changing existing tasks, wraps the operation in one transaction, tags every generated task with `sample-data`, and refuses to run again while tasks using that tag exist. It exits after seeding without opening the Photino window.
+
+## Milestone 15 — Installed MCP and OKF contract tests
+
+Status: planned.
+
+Scope:
+
+- Add a separate Windows xUnit project with no project references to application code.
+- Resolve an installed OKF-Todo directory from `OKF_TODO_INSTALL_DIR`, falling back to `%LOCALAPPDATA%\Programs\Okf-Todo`.
+- Require the MCP installer component.
+- Exercise the installed MCP executable over stdio using the official .NET MCP client.
+- Exercise the installed GUI executable's OKF command adapter over stdio as documented by the installed OKF bundle.
+- Implement add, read, list, and change-task business cases through both MCP and OKF command paths.
+- Add clearly separated OKF-guided direct SQLite capability tests for task and attachment insertion and task updates.
+- Validate the installed OKF bundle and compare its documented database contract with isolated SQLite databases created through both paths.
+
+Acceptance criteria:
+
+- Tests use only installed OKF and MCP files as product context.
+- Every test database is created under a test-owned temporary directory.
+- Tests never open the user's application database or repository build output.
+- The suite requires no network, AI model, administrator rights, or prior database.
+- Missing installed MCP files fail environment validation rather than skipping tests.
+- Add, read, list, change, timeline, restart persistence, invalid-input, and not-found behavior are covered independently through MCP and the OKF command adapter.
+- The supported OKF/SQLite path uses the installed command adapter for mutations.
+- Separate direct SQLite capability tests use only installed OKF table knowledge and a disposable database, and prove that raw writes bypass automatic history.
+- Equivalent MCP and OKF operations produce equivalent persisted task state and history behavior.
+- The installed OKF structure and documented SQLite schema are validated against observable database metadata.
+
+See `docs/adr-0003-installed-contract-tests.md` for the complete boundary and tooling decision.

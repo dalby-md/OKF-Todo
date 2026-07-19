@@ -85,6 +85,107 @@ Supported task mutation commands include:
 
 Use `task.timeline.get` to verify the resulting automatic history entries.
 
+## Core task command contracts
+
+The following payloads are sufficient for a harness that has only this installed OKF bundle and access to the installed command adapter. JSON property names use camel case.
+
+Create a task with `task.create`:
+
+```json
+{
+  "messageId": "create-1",
+  "type": "task.create",
+  "payload": {
+    "title": "Investigate failed deployment",
+    "taskTypeCode": "INVESTIGATION",
+    "body": "Evidence and proposed next steps.",
+    "bodyFormatCode": "MARKDOWN",
+    "taskPriorityCode": "NORMAL",
+    "taskSourceCode": "DEPLOYMENT",
+    "sourceReference": "Release 1842",
+    "sourceUrl": null,
+    "deadline": null,
+    "activeWaitingForLabel": null,
+    "tags": ["deployment", "investigation"]
+  }
+}
+```
+
+Only `title` and `taskTypeCode` are required. The command returns the saved task detail in `payload`, including its numeric `id`. New tasks start with status `ACTIVE` and receive a `TASK_CREATED` history entry.
+
+Read a task with `task.get`:
+
+```json
+{
+  "messageId": "get-1",
+  "type": "task.get",
+  "payload": {
+    "id": 42
+  }
+}
+```
+
+Replace editable task fields with `task.update`:
+
+```json
+{
+  "messageId": "update-1",
+  "type": "task.update",
+  "payload": {
+    "id": 42,
+    "title": "Investigate failed deployment and release variables",
+    "taskTypeCode": "INVESTIGATION",
+    "body": "Evidence and proposed next steps.",
+    "bodyFormatCode": "MARKDOWN",
+    "taskPriorityCode": "NORMAL",
+    "taskSourceCode": "DEPLOYMENT",
+    "sourceReference": "Release 1842",
+    "sourceUrl": null,
+    "deadline": null,
+    "activeWaitingForLabel": null,
+    "tags": ["deployment", "investigation"]
+  }
+}
+```
+
+This is replacement semantics: call `task.get` first and preserve every field that must remain. A null or omitted optional value is cleared, and a null or empty tag collection removes all tags. The command returns the complete saved task detail and creates history for changed fields.
+
+## Attachment command contract
+
+Add an attachment with `task.attachment.create` after `task.create` returns the task ID:
+
+```json
+{
+  "messageId": "attachment-1",
+  "type": "task.attachment.create",
+  "payload": {
+    "taskId": 42,
+    "fileName": "error.log",
+    "contentType": "text/plain",
+    "base64Data": "VGltZW91dCBhZnRlciAzMCBzZWNvbmRzLg==",
+    "description": "Customer diagnostic output"
+  }
+}
+```
+
+`base64Data` contains the complete file content. The application normalizes the file name, rejects invalid Base64 and files larger than 25 MB, calculates the byte length and SHA-256 hash, stores the content as a SQLite BLOB, updates the task timestamp, and creates an `ATTACHMENT_ADDED` history entry. The response payload contains the updated attachment list.
+
+Related commands use these payloads:
+
+```json
+{"messageId":"attachment-list-1","type":"task.attachment.list","payload":{"taskId":42}}
+{"messageId":"attachment-get-1","type":"task.attachment.get","payload":{"attachmentId":7}}
+{"messageId":"attachment-delete-1","type":"task.attachment.delete","payload":{"taskId":42,"attachmentId":7}}
+```
+
+The get response includes `fileName`, `contentType`, and `base64Data`.
+
+## Direct SQLite capability and boundary
+
+A harness that is separately granted write access to the SQLite database can use the linked table documents to construct direct inserts and updates, including BLOB rows in `TaskAttachments`. OKF is documentation and cannot prohibit those writes.
+
+Direct SQL is not equivalent to an application command. It bypasses filename normalization, file-size validation, automatic hashes unless the harness calculates them, task timestamp coordination, lifecycle services, and automatic history. Use a transaction, enable SQLite foreign keys, and restrict direct writes to disposable or explicitly approved databases. Prefer the application command adapter for normal task and attachment mutations.
+
 ## Sources
 
 - `Okf-Todo/Program.cs`

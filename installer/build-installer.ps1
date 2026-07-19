@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+(\.\d+)?$')]
-    [string]$Version = '0.1',
+    [string]$Version = '0.1.0',
 
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Release',
@@ -23,6 +23,7 @@ $ProgressPreference = 'SilentlyContinue'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $artifactRoot = Join-Path $repoRoot 'artifacts\installer'
+$buildRoot = Join-Path $artifactRoot 'build'
 $publishRoot = Join-Path $artifactRoot 'publish'
 $guiPublish = Join-Path $publishRoot 'gui'
 $mcpPublish = Join-Path $publishRoot 'mcp'
@@ -58,12 +59,16 @@ function Invoke-Publish {
         [Parameter(Mandatory)][string]$Output
     )
 
+    $projectName = [System.IO.Path]::GetFileNameWithoutExtension($Project)
+    $baseOutputPath = Join-Path $buildRoot $projectName
+
     & dotnet publish $Project `
         -c $Configuration `
         -r $RuntimeIdentifier `
         --self-contained true `
         -p:DebugType=None `
         -p:DebugSymbols=false `
+        "-p:BaseOutputPath=$baseOutputPath\" `
         -o $Output
 
     if ($LASTEXITCODE -ne 0) {

@@ -1,5 +1,29 @@
 # Glossary
 
+## Installed Contract Test
+
+An automated black-box test whose product inputs are limited to files placed by the Windows installer. For OKF-Todo, it uses the installed OKF bundle, installed GUI command adapter, installed MCP executable, and temporary SQLite databases created through those executables.
+
+## Installation Root
+
+The directory containing the installed OKF-Todo application. Installed contract tests read it from `OKF_TODO_INSTALL_DIR` or default to `%LOCALAPPDATA%\Programs\Okf-Todo`.
+
+## Test Database
+
+A disposable SQLite database created in a test-owned temporary directory by the installed MCP server. It is never the user's normal OKF-Todo database.
+
+## Product Context Boundary
+
+The complete product information available to an installed contract test: installed OKF files, OKF command responses, MCP protocol responses, and observable SQLite state. Repository documentation, source code, application assemblies used as libraries, and internal services are outside this boundary.
+
+## OKF/SQLite Test Path
+
+The supported installed-contract path that reads the installed OKF guidance and invokes `Okf-Todo.exe --okf-command --okf-database-path` against a temporary SQLite database. Mutations use the application adapter so validation and history are preserved.
+
+## OKF-Guided Direct SQLite Capability Test
+
+A deliberately separate test that validates installed OKF table descriptions and then constructs raw SQLite inserts or updates against a disposable database. It proves structural capability while also proving that direct writes bypass application validation and automatic history.
+
 ## App Shell
 
 The Photino.NET desktop window hosting the static web UI.
