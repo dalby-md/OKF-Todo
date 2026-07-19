@@ -625,6 +625,8 @@ public sealed class BridgeTaskMessageTests
         Assert.Equal("LIGHT", initial.GetProperty("colorScheme").GetString());
         Assert.Equal("ATTENTION", initial.GetProperty("taskSortModes").GetProperty("active").GetString());
         Assert.Equal("ATTENTION", initial.GetProperty("taskSortModes").GetProperty("waiting").GetString());
+        Assert.Equal("ASC", initial.GetProperty("taskSortDirections").GetProperty("active").GetString());
+        Assert.Equal("ASC", initial.GetProperty("taskSortDirections").GetProperty("waiting").GetString());
 
         await fixture.SendAsync("editor.preference.save", new
         {
@@ -641,8 +643,13 @@ public sealed class BridgeTaskMessageTests
             colorScheme = "DARK",
             taskSortModes = new Dictionary<string, string>
             {
-                ["active"] = "STALE_FIRST",
+                ["active"] = "RECENTLY_UPDATED",
                 ["waiting"] = "WAITING_LONGEST"
+            },
+            taskSortDirections = new Dictionary<string, string>
+            {
+                ["active"] = "DESC",
+                ["waiting"] = "ASC"
             }
         });
         Assert.Equal(412, saved.GetProperty("taskListWidth").GetDouble());
@@ -651,9 +658,11 @@ public sealed class BridgeTaskMessageTests
         Assert.True(saved.GetProperty("showSourceFields").GetBoolean());
         Assert.True(saved.GetProperty("showRelationships").GetBoolean());
         Assert.Equal("DARK", saved.GetProperty("colorScheme").GetString());
-        Assert.Equal("STALE_FIRST", saved.GetProperty("taskSortModes").GetProperty("active").GetString());
+        Assert.Equal("RECENTLY_UPDATED", saved.GetProperty("taskSortModes").GetProperty("active").GetString());
         Assert.Equal("WAITING_LONGEST", saved.GetProperty("taskSortModes").GetProperty("waiting").GetString());
         Assert.Equal("ATTENTION", saved.GetProperty("taskSortModes").GetProperty("all").GetString());
+        Assert.Equal("DESC", saved.GetProperty("taskSortDirections").GetProperty("active").GetString());
+        Assert.Equal("ASC", saved.GetProperty("taskSortDirections").GetProperty("waiting").GetString());
 
         var loaded = await fixture.SendAsync("layout.preference.get", new { });
         Assert.Equal(412, loaded.GetProperty("taskListWidth").GetDouble());
@@ -662,8 +671,10 @@ public sealed class BridgeTaskMessageTests
         Assert.True(loaded.GetProperty("showSourceFields").GetBoolean());
         Assert.True(loaded.GetProperty("showRelationships").GetBoolean());
         Assert.Equal("DARK", loaded.GetProperty("colorScheme").GetString());
-        Assert.Equal("STALE_FIRST", loaded.GetProperty("taskSortModes").GetProperty("active").GetString());
+        Assert.Equal("RECENTLY_UPDATED", loaded.GetProperty("taskSortModes").GetProperty("active").GetString());
         Assert.Equal("WAITING_LONGEST", loaded.GetProperty("taskSortModes").GetProperty("waiting").GetString());
+        Assert.Equal("DESC", loaded.GetProperty("taskSortDirections").GetProperty("active").GetString());
+        Assert.Equal("ASC", loaded.GetProperty("taskSortDirections").GetProperty("waiting").GetString());
 
         var editorPreference = await fixture.SendAsync("editor.preference.get", new { });
         Assert.Equal("MARKDOWN", editorPreference.GetProperty("bodyFormatCode").GetString());
@@ -779,6 +790,24 @@ public sealed class BridgeTaskMessageTests
         Assert.False(response.RootElement.GetProperty("ok").GetBoolean());
         Assert.Equal("ValidationFailed", response.RootElement.GetProperty("error").GetProperty("code").GetString());
         Assert.Equal("taskSortModes", response.RootElement.GetProperty("error").GetProperty("details").GetProperty("field").GetString());
+    }
+
+    [Fact]
+    public async Task Bridge_RejectsInvalidTaskSortDirectionPreference()
+    {
+        await using var fixture = await BridgeFixture.CreateAsync();
+
+        using var response = await fixture.SendRawAsync("layout.preference.save", new
+        {
+            taskSortDirections = new Dictionary<string, string>
+            {
+                ["active"] = "SIDEWAYS"
+            }
+        });
+
+        Assert.False(response.RootElement.GetProperty("ok").GetBoolean());
+        Assert.Equal("ValidationFailed", response.RootElement.GetProperty("error").GetProperty("code").GetString());
+        Assert.Equal("taskSortDirections", response.RootElement.GetProperty("error").GetProperty("details").GetProperty("field").GetString());
     }
 
     [Fact]

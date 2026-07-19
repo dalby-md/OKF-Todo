@@ -34,9 +34,8 @@ The [OKF](docs/help/okf-layer.md) and [MCP](docs/help/mcp-server.md) Markdown gu
 
 Planned improvements:
 
-- Improved filtering and sorting of tasks.
 - Calculation of initial editor height based on screen resolution. 
-- Possible inspiration points from MS To Do: Lists, flags and stars
+- Possible inspiration points from MS To Do: Lists, flags and stars. 
 - Installers for Mac and Linux.
 
 

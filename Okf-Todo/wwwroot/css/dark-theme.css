@@ -160,6 +160,7 @@ textarea.is-invalid {
 .task-view-field select,
 .task-search,
 .task-filter-button,
+.task-quick-filter,
 .task-sort-field,
 .task-filter-popover {
   border-color: var(--theme-border-strong);
@@ -189,11 +190,13 @@ textarea.is-invalid {
 }
 
 .task-filter-popover > label,
-.task-sort-field > span {
+.task-quick-filter > span,
+.task-sort-field > label {
   color: var(--theme-text);
 }
 
 .task-filter-popover > small,
+.task-sort-description,
 .task-result-count {
   color: var(--theme-muted);
 }
@@ -202,13 +205,30 @@ textarea.is-invalid {
   background: var(--theme-surface-raised) !important;
 }
 
+.task-quick-filter select,
 .task-sort-field select {
   border: 0;
   color: var(--theme-text);
   background: transparent;
 }
 
+.task-sort-direction {
+  border-left-color: var(--theme-border-strong);
+  color: var(--theme-text);
+  background: var(--theme-surface-hover);
+}
+
+.task-sort-direction:hover:not(:disabled) {
+  color: #111;
+  background: var(--theme-accent);
+}
+
+.task-sort-direction:focus-visible {
+  outline-color: var(--theme-accent);
+}
+
 .task-view-field select:focus-visible,
+.task-quick-filter:focus-within,
 .task-sort-field:focus-within {
   border-color: var(--theme-accent);
   outline-color: rgba(231, 177, 74, 0.24);
@@ -283,6 +303,11 @@ textarea.is-invalid {
 .task-badge {
   color: #d7d7d7;
   background: #36393e;
+}
+
+.task-badge-overdue {
+  color: #fff;
+  background: #b42318;
 }
 
 .task-badge-waiting {

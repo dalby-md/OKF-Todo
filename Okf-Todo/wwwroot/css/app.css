@@ -70,6 +70,15 @@ textarea {
   background: #ffffff;
 }
 
+select {
+  padding-right: 32px;
+}
+
+select option,
+select optgroup {
+  padding-right: 18px;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
@@ -238,19 +247,35 @@ h2 {
 
 .task-browse-controls {
   display: grid;
-  grid-template-columns: minmax(96px, 0.72fr) minmax(160px, 1.9fr) auto minmax(145px, 1.15fr);
+  gap: 6px;
+  min-width: 0;
+}
+
+.task-browse-primary,
+.task-browse-secondary {
+  display: grid;
   gap: 6px;
   align-items: stretch;
   min-width: 0;
 }
 
+.task-browse-primary {
+  grid-template-columns: minmax(110px, 0.72fr) minmax(180px, 2.2fr);
+}
+
+.task-browse-secondary {
+  grid-template-columns: auto minmax(185px, 1.2fr) minmax(135px, 0.85fr) minmax(185px, 1.25fr);
+}
+
 .task-view-field,
 .task-search-field,
+.task-quick-filter,
 .task-sort-field {
   min-width: 0;
 }
 
 .task-view-field select,
+.task-quick-filter,
 .task-sort-field {
   min-height: 36px;
   border: 1px solid #c7d0d9;
@@ -261,7 +286,7 @@ h2 {
 .task-view-field select {
   width: 100%;
   height: 100%;
-  padding: 4px 26px 4px 8px;
+  padding: 4px 32px 4px 8px;
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -316,6 +341,11 @@ h2 {
   white-space: nowrap;
 }
 
+.task-filter-menu,
+.task-filter-button {
+  width: 100%;
+}
+
 .task-filter-button[aria-expanded="true"] {
   border-color: #1f6f68;
   background: #edf7f5;
@@ -336,7 +366,7 @@ h2 {
   position: absolute;
   z-index: 30;
   top: calc(100% + 6px);
-  right: 0;
+  left: 0;
   display: grid;
   gap: 7px;
   width: min(300px, calc(100cqw - 24px));
@@ -370,13 +400,15 @@ h2 {
   background: #f8fafb;
 }
 
+.task-quick-filter,
 .task-sort-field {
   display: flex;
   align-items: center;
   overflow: hidden;
 }
 
-.task-sort-field > span {
+.task-quick-filter > span,
+.task-sort-field > label {
   flex: none;
   padding-left: 8px;
   color: #5f6872;
@@ -386,11 +418,12 @@ h2 {
   text-transform: none;
 }
 
+.task-quick-filter select,
 .task-sort-field select {
   min-width: 0;
   width: 100%;
   height: 100%;
-  padding: 4px 24px 4px 5px;
+  padding: 4px 32px 4px 5px;
   border: 0;
   outline: 0;
   background: transparent;
@@ -398,11 +431,47 @@ h2 {
   font-weight: 600;
 }
 
+.task-sort-direction {
+  flex: none;
+  align-self: stretch;
+  min-width: 43px;
+  min-height: 34px;
+  padding: 0 7px;
+  border: 0;
+  border-left: 1px solid #d8dee5;
+  border-radius: 0;
+  color: #2f4e4b;
+  background: #f3f7f6;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.task-sort-direction:hover:not(:disabled) {
+  color: #fff;
+  background: #1f6f68;
+}
+
+.task-sort-direction:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid #1f6f68;
+  outline-offset: -2px;
+}
+
 .task-view-field select:focus-visible,
+.task-quick-filter:focus-within,
 .task-sort-field:focus-within {
   border-color: #1f6f68;
   outline: 2px solid rgba(31, 111, 104, 0.18);
   outline-offset: 1px;
+}
+
+.task-sort-description {
+  grid-column: 1 / -1;
+  margin: -1px 4px 0;
+  color: #697580;
+  font-size: 0.68rem;
+  line-height: 1.35;
 }
 
 .task-filter-summary {
@@ -465,8 +534,12 @@ h2 {
   background: #edf7f5;
 }
 
-@container (max-width: 470px) {
-  .task-browse-controls {
+@container (max-width: 610px) {
+  .task-browse-primary {
+    grid-template-columns: minmax(96px, 0.72fr) minmax(0, 1.8fr);
+  }
+
+  .task-browse-secondary {
     grid-template-columns: minmax(96px, 0.72fr) minmax(0, 1fr) auto;
   }
 
@@ -476,28 +549,20 @@ h2 {
 }
 
 @container (max-width: 330px) {
-  .task-browse-controls {
-    grid-template-columns: minmax(0, 1fr) auto;
+  .task-browse-primary {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .task-search-field {
-    grid-column: 1 / -1;
     grid-row: 1;
   }
 
   .task-view-field {
-    grid-column: 1;
     grid-row: 2;
   }
 
-  .task-filter-menu {
-    grid-column: 2;
-    grid-row: 2;
-  }
-
-  .task-sort-field {
-    grid-column: 1 / -1;
-    grid-row: 3;
+  .task-browse-secondary {
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
@@ -591,6 +656,11 @@ h2 {
   color: #374151;
   background: #eef1f4;
   line-height: 1;
+}
+
+.task-badge-overdue {
+  color: #fff;
+  background: #b42318;
 }
 
 .task-badge-waiting {

@@ -86,6 +86,7 @@ public sealed class AppPreferenceService(
         var layoutMode = NormalizeOrDefaultLayoutMode(preferences.LayoutMode);
         var colorScheme = NormalizeOrDefaultColorScheme(preferences.ColorScheme);
         var taskSortModes = NormalizeStoredTaskSortModes(preferences.TaskSortModes);
+        var taskSortDirections = NormalizeStoredTaskSortDirections(preferences.TaskSortDirections, taskSortModes);
 
         return new LayoutPreferenceDto(
             preferences.TaskListWidth,
@@ -94,7 +95,8 @@ public sealed class AppPreferenceService(
             preferences.ShowSourceFields ?? DefaultShowSourceFields,
             preferences.ShowRelationships ?? DefaultShowRelationships,
             colorScheme,
-            taskSortModes);
+            taskSortModes,
+            taskSortDirections);
     }
 
     public async Task<LayoutPreferenceDto> SaveLayoutPreferenceAsync(
@@ -131,6 +133,9 @@ public sealed class AppPreferenceService(
         var taskSortModes = MergeTaskSortModes(
             NormalizeStoredTaskSortModes(preferences.TaskSortModes),
             request.TaskSortModes);
+        var taskSortDirections = MergeTaskSortDirections(
+            NormalizeStoredTaskSortDirections(preferences.TaskSortDirections, taskSortModes),
+            request.TaskSortDirections);
 
         preferences = preferences with
         {
@@ -140,19 +145,21 @@ public sealed class AppPreferenceService(
             ShowSourceFields = showSourceFields,
             ShowRelationships = showRelationships,
             ColorScheme = colorScheme,
-            TaskSortModes = taskSortModes
+            TaskSortModes = taskSortModes,
+            TaskSortDirections = taskSortDirections
         };
         await WritePreferencesAsync(preferences, cancellationToken);
 
         logger.LogInformation(
-            "Saved layout preference with task list width {TaskListWidth}, height {TaskListHeight}, mode {LayoutMode}, source fields {ShowSourceFields}, relationships {ShowRelationships}, color scheme {ColorScheme}, and task sort modes {TaskSortModes}.",
+            "Saved layout preference with task list width {TaskListWidth}, height {TaskListHeight}, mode {LayoutMode}, source fields {ShowSourceFields}, relationships {ShowRelationships}, color scheme {ColorScheme}, task sort modes {TaskSortModes}, and task sort directions {TaskSortDirections}.",
             taskListWidth,
             taskListHeight,
             layoutMode,
             showSourceFields,
             showRelationships,
             colorScheme,
-            taskSortModes);
+            taskSortModes,
+            taskSortDirections);
 
         return new LayoutPreferenceDto(
             taskListWidth,
@@ -161,7 +168,8 @@ public sealed class AppPreferenceService(
             showSourceFields,
             showRelationships,
             colorScheme,
-            taskSortModes);
+            taskSortModes,
+            taskSortDirections);
     }
 
     public async Task<WindowPreferenceDto> GetWindowPreferenceAsync(CancellationToken cancellationToken)
@@ -539,6 +547,92 @@ public sealed class AppPreferenceService(
         throw new ValidationException("Task sort mode is invalid.", "taskSortModes");
     }
 
+    private static IReadOnlyDictionary<string, string> NormalizeStoredTaskSortDirections(
+        IReadOnlyDictionary<string, string>? taskSortDirections,
+        IReadOnlyDictionary<string, string> taskSortModes)
+    {
+        var normalized = TaskViews.ToDictionary(
+            view => view,
+            view => InferLegacyTaskSortDirection(taskSortModes.GetValueOrDefault(view)),
+            StringComparer.OrdinalIgnoreCase);
+
+        if (taskSortDirections is null)
+        {
+            return normalized;
+        }
+
+        foreach (var pair in taskSortDirections)
+        {
+            var view = pair.Key.Trim().ToLowerInvariant();
+            if (!normalized.ContainsKey(view))
+            {
+                continue;
+            }
+
+            try
+            {
+                normalized[view] = NormalizeTaskSortDirection(pair.Value);
+            }
+            catch (ValidationException)
+            {
+                normalized[view] = InferLegacyTaskSortDirection(taskSortModes.GetValueOrDefault(view));
+            }
+        }
+
+        return normalized;
+    }
+
+    private static IReadOnlyDictionary<string, string> MergeTaskSortDirections(
+        IReadOnlyDictionary<string, string> current,
+        IReadOnlyDictionary<string, string>? requested)
+    {
+        var merged = current.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value,
+            StringComparer.OrdinalIgnoreCase);
+
+        if (requested is null)
+        {
+            return merged;
+        }
+
+        foreach (var pair in requested)
+        {
+            var view = pair.Key.Trim().ToLowerInvariant();
+            if (!TaskViews.Contains(view, StringComparer.Ordinal))
+            {
+                throw new ValidationException("Task sort view is invalid.", "taskSortDirections");
+            }
+
+            merged[view] = NormalizeTaskSortDirection(pair.Value);
+        }
+
+        return merged;
+    }
+
+    private static string NormalizeTaskSortDirection(string? taskSortDirection)
+    {
+        var normalized = string.IsNullOrWhiteSpace(taskSortDirection)
+            ? TaskListSortDirections.Ascending
+            : taskSortDirection.Trim().ToUpperInvariant();
+
+        if (TaskListSortDirections.All.Contains(normalized, StringComparer.Ordinal))
+        {
+            return normalized;
+        }
+
+        throw new ValidationException("Task sort direction is invalid.", "taskSortDirections");
+    }
+
+    private static string InferLegacyTaskSortDirection(string? taskSortMode)
+    {
+        return taskSortMode is TaskListSortModes.RecentlyUpdated
+            or TaskListSortModes.NewestCreated
+            or TaskListSortModes.TitleDescending
+            ? TaskListSortDirections.Descending
+            : TaskListSortDirections.Ascending;
+    }
+
     private WindowPreferenceDto NormalizeOrDefaultWindowPreference(StoredPreferences preferences)
     {
         try
@@ -658,6 +752,14 @@ public static class TaskListSortModes
     ];
 }
 
+public static class TaskListSortDirections
+{
+    public const string Ascending = "ASC";
+    public const string Descending = "DESC";
+
+    public static readonly string[] All = [Ascending, Descending];
+}
+
 public sealed record LayoutPreferenceDto(
     double? TaskListWidth,
     double? TaskListHeight,
@@ -665,7 +767,8 @@ public sealed record LayoutPreferenceDto(
     bool ShowSourceFields,
     bool ShowRelationships,
     string ColorScheme,
-    IReadOnlyDictionary<string, string> TaskSortModes);
+    IReadOnlyDictionary<string, string> TaskSortModes,
+    IReadOnlyDictionary<string, string> TaskSortDirections);
 
 public sealed record LayoutPreferenceSaveRequest(
     double? TaskListWidth,
@@ -674,7 +777,8 @@ public sealed record LayoutPreferenceSaveRequest(
     bool? ShowSourceFields = null,
     bool? ShowRelationships = null,
     string? ColorScheme = null,
-    IReadOnlyDictionary<string, string>? TaskSortModes = null);
+    IReadOnlyDictionary<string, string>? TaskSortModes = null,
+    IReadOnlyDictionary<string, string>? TaskSortDirections = null);
 
 public sealed record WindowPreferenceDto(int? Left, int? Top, int? Width, int? Height, bool IsMaximized);
 
@@ -696,4 +800,5 @@ internal sealed record StoredPreferences(
     bool? WindowIsMaximized,
     string? ColorScheme,
     string? BackupDirectory = null,
-    IReadOnlyDictionary<string, string>? TaskSortModes = null);
+    IReadOnlyDictionary<string, string>? TaskSortModes = null,
+    IReadOnlyDictionary<string, string>? TaskSortDirections = null);

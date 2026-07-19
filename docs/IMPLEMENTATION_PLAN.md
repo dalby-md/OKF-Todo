@@ -471,12 +471,14 @@ Acceptance criteria:
 - Views use lookup codes, not display names.
 - Completed tasks are hidden by default in active views.
 - Cancelled tasks appear in All, not Completed, and use red struck-through titles with gray pills in the list.
+- Active overdue deadlines use a red pill with white text; deadlines due today are not overdue.
 - Waiting tasks remain easy to find.
-- Every view defaults to smart priority and offers focus, activity, and organization sort modes suited to developer and support triage.
+- Every view defaults to visibly explained smart priority and offers focus, activity, and organization sort modes suited to developer and support triage. The lifecycle-status option states that it follows configured status order and is mainly useful in the All view.
 - Lookup-based modes use configured sort order; time-based modes use due, waiting, created, and updated timestamps.
-- The sort control explains the selected order, reports the filtered result count, and persists a separate selection for each view.
-- View, search, tag filtering, and sorting share a compact responsive browse area instead of permanent view tabs.
+- The sort control explains the selected field, reports the filtered result count, provides ascending/descending ordering, and persists both selections separately for each view.
+- View and search form the primary browse row; tags, task type, priority, and sorting use a responsive secondary row before controls become cramped.
 - Text search includes task tags, while explicit multi-tag filtering remains available on demand with OR semantics and removable filter chips.
+- Task type and priority provide immediate single-select filters and participate in the shared result count, clear action, and removable filter summary.
 
 ## Milestone 14 — Database backup
 

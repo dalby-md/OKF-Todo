@@ -33,8 +33,6 @@ No blocking follow-up. Lookup-defined badge colors intentionally differ from amb
 
 final result: passed
 
----
-
 # Design QA — Preferences option 1
 
 ## Evidence
@@ -109,3 +107,41 @@ Result: passed
 - The comparison preserves the user's saved task-list divider width. Existing detail-header and editor-toolbar responsive behavior is outside this change.
 
 final result: passed
+
+---
+
+# Design QA — task type and priority filters
+
+## Evidence
+
+- Source visual truth: `C:\Users\soere\AppData\Local\Temp\codex-clipboard-e8748cb3-fff9-43ec-8224-d05a48d21250.png`
+- Implementation screenshot: unavailable; the browser screenshot operation timed out and the Photino launch approval service returned an infrastructure error.
+- Viewport: 1560 × 876.
+- State: Light theme, Active view, responsive browse header.
+- Full-view comparison evidence: blocked because no implementation screenshot could be captured.
+- Focused-region comparison evidence: blocked for the same reason.
+
+## Verified structure and behavior
+
+- The live DOM exposes `Search tasks`, `Tags`, `Filter by task type`, `Filter by priority`, the sort field, and the ascending/descending control with distinct accessible names.
+- View and search are grouped in the primary row; tag, type, priority, and sort controls are grouped in the secondary row.
+- JavaScript syntax validation passed, the Release solution build passed, and all 18 focused bridge tests passed.
+- Task type and priority filtering, removable summary chips, result counts, and the shared Clear action are implemented in the client filtering path.
+
+## Findings
+
+- [Blocked] Visual fidelity and responsive spacing cannot be approved without a captured implementation image from the Photino runtime.
+- No code-level P0 or P1 issue was found in the implemented filter behavior.
+
+## Comparison history
+
+1. The reference screenshot was opened and reviewed at original resolution.
+2. The implementation DOM was captured immediately after page load and confirmed the intended hierarchy and accessible controls.
+3. Browser screenshots at the target viewport and a focused sidebar crop both timed out.
+4. Direct Photino launch could not be approved because the approval service was temporarily unavailable.
+
+## Next verification step
+
+- Capture the running Photino window at approximately 1560 × 876 and compare the browse header at its normal and narrow sidebar widths.
+
+final result: blocked

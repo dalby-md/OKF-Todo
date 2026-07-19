@@ -11,32 +11,39 @@
     all: 'All'
   }
   const defaultTaskSortMode = 'ATTENTION'
+  const defaultTaskSortDirection = 'ASC'
+  const taskSortDirectionCodes = {
+    ascending: 'ASC',
+    descending: 'DESC'
+  }
+  const legacyTaskSortModes = {
+    STALE_FIRST: 'RECENTLY_UPDATED',
+    OLDEST_CREATED: 'NEWEST_CREATED',
+    TITLE_DESC: 'TITLE_ASC'
+  }
   const taskSortGroups = [
     {
       label: 'Focus',
       options: [
-        { code: 'ATTENTION', label: 'Smart priority', description: 'Overdue and urgent work rises first.' },
+        { code: 'ATTENTION', label: 'Smart priority', description: 'Overdue → urgent → active → waiting → can wait → finished; then earliest deadline.' },
         { code: 'PRIORITY', label: 'Priority', description: 'Your configured priority order, then due date.' },
         { code: 'DUE_DATE', label: 'Due date', description: 'Earliest deadlines first; undated work stays visible.' },
-        { code: 'WAITING_LONGEST', label: 'Waiting longest', description: 'Surface external dependencies that need a follow-up.' }
+        { code: 'WAITING_LONGEST', label: 'Waiting since', description: 'Sort by how long the task has been waiting.' }
       ]
     },
     {
       label: 'Activity',
       options: [
-        { code: 'RECENTLY_UPDATED', label: 'Recently updated', description: 'Resume the work that changed most recently.' },
-        { code: 'STALE_FIRST', label: 'Stale first', description: 'Find investigations and support work going quiet.' },
-        { code: 'NEWEST_CREATED', label: 'Newest created', description: 'Triage the most recently captured work.' },
-        { code: 'OLDEST_CREATED', label: 'Oldest created', description: 'Review aging backlog items first.' }
+        { code: 'RECENTLY_UPDATED', label: 'Updated', description: 'Sort by when work last changed.' },
+        { code: 'NEWEST_CREATED', label: 'Created', description: 'Sort by when work was captured.' }
       ]
     },
     {
       label: 'Organize',
       options: [
-        { code: 'TITLE_ASC', label: 'Title A–Z', description: 'Find a known task by name.' },
-        { code: 'TITLE_DESC', label: 'Title Z–A', description: 'Reverse alphabetical order.' },
+        { code: 'TITLE_ASC', label: 'Title', description: 'Sort tasks alphabetically.' },
         { code: 'TASK_TYPE', label: 'Task type', description: 'Group errors, investigations, requests, and notes.' },
-        { code: 'STATUS', label: 'Status', description: 'Group active, completed, and cancelled work.' }
+        { code: 'STATUS', label: 'Lifecycle status', description: 'Uses the configured status order (Active → Completed → Cancelled by default); mainly useful in All tasks.' }
       ]
     }
   ]
@@ -93,6 +100,7 @@
   let currentTask = null
   let currentView = 'active'
   let taskSortModes = createDefaultTaskSortModes()
+  let taskSortDirections = createDefaultTaskSortDirections()
   let isEditorReady = false
   let isDirty = false
   let cleanTaskSnapshot = null
@@ -111,6 +119,7 @@
     showSourceFields: false,
     showRelationships: false,
     taskSortModes: taskSortModes,
+    taskSortDirections: taskSortDirections,
     colorScheme: document.documentElement.classList.contains('theme-dark')
       ? colorSchemeCodes.dark
       : colorSchemeCodes.light
@@ -290,6 +299,21 @@
     }
 
     return String(value).slice(0, 10)
+  }
+
+  function getLocalTodayDateKey() {
+    const today = new Date()
+    const month = String(today.getMonth() + 1).padStart(2, '0')
+    const day = String(today.getDate()).padStart(2, '0')
+    return `${today.getFullYear()}-${month}-${day}`
+  }
+
+  function isTaskOverdue(task) {
+    const deadline = formatDate(task && task.deadline)
+    return task
+      && task.taskStatusCode === 'ACTIVE'
+      && /^\d{4}-\d{2}-\d{2}$/.test(deadline)
+      && deadline < getLocalTodayDateKey()
   }
 
   function formatShortDate(value) {
@@ -698,13 +722,47 @@
     }, {})
   }
 
+  function createDefaultTaskSortDirections() {
+    return Object.keys(viewLabels).reduce(function (directions, view) {
+      directions[view] = defaultTaskSortDirection
+      return directions
+    }, {})
+  }
+
+  function getCanonicalTaskSortMode(value) {
+    const normalized = String(value || defaultTaskSortMode).trim().toUpperCase()
+    return legacyTaskSortModes[normalized] || normalized
+  }
+
+  function inferLegacyTaskSortDirection(value) {
+    const normalized = String(value || defaultTaskSortMode).trim().toUpperCase()
+    return normalized === 'RECENTLY_UPDATED'
+      || normalized === 'NEWEST_CREATED'
+      || normalized === 'TITLE_DESC'
+      ? taskSortDirectionCodes.descending
+      : taskSortDirectionCodes.ascending
+  }
+
   function normalizeTaskSortModes(values) {
     const normalized = createDefaultTaskSortModes()
     Object.keys(normalized).forEach(function (view) {
       const candidate = values && typeof values[view] === 'string'
-        ? values[view].trim().toUpperCase()
+        ? getCanonicalTaskSortMode(values[view])
         : defaultTaskSortMode
       normalized[view] = getTaskSortOption(candidate).code
+    })
+    return normalized
+  }
+
+  function normalizeTaskSortDirections(values, rawModes) {
+    const normalized = createDefaultTaskSortDirections()
+    Object.keys(normalized).forEach(function (view) {
+      const candidate = values && typeof values[view] === 'string'
+        ? values[view].trim().toUpperCase()
+        : inferLegacyTaskSortDirection(rawModes && rawModes[view])
+      normalized[view] = candidate === taskSortDirectionCodes.descending
+        ? taskSortDirectionCodes.descending
+        : taskSortDirectionCodes.ascending
     })
     return normalized
   }
@@ -713,11 +771,27 @@
     return taskSortModes[currentView] || defaultTaskSortMode
   }
 
+  function getCurrentTaskSortDirection() {
+    return taskSortDirections[currentView] || defaultTaskSortDirection
+  }
+
   function syncTaskSortControl() {
     const option = getTaskSortOption(getCurrentTaskSortMode())
+    const direction = getCurrentTaskSortDirection()
+    const directionLabel = direction === taskSortDirectionCodes.descending
+      ? 'Descending'
+      : 'Ascending'
     $('#task-sort').val(option.code)
-    $('#task-sort-description').text(option.description)
-    $('.task-sort-field').attr('title', option.description)
+    $('#task-sort-direction')
+      .text(direction === taskSortDirectionCodes.descending ? 'Desc' : 'Asc')
+      .attr('aria-label', `Sort ${directionLabel.toLowerCase()}`)
+      .attr('title', `Sort ${directionLabel.toLowerCase()}`)
+    const directionDescription = direction === taskSortDirectionCodes.descending
+      ? 'Descending reverses this order.'
+      : 'Ascending uses this order.'
+    const description = `${option.description} ${directionDescription}`
+    $('#task-sort-description').text(description)
+    $('.task-sort-field').attr('title', description)
   }
 
   function renderShell() {
@@ -733,42 +807,61 @@
           </header>
 
           <div class="task-browse-controls" aria-label="Browse tasks">
-            <label class="task-view-field" for="task-view">
-              <span class="sr-only">Task view</span>
-              <select id="task-view" aria-label="Task view">
-                ${renderTaskViewOptions()}
-              </select>
-            </label>
+            <div class="task-browse-primary">
+              <label class="task-view-field" for="task-view">
+                <span class="sr-only">Task view</span>
+                <select id="task-view" aria-label="Task view">
+                  ${renderTaskViewOptions()}
+                </select>
+              </label>
 
-            <label class="task-search-field" for="task-search">
-              <span class="sr-only">Search tasks or tags</span>
-              <input id="task-search" class="task-search" type="search" placeholder="Search tasks or tags" autocomplete="off">
-              <kbd aria-hidden="true">Ctrl+K</kbd>
-            </label>
-
-            <div class="task-filter-menu">
-              <button id="task-filter-button" class="secondary-button task-filter-button" type="button" aria-expanded="false" aria-controls="task-filter-popover">
-                <span>Filter</span>
-                <span id="task-filter-count-badge" class="task-filter-count-badge" hidden>0</span>
-              </button>
-              <div id="task-filter-popover" class="task-filter-popover" hidden>
-                <label for="task-tag-filter">Tags</label>
-                <select id="task-tag-filter" multiple aria-label="Filter tasks by tags"></select>
-                <small>Matches any selected tag.</small>
-              </div>
+              <label class="task-search-field" for="task-search">
+                <span class="sr-only">Search tasks</span>
+                <input id="task-search" class="task-search" type="search" placeholder="Search tasks" autocomplete="off">
+                <kbd aria-hidden="true">Ctrl+K</kbd>
+              </label>
             </div>
 
-            <label class="task-sort-field" for="task-sort">
-              <span>Sort</span>
-              <select id="task-sort" aria-describedby="task-sort-description">
-                ${renderTaskSortOptions()}
-              </select>
-            </label>
-            <span id="task-sort-description" class="sr-only">Overdue and urgent work rises first.</span>
+            <div class="task-browse-secondary">
+              <div class="task-filter-menu">
+                <button id="task-filter-button" class="secondary-button task-filter-button" type="button" aria-expanded="false" aria-controls="task-filter-popover">
+                  <span>Tags</span>
+                  <span id="task-filter-count-badge" class="task-filter-count-badge" hidden>0</span>
+                </button>
+                <div id="task-filter-popover" class="task-filter-popover" hidden>
+                  <label for="task-tag-filter">Filter by tags</label>
+                  <select id="task-tag-filter" multiple aria-label="Filter tasks by tags"></select>
+                  <small>Matches any selected tag.</small>
+                </div>
+              </div>
+
+              <label class="task-quick-filter" for="task-type-filter" title="Filter by task type">
+                <span>Type</span>
+                <select id="task-type-filter" aria-label="Filter by task type">
+                  <option value="">Any</option>
+                </select>
+              </label>
+
+              <label class="task-quick-filter" for="task-priority-filter" title="Filter by priority">
+                <span>Priority</span>
+                <select id="task-priority-filter" aria-label="Filter by priority">
+                  <option value="">Any</option>
+                </select>
+              </label>
+
+              <div class="task-sort-field">
+                <label for="task-sort">Sort</label>
+                <select id="task-sort" aria-describedby="task-sort-description">
+                  ${renderTaskSortOptions()}
+                </select>
+                <button id="task-sort-direction" class="task-sort-direction" type="button" aria-describedby="task-sort-description" aria-label="Sort ascending" title="Sort ascending">Asc</button>
+              </div>
+              <span id="task-sort-description" class="task-sort-description" aria-live="polite">Overdue → urgent → active → waiting → can wait → finished; then earliest deadline. Ascending uses this order.</span>
+            </div>
           </div>
 
           <div id="task-filter-summary" class="task-filter-summary">
-            <div id="task-filter-chips" class="task-filter-chips" aria-label="Active tag filters"></div>
+            <div id="task-filter-chips" class="task-filter-chips" aria-label="Active task filters"></div>
             <span id="task-result-count" class="task-result-count" aria-live="polite">0 tasks</span>
             <button id="task-filter-clear" class="task-filter-clear" type="button" hidden>Clear</button>
           </div>
@@ -1267,11 +1360,24 @@
     $(selector).html(options.join(''))
   }
 
+  function renderTaskListFilterOptions(selector, items) {
+    const selectedValue = $(selector).val() || ''
+    const options = ['<option value="">Any</option>']
+
+    ;(items || []).forEach(function (item) {
+      options.push(`<option value="${encodeAttribute(item.code)}">${encodeText(item.name)}</option>`)
+    })
+
+    $(selector).html(options.join('')).val(selectedValue)
+  }
+
   function renderLookups() {
     renderLookupOptions('#task-type', lookups.taskTypes, false)
     renderLookupOptions('#task-priority', lookups.taskPriorities, true)
     renderLookupOptions('#task-source', lookups.taskSources, true)
     renderLookupOptions('#editor-mode', lookups.bodyFormats, false)
+    renderTaskListFilterOptions('#task-type-filter', lookups.taskTypes)
+    renderTaskListFilterOptions('#task-priority-filter', lookups.taskPriorities)
     renderTagOptions(lookups.tags || [])
     renderTaskTagFilterOptions(lookups.tags || [])
     syncPreferenceControls()
@@ -2361,7 +2467,8 @@
       showSourceFields: layoutPreference.showSourceFields,
       showRelationships: layoutPreference.showRelationships,
       colorScheme: layoutPreference.colorScheme,
-      taskSortModes: taskSortModes
+      taskSortModes: taskSortModes,
+      taskSortDirections: taskSortDirections
     }).then(function () {
       return true
     }).catch(function (error) {
@@ -2387,6 +2494,8 @@
     layoutPreference.showRelationships = preference.showRelationships === true
     taskSortModes = normalizeTaskSortModes(preference.taskSortModes)
     layoutPreference.taskSortModes = taskSortModes
+    taskSortDirections = normalizeTaskSortDirections(preference.taskSortDirections, preference.taskSortModes)
+    layoutPreference.taskSortDirections = taskSortDirections
     applyColorScheme(preference.colorScheme)
     applyStoredLayoutSplit(false)
     syncTaskSortControl()
@@ -2584,6 +2693,17 @@
     })
   }
 
+  function getTaskListFilterValue(selector) {
+    return ($(selector).val() || '').toString().trim().toUpperCase()
+  }
+
+  function getTaskListFilterName(items, code) {
+    const match = (items || []).find(function (item) {
+      return item.code === code
+    })
+    return match ? match.name : code
+  }
+
   function setTaskFilterPopoverOpen(isOpen, shouldFocus) {
     const $popover = $('#task-filter-popover')
     const $button = $('#task-filter-button')
@@ -2612,12 +2732,27 @@
 
   function renderTaskFilterSummary(countLabel) {
     const selectedTags = getSelectedTaskTagFilterValues()
+    const taskTypeCode = getTaskListFilterValue('#task-type-filter')
+    const taskPriorityCode = getTaskListFilterValue('#task-priority-filter')
     const query = getTaskSearchQuery()
-    const hasFilters = query.length > 0 || selectedTags.length > 0
+    const hasFilters = query.length > 0
+      || selectedTags.length > 0
+      || taskTypeCode.length > 0
+      || taskPriorityCode.length > 0
 
-    $('#task-filter-chips').html(selectedTags.map(function (tag) {
-      return `<button class="task-filter-chip" type="button" data-tag="${encodeAttribute(tag)}" aria-label="Remove tag filter: ${encodeAttribute(tag)}" title="Remove tag filter">tag: ${encodeText(tag)}</button>`
-    }).join(''))
+    const chips = selectedTags.map(function (tag) {
+      return `<button class="task-filter-chip" type="button" data-tag="${encodeAttribute(tag)}" aria-label="Remove tag filter: ${encodeAttribute(tag)}" title="Remove tag filter">Tag: ${encodeText(tag)}</button>`
+    })
+    if (taskTypeCode) {
+      const taskTypeName = getTaskListFilterName(lookups.taskTypes, taskTypeCode)
+      chips.push(`<button class="task-filter-chip" type="button" data-filter="task-type" aria-label="Remove task type filter: ${encodeAttribute(taskTypeName)}" title="Remove task type filter">Type: ${encodeText(taskTypeName)}</button>`)
+    }
+    if (taskPriorityCode) {
+      const taskPriorityName = getTaskListFilterName(lookups.taskPriorities, taskPriorityCode)
+      chips.push(`<button class="task-filter-chip" type="button" data-filter="task-priority" aria-label="Remove priority filter: ${encodeAttribute(taskPriorityName)}" title="Remove priority filter">Priority: ${encodeText(taskPriorityName)}</button>`)
+    }
+
+    $('#task-filter-chips').html(chips.join(''))
     $('#task-result-count').text(countLabel)
     $('#task-filter-clear').prop('hidden', !hasFilters)
     $('#task-filter-count-badge')
@@ -2633,6 +2768,7 @@
   function clearTaskFilters() {
     $('#task-search').val('')
     $('#task-tag-filter').val([]).trigger('change.select2')
+    $('#task-type-filter, #task-priority-filter').val('')
     setTaskFilterPopoverOpen(false, false)
     renderTaskList()
   }
@@ -2666,8 +2802,10 @@
 
   function sortTasksForCurrentView(filteredTasks) {
     const mode = getCurrentTaskSortMode()
+    const direction = getCurrentTaskSortDirection() === taskSortDirectionCodes.descending ? -1 : 1
     if (mode === defaultTaskSortMode) {
-      return filteredTasks
+      const orderedTasks = filteredTasks.slice()
+      return direction === -1 ? orderedTasks.reverse() : orderedTasks
     }
 
     return filteredTasks.slice().sort(function (left, right) {
@@ -2678,71 +2816,56 @@
           comparison = compareNullableValues(
             Number.isFinite(left.taskPrioritySortOrder) ? left.taskPrioritySortOrder : null,
             Number.isFinite(right.taskPrioritySortOrder) ? right.taskPrioritySortOrder : null,
-            1)
+            direction)
           comparison = comparison || compareNullableValues(
             parseTaskDate(left.deadline),
             parseTaskDate(right.deadline),
-            1)
+            direction)
           break
         case 'DUE_DATE':
           comparison = compareNullableValues(
             parseTaskDate(left.deadline),
             parseTaskDate(right.deadline),
-            1)
+            direction)
           comparison = comparison || compareNullableValues(
             Number.isFinite(left.taskPrioritySortOrder) ? left.taskPrioritySortOrder : null,
             Number.isFinite(right.taskPrioritySortOrder) ? right.taskPrioritySortOrder : null,
-            1)
+            direction)
           break
         case 'WAITING_LONGEST':
           comparison = compareNullableValues(
             parseTaskDate(left.waitingSince),
             parseTaskDate(right.waitingSince),
-            1)
+            direction)
           break
         case 'RECENTLY_UPDATED':
           comparison = compareNullableValues(
             parseTaskDate(left.updatedAt),
             parseTaskDate(right.updatedAt),
-            -1)
-          break
-        case 'STALE_FIRST':
-          comparison = compareNullableValues(
-            parseTaskDate(left.updatedAt),
-            parseTaskDate(right.updatedAt),
-            1)
+            direction)
           break
         case 'NEWEST_CREATED':
           comparison = compareNullableValues(
             parseTaskDate(left.createdAt),
             parseTaskDate(right.createdAt),
-            -1)
-          break
-        case 'OLDEST_CREATED':
-          comparison = compareNullableValues(
-            parseTaskDate(left.createdAt),
-            parseTaskDate(right.createdAt),
-            1)
+            direction)
           break
         case 'TITLE_ASC':
-          comparison = compareTaskText(left.title, right.title)
-          break
-        case 'TITLE_DESC':
-          comparison = compareTaskText(right.title, left.title)
+          comparison = compareTaskText(left.title, right.title) * direction
           break
         case 'TASK_TYPE':
           comparison = compareNullableValues(
             Number.isFinite(left.taskTypeSortOrder) ? left.taskTypeSortOrder : null,
             Number.isFinite(right.taskTypeSortOrder) ? right.taskTypeSortOrder : null,
-            1)
-          comparison = comparison || compareTaskText(left.taskTypeName, right.taskTypeName)
+            direction)
+          comparison = comparison || compareTaskText(left.taskTypeName, right.taskTypeName) * direction
           break
         case 'STATUS':
           comparison = compareNullableValues(
             Number.isFinite(left.taskStatusSortOrder) ? left.taskStatusSortOrder : null,
             Number.isFinite(right.taskStatusSortOrder) ? right.taskStatusSortOrder : null,
-            1)
-          comparison = comparison || compareTaskText(left.taskStatusName, right.taskStatusName)
+            direction)
+          comparison = comparison || compareTaskText(left.taskStatusName, right.taskStatusName) * direction
           break
       }
 
@@ -2753,6 +2876,8 @@
   function getVisibleTasks() {
     const query = getTaskSearchQuery()
     const selectedTags = getSelectedTaskTagFilters()
+    const taskTypeCode = getTaskListFilterValue('#task-type-filter')
+    const taskPriorityCode = getTaskListFilterValue('#task-priority-filter')
 
     const filteredTasks = tasks.filter(function (task) {
       const taskTags = (task.tags || []).map(function (tag) {
@@ -2769,8 +2894,10 @@
         || selectedTags.some(function (selectedTag) {
           return taskTags.includes(selectedTag)
         })
+      const matchesTaskType = !taskTypeCode || task.taskTypeCode === taskTypeCode
+      const matchesPriority = !taskPriorityCode || task.taskPriorityCode === taskPriorityCode
 
-      return matchesSearch && matchesTags
+      return matchesSearch && matchesTags && matchesTaskType && matchesPriority
     })
 
     return sortTasksForCurrentView(filteredTasks)
@@ -2779,10 +2906,15 @@
   function renderTaskList() {
     const query = getTaskSearchQuery()
     const selectedTags = getSelectedTaskTagFilters()
+    const taskTypeCode = getTaskListFilterValue('#task-type-filter')
+    const taskPriorityCode = getTaskListFilterValue('#task-priority-filter')
     const visibleTasks = getVisibleTasks()
 
     syncTaskSortControl()
-    const hasFilters = query.length > 0 || selectedTags.length > 0
+    const hasFilters = query.length > 0
+      || selectedTags.length > 0
+      || taskTypeCode.length > 0
+      || taskPriorityCode.length > 0
     const countLabel = hasFilters
       ? `${visibleTasks.length} of ${tasks.length} ${tasks.length === 1 ? 'task' : 'tasks'}`
       : `${visibleTasks.length} ${visibleTasks.length === 1 ? 'task' : 'tasks'}`
@@ -2791,7 +2923,7 @@
 
     if (visibleTasks.length === 0) {
       const title = hasFilters ? 'No matching tasks' : `No ${viewLabels[currentView].toLowerCase()} tasks`
-      const detail = hasFilters ? 'Adjust the search text or tag filters' : 'Create a task or switch view'
+      const detail = hasFilters ? 'Adjust the search or filters' : 'Create a task or switch view'
 
       $('#task-list').html(`
         <div class="empty-list">
@@ -2810,7 +2942,7 @@
         ? renderBadge(task.taskPriorityName, task.taskPriorityBackgroundColor, task.taskPriorityForegroundColor)
         : ''
       const deadline = task.deadline
-        ? `<span class="task-badge">Due ${encodeText(formatShortDate(task.deadline))}</span>`
+        ? `<span class="task-badge${isTaskOverdue(task) ? ' task-badge-overdue' : ''}">Due ${encodeText(formatShortDate(task.deadline))}</span>`
         : ''
       const waiting = task.activeWaitingForLabel
         ? `<span class="task-badge task-badge-waiting">Waiting: ${encodeText(task.activeWaitingForLabel)}</span>`
@@ -4086,11 +4218,19 @@
 
     $('#task-search').on('input', renderTaskList)
     $('#task-tag-filter').on('change', renderTaskList)
+    $('#task-type-filter, #task-priority-filter').on('change', renderTaskList)
     $('#task-filter-button').on('click', function () {
       const isOpen = $('#task-filter-popover').prop('hidden')
       setTaskFilterPopoverOpen(isOpen, isOpen)
     })
     $('#task-filter-summary').on('click', '.task-filter-chip', function () {
+      const filter = $(this).attr('data-filter')
+      if (filter) {
+        $(`#${filter}-filter`).val('')
+        renderTaskList()
+        return
+      }
+
       const tag = $(this).attr('data-tag')
       const selected = getSelectedTaskTagFilterValues().filter(function (value) {
         return value !== tag
@@ -4122,6 +4262,15 @@
     $('#task-sort').on('change', function () {
       taskSortModes[currentView] = getTaskSortOption($(this).val().toString()).code
       layoutPreference.taskSortModes = taskSortModes
+      syncTaskSortControl()
+      renderTaskList()
+      scheduleLayoutPreferenceSave()
+    })
+    $('#task-sort-direction').on('click', function () {
+      taskSortDirections[currentView] = getCurrentTaskSortDirection() === taskSortDirectionCodes.ascending
+        ? taskSortDirectionCodes.descending
+        : taskSortDirectionCodes.ascending
+      layoutPreference.taskSortDirections = taskSortDirections
       syncTaskSortControl()
       renderTaskList()
       scheduleLayoutPreferenceSave()

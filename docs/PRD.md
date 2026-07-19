@@ -453,9 +453,11 @@ All tasks
 
 Cancelled tasks appear only in `All tasks`, where their titles use red struck-through text and all pills are gray. They do not appear in `Completed tasks`.
 
+An active task whose deadline is before the current local date uses a red deadline pill with white text. A task due today is not overdue.
+
 ## Task-list sorting
 
-Every view defaults to smart priority:
+Every view defaults to smart priority. The UI explains that this is a triage order rather than a database priority field:
 
 ```text
 1. Overdue tasks
@@ -463,20 +465,22 @@ Every view defaults to smart priority:
 3. Active tasks
 4. Waiting tasks
 5. Can wait
-6. Completed hidden by default
+6. Completed and cancelled work
 ```
+
+Within each group, tasks with the earliest deadline come first, undated tasks remain visible, and the most recently updated task breaks remaining ties. Descending order reverses the smart triage order.
 
 Waiting tasks should not disappear. They should be easy to review.
 
 The task list also offers purpose-driven alternatives for developer and support work:
 
-- Focus: configured priority, due date, and longest waiting time.
-- Activity: recently updated, stale first, newest created, and oldest created.
-- Organize: title A-Z or Z-A, task type, and status.
+- Focus: configured priority, due date, and waiting since.
+- Activity: updated and created timestamps.
+- Organize: title, task type, and lifecycle status. Lifecycle status follows the configured status order and is mainly useful in the `All` view.
 
-The control explains the practical effect of the selected order, shows the visible result count, works after text and tag filtering, and persists a separate selection for each task view. Lookup-based ordering follows the configured lookup sort order rather than display names.
+The control shows a concise, visible explanation of the selected sort, shows the visible result count, works after text and tag filtering, and provides a compact ascending/descending control. The selected field and direction persist separately for each task view. Lookup-based ordering follows the configured lookup sort order rather than display names, and tasks without a value remain last in either direction.
 
-Task browsing uses one compact control row: a labeled view selector, a shared task-or-tag search, an on-demand tag filter, and the sort selector. Selected tag filters appear as removable chips in a slim contextual row with the result count and a clear action. The controls reflow at narrow sidebar widths so the task list keeps as much vertical space as possible.
+Task browsing uses a compact responsive header. View and task search form the primary row; tag, task-type, priority, and sorting controls move to a dedicated secondary row before they become cramped. Tags remain an on-demand multi-select with OR semantics, while task type and priority are immediate single-select filters. Active filters appear as removable chips in a slim contextual row with the result count and a clear action.
 
 ## Out of scope for first version
 
