@@ -2,4 +2,5 @@
   <Project Path="Okf-Todo.Mcp/Okf-Todo.Mcp.csproj" />
   <Project Path="Okf-Todo/Okf-Todo.csproj" />
   <Project Path="Okf-Todo.Tests/Okf-Todo.Tests.csproj" />
+  <Project Path="Okf-Todo.UiTests/Okf-Todo.UiTests.csproj" />
 </Solution>

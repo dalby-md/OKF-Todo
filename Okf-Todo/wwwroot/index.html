@@ -37,6 +37,9 @@
     <script defer src="/js/jquery.min.js?v=20260707-editor-2"></script>
     <script defer src="/js/select2.min.js?v=4.0.13"></script>
     <script defer src="/js/editor.js?v=20260717-help-markdown-1"></script>
-    <script defer src="/js/app.js?v=20260719-sort-help-1"></script>
+    <script>
+      const startupVersion = new URLSearchParams(window.location.search).get('v') || Date.now().toString()
+      document.write(`<script defer src="/js/app.js?v=${encodeURIComponent(startupVersion)}"><\/script>`)
+    </script>
   </body>
 </html>

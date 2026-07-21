@@ -3055,14 +3055,12 @@
       bodyFormatCode,
       taskTypeCode: selectedTaskType ? selectedTaskType.code : '',
       taskPriorityCode: selectedTaskPriority ? selectedTaskPriority.code : '',
-      taskSourceCode: '',
-      sourceReference: '',
-      sourceUrl: '',
+      taskSourceCode: null,
+      sourceReference: null,
+      sourceUrl: null,
       deadline: null,
-      activeWaitingFor: null,
-      tags: [],
-      taskStatusCode: 'ACTIVE',
-      taskStatusName: 'Draft'
+      activeWaitingForLabel: null,
+      tags: []
     }
   }
 
@@ -3406,8 +3404,24 @@
       .text(canReopen ? 'Reopen' : 'Complete')
       .prop('disabled', !(canCompleteOrCancel || canReopen))
     $('#cancel-button').prop('disabled', !canCompleteOrCancel)
-    $('#attachment-add-button, #attachment-file').prop('disabled', !isSavedTask)
+    setTaskOwnedControlsEnabled(isSavedTask)
     renderWaitingPanel(task)
+  }
+
+  function setTaskOwnedControlsEnabled(isEnabled) {
+    $('#attachment-add-button, #attachment-file').prop('disabled', !isEnabled)
+    $('#checklist-new-text, #checklist-add-button').prop('disabled', !isEnabled)
+    $('#relationship-type, #relationship-task, #relationship-add-button').prop('disabled', !isEnabled)
+    setCommentControlsEnabled(isEnabled)
+  }
+
+  function requireSavedTaskId(task) {
+    const taskId = Number(task && task.id)
+    if (!Number.isSafeInteger(taskId) || taskId <= 0) {
+      throw new Error('Task creation did not return a saved task ID.')
+    }
+
+    return taskId
   }
 
   function refreshCurrentTaskWithoutEditor(task) {
@@ -3916,16 +3930,26 @@
     }
 
     $('#new-task-save-button, #new-task-cancel-button').prop('disabled', true)
+    $('#new-task-save-button').text('Saving')
+    setStatus('Saving', 'ready')
 
     try {
+      const createdTask = await sendBridgeMessage('task.create', payload)
+      const taskId = requireSavedTaskId(createdTask)
+      const savedTask = await sendBridgeMessage('task.get', { id: taskId })
+      requireSavedTaskId(savedTask)
+      await renderTaskEditor(savedTask)
       closeNewTaskDialog()
-      await renderTaskEditor(payload)
-      isDirty = true
+      selectViewForTask(savedTask)
+      await loadTasks({ keepSelection: true })
+      isDirty = false
       window.Editor.markClean()
-      setStatus('Unsaved changes', 'dirty')
+      setStatus('Saved', 'saved')
     } catch (error) {
       $('#new-task-save-button, #new-task-cancel-button').prop('disabled', false)
       throw error
+    } finally {
+      $('#new-task-save-button').text('Save')
     }
   }
 
