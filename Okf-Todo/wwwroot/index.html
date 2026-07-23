@@ -6,8 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OKF-Todo</title>
     <link rel="stylesheet" href="/css/select2.min.css?v=4.0.13">
-    <link rel="stylesheet" href="/css/app.css?v=20260719-sort-help-1">
-    <link id="dark-theme-stylesheet" rel="stylesheet" href="/css/dark-theme.css?v=20260719-browse-filters-1" disabled>
+    <script>
+      const startupVersion = new URLSearchParams(window.location.search).get('v') || Date.now().toString()
+      document.write(`<link id="app-stylesheet" rel="stylesheet" href="/css/app.css?v=${encodeURIComponent(startupVersion)}">`)
+      document.write(`<link id="dark-theme-stylesheet" rel="stylesheet" href="/css/dark-theme.css?v=${encodeURIComponent(startupVersion)}" disabled>`)
+    </script>
     <script>
       try {
         if (window.localStorage.getItem('okf-todo-color-scheme') === 'DARK') {
@@ -38,7 +41,6 @@
     <script defer src="/js/select2.min.js?v=4.0.13"></script>
     <script defer src="/js/editor.js?v=20260717-help-markdown-1"></script>
     <script>
-      const startupVersion = new URLSearchParams(window.location.search).get('v') || Date.now().toString()
       document.write(`<script defer src="/js/app.js?v=${encodeURIComponent(startupVersion)}"><\/script>`)
     </script>
   </body>

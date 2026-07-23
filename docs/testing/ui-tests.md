@@ -25,5 +25,5 @@ dotnet test .\Okf-Todo.UiTests\Okf-Todo.UiTests.csproj -c Release
 
 1. Owner and Responsible are hidden by default.
 2. **Show owner** and **Show responsible** are independent persisted preferences.
-3. Both fields appear side by side when enabled together.
+3. Both fields remain on the same row when enabled together, including at compact window widths.
 4. Saved owner and responsible values are found by the overview text search.

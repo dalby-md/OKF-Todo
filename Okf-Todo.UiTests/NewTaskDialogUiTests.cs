@@ -83,6 +83,9 @@ public sealed class NewTaskDialogUiTests
             WaitUntil = WaitUntilState.DOMContentLoaded
         });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        Assert.Equal(
+            $"/css/app.css?v={startupVersion}",
+            await page.Locator("#app-stylesheet").GetAttributeAsync("href"));
         Assert.Contains($"v={startupVersion}", appScriptUrl);
 
         var taskTitle = $"New task dialog {bodyFormatCode} browser contract";
@@ -164,6 +167,9 @@ public sealed class NewTaskDialogUiTests
             WaitUntil = WaitUntilState.DOMContentLoaded
         });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        Assert.Equal(
+            "/css/app.css?v=ownership-fields-contract",
+            await page.Locator("#app-stylesheet").GetAttributeAsync("href"));
 
         const string taskTitle = "Ownership search browser contract";
         await page.Locator("#new-task-button").ClickAsync();
@@ -183,6 +189,8 @@ public sealed class NewTaskDialogUiTests
         Assert.False(await page.Locator("#show-responsible").IsCheckedAsync());
 
         await page.Locator("#show-owner").CheckAsync();
+        Assert.True(await page.Locator("#show-owner").IsCheckedAsync());
+        Assert.False(await page.Locator("#show-responsible").IsCheckedAsync());
         await WaitForDisplayPreferenceSavedAsync(page);
         await page.Locator("#settings-close-button").ClickAsync();
 
@@ -200,9 +208,12 @@ public sealed class NewTaskDialogUiTests
         Assert.True(await page.Locator("#show-owner").IsCheckedAsync());
         Assert.False(await page.Locator("#show-responsible").IsCheckedAsync());
         await page.Locator("#show-responsible").CheckAsync();
+        Assert.True(await page.Locator("#show-owner").IsCheckedAsync());
+        Assert.True(await page.Locator("#show-responsible").IsCheckedAsync());
         await WaitForDisplayPreferenceSavedAsync(page);
         await page.Locator("#settings-close-button").ClickAsync();
 
+        await page.SetViewportSizeAsync(680, 1000);
         var ownerBox = await page.Locator(".owner-field").BoundingBoxAsync();
         var responsibleBox = await page.Locator(".responsible-field").BoundingBoxAsync();
         Assert.NotNull(ownerBox);
@@ -226,6 +237,8 @@ public sealed class NewTaskDialogUiTests
         await page.Locator("#task-search").FillAsync("");
         await OpenTaskDetailsPreferencesAsync(page);
         await page.Locator("#show-owner").UncheckAsync();
+        Assert.False(await page.Locator("#show-owner").IsCheckedAsync());
+        Assert.True(await page.Locator("#show-responsible").IsCheckedAsync());
         await WaitForDisplayPreferenceSavedAsync(page);
         await page.Locator("#settings-close-button").ClickAsync();
         Assert.True(await page.Locator(".owner-field").IsHiddenAsync());
@@ -235,6 +248,16 @@ public sealed class NewTaskDialogUiTests
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
         Assert.True(await page.Locator(".owner-field").IsHiddenAsync());
         Assert.False(await page.Locator(".responsible-field").IsHiddenAsync());
+
+        await OpenTaskDetailsPreferencesAsync(page);
+        Assert.False(await page.Locator("#show-owner").IsCheckedAsync());
+        Assert.True(await page.Locator("#show-responsible").IsCheckedAsync());
+        await page.Locator("#show-responsible").UncheckAsync();
+        await WaitForDisplayPreferenceSavedAsync(page);
+        await page.Locator("#settings-close-button").ClickAsync();
+        Assert.True(await page.Locator(".ownership-grid").IsHiddenAsync());
+        Assert.True(await page.Locator(".owner-field").IsHiddenAsync());
+        Assert.True(await page.Locator(".responsible-field").IsHiddenAsync());
     }
 
     private static async Task OpenTaskDetailsPreferencesAsync(IPage page)

@@ -2376,10 +2376,6 @@ body.is-resizing-editor * {
     grid-template-columns: 1fr;
   }
 
-  .ownership-grid {
-    grid-template-columns: 1fr;
-  }
-
   .lookup-group-buttons,
   .lookup-list-row,
   .tag-list-row,

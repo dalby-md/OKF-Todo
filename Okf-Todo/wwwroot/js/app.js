@@ -126,6 +126,12 @@
       ? colorSchemeCodes.dark
       : colorSchemeCodes.light
   }
+  const taskSectionPreferenceByControlId = {
+    'show-source-fields': 'showSourceFields',
+    'show-owner': 'showOwner',
+    'show-responsible': 'showResponsible',
+    'show-relationships': 'showRelationships'
+  }
   let layoutPreferenceSaveTimer = null
   let editorHeightPreferenceSaveTimer = null
   let editorHeightDragState = null
@@ -2630,11 +2636,13 @@
     })
   }
 
-  function saveTaskSectionVisibility() {
-    layoutPreference.showSourceFields = $('#show-source-fields').prop('checked')
-    layoutPreference.showOwner = $('#show-owner').prop('checked')
-    layoutPreference.showResponsible = $('#show-responsible').prop('checked')
-    layoutPreference.showRelationships = $('#show-relationships').prop('checked')
+  function saveTaskSectionVisibility(event) {
+    const preferenceName = taskSectionPreferenceByControlId[event.currentTarget.id]
+    if (!preferenceName) {
+      return
+    }
+
+    layoutPreference[preferenceName] = $(event.currentTarget).prop('checked')
     applyTaskSectionVisibility()
     saveLayoutPreference().then(function (wasSaved) {
       if (wasSaved) {
