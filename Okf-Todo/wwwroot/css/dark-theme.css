@@ -972,11 +972,24 @@ textarea.is-invalid {
 }
 
 .task-row-star:hover:not(:disabled),
-.task-row-star.is-starred,
-.task-detail-star-button.is-starred {
+.task-row-star.is-starred {
   border-color: #6d5822;
   color: #ffd36a;
   background: #382e16;
+}
+
+.task-detail-context-menu-button {
+  border-color: var(--theme-border-strong);
+  color: var(--theme-muted);
+  background: var(--theme-surface-raised);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 22%);
+}
+
+.task-detail-context-menu-button:hover:not(:disabled),
+.task-detail-context-menu-button[aria-expanded="true"] {
+  border-color: var(--theme-border-strong);
+  color: var(--theme-accent);
+  background: var(--theme-surface-hover);
 }
 
 .task-row-shell.is-bulk-selected .task-row,

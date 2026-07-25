@@ -166,7 +166,7 @@ Both preferences default to disabled, so completed and cancelled tasks are read 
 
 Stars are an everyday focus mechanism, independent of task type, priority, and lifecycle:
 
-- Any task outside Trash can be starred or unstarred from its list row or detail header.
+- Any task outside Trash can be starred or unstarred from its list row, Select mode, or the contextual task-details menu used in compact and stacked layouts.
 - Star state persists when a task is completed or cancelled.
 - The **Starred** view shows unfinished starred tasks first. Completed and cancelled starred tasks remain available in a collapsed **Finished** group.
 - Star and unstar actions do not add timeline noise.
@@ -183,7 +183,7 @@ Deletion uses a reversible Trash workflow:
 - Star controls are not interactive in Trash. A task that was starred before deletion keeps a passive star marker for context until it is restored or permanently deleted.
 - The **All** view provides **Move all cancelled to Trash** as a compact complete-view action. It includes cancelled tasks hidden by current search or filters, requires explicit confirmation, and provides the normal immediate Undo. This action is not shown in other views.
 
-The same action system supports individual and bulk work. Individual actions live in a compact task menu. **Select** mode operates only on tasks currently rendered by the active view and filters, offers Select all visible, Star, Unstar, **Move all selected to Trash**, Restore, and **Delete all selected permanently** as applicable, and uses a bottom action bar on smaller screens.
+The same action system supports individual and bulk work. Individual actions live on each task row. The application header contains only application-level and lifecycle actions; it does not duplicate Star or Trash controls for the selected task. Compact and stacked task-details layouts provide a contextual menu with Star/Unstar and the applicable Trash actions because the selected row may be outside the visible area. **Select** mode operates only on tasks currently rendered by the active view and filters, offers Select all visible, Star, Unstar, **Move all selected to Trash**, Restore, and **Delete all selected permanently** as applicable, and uses a bottom action bar on smaller screens.
 
 ## Lifecycle timestamps
 

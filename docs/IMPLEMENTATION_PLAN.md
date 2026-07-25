@@ -578,7 +578,7 @@ Scope:
 
 - Add persistent `IsStarred`, `StarredAt`, and `DeletedAt` task fields through an EF Core migration.
 - Add Starred and Trash views.
-- Provide row and detail-header star controls plus compact individual task menus.
+- Provide row-level Star and individual task menus. Keep task-specific Star and Trash controls out of the global application header, and provide one contextual task-details menu in compact and stacked layouts where the selected row may be outside the visible area.
 - Add filtered bulk selection with Star, Unstar, Move all selected to Trash, Restore, and Delete all selected permanently.
 - Keep permanent-delete controls out of normal views. In Trash, use Select mode for arbitrary subsets and a compact header overflow action for Empty Trash across the complete Trash view.
 - Add Move all cancelled to Trash to All as a confirmed complete-view shortcut that includes matches hidden by client-side filters or collapsed groups.
@@ -597,5 +597,6 @@ Acceptance criteria:
 - Empty Trash confirms the complete Trash count and includes tasks hidden by current search or filters.
 - Star controls remain unavailable in Trash; previously starred tasks retain a passive marker as context.
 - Selection actions operate only on selected rendered tasks. The All-only cancelled Trash action confirms its complete matching count, includes hidden or collapsed matches, remains reversible through Undo, and never appears in other views.
+- Wide layouts use row controls without duplicating Star or Trash in the application header. Compact and stacked task details expose one contextual menu with Star/Unstar and the applicable Trash actions.
 - Restore returns an individually opened task to its appropriate lifecycle view and editable state.
 - Playwright coverage verifies individual star/trash/undo, bulk Trash, permanent deletion, restore, read-only behavior, and the responsive action bar.

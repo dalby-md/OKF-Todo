@@ -947,12 +947,6 @@
               <span class="fluent-icon" aria-hidden="true">&#xE710;</span>
               <span>New task</span>
             </button>
-            <button id="task-detail-star-button" class="icon-button task-detail-star-button" type="button" aria-label="Star task" title="Star task" aria-pressed="false" disabled>
-              <span class="fluent-icon" aria-hidden="true">&#xE734;</span>
-            </button>
-            <button id="task-detail-menu-button" class="icon-button task-detail-menu-button" type="button" aria-label="More task actions" title="More task actions" aria-expanded="false" disabled>
-              <span aria-hidden="true">&hellip;</span>
-            </button>
             <button id="complete-button" class="secondary-button" type="button" disabled>Complete</button>
             <button id="cancel-button" class="secondary-button danger-button" type="button" disabled>Cancel</button>
             <button id="save-button" type="button" disabled>Save</button>
@@ -1077,8 +1071,13 @@
 
           <section class="task-editor-panel" aria-labelledby="task-editor-title">
             <header class="editor-header">
-              <p id="task-status-label" class="eyebrow" role="status" aria-live="polite">No task selected</p>
-              <h2 id="task-editor-title">Select or create a task</h2>
+              <div class="task-editor-heading">
+                <p id="task-status-label" class="eyebrow" role="status" aria-live="polite">No task selected</p>
+                <h2 id="task-editor-title">Select or create a task</h2>
+              </div>
+              <button id="task-detail-context-menu-button" class="task-detail-context-menu-button" type="button" aria-label="More task actions" title="More task actions" aria-haspopup="menu" aria-controls="task-action-menu" aria-expanded="false" disabled hidden>
+                <span aria-hidden="true">&hellip;</span>
+              </button>
             </header>
 
           <form id="task-form" class="task-form">
@@ -1583,6 +1582,10 @@
         </div>
 
         <div id="task-action-menu" class="task-action-menu" role="menu" hidden>
+          <button class="task-action-menu-item" type="button" data-task-action="toggle-star" role="menuitem" hidden>
+            <span class="fluent-icon" aria-hidden="true">&#xE734;</span>
+            <span>Star task</span>
+          </button>
           <button class="task-action-menu-item" type="button" data-task-action="restore" role="menuitem" hidden>
             <span class="fluent-icon" aria-hidden="true">&#xE777;</span>
             <span>Restore</span>
@@ -2663,16 +2666,9 @@
     $('#editor-mode').val(getSupportedBodyFormatCode(preferredBodyFormatCode))
     $('#waiting-text').val('')
     $('#task-form input, #task-form select').prop('disabled', true)
-    $('#complete-button, #cancel-button, #save-button, #task-detail-star-button, #task-detail-menu-button').prop('disabled', true)
+    $('#complete-button, #cancel-button, #save-button, #task-detail-context-menu-button').prop('disabled', true)
     $('#cancel-button').prop('hidden', false)
-    $('#task-detail-star-button')
-      .prop('hidden', false)
-      .removeClass('is-starred')
-      .attr('aria-pressed', 'false')
-      .attr('aria-label', 'Star task')
-      .attr('title', 'Star task')
-      .find('.fluent-icon')
-      .html('&#xE734;')
+    $('#task-detail-context-menu-button').prop('hidden', true)
     closeTaskActionMenu()
     $('#editor-mode').prop('disabled', !lookups)
     $('#editor-host').html('<div class="empty-editor">Select a task to edit the body.</div>')
@@ -3504,7 +3500,7 @@
   function closeTaskActionMenu() {
     activeTaskActionMenuId = null
     $('#task-action-menu').prop('hidden', true)
-    $('.task-row-more, #task-detail-menu-button').attr('aria-expanded', 'false')
+    $('.task-row-more, #task-detail-context-menu-button').attr('aria-expanded', 'false')
   }
 
   function openTaskActionMenu(taskId, anchor) {
@@ -3516,11 +3512,18 @@
 
     activeTaskActionMenuId = taskId
     const isInTrash = !!task.deletedAt
+    const isDetailContext = $(anchor).is('#task-detail-context-menu-button')
     const menu = $('#task-action-menu')
+    const starAction = menu.find('[data-task-action="toggle-star"]')
+    starAction
+      .prop('hidden', !isDetailContext || isInTrash)
+      .prop('disabled', isInTrash)
+    starAction.find('.fluent-icon').html(task.isStarred ? '&#xE735;' : '&#xE734;')
+    starAction.find('span:last').text(task.isStarred ? 'Unstar task' : 'Star task')
     menu.find('[data-task-action="restore"]').prop('hidden', !isInTrash)
     menu.find('[data-task-action="trash"]').prop('hidden', isInTrash)
     menu.find('[data-task-action="delete-permanently"]').prop('hidden', !isInTrash)
-    $('.task-row-more, #task-detail-menu-button').attr('aria-expanded', 'false')
+    $('.task-row-more, #task-detail-context-menu-button').attr('aria-expanded', 'false')
     $(anchor).attr('aria-expanded', 'true')
     menu.prop('hidden', false)
 
@@ -4382,16 +4385,9 @@
     $('#cancel-button')
       .prop('disabled', !canCompleteOrCancel)
       .prop('hidden', isInTrash)
-    $('#task-detail-star-button')
-      .prop('hidden', isInTrash)
-      .prop('disabled', !isSavedTask || isInTrash)
-      .toggleClass('is-starred', !!task.isStarred)
-      .attr('aria-pressed', String(!!task.isStarred))
-      .attr('aria-label', task.isStarred ? 'Unstar task' : 'Star task')
-      .attr('title', task.isStarred ? 'Unstar task' : 'Star task')
-      .find('.fluent-icon')
-      .html(task.isStarred ? '&#xE735;' : '&#xE734;')
-    $('#task-detail-menu-button').prop('disabled', !isSavedTask)
+    $('#task-detail-context-menu-button')
+      .prop('hidden', !isSavedTask)
+      .prop('disabled', !isSavedTask)
     applyCurrentTaskEditability()
   }
 
@@ -5339,15 +5335,7 @@
         setStatus(getErrorMessage(error, 'Could not empty Trash'), 'error')
       })
     })
-    $('#task-detail-star-button').on('click', function () {
-      if (!currentTask || !currentTask.id || currentTask.deletedAt) {
-        return
-      }
-      setTaskStarred(currentTask.id, !currentTask.isStarred).catch(function (error) {
-        setStatus(getErrorMessage(error, 'Could not update star'), 'error')
-      })
-    })
-    $('#task-detail-menu-button').on('click', function () {
+    $('#task-detail-context-menu-button').on('click', function () {
       if (currentTask && currentTask.id) {
         openTaskActionMenu(currentTask.id, this)
       }
@@ -5358,11 +5346,24 @@
       if (!taskId) {
         return
       }
-      const promise = action === 'restore'
-        ? restoreTasks([taskId], { openRestoredTask: currentTask && currentTask.id === taskId })
-        : action === 'delete-permanently'
-          ? deleteTasksPermanently([taskId])
-          : moveTasksToTrash([taskId])
+      const task = tasks.find(function (item) { return item.id === taskId })
+        || (currentTask && currentTask.id === taskId ? currentTask : null)
+      closeTaskActionMenu()
+      let promise
+      if (action === 'toggle-star') {
+        if (!task || task.deletedAt) {
+          return
+        }
+        promise = setTaskStarred(taskId, !task.isStarred)
+      } else if (action === 'restore') {
+        promise = restoreTasks([taskId], { openRestoredTask: currentTask && currentTask.id === taskId })
+      } else if (action === 'delete-permanently') {
+        promise = deleteTasksPermanently([taskId])
+      } else if (action === 'trash') {
+        promise = moveTasksToTrash([taskId])
+      } else {
+        return
+      }
       promise.catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not update task'), 'error')
       })
@@ -5402,7 +5403,7 @@
       if (!$(event.target).closest('.task-filter-menu').length) {
         setTaskFilterPopoverOpen(false, false)
       }
-      if (!$(event.target).closest('#task-action-menu, .task-row-more, #task-detail-menu-button').length) {
+      if (!$(event.target).closest('#task-action-menu, .task-row-more, #task-detail-context-menu-button').length) {
         closeTaskActionMenu()
       }
       if (!$(event.target).closest('.task-view-header-menu').length) {
