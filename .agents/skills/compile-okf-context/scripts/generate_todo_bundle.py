@@ -20,6 +20,7 @@ DESCRIPTIONS = {
     "TaskItems": "Stores the primary task records and lifecycle state.",
     "TaskLogEntries": "Stores automatic append-oriented task history entries.",
     "TaskLogTypes": "Defines stable types for automatic task history entries.",
+    "TaskLists": "Stores user-managed task lists and their manual display order.",
     "TaskPriorities": "Defines selectable task priorities.",
     "TaskRelations": "Stores directed typed relationships between distinct tasks.",
     "TaskRelationTypes": "Defines forward and reverse labels for task relationships.",
@@ -32,7 +33,16 @@ DESCRIPTIONS = {
 }
 
 APPLICATION_SEMANTICS = {
+    "TaskLists": [
+        "Every task belongs to exactly one concrete task list; the UI's `All lists` scope is synthetic and is not stored here.",
+        "Names are trimmed and case-insensitively unique, and at least one list must exist.",
+        "The list currently named `Default list` is an ordinary list after creation and may be renamed, reordered, or deleted when another list remains.",
+        "Zero-list recovery inserts `Default list` with sort order 10 and current UTC creation and update timestamps.",
+        "Deleting a list never deletes tasks: affected tasks, including trashed tasks, are moved to a required destination in the same transaction.",
+    ],
     "TaskItems": [
+        "`TaskListId` is required and identifies the task's concrete owning list.",
+        "Missing list assignment resolves in this order: explicit list, contextual task list, the list named `Default list`, first manually ordered list, then creation of `Default list` when no lists exist.",
         "`Owner` is optional free text identifying the person or team accountable for the task.",
         "`Responsible` is optional free text identifying the person currently expected to perform or coordinate the work.",
         "The overview text search includes both values even when their independently controlled task-detail fields are hidden.",
@@ -183,7 +193,7 @@ def main() -> int:
 
 ## Purpose
 
-The application owns one local SQLite database under the operating system's per-user application-data directory. It stores tasks, controlled lookups, history, relationships, tags, attachments, and image BLOBs.
+The application owns one local SQLite database under the operating system's per-user application-data directory. It stores task lists, tasks, controlled lookups, history, relationships, tags, attachments, and image BLOBs.
 
 The path is resolved by `DatabasePathProvider` using these platform rules:
 
@@ -226,6 +236,8 @@ See [Database Schema Lifecycle](../references/schema-lifecycle.md).
 - Task-owned rows cascade when the owning task is deleted.
 - Lookup and retained-history references use restricted deletion where configured.
 - Lookup `Code` values are unique per lookup table.
+- Every task has one required `TaskListId`; deleting a referenced list is restricted until application services move its tasks.
+- `TaskLists.Name` is unique with SQLite `NOCASE` collation.
 - Tag `Value` is unique with SQLite `NOCASE` collation.
 - `TaskTaskTags` uses `(TaskId, TaskTagId)` as its composite key.
 - `TaskWaitingFors` has a filtered unique index allowing at most one unresolved row per task.

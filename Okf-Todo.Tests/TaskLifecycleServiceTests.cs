@@ -93,6 +93,7 @@ public sealed class TaskLifecycleServiceTests
         var task = await database.Lifecycle.CreateTaskAsync(new TaskCreateRequest(
             Title: "Fix failed deployment",
             TaskTypeCode: "ERROR",
+            TaskListId: (await database.TaskLists.EnsureDefaultListAsync()).Id,
             BodyFormatCode: "HTML",
             TaskPriorityCode: "NORMAL"));
 
@@ -281,13 +282,16 @@ internal sealed class TestDatabase : IAsyncDisposable
         this.loggerFactory = loggerFactory;
         DbContext = dbContext;
         Lifecycle = new TaskLifecycleService(DbContext, loggerFactory.CreateLogger<TaskLifecycleService>());
-        Tasks = new TaskService(DbContext, Lifecycle);
+        TaskLists = new TaskListService(DbContext);
+        Tasks = new TaskService(DbContext, Lifecycle, TaskLists);
         Images = new ImageService(DbContext, loggerFactory.CreateLogger<ImageService>());
     }
 
     public AppDbContext DbContext { get; }
 
     public TaskLifecycleService Lifecycle { get; }
+
+    public TaskListService TaskLists { get; }
 
     public TaskService Tasks { get; }
 
@@ -309,6 +313,7 @@ internal sealed class TestDatabase : IAsyncDisposable
 
         var database = new TestDatabase(connection, dbContext, loggerFactory);
         await database.SeedAsync();
+        await database.TaskLists.EnsureDefaultListAsync();
 
         return database;
     }
@@ -324,6 +329,7 @@ internal sealed class TestDatabase : IAsyncDisposable
         return await Lifecycle.CreateTaskAsync(new TaskCreateRequest(
             Title: "Fix failed deployment",
             TaskTypeCode: "ERROR",
+            TaskListId: (await TaskLists.EnsureDefaultListAsync()).Id,
             BodyFormatCode: "HTML",
             TaskPriorityCode: "NORMAL"));
     }

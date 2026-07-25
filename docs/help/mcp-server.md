@@ -101,6 +101,19 @@ the complete proposed replacement before using task_update.
 
 `task_update` replaces all editable task fields, including Owner and Responsible. The harness must read the task first and preserve everything that should remain. A partial update can clear optional fields or tags.
 
+### Choose or infer a task list
+
+Every task belongs to a concrete list. Ask the harness to call `task_list_lists` when you want to choose one by name. You can then approve an explicit list assignment:
+
+```text
+Create the approved investigation task in the Support list. Discover the
+list first, show me the complete task and list choice, and wait for approval.
+```
+
+If you do not name a list, MCP uses the same predictable rule as the desktop app: explicit list first; otherwise infer from an existing, source, related, or parent task; otherwise use the list named **Default list**; otherwise use the first manually ordered list; and create **Default list** only if no lists exist. Ask the harness to read the saved task back and confirm both its list name and task values.
+
+Use `task_move_to_list` to move an existing task after approval. The move is recorded in the task Timeline. MCP can discover and assign lists, but it cannot add, rename, reorder, or delete lists in this version; use **Manage lists** in the desktop app for those operations.
+
 ### Review priorities without changing anything
 
 ```text
@@ -113,9 +126,11 @@ attention first and explain why. Do not change any task.
 | User request | MCP action |
 | --- | --- |
 | Show active, urgent, waiting, overdue, completed, or all tasks | List tasks |
+| Show available task lists | Discover lists |
 | Read the complete current values of a task | Get one task |
-| Save an approved task proposal | Create a task |
-| Replace an existing task after reading it | Update a task |
+| Save an approved task proposal in an explicit or inferred list | Create a task |
+| Replace an existing task after reading it, including list ownership when requested | Update a task |
+| Move approved tasks to another list | Move tasks to a list |
 | Review comments and automatic history | Read a task timeline |
 
 The current MCP tools do not complete or cancel tasks and do not add comments, checklists, attachments, or relationships. Use the desktop app for those actions. Generated checklists, reply drafts, and other text can still be stored as sections in a Markdown task body.

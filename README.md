@@ -49,6 +49,7 @@ It is designed for the work that often falls between formal systems: production 
 - Paste, drop, or select images for task bodies.
 - Priorities, deadlines, waiting targets, tags, and optional source references.
 - Checklists with progress shown in the task list.
+- User-managed task lists with a persistent list switcher, global **All lists** scope, safe deletion, and bulk moves with Undo.
 - File attachments stored inside the SQLite database.
 - Typed relationships between tasks.
 - A combined timeline of comments and automatic change history.
@@ -150,9 +151,11 @@ Adjust the absolute DLL path for your checkout. By default, the server uses the 
 | Tool | Purpose |
 | --- | --- |
 | `task_list` | List tasks by view. |
+| `task_list_lists` | Discover concrete task lists and task counts. |
 | `task_get` | Read one task. |
-| `task_create` | Create a task through the shared application command service. |
-| `task_update` | Replace a task's editable fields through the shared application command service. |
+| `task_create` | Create a task with explicit or inferred list ownership. |
+| `task_update` | Replace a task's editable fields, including list ownership when requested. |
+| `task_move_to_list` | Move existing tasks to a concrete list. |
 | `task_get_timeline` | Read comments and automatic task history. |
 
 `task_update` has full-replacement semantics for editable fields. Call `task_get` first and include every value that must be preserved; omitted optional fields are cleared.
@@ -169,7 +172,7 @@ The MCP protocol uses standard output. Server and framework logs are written to 
 
 Open **Setup**, then select **Back up database**. Choose a destination in the native save dialog. The application creates and validates a complete SQLite backup before replacing the selected destination.
 
-The backup includes tasks, body images, attachments, lookups, tags, relationships, comments, checklists, and history. Interface preferences such as layout and color scheme are stored separately and are not included.
+The backup includes task lists, tasks, body images, attachments, lookups, tags, relationships, comments, checklists, and history. Interface preferences such as layout, selected list scope, and color scheme are stored separately and are not included.
 
 Restore is manual in version 0.1:
 

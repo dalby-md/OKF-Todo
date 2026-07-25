@@ -603,3 +603,25 @@ Acceptance criteria:
 - Wide layouts use row controls without duplicating Star or Trash in the application header. Compact and stacked task details expose one contextual menu with Star/Unstar and the applicable Trash actions.
 - Restore returns an individually opened task to its appropriate lifecycle view and editable state.
 - Playwright coverage verifies selection discoverability and coach-mark persistence, individual star/trash/undo, bulk Trash, permanent deletion, restore, read-only behavior, and the responsive action bar.
+
+## Milestone 17 — User-managed task lists
+
+Status: implemented.
+
+Scope:
+
+- Add `TaskList` with case-insensitively unique names, manual order, timestamps, counts, CRUD, reorder, and safe transactional deletion.
+- Add required restrictive `TaskListId` ownership to every task and backfill upgraded databases into `Default list`.
+- Guarantee at least one list at startup and before task creation.
+- Centralize explicit, task-context, named-default, manual-order, and zero-list resolution for desktop commands, MCP, and documented OKF-guided writes.
+- Add the responsive header list switcher, synthetic **All lists**, list manager, first task metadata field, global list pills/search, scoped queries, list-aware creation, bulk move with Undo, Trash restrictions, and cross-list relationship navigation.
+- Add MCP list discovery, explicit/inferred task creation assignment, and task moves without exposing master-list administration.
+- Record every list move in the task Timeline.
+
+Acceptance criteria:
+
+- Migration creates `Default list`, backfills existing tasks, and establishes required restrictive ownership.
+- The final list cannot be deleted; deleting a used list moves every normal and Trash task transactionally.
+- Concrete and global scopes persist; Trash remains global.
+- The same list-resolution precedence is used and documented across application commands, MCP, and OKF/SQLite writes.
+- Focused service, migration, MCP, installed-contract, and Playwright coverage exercise creation, resolution, scoping, list management, moves, Undo, and responsive behavior.

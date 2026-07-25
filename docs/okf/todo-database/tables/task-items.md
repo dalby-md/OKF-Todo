@@ -6,7 +6,7 @@ resource: Okf-Todo/Data/AppDbContext.cs
 tags:
   - sqlite
   - todo
-timestamp: 2026-07-25T09:30:03Z
+timestamp: 2026-07-25T00:00:00Z
 ---
 
 
@@ -21,31 +21,33 @@ Stores the primary task records and lifecycle state.
 | Column | SQLite type | Null | Default | Role |
 | --- | --- | --- | --- | --- |
 | `Id` | `INTEGER` | No | `-` | primary key position 1 |
-| `Title` | `TEXT` | No | `-` | value |
+| `ActivatedAt` | `TEXT` | Yes | `-` | value |
 | `Body` | `TEXT` | Yes | `-` | value |
 | `BodyFormatId` | `INTEGER` | Yes | `-` | foreign key to BodyFormats.Id |
-| `TaskTypeId` | `INTEGER` | No | `-` | foreign key to TaskTypes.Id |
-| `TaskStatusId` | `INTEGER` | No | `-` | foreign key to TaskStatuses.Id |
-| `TaskPriorityId` | `INTEGER` | Yes | `-` | foreign key to TaskPriorities.Id |
-| `TaskSourceId` | `INTEGER` | Yes | `-` | foreign key to TaskSources.Id |
-| `SourceReference` | `TEXT` | Yes | `-` | value |
-| `SourceUrl` | `TEXT` | Yes | `-` | value |
-| `Deadline` | `TEXT` | Yes | `-` | value |
-| `CreatedAt` | `TEXT` | No | `-` | value |
-| `UpdatedAt` | `TEXT` | No | `-` | value |
-| `ActivatedAt` | `TEXT` | Yes | `-` | value |
-| `WaitingSince` | `TEXT` | Yes | `-` | value |
-| `CompletedAt` | `TEXT` | Yes | `-` | value |
 | `CancelledAt` | `TEXT` | Yes | `-` | value |
-| `Owner` | `TEXT` | Yes | `-` | value |
-| `Responsible` | `TEXT` | Yes | `-` | value |
+| `CompletedAt` | `TEXT` | Yes | `-` | value |
+| `CreatedAt` | `TEXT` | No | `-` | value |
+| `Deadline` | `TEXT` | Yes | `-` | value |
 | `DeletedAt` | `TEXT` | Yes | `-` | value |
 | `IsStarred` | `INTEGER` | No | `0` | value |
+| `Owner` | `TEXT` | Yes | `-` | value |
+| `Responsible` | `TEXT` | Yes | `-` | value |
+| `SourceReference` | `TEXT` | Yes | `-` | value |
+| `SourceUrl` | `TEXT` | Yes | `-` | value |
 | `StarredAt` | `TEXT` | Yes | `-` | value |
+| `TaskListId` | `INTEGER` | No | `-` | foreign key to TaskLists.Id |
+| `TaskPriorityId` | `INTEGER` | Yes | `-` | foreign key to TaskPriorities.Id |
+| `TaskSourceId` | `INTEGER` | Yes | `-` | foreign key to TaskSources.Id |
+| `TaskStatusId` | `INTEGER` | No | `-` | foreign key to TaskStatuses.Id |
+| `TaskTypeId` | `INTEGER` | No | `-` | foreign key to TaskTypes.Id |
+| `Title` | `TEXT` | No | `-` | value |
+| `UpdatedAt` | `TEXT` | No | `-` | value |
+| `WaitingSince` | `TEXT` | Yes | `-` | value |
 
 ## Relationships
 
 - `BodyFormatId` references [BodyFormats](body-formats.md).`Id`; delete `RESTRICT`, update `NO ACTION`.
+- `TaskListId` references [TaskLists](task-lists.md).`Id`; delete `RESTRICT`, update `NO ACTION`.
 - `TaskPriorityId` references [TaskPriorities](task-priorities.md).`Id`; delete `RESTRICT`, update `NO ACTION`.
 - `TaskSourceId` references [TaskSources](task-sources.md).`Id`; delete `RESTRICT`, update `NO ACTION`.
 - `TaskStatusId` references [TaskStatuses](task-statuses.md).`Id`; delete `RESTRICT`, update `NO ACTION`.
@@ -56,6 +58,7 @@ Stores the primary task records and lifecycle state.
 - `IX_TaskItems_BodyFormatId` on `BodyFormatId`: non-unique.
 - `IX_TaskItems_DeletedAt_IsStarred` on `DeletedAt`, `IsStarred`: non-unique.
 - `IX_TaskItems_StarredAt` on `StarredAt`: non-unique.
+- `IX_TaskItems_TaskListId` on `TaskListId`: non-unique.
 - `IX_TaskItems_TaskPriorityId` on `TaskPriorityId`: non-unique.
 - `IX_TaskItems_TaskSourceId` on `TaskSourceId`: non-unique.
 - `IX_TaskItems_TaskStatusId` on `TaskStatusId`: non-unique.
@@ -68,13 +71,11 @@ See [Database Integrity Rules](../references/integrity-rules.md) for cross-table
 ## Application Semantics
 
 Structural facts are generated from the inspected SQLite database. Application behavior is governed by the product data model and services.
+- `TaskListId` is required and identifies the task's concrete owning list.
+- Missing list assignment resolves in this order: explicit list, contextual task list, the list named `Default list`, first manually ordered list, then creation of `Default list` when no lists exist.
 - `Owner` is optional free text identifying the person or team accountable for the task.
 - `Responsible` is optional free text identifying the person currently expected to perform or coordinate the work.
 - The overview text search includes both values even when their independently controlled task-detail fields are hidden.
-- `IsStarred` is independent of lifecycle state and defaults to `0`. Adding a star sets `StarredAt`; removing it clears `StarredAt`.
-- `DeletedAt` implements reversible Trash. A non-null value excludes the task from normal and Starred views without changing status, star state, or owned data.
-- A task in Trash is read only through application commands except for restore and permanent delete.
-- Permanent deletion is accepted only for a task already in Trash. Owned rows cascade and relationships involving the deleted task are removed explicitly.
 
 ## Sources
 

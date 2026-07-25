@@ -171,10 +171,30 @@ HTML        HTML
 
 ## Main tables
 
+## TaskList
+
+```text
+Id
+Name
+SortOrder
+CreatedAt
+UpdatedAt
+```
+
+Rules:
+
+- `Name` is required, trimmed, and unique with SQLite `NOCASE` collation.
+- `SortOrder` defines the manual list order, with `Id` as a deterministic tie-breaker.
+- Every database contains at least one list. Migration and startup recovery create `Default list` when required.
+- `Default list` has no immutable or system-list flag. It can be renamed or deleted when another list exists.
+- The final remaining list cannot be deleted.
+- Deleting a populated list requires a destination. Tasks are moved and the list is deleted in one transaction; tasks are never cascade-deleted.
+
 ## Task
 
 ```text
 Id
+TaskListId
 Title
 Body nullable
 BodyFormatId nullable
@@ -201,6 +221,7 @@ CancelledAt nullable
 Notes:
 
 - `Title` is required.
+- `TaskListId` is required and references `TaskList`.
 - `TaskTypeId` is required.
 - `TaskStatusId` is required.
 - New tasks start with status code `ACTIVE`.
@@ -214,6 +235,8 @@ Notes:
 - Permanent deletion is accepted only for a task already in Trash. Task-owned rows cascade; task relationships where the task is either source or target are removed explicitly.
 - Index `(DeletedAt, IsStarred)` for normal, Starred, and Trash filtering. Index `StarredAt` for focus ordering and diagnostics.
 - `WaitingSince` is set only while the task has an active wait target.
+- The `TaskListId` foreign key uses restrictive/non-cascading delete behavior.
+- Index `TaskListId` supports concrete-list task views.
 
 ## TaskWaitingFor
 
@@ -374,6 +397,7 @@ Rules:
 
 ```text
 TaskItem
+TaskList
 TaskType
 TaskStatus
 TaskPriority

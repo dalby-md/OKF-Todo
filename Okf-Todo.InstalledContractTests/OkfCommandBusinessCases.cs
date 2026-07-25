@@ -14,6 +14,8 @@ public sealed class OkfCommandBusinessCases
             "task.create",
             "task.attachment.create",
             "taskTypeCode",
+            "taskListId",
+            "Default list",
             "base64Data");
         await using var workspace = new TestWorkspace("okf-command-insert");
         var okf = new OkfCommandClient(product, workspace.DatabasePath);
@@ -33,6 +35,7 @@ public sealed class OkfCommandBusinessCases
             tags = new[] { "installed-contract", "customer" }
         });
         var taskId = created.GetProperty("id").GetInt32();
+        Assert.Equal("Default list", created.GetProperty("taskListName").GetString());
         var attachmentContent = Encoding.UTF8.GetBytes("Timeout after 30 seconds\r\nCorrelation: abc-123");
 
         await okf.ExecuteAsync("task.attachment.create", new

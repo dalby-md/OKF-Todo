@@ -1,7 +1,7 @@
 ---
 type: SQLite Table
-title: TaskStatuses
-description: Defines stable task lifecycle statuses.
+title: TaskLists
+description: Stores user-managed task lists and their manual display order.
 resource: Okf-Todo/Data/AppDbContext.cs
 tags:
   - sqlite
@@ -10,26 +10,19 @@ timestamp: 2026-07-25T00:00:00Z
 ---
 
 
-# TaskStatuses
+# TaskLists
 
 ## Purpose
 
-Defines stable task lifecycle statuses.
+Stores user-managed task lists and their manual display order.
 
 ## Schema
 
 | Column | SQLite type | Null | Default | Role |
 | --- | --- | --- | --- | --- |
 | `Id` | `INTEGER` | No | `-` | primary key position 1 |
-| `Code` | `TEXT` | No | `-` | value |
 | `Name` | `TEXT` | No | `-` | value |
-| `Description` | `TEXT` | Yes | `-` | value |
-| `BackgroundColor` | `TEXT` | Yes | `-` | value |
-| `ForegroundColor` | `TEXT` | Yes | `-` | value |
-| `IsSelected` | `INTEGER` | No | `0` | value |
 | `SortOrder` | `INTEGER` | No | `-` | value |
-| `IsActive` | `INTEGER` | No | `-` | value |
-| `IsSystem` | `INTEGER` | No | `-` | value |
 | `CreatedAt` | `TEXT` | No | `-` | value |
 | `UpdatedAt` | `TEXT` | No | `-` | value |
 
@@ -39,7 +32,8 @@ No foreign keys originate from this table.
 
 ## Indexes
 
-- `IX_TaskStatuses_Code` on `Code`: unique.
+- `IX_TaskLists_Name` on `Name`: unique.
+- `IX_TaskLists_SortOrder` on `SortOrder`: non-unique.
 
 ## Integrity Rules
 
@@ -48,6 +42,11 @@ See [Database Integrity Rules](../references/integrity-rules.md) for cross-table
 ## Application Semantics
 
 Structural facts are generated from the inspected SQLite database. Application behavior is governed by the product data model and services.
+- Every task belongs to exactly one concrete task list; the UI's `All lists` scope is synthetic and is not stored here.
+- Names are trimmed and case-insensitively unique, and at least one list must exist.
+- The list currently named `Default list` is an ordinary list after creation and may be renamed, reordered, or deleted when another list remains.
+- Zero-list recovery inserts `Default list` with sort order 10 and current UTC creation and update timestamps.
+- Deleting a list never deletes tasks: affected tasks, including trashed tasks, are moved to a required destination in the same transaction.
 
 ## Sources
 

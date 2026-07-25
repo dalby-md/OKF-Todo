@@ -91,9 +91,11 @@ public sealed class McpServerProcessTests
                 new HashSet<string>(StringComparer.Ordinal)
                 {
                     "task_list",
+                    "task_list_lists",
                     "task_get",
                     "task_create",
                     "task_update",
+                    "task_move_to_list",
                     "task_get_timeline"
                 },
                 toolNames);

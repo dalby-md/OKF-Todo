@@ -54,6 +54,20 @@ public sealed class ApplicationCommandService(IServiceProvider services)
                 .DeleteTagAsync(GetPayload<TagDeleteRequest>(command), cancellationToken),
             "tag.settings.merge" => await scopedServices.GetRequiredService<TaskService>()
                 .MergeTagAsync(GetPayload<TagMergeRequest>(command), cancellationToken),
+            "taskList.list" => await scopedServices.GetRequiredService<TaskListService>()
+                .ListAsync(cancellationToken),
+            "taskList.create" => await scopedServices.GetRequiredService<TaskListService>()
+                .CreateAsync(GetPayload<TaskListCreateRequest>(command), cancellationToken),
+            "taskList.rename" => await scopedServices.GetRequiredService<TaskListService>()
+                .RenameAsync(GetPayload<TaskListRenameRequest>(command), cancellationToken),
+            "taskList.reorder" => await scopedServices.GetRequiredService<TaskListService>()
+                .ReorderAsync(GetPayload<TaskListReorderRequest>(command), cancellationToken),
+            "taskList.delete" => await scopedServices.GetRequiredService<TaskListService>()
+                .DeleteAsync(GetPayload<TaskListDeleteRequest>(command), cancellationToken),
+            "taskList.moveTasks" => await scopedServices.GetRequiredService<TaskListService>()
+                .MoveTasksAsync(GetPayload<TaskListMoveRequest>(command), cancellationToken),
+            "taskList.undoMove" => await scopedServices.GetRequiredService<TaskListService>()
+                .UndoMoveAsync(GetPayload<TaskListUndoMoveRequest>(command), cancellationToken),
             "task.list" => await scopedServices.GetRequiredService<TaskService>()
                 .ListAsync(GetPayload<TaskListRequest>(command), cancellationToken),
             "task.get" => await scopedServices.GetRequiredService<TaskService>()

@@ -54,6 +54,11 @@ namespace Photino.Okf_Todo
                         .SeedAsync()
                         .GetAwaiter()
                         .GetResult();
+                    logger.LogInformation("Ensuring at least one task list exists.");
+                    scope.ServiceProvider.GetRequiredService<TaskListService>()
+                        .EnsureDefaultListAsync()
+                        .GetAwaiter()
+                        .GetResult();
 
                     if (args.Any(argument => string.Equals(
                         argument,
@@ -379,6 +384,7 @@ namespace Photino.Okf_Todo
                 serviceProvider.GetRequiredService<PhotinoBackupDestinationPicker>());
             services.AddScoped<LookupSeedService>();
             services.AddScoped<TaskLifecycleService>();
+            services.AddScoped<TaskListService>();
             services.AddScoped<TaskService>();
             services.AddScoped<TaskAttachmentService>();
             services.AddScoped<TaskChecklistService>();

@@ -300,11 +300,39 @@ public sealed class NewTaskDialogUiTests
         await page.Locator("#settings-close-button").ClickAsync();
 
         await page.SetViewportSizeAsync(680, 1000);
+        await page.WaitForFunctionAsync(
+            """
+            () => {
+              const owner = document.querySelector('.owner-field')?.getBoundingClientRect()
+              const responsible = document.querySelector('.responsible-field')?.getBoundingClientRect()
+              return owner && responsible && Math.abs(owner.y - responsible.y) <= 1
+            }
+            """);
         var ownerBox = await page.Locator(".owner-field").BoundingBoxAsync();
         var responsibleBox = await page.Locator(".responsible-field").BoundingBoxAsync();
         Assert.NotNull(ownerBox);
         Assert.NotNull(responsibleBox);
-        Assert.InRange(Math.Abs(ownerBox.Y - responsibleBox.Y), 0, 1);
+        var ownershipLayout = await page.EvaluateAsync<string>(
+            """
+            () => {
+              const grid = document.querySelector('.ownership-grid')
+              const owner = document.querySelector('.owner-field')
+              const responsible = document.querySelector('.responsible-field')
+              return JSON.stringify({
+                gridClass: grid?.className,
+                gridDisplay: grid ? getComputedStyle(grid).display : null,
+                gridColumns: grid ? getComputedStyle(grid).gridTemplateColumns : null,
+                gridWidth: grid?.getBoundingClientRect().width,
+                ownerHidden: owner?.hidden,
+                ownerBox: owner?.getBoundingClientRect().toJSON(),
+                responsibleHidden: responsible?.hidden,
+                responsibleBox: responsible?.getBoundingClientRect().toJSON()
+              })
+            }
+            """);
+        Assert.True(
+            Math.Abs(ownerBox.Y - responsibleBox.Y) <= 1,
+            $"Ownership fields must share one row: {ownershipLayout}");
         Assert.True(ownerBox.X < responsibleBox.X);
 
         await page.Locator("#task-owner").FillAsync("North Support");
@@ -406,7 +434,7 @@ public sealed class NewTaskDialogUiTests
             page,
             taskTitle,
             "all",
-            "CANCELLED · VIEWING IN ALL",
+            "CANCELLED · VIEWING IN ALL STATUSES",
             "is-transition-cancelled",
             "Reopen",
             workspaceScrollPosition);
@@ -748,7 +776,7 @@ public sealed class NewTaskDialogUiTests
 
         await page.Locator(".task-view-rail-button[data-task-view='all']").ClickAsync();
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('#task-list-title')?.textContent === 'All'");
+            "() => document.querySelector('#task-list-title')?.textContent === 'All statuses'");
         Assert.True(await page.Locator("#task-view-overflow-button").IsHiddenAsync());
         await page.Locator("#task-select-mode-button").ClickAsync();
         await page.Locator("#task-select-all").CheckAsync();
@@ -943,7 +971,7 @@ public sealed class NewTaskDialogUiTests
                 title);
             await page.Locator("#cancel-button").ClickAsync();
             await page.WaitForFunctionAsync(
-                "taskTitle => document.querySelector('#task-list-title')?.textContent === 'All' && document.querySelector('#task-title')?.value === taskTitle && document.querySelector('#complete-button')?.textContent === 'Reopen'",
+                "taskTitle => document.querySelector('#task-list-title')?.textContent === 'All statuses' && document.querySelector('#task-title')?.value === taskTitle && document.querySelector('#complete-button')?.textContent === 'Reopen'",
                 title);
         }
 
@@ -962,7 +990,7 @@ public sealed class NewTaskDialogUiTests
             "Move 2 cancelled tasks to Trash?",
             await page.Locator("#confirmation-title").TextContentAsync());
         Assert.Contains(
-            "all 2 cancelled tasks in All",
+            "all 2 cancelled tasks in All statuses",
             await page.Locator("#confirmation-message").TextContentAsync());
         await page.Locator("#confirmation-confirm-button").ClickAsync();
         await page.WaitForFunctionAsync(
@@ -982,6 +1010,79 @@ public sealed class NewTaskDialogUiTests
         Assert.Equal(
             "Delete all selected permanently",
             await page.Locator("#task-bulk-delete-permanently").TextContentAsync());
+    }
+
+    [Fact]
+    public async Task TaskLists_CanBeManagedSelectedSearchedMovedAndUndone()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync();
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1600, Height = 1000 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+        var page = await context.NewPageAsync();
+        await page.GotoAsync($"{fixture.BaseUrl}/index.html?v=task-lists-contract");
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list-switcher option').length === 2");
+
+        await page.Locator("#manage-task-lists-button").ClickAsync();
+        await page.Locator("#task-list-add-name").FillAsync("Support");
+        await page.Locator("#task-list-add-button").ClickAsync();
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list-switcher option').length === 3");
+        await page.Locator("#task-lists-close-button").ClickAsync();
+
+        await page.Locator("#task-list-switcher").SelectOptionAsync("ALL");
+        await page.Locator("#new-task-button").ClickAsync();
+        await page.Locator("#new-task-title-input").FillAsync("List-aware support task");
+        Assert.False(await page.Locator("#new-task-list-field").IsHiddenAsync());
+        await page.Locator("#new-task-list-select").SelectOptionAsync(
+            new SelectOptionValue { Label = "Support" });
+        await page.Locator("#new-task-save-button").ClickAsync();
+        await page.Locator("#new-task-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Hidden
+        });
+
+        Assert.Equal("Support", await page.Locator("#task-list-owner option:checked").TextContentAsync());
+        Assert.Equal("Support", await page.Locator(".task-row.is-selected .task-list-pill").TextContentAsync());
+
+        await page.Locator("#task-search").FillAsync("Support");
+        Assert.Equal(1, await page.Locator(".task-row-shell").CountAsync());
+        await page.Locator("#task-search").FillAsync(string.Empty);
+
+        await page.Locator("#task-select-mode-button").ClickAsync();
+        await page.Locator(".task-row-select").CheckAsync();
+        await page.Locator("#task-bulk-move-list").ClickAsync();
+        await page.Locator("#task-list-move-destination").SelectOptionAsync(
+            new SelectOptionValue { Label = "Default list" });
+        await page.Locator("#task-list-move-confirm").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('.task-row.is-selected .task-list-pill')?.textContent.trim() === 'Default list'");
+        await page.Locator("#task-undo-button").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('.task-row.is-selected .task-list-pill')?.textContent.trim() === 'Support'");
+
+        await page.SetViewportSizeAsync(820, 900);
+        var brandBox = await page.Locator(".app-brand").BoundingBoxAsync();
+        var switcherBox = await page.Locator(".task-list-switcher-group").BoundingBoxAsync();
+        Assert.NotNull(brandBox);
+        Assert.NotNull(switcherBox);
+        Assert.True(switcherBox!.Y >= brandBox!.Y + brandBox.Height - 1);
+
+        await page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-list-switcher')?.value === 'ALL'");
+
+        Assert.Contains("taskList.create", fixture.BridgeMessageTypes);
+        Assert.Contains("taskList.moveTasks", fixture.BridgeMessageTypes);
+        Assert.Contains("taskList.undoMove", fixture.BridgeMessageTypes);
+        Assert.Contains("layout.preference.save", fixture.BridgeMessageTypes);
     }
 
     private static async Task OpenTaskDetailsPreferencesAsync(IPage page)
@@ -1286,6 +1387,7 @@ public sealed class NewTaskDialogUiTests
             builder.Services.AddSingleton<IBackupDestinationPicker, CancelledBackupDestinationPicker>();
             builder.Services.AddScoped<LookupSeedService>();
             builder.Services.AddScoped<TaskLifecycleService>();
+            builder.Services.AddScoped<TaskListService>();
             builder.Services.AddScoped<TaskService>();
             builder.Services.AddScoped<TaskAttachmentService>();
             builder.Services.AddScoped<TaskChecklistService>();
@@ -1321,6 +1423,7 @@ public sealed class NewTaskDialogUiTests
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 await dbContext.Database.MigrateAsync();
                 await scope.ServiceProvider.GetRequiredService<LookupSeedService>().SeedAsync();
+                await scope.ServiceProvider.GetRequiredService<TaskListService>().EnsureDefaultListAsync();
                 if (seedSampleTasks)
                 {
                     await scope.ServiceProvider.GetRequiredService<SampleDataSeeder>().SeedAsync();

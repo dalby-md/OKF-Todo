@@ -62,17 +62,43 @@ Each task should support:
 - Optional responsible person
 - Starred focus state
 - Reversible Trash state
+- Required task-list ownership
 
 ## Required fields
 
-Only these should be required in the first version:
+Only these task-editing values should be required in the first version:
 
 - Title
 - Task type
+- List
 
 Everything else should be optional.
 
 A newly created task starts with status `ACTIVE`.
+
+## Task lists
+
+Every task belongs to exactly one concrete user-managed list. A new or upgraded database contains **Default list**, and all pre-existing tasks are assigned to it. The application recovers automatically by creating **Default list** transactionally if a database is ever opened with zero lists.
+
+List names are trimmed and case-insensitively unique. Lists have a manual order. The final remaining list cannot be deleted. **Default list** is otherwise an ordinary list and can be renamed, reordered, or deleted once another list exists.
+
+The header list switcher contains the concrete lists plus synthetic **All lists**, which is not stored in SQLite. Normal task views respect the selected concrete list. **All lists** searches and displays tasks across list boundaries and shows a subdued list-name pill on every row. Trash is always global and shows list ownership regardless of the header selection. The lifecycle view named **All** is presented as **All statuses** to distinguish it from **All lists**.
+
+The selected concrete or global scope persists. First launch selects **Default list**. On narrow screens the list switcher occupies its own full-width header row.
+
+Task creation and automation use one central resolution order:
+
+1. Use an explicit list reference.
+2. Otherwise infer the list from available task context, such as an existing, source, related, or parent task.
+3. Otherwise use the list currently named **Default list**, when present.
+4. Otherwise use the first manually ordered list.
+5. If no list exists, create and use **Default list**.
+
+In a concrete scope, new tasks inherit that list. In **All lists**, the New task dialog shows a required preselected List field. List is the first metadata field in task details, and changing it is an unsaved edit handled by the main Save and normal Save/Discard/Cancel navigation protection. Saving a move from a concrete scope switches to the destination list and keeps the task focused; a global scope remains global.
+
+The list manager supports inline add and rename, drag-to-reorder, task counts including Trash, and safe deletion. Deleting a populated list requires a destination and strongly warns about the complete affected count. The application moves every task and deletes the list in one transaction; it never deletes tasks. Selection mode can move selected non-Trash tasks to another list and offers immediate Undo. Every individual, bulk, delete-related, and Undo list move creates a Timeline entry.
+
+Cross-list relationships remain supported. Opening a related task switches to its concrete list when currently scoped, while **All lists** remains global. A task in Trash shows its list but must be restored before list ownership can change.
 
 Confirming the title in the **New task** dialog immediately creates the task in SQLite. The returned saved task opens in the editor with task-owned controls such as attachments, checklist items, relationships, comments, Complete, and Cancel available immediately. A second press of the main **Save** button is not required to finish creation; that button saves subsequent edits. When the dialog closes after a successful creation, keyboard focus moves directly into the active HTML or Markdown body editor.
 

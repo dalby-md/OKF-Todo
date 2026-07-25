@@ -6,7 +6,7 @@ resource: Okf-Todo/Data/AppDbContext.cs
 tags:
   - sqlite
   - todo
-timestamp: 2026-07-25T09:30:03Z
+timestamp: 2026-07-25T00:00:00Z
 ---
 
 # Database Relationships
@@ -17,6 +17,7 @@ timestamp: 2026-07-25T09:30:03Z
 - [TaskChecklistItems](../tables/task-checklist-items.md).`TaskId` -> [TaskItems](../tables/task-items.md).`Id`; delete `CASCADE`.
 - [TaskComments](../tables/task-comments.md).`TaskId` -> [TaskItems](../tables/task-items.md).`Id`; delete `CASCADE`.
 - [TaskItems](../tables/task-items.md).`BodyFormatId` -> [BodyFormats](../tables/body-formats.md).`Id`; delete `RESTRICT`.
+- [TaskItems](../tables/task-items.md).`TaskListId` -> [TaskLists](../tables/task-lists.md).`Id`; delete `RESTRICT`.
 - [TaskItems](../tables/task-items.md).`TaskPriorityId` -> [TaskPriorities](../tables/task-priorities.md).`Id`; delete `RESTRICT`.
 - [TaskItems](../tables/task-items.md).`TaskSourceId` -> [TaskSources](../tables/task-sources.md).`Id`; delete `RESTRICT`.
 - [TaskItems](../tables/task-items.md).`TaskStatusId` -> [TaskStatuses](../tables/task-statuses.md).`Id`; delete `RESTRICT`.

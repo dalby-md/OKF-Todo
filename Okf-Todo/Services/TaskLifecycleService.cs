@@ -35,6 +35,7 @@ public sealed class TaskLifecycleService(
 
         var task = new TaskItem
         {
+            TaskListId = request.TaskListId,
             Title = request.Title.Trim(),
             Body = request.Body,
             BodyFormatId = bodyFormat?.Id,
@@ -422,6 +423,7 @@ public sealed class TaskLifecycleService(
 public sealed record TaskCreateRequest(
     string Title,
     string TaskTypeCode,
+    int TaskListId,
     string? Body = null,
     string? BodyFormatCode = null,
     string? TaskPriorityCode = null,

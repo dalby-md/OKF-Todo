@@ -32,6 +32,7 @@ public sealed class OkfSqliteKnowledgeCases
 
         var applicationRead = await okf.ExecuteAsync("task.get", new { id = taskId });
         Assert.Equal("Task inserted from OKF schema knowledge", applicationRead.GetProperty("title").GetString());
+        Assert.Equal("Default list", applicationRead.GetProperty("taskListName").GetString());
 
         Assert.Equal(0, await SqliteEvidence.CountLogEntriesAsync(
             workspace.DatabasePath,

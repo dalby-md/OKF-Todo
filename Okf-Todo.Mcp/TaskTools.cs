@@ -16,11 +16,23 @@ public static class TaskTools
     public static Task<IReadOnlyCollection<TaskListItemDto>> ListAsync(
         ApplicationCommandService commandService,
         [Description("Task view: active, urgent, waiting, overdue, completed, or all. Defaults to active.")] string? view = null,
+        [Description("Optional concrete task-list ID. Omit to search across all lists. Trash is always global.")] int? taskListId = null,
         CancellationToken cancellationToken = default) =>
         ExecuteAsync<IReadOnlyCollection<TaskListItemDto>>(
             commandService,
             "task.list",
-            new TaskListRequest(view),
+            new TaskListRequest(view, taskListId),
+            cancellationToken);
+
+    [McpServerTool(Name = "task_list_lists", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
+    [Description("Discover the concrete task lists available in OKF-Todo, including task counts and manual order.")]
+    public static Task<IReadOnlyCollection<TaskListDto>> ListTaskListsAsync(
+        ApplicationCommandService commandService,
+        CancellationToken cancellationToken = default) =>
+        ExecuteAsync<IReadOnlyCollection<TaskListDto>>(
+            commandService,
+            "taskList.list",
+            new { },
             cancellationToken);
 
     [McpServerTool(Name = "task_get", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
@@ -52,6 +64,8 @@ public static class TaskTools
         [Description("Optional plain-string tags.")] IReadOnlyCollection<string>? tags = null,
         [Description("Optional task owner.")] string? owner = null,
         [Description("Optional person responsible for the task.")] string? responsible = null,
+        [Description("Optional explicit task-list ID. When omitted, OKF-Todo applies its documented list-resolution rule.")] int? taskListId = null,
+        [Description("Optional existing/source/related/parent task ID used to infer list ownership when taskListId is omitted.")] int? contextTaskId = null,
         CancellationToken cancellationToken = default) =>
         ExecuteAsync<TaskDetailDto>(
             commandService,
@@ -70,7 +84,9 @@ public static class TaskTools
                 activeWaitingForLabel,
                 tags,
                 owner,
-                responsible),
+                responsible,
+                taskListId,
+                contextTaskId),
             cancellationToken);
 
     [McpServerTool(Name = "task_update", ReadOnly = false, Destructive = false, Idempotent = true, OpenWorld = false)]
@@ -91,6 +107,7 @@ public static class TaskTools
         [Description("Replacement plain-string tag set; null or empty removes all tags.")] IReadOnlyCollection<string>? tags = null,
         [Description("Replacement task owner; null clears it.")] string? owner = null,
         [Description("Replacement person responsible for the task; null clears it.")] string? responsible = null,
+        [Description("Optional destination task-list ID. Omit to keep the task's current list.")] int? taskListId = null,
         CancellationToken cancellationToken = default) =>
         ExecuteAsync<TaskDetailDto>(
             commandService,
@@ -109,7 +126,21 @@ public static class TaskTools
                 activeWaitingForLabel,
                 tags,
                 owner,
-                responsible),
+                responsible,
+                taskListId),
+            cancellationToken);
+
+    [McpServerTool(Name = "task_move_to_list", ReadOnly = false, Destructive = false, Idempotent = true, OpenWorld = false)]
+    [Description("Move one or more existing, non-Trash tasks to a concrete task list and record each move in the Timeline.")]
+    public static Task<TaskListMoveResult> MoveToListAsync(
+        ApplicationCommandService commandService,
+        [Description("Numeric task IDs to move.")] IReadOnlyCollection<int> taskIds,
+        [Description("Destination task-list ID returned by task_list_lists.")] int destinationListId,
+        CancellationToken cancellationToken = default) =>
+        ExecuteAsync<TaskListMoveResult>(
+            commandService,
+            "taskList.moveTasks",
+            new TaskListMoveRequest(taskIds, destinationListId),
             cancellationToken);
 
     [McpServerTool(Name = "task_get_timeline", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]

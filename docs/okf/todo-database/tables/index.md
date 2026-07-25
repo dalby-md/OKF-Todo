@@ -7,6 +7,7 @@
 * [TaskChecklistItems](task-checklist-items.md) - Stores ordered checklist items owned by tasks.
 * [TaskComments](task-comments.md) - Stores human-written comments owned by tasks.
 * [TaskItems](task-items.md) - Stores the primary task records and lifecycle state.
+* [TaskLists](task-lists.md) - Stores user-managed task lists and their manual display order.
 * [TaskLogEntries](task-log-entries.md) - Stores automatic append-oriented task history entries.
 * [TaskLogTypes](task-log-types.md) - Defines stable types for automatic task history entries.
 * [TaskPriorities](task-priorities.md) - Defines selectable task priorities.

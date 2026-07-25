@@ -6,14 +6,14 @@ resource: Okf-Todo/Data/DatabasePathProvider.cs
 tags:
   - sqlite
   - todo
-timestamp: 2026-07-25T09:30:03Z
+timestamp: 2026-07-25T00:00:00Z
 ---
 
 # OKF-Todo SQLite Database
 
 ## Purpose
 
-The application owns one local SQLite database under the operating system's per-user application-data directory. It stores tasks, controlled lookups, history, relationships, tags, attachments, and image BLOBs.
+The application owns one local SQLite database under the operating system's per-user application-data directory. It stores task lists, tasks, controlled lookups, history, relationships, tags, attachments, and image BLOBs.
 
 The path is resolved by `DatabasePathProvider` using these platform rules:
 
@@ -23,7 +23,7 @@ The path is resolved by `DatabasePathProvider` using these platform rules:
 
 ## Contents
 
-The database currently contains 18 physical application tables. Browse them through the [table index](../tables/index.md).
+The database currently contains 19 physical application tables. Browse them through the [table index](../tables/index.md).
 
 ## Integrity
 

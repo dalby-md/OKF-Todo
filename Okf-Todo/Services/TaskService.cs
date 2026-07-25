@@ -3,7 +3,10 @@ using Photino.Okf_Todo.Data;
 
 namespace Photino.Okf_Todo.Services;
 
-public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lifecycleService)
+public sealed class TaskService(
+    AppDbContext dbContext,
+    TaskLifecycleService lifecycleService,
+    TaskListService taskListService)
 {
     public async Task<TaskLookupsDto> GetLookupsAsync(CancellationToken cancellationToken)
     {
@@ -296,10 +299,16 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         var today = DateTime.UtcNow.Date;
         var query = dbContext.TaskItems
             .AsNoTracking()
+            .Include(task => task.TaskList)
             .Include(task => task.TaskType)
             .Include(task => task.TaskStatus)
             .Include(task => task.TaskPriority)
             .AsQueryable();
+
+        if (view != "trash" && request.TaskListId is > 0)
+        {
+            query = query.Where(task => task.TaskListId == request.TaskListId.Value);
+        }
 
         query = view switch
         {
@@ -362,6 +371,8 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
             .Select(task => new TaskListItemDto(
                 task.Id,
                 task.Title,
+                task.TaskListId,
+                task.TaskList!.Name,
                 task.IsStarred,
                 task.StarredAt,
                 task.DeletedAt,
@@ -405,6 +416,7 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         var task = await dbContext.TaskItems
             .AsNoTracking()
             .Include(item => item.BodyFormat)
+            .Include(item => item.TaskList)
             .Include(item => item.TaskType)
             .Include(item => item.TaskStatus)
             .Include(item => item.TaskPriority)
@@ -422,10 +434,15 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
     {
         var taskTypeCode = await GetDefaultTaskTypeCodeAsync(request.TaskTypeCode, cancellationToken);
         var taskPriorityCode = await GetDefaultTaskPriorityCodeAsync(request.TaskPriorityCode, cancellationToken);
+        var taskList = await taskListService.ResolveAsync(
+            request.TaskListId,
+            [request.ContextTaskId],
+            cancellationToken);
 
         var task = await lifecycleService.CreateTaskAsync(new TaskCreateRequest(
             request.Title,
             taskTypeCode,
+            taskList.Id,
             request.Body,
             request.BodyFormatCode,
             taskPriorityCode,
@@ -460,6 +477,7 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         }
 
         var task = await dbContext.TaskItems
+            .Include(item => item.TaskList)
             .Include(item => item.BodyFormat)
             .Include(item => item.TaskType)
             .Include(item => item.TaskPriority)
@@ -483,6 +501,10 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         var newOwner = NormalizeOptional(request.Owner);
         var newResponsible = NormalizeOptional(request.Responsible);
         var updateLogType = await GetOrCreateTaskUpdatedLogTypeAsync(cancellationToken);
+        var destinationList = await taskListService.ResolveAsync(
+            request.TaskListId,
+            [task.Id, request.ContextTaskId],
+            cancellationToken);
 
         AddFieldChangeLog(task, updateLogType, "Title", task.Title, newTitle, now);
         AddFieldChangeLog(task, updateLogType, "Source", task.TaskSource?.Name, source?.Name, now);
@@ -490,6 +512,15 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         AddFieldChangeLog(task, updateLogType, "Source URL", task.SourceUrl, newSourceUrl, now);
         AddFieldChangeLog(task, updateLogType, "Owner", task.Owner, newOwner, now);
         AddFieldChangeLog(task, updateLogType, "Responsible", task.Responsible, newResponsible, now);
+        if (task.TaskListId != destinationList.Id)
+        {
+            await taskListService.LogTaskMoveAsync(
+                task,
+                task.TaskList!,
+                destinationList,
+                "Task moved",
+                cancellationToken);
+        }
 
         if (!string.Equals(task.Body, request.Body, StringComparison.Ordinal)
             || task.BodyFormatId != bodyFormat?.Id)
@@ -1402,7 +1433,7 @@ public sealed record LookupReorderRequest(
     string Group,
     IReadOnlyList<string> OrderedCodes);
 
-public sealed record TaskListRequest(string? View);
+public sealed record TaskListRequest(string? View, int? TaskListId = null);
 
 public sealed record TagSettingsItemDto(int Id, string Value, int UsageCount);
 
@@ -1444,11 +1475,15 @@ public sealed record TaskSaveRequest(
     string? ActiveWaitingForLabel = null,
     IReadOnlyCollection<string>? Tags = null,
     string? Owner = null,
-    string? Responsible = null);
+    string? Responsible = null,
+    int? TaskListId = null,
+    int? ContextTaskId = null);
 
 public sealed record TaskListItemDto(
     int Id,
     string Title,
+    int TaskListId,
+    string TaskListName,
     bool IsStarred,
     DateTime? StarredAt,
     DateTime? DeletedAt,
@@ -1481,6 +1516,8 @@ public sealed record TaskListItemDto(
 public sealed record TaskDetailDto(
     int Id,
     string Title,
+    int TaskListId,
+    string TaskListName,
     bool IsStarred,
     DateTime? StarredAt,
     DateTime? DeletedAt,
@@ -1509,6 +1546,8 @@ public sealed record TaskDetailDto(
         return new TaskDetailDto(
             task.Id,
             task.Title,
+            task.TaskListId,
+            task.TaskList?.Name ?? string.Empty,
             task.IsStarred,
             task.StarredAt,
             task.DeletedAt,

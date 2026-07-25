@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Photino.Okf_Todo.Data;
+using Photino.Okf_Todo.Services;
 
 namespace Okf_Todo.Tests;
 
@@ -43,6 +44,7 @@ public sealed class DatabaseReferentialIntegrityTests
         var task = new TaskItem
         {
             Title = "Integrity test",
+            TaskListId = database.DefaultTaskListId,
             TaskType = taskType,
             TaskStatus = taskStatus,
             CreatedAt = now,
@@ -90,6 +92,7 @@ public sealed class DatabaseReferentialIntegrityTests
         var task = new TaskItem
         {
             Title = "Constraint test",
+            TaskListId = database.DefaultTaskListId,
             TaskType = taskType,
             TaskStatus = taskStatus,
             CreatedAt = now,
@@ -150,15 +153,18 @@ public sealed class DatabaseReferentialIntegrityTests
 
     private sealed class FreshDatabase : IAsyncDisposable
     {
-        private FreshDatabase(SqliteConnection connection, AppDbContext dbContext)
+        private FreshDatabase(SqliteConnection connection, AppDbContext dbContext, int defaultTaskListId)
         {
             Connection = connection;
             DbContext = dbContext;
+            DefaultTaskListId = defaultTaskListId;
         }
 
         public SqliteConnection Connection { get; }
 
         public AppDbContext DbContext { get; }
+
+        public int DefaultTaskListId { get; }
 
         public static async Task<FreshDatabase> CreateAsync()
         {
@@ -171,8 +177,9 @@ public sealed class DatabaseReferentialIntegrityTests
                 .Options;
             var dbContext = new AppDbContext(options);
             await dbContext.Database.EnsureCreatedAsync();
+            var defaultTaskList = await new TaskListService(dbContext).EnsureDefaultListAsync();
 
-            return new FreshDatabase(connection, dbContext);
+            return new FreshDatabase(connection, dbContext, defaultTaskList.Id);
         }
 
         public async ValueTask DisposeAsync()

@@ -25,6 +25,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(DatabasePathProvider.CreateConnectionString(databasePath)));
 builder.Services.AddScoped<LookupSeedService>();
 builder.Services.AddScoped<TaskLifecycleService>();
+builder.Services.AddScoped<TaskListService>();
 builder.Services.AddScoped<TaskService>();
 builder.Services.AddSingleton<ApplicationCommandService>();
 builder.Services
@@ -39,6 +40,7 @@ await using (var scope = host.Services.CreateAsyncScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await dbContext.Database.MigrateAsync();
     await scope.ServiceProvider.GetRequiredService<LookupSeedService>().SeedAsync();
+    await scope.ServiceProvider.GetRequiredService<TaskListService>().EnsureDefaultListAsync();
 }
 
 host.Services.GetRequiredService<ILoggerFactory>()

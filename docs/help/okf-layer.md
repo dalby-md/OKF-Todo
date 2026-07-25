@@ -166,7 +166,7 @@ The best prompts identify the source, audience, deliverables, constraints, and w
 The OKF context helps the harness understand:
 
 - What an OKF-Todo task contains and which fields are required.
-- How tasks, attachments, relationships, comments, checklists, tags, and lookup values are stored.
+- How task lists, tasks, attachments, relationships, comments, checklists, tags, and lookup values are stored.
 - Which values are stable codes and which values are display text.
 - Which database relationships, constraints, and delete behaviors must be respected.
 - Where to find deeper details only when the current job needs them.
@@ -190,6 +190,16 @@ The shipped OKF graph describes OKF-Todo and its task database. It does not cont
 
 Direct SQLite writes do not pass through OKF-Todo's application services. The harness must follow the constraints described by the OKF context and use current database values rather than guessing identifiers or lookup codes. Direct writes can still bypass application validation, automatic timestamps, and task-history creation unless the harness explicitly performs the corresponding database changes. That is why the default workflow is always draft, review, explicit approval, transactional write, and read-back verification.
 
+Every task must reference one concrete task list. When a harness creates or moves a task through SQLite, require it to resolve `TaskItems.TaskListId` using this exact order:
+
+1. Use the list you explicitly named or identified.
+2. Otherwise copy the list from available task context, such as an existing, source, related, or parent task.
+3. Otherwise use the list currently named `Default list`, when it exists.
+4. Otherwise use the first `TaskLists` row ordered by `SortOrder`, then `Id`.
+5. If there are no lists, insert `Default list` with `SortOrder` 10 and current UTC `CreatedAt` and `UpdatedAt` values, then use its generated ID.
+
+The list lookup or creation and the task write belong in the same transaction. `All lists` is only an application view and is never a database list. Ask the harness to show the resolved list name and ID in its preview and read them back after saving.
+
 The installed-product tests deliberately verify this boundary: the directly inserted task and attachment are present, and the directly updated task is readable, but no automatic `TASK_CREATED`, `ATTACHMENT_ADDED`, or `TASK_UPDATED` history entry is produced by those SQLite writes. Do not ask the harness to fabricate history unless the OKF context explicitly documents every required record and you have reviewed that additional change.
 
 Use direct database access only with a harness you trust to make controlled file changes. For a more restricted tool-based interface that exposes selected task operations without general database access, the optional [MCP server](mcp-server.md) remains available as an alternative.
@@ -200,13 +210,14 @@ The automated installed-product tests use the same pairing described in this gui
 
 For a task and attachment insert, the tested method:
 
-1. Reads the installed `TaskItems`, `TaskAttachments`, `TaskTypes`, and `TaskStatuses` table descriptions and confirms that every required column is documented.
+1. Reads the installed `TaskLists`, `TaskItems`, `TaskAttachments`, `TaskTypes`, and `TaskStatuses` table descriptions and confirms that every required column is documented.
 2. Opens SQLite for reading and writing with foreign-key enforcement enabled.
 3. Reads active task-type and task-status IDs from the database instead of inventing IDs or assuming that display names are stored in the task.
-4. Inserts the task and attachment in one transaction using parameterized SQL.
-5. Sets the task's `CreatedAt`, `UpdatedAt`, and `ActivatedAt` values to the current ISO-8601 UTC time.
-6. Stores the attachment bytes in `ContentBlob` together with its file name, content type, byte length, lowercase SHA-256 hash, description, and UTC creation time.
-7. Reads the task and attachment records back from SQLite and compares the stored values with the approved input.
+4. Resolves a concrete task-list ID using the same explicit, task-context, named-default, manual-order, and zero-list precedence used by the application.
+5. Inserts the task with its required `TaskListId` and the attachment in one transaction using parameterized SQL.
+6. Sets the task's `CreatedAt`, `UpdatedAt`, and `ActivatedAt` values to the current ISO-8601 UTC time.
+7. Stores the attachment bytes in `ContentBlob` together with its file name, content type, byte length, lowercase SHA-256 hash, description, and UTC creation time.
+8. Reads the list, task, and attachment records back from SQLite and compares the stored values with the approved input.
 
 For a task update, the tested method first confirms the documented `TaskItems` columns, updates the selected task by ID using parameterized SQL, updates `UpdatedAt` with an ISO-8601 UTC value, requires exactly one affected row, and then reads the record back from SQLite.
 

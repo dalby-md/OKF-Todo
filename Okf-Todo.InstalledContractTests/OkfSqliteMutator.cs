@@ -18,6 +18,7 @@ internal sealed class OkfSqliteMutator(OkfKnowledge knowledge, string databasePa
             "TaskItems",
             "Id",
             "Title",
+            "TaskListId",
             "TaskTypeId",
             "TaskStatusId",
             "CreatedAt",
@@ -36,23 +37,33 @@ internal sealed class OkfSqliteMutator(OkfKnowledge knowledge, string databasePa
             "CreatedAt");
         knowledge.RequireTable("task-types.md", "TaskTypes", "Id", "IsActive", "SortOrder");
         knowledge.RequireTable("task-statuses.md", "TaskStatuses", "Id", "IsActive", "SortOrder");
+        knowledge.RequireTable(
+            "task-lists.md",
+            "TaskLists",
+            "Id",
+            "Name",
+            "SortOrder",
+            "CreatedAt",
+            "UpdatedAt");
 
         await using var connection = await OpenReadWriteAsync();
         await using var transaction = connection.BeginTransaction();
         var taskTypeId = await SelectFirstActiveLookupIdAsync(connection, transaction, "TaskTypes");
         var taskStatusId = await SelectFirstActiveLookupIdAsync(connection, transaction, "TaskStatuses");
         var now = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+        var taskListId = await ResolveTaskListIdAsync(connection, transaction, now);
 
         await using var insertTask = connection.CreateCommand();
         insertTask.Transaction = transaction;
         insertTask.CommandText = $"""
             INSERT INTO {taskTable.Name}
-                (Title, TaskTypeId, TaskStatusId, CreatedAt, UpdatedAt, ActivatedAt)
+                (Title, TaskListId, TaskTypeId, TaskStatusId, CreatedAt, UpdatedAt, ActivatedAt)
             VALUES
-                ($title, $taskTypeId, $taskStatusId, $now, $now, $now);
+                ($title, $taskListId, $taskTypeId, $taskStatusId, $now, $now, $now);
             SELECT last_insert_rowid();
             """;
         insertTask.Parameters.AddWithValue("$title", title);
+        insertTask.Parameters.AddWithValue("$taskListId", taskListId);
         insertTask.Parameters.AddWithValue("$taskTypeId", taskTypeId);
         insertTask.Parameters.AddWithValue("$taskStatusId", taskStatusId);
         insertTask.Parameters.AddWithValue("$now", now);
@@ -137,5 +148,40 @@ internal sealed class OkfSqliteMutator(OkfKnowledge knowledge, string databasePa
             """;
         return Convert.ToInt64(await command.ExecuteScalarAsync()
             ?? throw new InvalidDataException($"Isolated database contains no active lookup in {tableName}."));
+    }
+
+    private static async Task<long> ResolveTaskListIdAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        string now)
+    {
+        await using var select = connection.CreateCommand();
+        select.Transaction = transaction;
+        select.CommandText =
+            """
+            SELECT Id
+            FROM TaskLists
+            ORDER BY CASE WHEN Name = 'Default list' COLLATE NOCASE THEN 0 ELSE 1 END,
+                     SortOrder,
+                     Id
+            LIMIT 1;
+            """;
+        var resolved = await select.ExecuteScalarAsync();
+        if (resolved is not null && resolved is not DBNull)
+        {
+            return Convert.ToInt64(resolved);
+        }
+
+        await using var create = connection.CreateCommand();
+        create.Transaction = transaction;
+        create.CommandText =
+            """
+            INSERT INTO TaskLists (Name, SortOrder, CreatedAt, UpdatedAt)
+            VALUES ('Default list', 10, $now, $now);
+            SELECT last_insert_rowid();
+            """;
+        create.Parameters.AddWithValue("$now", now);
+        return Convert.ToInt64(await create.ExecuteScalarAsync()
+            ?? throw new InvalidDataException("Could not create Default list."));
     }
 }

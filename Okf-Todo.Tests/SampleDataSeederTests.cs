@@ -25,7 +25,9 @@ public sealed class SampleDataSeederTests
         var lifecycleService = new TaskLifecycleService(
             dbContext,
             NullLogger<TaskLifecycleService>.Instance);
-        var taskService = new TaskService(dbContext, lifecycleService);
+        var taskListService = new TaskListService(dbContext);
+        await taskListService.EnsureDefaultListAsync();
+        var taskService = new TaskService(dbContext, lifecycleService, taskListService);
         var seeder = new SampleDataSeeder(
             dbContext,
             taskService,

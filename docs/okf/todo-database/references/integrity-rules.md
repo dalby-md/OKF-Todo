@@ -6,7 +6,7 @@ resource: docs/DATA_MODEL.md
 tags:
   - sqlite
   - todo
-timestamp: 2026-07-25T09:30:03Z
+timestamp: 2026-07-25T00:00:00Z
 ---
 
 # Database Integrity Rules
@@ -16,6 +16,8 @@ timestamp: 2026-07-25T09:30:03Z
 - Task-owned rows cascade when the owning task is deleted.
 - Lookup and retained-history references use restricted deletion where configured.
 - Lookup `Code` values are unique per lookup table.
+- Every task has one required `TaskListId`; deleting a referenced list is restricted until application services move its tasks.
+- `TaskLists.Name` is unique with SQLite `NOCASE` collation.
 - Tag `Value` is unique with SQLite `NOCASE` collation.
 - `TaskTaskTags` uses `(TaskId, TaskTagId)` as its composite key.
 - `TaskWaitingFors` has a filtered unique index allowing at most one unresolved row per task.

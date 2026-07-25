@@ -904,6 +904,7 @@ public sealed class BridgeTaskMessageTests
             serviceCollection.AddSingleton<IBackupDestinationPicker>(backupDestinationPicker);
             serviceCollection.AddScoped<LookupSeedService>();
             serviceCollection.AddScoped<TaskLifecycleService>();
+            serviceCollection.AddScoped<TaskListService>();
             serviceCollection.AddScoped<TaskService>();
             serviceCollection.AddScoped<TaskAttachmentService>();
             serviceCollection.AddScoped<TaskChecklistService>();
@@ -922,6 +923,7 @@ public sealed class BridgeTaskMessageTests
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 await dbContext.Database.EnsureCreatedAsync();
                 await scope.ServiceProvider.GetRequiredService<LookupSeedService>().SeedAsync();
+                await scope.ServiceProvider.GetRequiredService<TaskListService>().EnsureDefaultListAsync();
             }
 
             var handler = services.GetRequiredService<BridgeMessageHandler>();

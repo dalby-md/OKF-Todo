@@ -9,7 +9,7 @@
     waiting: 'Waiting',
     overdue: 'Overdue',
     completed: 'Completed',
-    all: 'All',
+    all: 'All statuses',
     trash: 'Trash'
   }
   const defaultTaskSortMode = 'ATTENTION'
@@ -93,12 +93,15 @@
     dark: 'DARK'
   }
   const colorSchemeStorageKey = 'okf-todo-color-scheme'
+  const allTaskListsScope = 'ALL'
   const helpTopics = {
     'okf-layer': '/help/okf-layer.md',
     'mcp-server': '/help/mcp-server.md'
   }
 
   let lookups = null
+  let taskLists = []
+  let activeTaskListId = null
   let tasks = []
   let currentTask = null
   let currentView = 'active'
@@ -127,6 +130,7 @@
     allowEditingCompletedTasks: false,
     allowEditingCancelledTasks: false,
     taskSelectionCoachmarkSeen: false,
+    taskListScope: null,
     taskSortModes: taskSortModes,
     taskSortDirections: taskSortDirections,
     colorScheme: document.documentElement.classList.contains('theme-dark')
@@ -156,6 +160,7 @@
   let starredFinishedExpanded = false
   let activeTaskActionMenuId = null
   let lastTrashedTaskIds = []
+  let lastTaskListMove = null
   let trashUndoTimer = null
   const selectedTaskIds = new Set()
   const helpDocumentCache = new Map()
@@ -448,8 +453,15 @@
   function beginTaskTransitionReveal(task) {
     clearTaskTransitionReveal(false)
     taskTransitionReveal = getLifecycleTransitionPresentation(task)
-    const revealTaskId = taskTransitionReveal.taskId
+    return taskTransitionReveal
+  }
 
+  function scheduleTaskTransitionRevealClear() {
+    if (!taskTransitionReveal) {
+      return
+    }
+
+    const revealTaskId = taskTransitionReveal.taskId
     taskTransitionRevealTimer = window.setTimeout(function () {
       if (!taskTransitionReveal || taskTransitionReveal.taskId !== revealTaskId) {
         return
@@ -457,8 +469,6 @@
 
       clearTaskTransitionReveal(true)
     }, taskTransitionRevealDurationMs)
-
-    return taskTransitionReveal
   }
 
   function readBlobAsDataUrl(blob) {
@@ -586,7 +596,7 @@
   }
 
   function clearValidationState() {
-    $('#task-title, #task-type, #waiting-text').removeClass('is-invalid')
+    $('#task-title, #task-list-owner, #task-type, #waiting-text').removeClass('is-invalid')
   }
 
   function suppressDirtyTracking() {
@@ -618,6 +628,7 @@
     const payload = getTaskPayload()
     return {
       title: normalizeSnapshotValue(payload.title),
+      taskListId: normalizeSnapshotValue(payload.taskListId),
       taskTypeCode: normalizeSnapshotValue(payload.taskTypeCode),
       body: normalizeSnapshotValue(payload.body),
       bodyFormatCode: normalizeSnapshotValue(payload.bodyFormatCode),
@@ -903,6 +914,16 @@
               <span>Local task system</span>
             </div>
           </div>
+          <div class="task-list-switcher-group" aria-label="Task list">
+            <label class="task-list-switcher-field" for="task-list-switcher">
+              <span>List</span>
+              <select id="task-list-switcher" aria-label="Active task list"></select>
+            </label>
+            <button id="manage-task-lists-button" class="secondary-button manage-task-lists-button" type="button" aria-label="Manage lists" title="Manage lists">
+              <span class="fluent-icon" aria-hidden="true">&#xE8FD;</span>
+              <span>Manage lists</span>
+            </button>
+          </div>
           <div class="app-actions" aria-label="Task actions">
             <span id="save-status" class="save-status is-ready" role="status">Ready</span>
             <button id="help-button" class="icon-button setup-button" type="button" aria-label="Help" title="Help">
@@ -1035,6 +1056,7 @@
               <span>Select all</span>
             </label>
             <div class="task-selection-actions">
+              <button id="task-bulk-move-list" class="secondary-button" type="button">Move selected to list</button>
               <button id="task-bulk-star" class="secondary-button" type="button">Star</button>
               <button id="task-bulk-unstar" class="secondary-button" type="button">Unstar</button>
               <button id="task-bulk-restore" class="secondary-button" type="button" hidden>Restore</button>
@@ -1074,6 +1096,10 @@
             <input id="task-title" class="title-input" type="text" autocomplete="off" required disabled>
 
             <div class="metadata-grid">
+              <label class="field-block task-list-field" for="task-list-owner">
+                <span>List</span>
+                <select id="task-list-owner" required disabled></select>
+              </label>
               <label class="field-block" for="task-type">
                 <span>Task type</span>
                 <select id="task-type" required disabled></select>
@@ -1497,6 +1523,60 @@
           </section>
         </div>
 
+        <div id="task-lists-overlay" class="modal-overlay" hidden>
+          <section class="settings-dialog task-lists-dialog" role="dialog" aria-modal="true" aria-labelledby="task-lists-title">
+            <header class="settings-header task-lists-dialog-header">
+              <div>
+                <p class="eyebrow">Organize work</p>
+                <h2 id="task-lists-title">Manage lists</h2>
+              </div>
+              <button id="task-lists-close-button" class="secondary-button" type="button">Close</button>
+            </header>
+            <p class="settings-help">Drag lists into the order you want. Every task always belongs to one list.</p>
+            <div id="task-lists-manager" class="task-lists-manager" aria-live="polite"></div>
+            <form id="task-list-add-form" class="task-list-add-form">
+              <label class="sr-only" for="task-list-add-name">New list name</label>
+              <input id="task-list-add-name" type="text" maxlength="120" placeholder="New list name" autocomplete="off">
+              <button id="task-list-add-button" type="submit">Add list</button>
+            </form>
+            <p id="task-list-manager-error" class="form-error" hidden></p>
+          </section>
+        </div>
+
+        <div id="task-list-delete-overlay" class="modal-overlay" hidden>
+          <section class="settings-dialog task-list-delete-dialog" role="alertdialog" aria-modal="true" aria-labelledby="task-list-delete-title" aria-describedby="task-list-delete-message">
+            <header class="settings-header">
+              <h2 id="task-list-delete-title">Delete list?</h2>
+            </header>
+            <p id="task-list-delete-message" class="task-list-delete-warning"></p>
+            <label id="task-list-delete-destination-field" class="settings-field" for="task-list-delete-destination">
+              <span>Move every task to</span>
+              <select id="task-list-delete-destination"></select>
+            </label>
+            <p id="task-list-delete-error" class="form-error" hidden></p>
+            <div class="modal-actions">
+              <button id="task-list-delete-cancel" class="secondary-button" type="button">Keep list</button>
+              <button id="task-list-delete-confirm" class="danger-button" type="button">Move tasks and delete list</button>
+            </div>
+          </section>
+        </div>
+
+        <div id="task-list-move-overlay" class="modal-overlay" hidden>
+          <section class="settings-dialog task-list-move-dialog" role="dialog" aria-modal="true" aria-labelledby="task-list-move-title">
+            <header class="settings-header">
+              <h2 id="task-list-move-title">Move selected tasks</h2>
+            </header>
+            <label class="settings-field" for="task-list-move-destination">
+              <span>Destination list</span>
+              <select id="task-list-move-destination"></select>
+            </label>
+            <div class="modal-actions">
+              <button id="task-list-move-cancel" class="secondary-button" type="button">Cancel</button>
+              <button id="task-list-move-confirm" type="button">Move tasks</button>
+            </div>
+          </section>
+        </div>
+
         <div id="new-task-overlay" class="modal-overlay" hidden>
           <section class="settings-dialog new-task-dialog" role="dialog" aria-modal="true" aria-labelledby="new-task-dialog-title">
             <header class="settings-header">
@@ -1506,6 +1586,10 @@
             <label class="settings-field" for="new-task-title-input">
               <span>Title</span>
               <input id="new-task-title-input" type="text" autocomplete="off" required>
+            </label>
+            <label id="new-task-list-field" class="settings-field" for="new-task-list-select" hidden>
+              <span>List</span>
+              <select id="new-task-list-select" required></select>
             </label>
 
             <p id="new-task-error" class="form-error" hidden>Title is required.</p>
@@ -1624,6 +1708,285 @@
     renderTagOptions(lookups.tags || [])
     renderTaskTagFilterOptions(lookups.tags || [])
     syncPreferenceControls()
+  }
+
+  function isGlobalTaskListScope() {
+    return currentView === 'trash' || activeTaskListId == null
+  }
+
+  function getTaskListById(id) {
+    const numericId = Number(id)
+    return taskLists.find(function (taskList) { return taskList.id === numericId }) || null
+  }
+
+  function getEffectiveTaskListId() {
+    return currentView === 'trash' ? null : activeTaskListId
+  }
+
+  function renderTaskListOptions() {
+    const concreteOptions = taskLists.map(function (taskList) {
+      return `<option value="${taskList.id}">${encodeText(taskList.name)}</option>`
+    }).join('')
+    const headerValue = currentView === 'trash'
+      ? allTaskListsScope
+      : (activeTaskListId == null ? allTaskListsScope : String(activeTaskListId))
+
+    $('#task-list-switcher')
+      .html(`<option value="${allTaskListsScope}">All lists</option>${concreteOptions}`)
+      .val(headerValue)
+      .prop('disabled', currentView === 'trash')
+      .attr('title', currentView === 'trash' ? 'Trash always includes every list' : null)
+    $('#task-list-owner')
+      .html(concreteOptions)
+      .val(currentTask && currentTask.taskListId ? String(currentTask.taskListId) : '')
+    $('#new-task-list-select, #task-list-move-destination').html(concreteOptions)
+  }
+
+  function resolveTaskListScopeFromPreference() {
+    const storedScope = layoutPreference.taskListScope
+    if (storedScope === allTaskListsScope) {
+      activeTaskListId = null
+      return
+    }
+
+    const storedList = getTaskListById(storedScope)
+    if (storedList) {
+      activeTaskListId = storedList.id
+      return
+    }
+
+    const defaultList = taskLists.find(function (taskList) {
+      return taskList.name.toLocaleLowerCase() === 'default list'
+    })
+    activeTaskListId = (defaultList || taskLists[0]).id
+    layoutPreference.taskListScope = String(activeTaskListId)
+  }
+
+  async function loadTaskLists(options) {
+    taskLists = await sendBridgeMessage('taskList.list', {})
+    if (!taskLists.length) {
+      throw new Error('OKF-Todo could not create a task list.')
+    }
+
+    const keepCurrentScope = options && options.keepCurrentScope
+    if (!keepCurrentScope || (activeTaskListId != null && !getTaskListById(activeTaskListId))) {
+      resolveTaskListScopeFromPreference()
+    }
+    renderTaskListOptions()
+    renderTaskListManager()
+    return taskLists
+  }
+
+  async function activateTaskListScope(value) {
+    const targetId = value === allTaskListsScope ? null : Number(value)
+    if (targetId != null && !getTaskListById(targetId)) {
+      throw new Error('The selected task list no longer exists.')
+    }
+    if (targetId === activeTaskListId) {
+      renderTaskListOptions()
+      return
+    }
+
+    activeTaskListId = targetId
+    layoutPreference.taskListScope = targetId == null ? allTaskListsScope : String(targetId)
+    clearTaskTransitionReveal(false)
+    closeTaskActionMenu()
+    exitTaskSelectionMode()
+    renderTaskListOptions()
+    await saveLayoutPreference()
+    await loadTasks({ selectFirst: true })
+  }
+
+  function renderTaskListManager() {
+    if (!$('#task-lists-manager').length) {
+      return
+    }
+
+    $('#task-lists-manager').html(taskLists.map(function (taskList) {
+      const taskLabel = `${taskList.taskCount} ${taskList.taskCount === 1 ? 'task' : 'tasks'}`
+      const trashLabel = taskList.trashTaskCount
+        ? ` · ${taskList.trashTaskCount} in Trash`
+        : ''
+      return `
+        <div class="task-list-manager-row" draggable="true" data-task-list-id="${taskList.id}">
+          <span class="task-list-drag-handle fluent-icon" aria-hidden="true">&#xE700;</span>
+          <label class="task-list-manager-name">
+            <span class="sr-only">List name</span>
+            <input class="task-list-name-input" type="text" maxlength="120" value="${encodeAttribute(taskList.name)}" data-original-name="${encodeAttribute(taskList.name)}">
+          </label>
+          <span class="task-list-manager-count">${taskLabel}${trashLabel}</span>
+          <button class="task-list-delete-button secondary-button danger-button" type="button"${taskLists.length === 1 ? ' disabled title="The final list cannot be deleted"' : ''}>Delete</button>
+        </div>
+      `
+    }).join(''))
+  }
+
+  async function renameTaskList(row) {
+    const id = Number(row.attr('data-task-list-id'))
+    const input = row.find('.task-list-name-input')
+    const name = input.val().toString().trim()
+    const originalName = input.attr('data-original-name')
+    if (!name || name === originalName) {
+      input.val(originalName)
+      return
+    }
+
+    try {
+      await sendBridgeMessage('taskList.rename', { id, name })
+      await loadTaskLists({ keepCurrentScope: true })
+      await loadTasks({ keepSelection: true })
+      setStatus('List renamed', 'saved')
+    } catch (error) {
+      input.val(originalName)
+      $('#task-list-manager-error').text(getErrorMessage(error, 'Could not rename list')).prop('hidden', false)
+    }
+  }
+
+  async function addTaskList() {
+    const input = $('#task-list-add-name')
+    const name = input.val().toString().trim()
+    if (!name) {
+      input.trigger('focus')
+      return
+    }
+
+    try {
+      const created = await sendBridgeMessage('taskList.create', { name })
+      input.val('')
+      $('#task-list-manager-error').prop('hidden', true)
+      await loadTaskLists({ keepCurrentScope: true })
+      $(`.task-list-manager-row[data-task-list-id="${created.id}"] .task-list-name-input`).trigger('focus').trigger('select')
+      setStatus('List added', 'saved')
+    } catch (error) {
+      $('#task-list-manager-error').text(getErrorMessage(error, 'Could not add list')).prop('hidden', false)
+    }
+  }
+
+  function openTaskListDeleteDialog(taskListId) {
+    const taskList = getTaskListById(taskListId)
+    if (!taskList || taskLists.length <= 1) {
+      return
+    }
+
+    $('#task-list-delete-overlay').attr('data-task-list-id', taskList.id)
+    $('#task-list-delete-title').text(`Delete “${taskList.name}”?`)
+    $('#task-list-delete-message').text(
+      taskList.taskCount > 0
+        ? `This list contains ${taskList.taskCount} ${taskList.taskCount === 1 ? 'task' : 'tasks'}, including ${taskList.trashTaskCount} in Trash. No task will be deleted, but every task must be moved before the list can be removed.`
+        : 'This removes the list permanently. It contains no tasks.')
+    const destinations = taskLists
+      .filter(function (item) { return item.id !== taskList.id })
+      .map(function (item) { return `<option value="${item.id}">${encodeText(item.name)}</option>` })
+      .join('')
+    $('#task-list-delete-destination').html(destinations)
+    $('#task-list-delete-destination-field').prop('hidden', taskList.taskCount === 0)
+    $('#task-list-delete-confirm').text(taskList.taskCount ? 'Move tasks and delete list' : 'Delete list')
+    $('#task-list-delete-error').prop('hidden', true)
+    $('#task-list-delete-overlay').prop('hidden', false)
+    window.setTimeout(function () { $('#task-list-delete-cancel').trigger('focus') }, 0)
+  }
+
+  function closeTaskListDeleteDialog() {
+    $('#task-list-delete-overlay').prop('hidden', true).removeAttr('data-task-list-id')
+  }
+
+  async function confirmTaskListDelete() {
+    const listId = Number($('#task-list-delete-overlay').attr('data-task-list-id'))
+    const taskList = getTaskListById(listId)
+    if (!taskList) {
+      closeTaskListDeleteDialog()
+      return
+    }
+
+    const destinationListId = taskList.taskCount
+      ? Number($('#task-list-delete-destination').val())
+      : null
+    $('#task-list-delete-confirm, #task-list-delete-cancel').prop('disabled', true)
+    try {
+      const result = await sendBridgeMessage('taskList.delete', {
+        id: listId,
+        destinationListId
+      })
+      closeTaskListDeleteDialog()
+      if (activeTaskListId === listId) {
+        activeTaskListId = result.destinationListId || taskLists.find(function (item) { return item.id !== listId }).id
+        layoutPreference.taskListScope = String(activeTaskListId)
+        await saveLayoutPreference()
+      }
+      await loadTaskLists({ keepCurrentScope: true })
+      await loadTasks({ selectFirst: true })
+      setStatus(
+        result.movedTaskCount
+          ? `List deleted · ${result.movedTaskCount} tasks moved`
+          : 'List deleted',
+        'saved')
+    } catch (error) {
+      $('#task-list-delete-error').text(getErrorMessage(error, 'Could not delete list')).prop('hidden', false)
+    } finally {
+      $('#task-list-delete-confirm, #task-list-delete-cancel').prop('disabled', false)
+    }
+  }
+
+  async function saveTaskListOrder() {
+    const orderedIds = $('#task-lists-manager .task-list-manager-row').map(function () {
+      return Number($(this).attr('data-task-list-id'))
+    }).get()
+    taskLists = await sendBridgeMessage('taskList.reorder', { orderedIds })
+    renderTaskListOptions()
+    renderTaskListManager()
+    setStatus('List order saved', 'saved')
+  }
+
+  function openTaskListMoveDialog() {
+    if (!selectedTaskIds.size || currentView === 'trash') {
+      return
+    }
+    renderTaskListOptions()
+    const currentListId = activeTaskListId || (currentTask && currentTask.taskListId)
+    const firstAlternative = taskLists.find(function (taskList) { return taskList.id !== currentListId }) || taskLists[0]
+    $('#task-list-move-destination').val(String(firstAlternative.id))
+    $('#task-list-move-title').text(`Move ${selectedTaskIds.size} selected ${selectedTaskIds.size === 1 ? 'task' : 'tasks'}`)
+    $('#task-list-move-overlay').prop('hidden', false)
+    window.setTimeout(function () { $('#task-list-move-destination').trigger('focus') }, 0)
+  }
+
+  function closeTaskListMoveDialog() {
+    $('#task-list-move-overlay').prop('hidden', true)
+  }
+
+  async function moveSelectedTasksToList() {
+    const taskIds = Array.from(selectedTaskIds)
+    const destinationListId = Number($('#task-list-move-destination').val())
+    if (!taskIds.length || !destinationListId) {
+      return
+    }
+    const result = await sendBridgeMessage('taskList.moveTasks', { taskIds, destinationListId })
+    closeTaskListMoveDialog()
+    exitTaskSelectionMode()
+    lastTaskListMove = result
+    const destination = getTaskListById(destinationListId)
+    $('#task-undo-message').text(`${result.affectedCount} ${result.affectedCount === 1 ? 'task' : 'tasks'} moved to ${destination.name}`)
+    $('#task-undo-toast').prop('hidden', false)
+    if (trashUndoTimer) window.clearTimeout(trashUndoTimer)
+    trashUndoTimer = window.setTimeout(dismissTrashUndo, 15000)
+    await loadTaskLists({ keepCurrentScope: true })
+    await loadTasks({ keepSelection: true })
+    if (currentTask && !tasks.some(function (task) { return task.id === currentTask.id })) {
+      currentTask = null
+      await selectFirstAvailableTask()
+    }
+    setStatus('Tasks moved', 'saved')
+  }
+
+  async function undoTaskListMove() {
+    if (!lastTaskListMove || !lastTaskListMove.items.length) {
+      return
+    }
+    await sendBridgeMessage('taskList.undoMove', { items: lastTaskListMove.items })
+    dismissTrashUndo()
+    await loadTaskLists({ keepCurrentScope: true })
+    await loadTasks({ keepSelection: true })
+    setStatus('List move undone', 'saved')
   }
 
   function resolveConfirmationDialog(isConfirmed) {
@@ -2634,6 +2997,7 @@
     $('#task-read-only-notice').prop('hidden', true)
     $('#task-form').removeClass('is-task-read-only').attr('aria-readonly', null)
     $('#task-title').val('')
+    $('#task-list-owner').val('')
     $('#task-type').val('')
     $('#task-priority').val('')
     $('#task-deadline').val('')
@@ -2738,7 +3102,8 @@
       taskSelectionCoachmarkSeen: layoutPreference.taskSelectionCoachmarkSeen,
       colorScheme: layoutPreference.colorScheme,
       taskSortModes: taskSortModes,
-      taskSortDirections: taskSortDirections
+      taskSortDirections: taskSortDirections,
+      taskListScope: layoutPreference.taskListScope
     }).then(function () {
       return true
     }).catch(function (error) {
@@ -2767,6 +3132,7 @@
     layoutPreference.allowEditingCompletedTasks = preference.allowEditingCompletedTasks === true
     layoutPreference.allowEditingCancelledTasks = preference.allowEditingCancelledTasks === true
     layoutPreference.taskSelectionCoachmarkSeen = preference.taskSelectionCoachmarkSeen === true
+    layoutPreference.taskListScope = preference.taskListScope || null
     hasLoadedLayoutPreference = true
     taskSortModes = normalizeTaskSortModes(preference.taskSortModes)
     layoutPreference.taskSortModes = taskSortModes
@@ -3199,6 +3565,7 @@
           || (task.activeWaitingForLabel || '').toLowerCase().includes(query)
           || (task.owner || '').toLowerCase().includes(query)
           || (task.responsible || '').toLowerCase().includes(query)
+          || (isGlobalTaskListScope() && (task.taskListName || '').toLowerCase().includes(query))
           || taskTags.some(function (tag) { return tag.includes(query) })
       const matchesTags = selectedTags.length === 0
         || selectedTags.some(function (selectedTag) {
@@ -3258,6 +3625,9 @@
     const checklistProgress = task.checklistCount > 0
       ? `<span class="task-badge">${task.completedChecklistCount}/${task.checklistCount}</span>`
       : ''
+    const taskListPill = isGlobalTaskListScope()
+      ? `<span class="task-badge task-list-pill">${encodeText(task.taskListName)}</span>`
+      : ''
     const starGlyph = task.isStarred ? '&#xE735;' : '&#xE734;'
     const starLabel = task.isStarred ? 'Unstar task' : 'Star task'
     const passiveStarClass = task.deletedAt && task.isStarred ? ' has-passive-star' : ''
@@ -3284,6 +3654,7 @@
           ${transitionLabel}
           <span class="task-row-title">${encodeText(task.title)}</span>
           <span class="task-row-meta">
+            ${taskListPill}
             ${renderBadge(task.taskTypeName, task.taskTypeBackgroundColor, task.taskTypeForegroundColor)}
             ${renderTaskStatusBadge(task)}
             ${priority}
@@ -3430,6 +3801,9 @@
     $('#task-bulk-trash')
       .prop('hidden', isTrashView)
       .prop('disabled', selectedCount === 0)
+    $('#task-bulk-move-list')
+      .prop('hidden', isTrashView || taskLists.length < 2)
+      .prop('disabled', selectedCount === 0 || taskLists.length < 2)
     $('#task-bulk-delete-permanently')
       .prop('hidden', !isTrashView)
       .prop('disabled', selectedCount === 0)
@@ -3551,12 +3925,14 @@
       trashUndoTimer = null
     }
     lastTrashedTaskIds = []
+    lastTaskListMove = null
     $('#task-undo-toast').prop('hidden', true)
   }
 
   function showTrashUndo(taskIds) {
     dismissTrashUndo()
     lastTrashedTaskIds = taskIds.slice()
+    lastTaskListMove = null
     const count = taskIds.length
     $('#task-undo-message').text(count === 1 ? 'Task moved to Trash' : `${count} tasks moved to Trash`)
     $('#task-undo-toast').prop('hidden', false)
@@ -3928,6 +4304,7 @@
     return {
       id: null,
       title,
+      taskListId: activeTaskListId || Number($('#new-task-list-select').val()) || null,
       body: '',
       bodyFormatCode,
       taskTypeCode: selectedTaskType ? selectedTaskType.code : '',
@@ -3939,6 +4316,26 @@
       activeWaitingForLabel: null,
       tags: []
     }
+  }
+
+  async function selectRelatedTaskWithUnsavedCheck(taskId) {
+    if (!await allowContextSwitch()) {
+      return
+    }
+
+    const task = await sendBridgeMessage('task.get', { id: taskId })
+    const remainGlobal = activeTaskListId == null
+    if (!remainGlobal && task.taskListId !== activeTaskListId) {
+      activeTaskListId = task.taskListId
+      layoutPreference.taskListScope = String(task.taskListId)
+      await saveLayoutPreference()
+    }
+    selectViewForTask(task)
+    renderTaskListOptions()
+    await loadTasks({ keepSelection: false })
+    await renderTaskEditor(task)
+    revealTaskRow(task.id)
+    focusTaskRow(task.id)
   }
 
   function switchTaskView(targetView) {
@@ -3958,6 +4355,7 @@
       currentView = targetView
       starredFinishedExpanded = false
       syncTaskSortControl()
+      renderTaskListOptions()
       loadTasks({ selectFirst: true }).catch(showFatalError)
     })
   }
@@ -4175,6 +4573,7 @@
     }
 
     $('#task-type').val(currentTask.taskTypeCode || '')
+    $('#task-list-owner').val(String(currentTask.taskListId || ''))
     $('#task-priority').val(currentTask.taskPriorityCode || '')
     $('#task-source').val(currentTask.taskSourceCode || '')
     setTaskTags(currentTask.tags || [])
@@ -4427,6 +4826,7 @@
     try {
       currentTask = task
       $('#task-title').val(task.title || '')
+      $('#task-list-owner').val(String(task.taskListId || ''))
       $('#task-type').val(task.taskTypeCode || '')
       $('#task-priority').val(task.taskPriorityCode || '')
       $('#task-deadline').val(formatDate(task.deadline))
@@ -4458,6 +4858,7 @@
       clearValidationState()
 
       $('#task-title').val(task.title || '')
+      $('#task-list-owner').val(String(task.taskListId || ''))
       $('#task-type').val(task.taskTypeCode || '')
       $('#task-priority').val(task.taskPriorityCode || '')
       $('#task-deadline').val(formatDate(task.deadline))
@@ -4500,6 +4901,7 @@
     return {
       id: currentTask && currentTask.id ? currentTask.id : null,
       title: $('#task-title').val().toString().trim(),
+      taskListId: Number($('#task-list-owner').val()) || null,
       taskTypeCode: $('#task-type').val().toString(),
       body: getEditorBody(),
       bodyFormatCode: $('#editor-mode').val().toString(),
@@ -4591,7 +4993,8 @@
     const selectFirst = options && options.selectFirst
     const revealTaskId = options && Number(options.revealTaskId)
     tasks = await sendBridgeMessage('task.list', {
-      view: currentView
+      view: currentView,
+      taskListId: getEffectiveTaskListId()
     })
     renderTaskList()
 
@@ -4655,6 +5058,8 @@
     }
 
     const isNewTask = !currentTask.id
+    const previousTaskListId = currentTask.taskListId
+    const wasGlobalScope = activeTaskListId == null
     clearValidationState()
     const payload = getTaskPayload()
     if (!payload.title) {
@@ -4668,6 +5073,13 @@
       setFieldInvalid('#task-type', true)
       setStatus('Task type is required', 'error')
       $('#task-type').trigger('focus')
+      return false
+    }
+
+    if (!payload.taskListId) {
+      setFieldInvalid('#task-list-owner', true)
+      setStatus('List is required', 'error')
+      $('#task-list-owner').trigger('focus')
       return false
     }
 
@@ -4688,6 +5100,13 @@
         selectViewForTask(savedTask)
       }
 
+      if (!wasGlobalScope && previousTaskListId !== savedTask.taskListId) {
+        activeTaskListId = savedTask.taskListId
+        layoutPreference.taskListScope = String(savedTask.taskListId)
+        await saveLayoutPreference()
+      }
+
+      await loadTaskLists({ keepCurrentScope: true })
       await loadTasks({ keepSelection: true })
       isDirty = false
       window.Editor.markClean()
@@ -4718,6 +5137,7 @@
       keepSelection: true,
       revealTaskId: task.id
     })
+    scheduleTaskTransitionRevealClear()
     setStatus(isTaskEditable(task) ? 'Loaded' : 'Read only', 'ready')
   }
 
@@ -4922,8 +5342,19 @@
     $('#settings-button').trigger('focus')
   }
 
-  function openNewTaskDialog() {
+  async function openNewTaskDialog() {
+    if (!taskLists.length) {
+      await loadTaskLists({ keepCurrentScope: false })
+    }
+
+    renderTaskListOptions()
     $('#new-task-title-input').val('').removeClass('is-invalid')
+    const needsListChoice = isGlobalTaskListScope()
+    $('#new-task-list-field').prop('hidden', !needsListChoice)
+    const resolvedListId = activeTaskListId || (taskLists.find(function (taskList) {
+      return taskList.name.toLocaleLowerCase() === 'default list'
+    }) || taskLists[0]).id
+    $('#new-task-list-select').val(String(resolvedListId))
     $('#new-task-error').prop('hidden', true)
     $('#new-task-save-button, #new-task-cancel-button').prop('disabled', false)
     $('#new-task-overlay').prop('hidden', false)
@@ -4952,6 +5383,11 @@
     }
 
     const payload = createNewTaskPayload(title)
+    if (!payload.taskListId) {
+      $('#new-task-list-select').trigger('focus')
+      setStatus('List is required', 'error')
+      return
+    }
     if (!payload.taskTypeCode) {
       setStatus('Task type lookup is missing', 'error')
       return
@@ -4970,6 +5406,7 @@
       closeNewTaskDialog()
       window.Editor.focus()
       selectViewForTask(savedTask)
+      await loadTaskLists({ keepCurrentScope: true })
       await loadTasks({ keepSelection: true })
       isDirty = false
       window.Editor.markClean()
@@ -4983,10 +5420,99 @@
   }
 
   function bindEvents() {
+    $('#task-list-switcher').on('change', function () {
+      const requestedScope = $(this).val().toString()
+      allowContextSwitch().then(function (isAllowed) {
+        if (!isAllowed) {
+          renderTaskListOptions()
+          return
+        }
+        activateTaskListScope(requestedScope).catch(function (error) {
+          renderTaskListOptions()
+          setStatus(getErrorMessage(error, 'Could not switch list'), 'error')
+        })
+      })
+    })
+    $('#manage-task-lists-button').on('click', function () {
+      allowContextSwitch().then(function (isAllowed) {
+        if (!isAllowed) {
+          return
+        }
+
+        $('#task-list-manager-error').prop('hidden', true)
+        renderTaskListManager()
+        $('#task-lists-overlay').prop('hidden', false)
+        $('#task-list-add-name').trigger('focus')
+      }).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not open task lists'), 'error')
+      })
+    })
+    $('#task-lists-close-button').on('click', function () {
+      $('#task-lists-overlay').prop('hidden', true)
+      $('#manage-task-lists-button').trigger('focus')
+    })
+    $('#task-list-add-form').on('submit', function (event) {
+      event.preventDefault()
+      addTaskList()
+    })
+    $('#task-lists-manager').on('change', '.task-list-name-input', function () {
+      renameTaskList($(this).closest('.task-list-manager-row'))
+    })
+    $('#task-lists-manager').on('keydown', '.task-list-name-input', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        $(this).trigger('change')
+      }
+    })
+    $('#task-lists-manager').on('click', '.task-list-delete-button', function () {
+      openTaskListDeleteDialog(Number($(this).closest('.task-list-manager-row').attr('data-task-list-id')))
+    })
+    $('#task-lists-manager').on('dragstart', '.task-list-manager-row', function (event) {
+      event.originalEvent.dataTransfer.setData('text/plain', $(this).attr('data-task-list-id'))
+      $(this).addClass('is-dragging')
+    })
+    $('#task-lists-manager').on('dragend', '.task-list-manager-row', function () {
+      $(this).removeClass('is-dragging')
+    })
+    $('#task-lists-manager').on('dragover', '.task-list-manager-row', function (event) {
+      event.preventDefault()
+      event.originalEvent.dataTransfer.dropEffect = 'move'
+    })
+    $('#task-lists-manager').on('drop', '.task-list-manager-row', function (event) {
+      event.preventDefault()
+      const draggedId = Number(event.originalEvent.dataTransfer.getData('text/plain'))
+      const targetId = Number($(this).attr('data-task-list-id'))
+      if (!draggedId || draggedId === targetId) return
+      const dragged = $(`.task-list-manager-row[data-task-list-id="${draggedId}"]`)
+      const target = $(this)
+      const targetRect = target[0].getBoundingClientRect()
+      if (event.originalEvent.clientY < targetRect.top + (targetRect.height / 2)) {
+        dragged.insertBefore(target)
+      } else {
+        dragged.insertAfter(target)
+      }
+      saveTaskListOrder().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not reorder lists'), 'error')
+        renderTaskListManager()
+      })
+    })
+    $('#task-list-delete-cancel').on('click', closeTaskListDeleteDialog)
+    $('#task-list-delete-confirm').on('click', function () {
+      confirmTaskListDelete()
+    })
+    $('#task-list-move-cancel').on('click', closeTaskListMoveDialog)
+    $('#task-list-move-confirm').on('click', function () {
+      moveSelectedTasksToList().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not move selected tasks'), 'error')
+      })
+    })
+
     $('#new-task-button').on('click', function () {
       allowContextSwitch().then(function (isAllowed) {
         if (isAllowed) {
-          openNewTaskDialog()
+          openNewTaskDialog().catch(function (error) {
+            setStatus(getErrorMessage(error, 'Could not prepare a task list'), 'error')
+          })
         }
       })
     })
@@ -5312,6 +5838,7 @@
         setStatus(getErrorMessage(error, 'Could not unstar selected tasks'), 'error')
       })
     })
+    $('#task-bulk-move-list').on('click', openTaskListMoveDialog)
     $('#task-bulk-restore').on('click', function () {
       restoreTasks(Array.from(selectedTaskIds)).catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not restore selected tasks'), 'error')
@@ -5374,6 +5901,12 @@
       })
     })
     $('#task-undo-button').on('click', function () {
+      if (lastTaskListMove) {
+        undoTaskListMove().catch(function (error) {
+          setStatus(getErrorMessage(error, 'Could not undo list move'), 'error')
+        })
+        return
+      }
       const taskIds = lastTrashedTaskIds.slice()
       restoreTasks(taskIds).catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not restore task'), 'error')
@@ -5469,7 +6002,9 @@
       addRelationship().catch(function (error) { setStatus(getErrorMessage(error, 'Could not add relationship'), 'error') })
     })
     $('#relationships-list').on('click', '.relationship-open', function () {
-      selectTaskWithUnsavedCheck(Number($(this).attr('data-task-id')))
+      selectRelatedTaskWithUnsavedCheck(Number($(this).attr('data-task-id'))).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not open related task'), 'error')
+      })
     })
     $('#relationships-list').on('click', '.relationship-delete', async function () {
       const row = $(this).closest('.relationship-row')
@@ -5521,7 +6056,7 @@
       if (!await showConfirmationDialog('Remove attachment?', `Remove “${fileName}”? This cannot be undone.`, 'Remove file')) return
       deleteAttachment(Number($(this).attr('data-attachment-id'))).catch(function (error) { setStatus(getErrorMessage(error, 'Could not remove attachment'), 'error') })
     })
-    $('#task-form').on('input change', '#task-title, #task-type, #task-priority, #task-deadline, #task-tags, #task-source, #task-source-reference, #task-source-url, #task-owner, #task-responsible, #waiting-text', markDirty)
+    $('#task-form').on('input change', '#task-title, #task-list-owner, #task-type, #task-priority, #task-deadline, #task-tags, #task-source, #task-source-reference, #task-source-url, #task-owner, #task-responsible, #waiting-text', markDirty)
     $('#comment-add-button').on('click', function () {
       addComment().catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not add comment'), 'error')
@@ -5615,9 +6150,8 @@
 
     try {
       await waitForNextPaint()
-      loadLayoutPreference().catch(function (error) {
-        setStatus(getErrorMessage(error, 'Could not load layout preference'), 'error')
-      })
+      await loadLayoutPreference()
+      await loadTaskLists()
       lookups = await sendBridgeMessage('task.lookups.get', {})
       renderLookups()
       await loadEditorPreference()

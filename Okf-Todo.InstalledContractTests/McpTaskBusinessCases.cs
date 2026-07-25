@@ -12,6 +12,12 @@ public sealed class McpTaskBusinessCases
         var toolNames = await mcp.ListToolNamesAsync();
         Assert.Contains("task_create", toolNames);
         Assert.Contains("task_get", toolNames);
+        Assert.Contains("task_list_lists", toolNames);
+        Assert.Contains("task_move_to_list", toolNames);
+
+        var lists = await mcp.CallAsync("task_list_lists", new Dictionary<string, object?>());
+        var defaultList = lists.EnumerateArray().Single();
+        Assert.Equal("Default list", defaultList.GetProperty("name").GetString());
 
         var created = await mcp.CallAsync("task_create", new Dictionary<string, object?>
         {
@@ -26,6 +32,8 @@ public sealed class McpTaskBusinessCases
         var taskId = created.GetProperty("id").GetInt32();
         Assert.Equal("Investigate failed deployment", created.GetProperty("title").GetString());
         Assert.Equal("ACTIVE", created.GetProperty("taskStatusCode").GetString());
+        Assert.Equal(defaultList.GetProperty("id").GetInt32(), created.GetProperty("taskListId").GetInt32());
+        Assert.Equal("Default list", created.GetProperty("taskListName").GetString());
 
         var readBack = await mcp.CallAsync("task_get", new Dictionary<string, object?> { ["id"] = taskId });
         Assert.Equal("Investigate failed deployment", readBack.GetProperty("title").GetString());

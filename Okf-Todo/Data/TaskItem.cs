@@ -4,6 +4,10 @@ public sealed class TaskItem
 {
     public int Id { get; set; }
 
+    public int TaskListId { get; set; }
+
+    public TaskList? TaskList { get; set; }
+
     public string Title { get; set; } = string.Empty;
 
     public string? Body { get; set; }

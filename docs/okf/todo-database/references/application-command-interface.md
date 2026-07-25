@@ -7,7 +7,7 @@ tags:
   - okf
   - todo
   - commands
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 ---
 
 # Task Application Command Interface
@@ -70,6 +70,8 @@ Supported task mutation commands include:
 
 - `task.create`
 - `task.update`
+- `taskList.moveTasks`
+- `taskList.undoMove`
 - `task.start`
 - `task.undoStart`
 - `task.complete`
@@ -90,6 +92,36 @@ Supported task mutation commands include:
 
 Use `task.timeline.get` to verify the resulting automatic history entries.
 
+List discovery and desktop list administration commands are:
+
+- `taskList.list`
+- `taskList.create`
+- `taskList.rename`
+- `taskList.reorder`
+- `taskList.delete`
+- `taskList.moveTasks`
+- `taskList.undoMove`
+
+MCP exposes discovery and task assignment/moves, but deliberately does not expose add, rename, reorder, or delete for the master list in this version.
+
+## Required list ownership and resolution
+
+Every task has a required `taskListId`. Discover concrete lists with:
+
+```json
+{"messageId":"lists-1","type":"taskList.list","payload":{}}
+```
+
+Task creation accepts optional `taskListId` and optional `contextTaskId`. Task update accepts optional `taskListId`; when omitted, the existing task supplies its own context and remains in its current list. All application, MCP, and OKF-guided database writers must use this exact resolution precedence:
+
+1. Use an explicit list reference when supplied.
+2. Otherwise infer the list from available task context, such as the existing, source, related, or parent task.
+3. Otherwise use the list currently named `Default list`, when present.
+4. Otherwise use the first list ordered by `SortOrder`, then `Id`.
+5. If no list exists, transactionally insert `Default list` with `SortOrder` 10 and current UTC `CreatedAt` and `UpdatedAt` values, then use its generated ID.
+
+For direct SQLite work, resolve and store the concrete `TaskLists.Id` in `TaskItems.TaskListId` inside the same transaction as the task write. `All lists` is a synthetic desktop scope and must never be inserted into `TaskLists`.
+
 ## Core task command contracts
 
 The following payloads are sufficient for a harness that has only this installed OKF bundle and access to the installed command adapter. JSON property names use camel case.
@@ -102,6 +134,7 @@ Create a task with `task.create`:
   "type": "task.create",
   "payload": {
     "title": "Investigate failed deployment",
+    "taskListId": 1,
     "taskTypeCode": "INVESTIGATION",
     "body": "Evidence and proposed next steps.",
     "bodyFormatCode": "MARKDOWN",
@@ -118,7 +151,7 @@ Create a task with `task.create`:
 }
 ```
 
-Only `title` and `taskTypeCode` are required. The command returns the saved task detail in `payload`, including its numeric `id`. New tasks start with status `ACTIVE` and receive a `TASK_CREATED` history entry.
+Only `title` and `taskTypeCode` must be provided by the caller; required list ownership is resolved by the precedence above when `taskListId` is omitted. The command returns the saved task detail in `payload`, including its numeric `id`, `taskListId`, and `taskListName`. New tasks start with status `ACTIVE` and receive a `TASK_CREATED` history entry.
 
 Read a task with `task.get`:
 
@@ -141,6 +174,7 @@ Replace editable task fields with `task.update`:
   "payload": {
     "id": 42,
     "title": "Investigate failed deployment and release variables",
+    "taskListId": 1,
     "taskTypeCode": "INVESTIGATION",
     "body": "Evidence and proposed next steps.",
     "bodyFormatCode": "MARKDOWN",
@@ -158,6 +192,21 @@ Replace editable task fields with `task.update`:
 ```
 
 This is replacement semantics: call `task.get` first and preserve every field that must remain. A null or omitted optional value is cleared, and a null or empty tag collection removes all tags. The command returns the complete saved task detail and creates history for changed fields.
+
+Move one or more non-Trash tasks to a concrete list:
+
+```json
+{
+  "messageId": "move-list-1",
+  "type": "taskList.moveTasks",
+  "payload": {
+    "taskIds": [42, 43],
+    "destinationListId": 2
+  }
+}
+```
+
+The result contains each task's original and destination list IDs and names. Pass its `items` unchanged to `taskList.undoMove` for an immediate reverse move. Every changed task receives a `TASK_UPDATED` Timeline entry naming its source and destination lists.
 
 ## Star and Trash command contracts
 

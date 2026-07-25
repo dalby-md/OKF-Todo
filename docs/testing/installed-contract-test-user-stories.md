@@ -13,7 +13,10 @@ As a user working through an AI harness, I want to create a task through the ins
 The test verifies that:
 
 - The installed MCP server advertises `task_create` and `task_get`.
+- The installed MCP server advertises list discovery and task-move tools.
+- List discovery returns the automatically created **Default list**.
 - A task can be created with a title, type, Markdown body, priority, and tags.
+- Omitting a list assigns the task to **Default list** through the shared resolution rule.
 - The new task starts in the `ACTIVE` state.
 - The task can be read back through MCP.
 - The task is present in SQLite.
@@ -39,7 +42,7 @@ As a user who has given an AI harness the installed OKF context, I want it to cr
 
 The test verifies that:
 
-- The installed OKF contract documents `task.create`, `task.attachment.create`, `taskTypeCode`, and `base64Data`.
+- The installed OKF contract documents `task.create`, `task.attachment.create`, `taskTypeCode`, `taskListId`, the **Default list** fallback, and `base64Data`.
 - A customer investigation task can be created with source information and tags.
 - A text attachment can be supplied as Base64 content.
 - The attachment content and content type are persisted.
@@ -66,10 +69,11 @@ As a user who has explicitly granted an AI harness direct database access, I wan
 
 The test verifies that:
 
-- The installed OKF files describe the required `TaskItems`, `TaskAttachments`, `TaskTypes`, and `TaskStatuses` columns.
+- The installed OKF files describe the required `TaskLists`, `TaskItems`, `TaskAttachments`, `TaskTypes`, and `TaskStatuses` columns.
+- The harness resolves the required task-list ID by explicit reference, task context, the list named **Default list**, manual list order, or zero-list creation, in that order.
 - Active task-type and task-status identifiers are read from the database rather than guessed.
 - SQLite foreign-key enforcement is enabled.
-- The task and attachment are inserted in one transaction using parameterized SQL.
+- The task, its required list ownership, and the attachment are inserted in one transaction using parameterized SQL.
 - Attachment bytes, file size, content type, SHA-256 hash, description, and UTC timestamp are stored.
 - The inserted records can be read directly from SQLite.
 - The installed application can also read the directly inserted task.

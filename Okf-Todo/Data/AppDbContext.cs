@@ -10,6 +10,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<TaskItem> TaskItems => Set<TaskItem>();
 
+    public DbSet<TaskList> TaskLists => Set<TaskList>();
+
     public DbSet<TaskType> TaskTypes => Set<TaskType>();
 
     public DbSet<TaskStatus> TaskStatuses => Set<TaskStatus>();
@@ -114,6 +116,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(task => task.IsStarred).HasDefaultValue(false);
             entity.HasIndex(task => new { task.DeletedAt, task.IsStarred });
             entity.HasIndex(task => task.StarredAt);
+            entity.HasIndex(task => task.TaskListId);
+
+            entity.HasOne(task => task.TaskList)
+                .WithMany(taskList => taskList.Tasks)
+                .HasForeignKey(task => task.TaskListId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(task => task.BodyFormat)
                 .WithMany(bodyFormat => bodyFormat.Tasks)
@@ -213,6 +221,17 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 .HasForeignKey(attachment => attachment.TaskId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+        });
+
+        modelBuilder.Entity<TaskList>(entity =>
+        {
+            entity.Property(taskList => taskList.Name)
+                .IsRequired()
+                .UseCollation("NOCASE");
+            entity.Property(taskList => taskList.CreatedAt).IsRequired();
+            entity.Property(taskList => taskList.UpdatedAt).IsRequired();
+            entity.HasIndex(taskList => taskList.Name).IsUnique();
+            entity.HasIndex(taskList => taskList.SortOrder);
         });
 
         modelBuilder.Entity<TaskTag>(entity =>
