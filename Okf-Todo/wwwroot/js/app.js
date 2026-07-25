@@ -917,12 +917,16 @@
           </div>
           <div class="task-list-switcher-group" aria-label="Task list">
             <label class="task-list-switcher-field" for="task-list-switcher">
-              <span>List</span>
-              <select id="task-list-switcher" aria-label="Active task list"></select>
+              <span class="task-list-switcher-label">List</span>
+              <span class="task-list-switcher-control">
+                <span class="task-list-switcher-icon fluent-icon" aria-hidden="true">&#xE8FD;</span>
+                <select id="task-list-switcher" aria-label="Active task list"></select>
+              </span>
             </label>
+            <span class="task-list-switcher-divider" aria-hidden="true"></span>
             <button id="manage-task-lists-button" class="secondary-button manage-task-lists-button" type="button" aria-label="Manage lists" title="Manage lists">
-              <span class="fluent-icon" aria-hidden="true">&#xE8FD;</span>
-              <span>Manage lists</span>
+              <span class="fluent-icon" aria-hidden="true">&#xE713;</span>
+              <span>Manage</span>
             </button>
           </div>
           <div class="app-actions" aria-label="Task actions">
@@ -935,6 +939,7 @@
               <span class="fluent-icon" aria-hidden="true">&#xE713;</span>
               <span>Setup</span>
             </button>
+            <span class="app-action-divider" aria-hidden="true"></span>
             <button id="new-task-button" type="button">
               <span class="fluent-icon" aria-hidden="true">&#xE710;</span>
               <span>New task</span>

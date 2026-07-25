@@ -33,8 +33,6 @@ No blocking follow-up. Lookup-defined badge colors intentionally differ from amb
 
 final result: passed
 
----
-
 # Design QA — lifecycle destination reveal, option 3
 
 ## Evidence
@@ -430,3 +428,122 @@ final result: passed
 ## Result
 
 passed
+
+---
+
+# Design QA — Workspace capsule header
+
+## Evidence
+
+- Selected reference: `C:\Users\soere\.codex\generated_images\019f64d1-7fc6-7900-afb4-ee49130ff5eb\call_Wad2niTOcsEPp47yPYxaHRSj.png`
+- Large implementation: `artifacts/ui-captures/workspace-capsule/workspace-capsule-large.png`
+- Medium implementation: `artifacts/ui-captures/workspace-capsule/workspace-capsule-medium.png`
+- Compact implementation: `artifacts/ui-captures/workspace-capsule/workspace-capsule-compact.png`
+- Same-input comparison: `artifacts/ui-captures/workspace-capsule/workspace-capsule-comparison.png`
+- Reference and large implementation viewport: 1584 × 1024 CSS pixels.
+- Responsive verification: 1200 × 900 and 820 × 900 CSS pixels.
+
+## Visual and interaction review
+
+- The list selector and Manage action now read as one pale-teal workspace
+  capsule with shared border, background, focus treatment, internal divider,
+  list glyph, and compact hierarchy.
+- The save/status pill and Help/Setup controls remain visually quiet. A
+  separate divider establishes the transition to task-level actions.
+- New task and Save remain the strongest actions; Complete and Cancel retain
+  their existing semantic colors without competing with the primary buttons.
+- At 1200 pixels, the workspace capsule becomes a full-width second header row
+  instead of compressing the actions. At 820 pixels, brand, actions, and list
+  context occupy deliberate rows with no collision or horizontal page
+  overflow.
+- The accessible names remain **Active task list** and **Manage lists** even
+  though the compact visual label is **Manage**.
+- Focus is visible around the complete capsule, so keyboard users see list
+  selection and management as one context control.
+- The browser fixture uses one realistic list-aware task rather than the
+  reference's promotional task set; this does not affect the header comparison.
+- The reference includes native Photino window chrome while the browser capture
+  starts at the application surface.
+- No actionable P0, P1, or P2 visual issues remain.
+
+## Verification
+
+- `node --check Okf-Todo/wwwroot/js/app.js`
+- Focused Edge/Playwright task-list and responsive-header contract: passed.
+- Complete Edge/Playwright UI suite: 11 passed.
+- `dotnet build Okf-Todo.slnx -c Debug --no-restore`: passed.
+- Release build reached compilation but could not replace
+  `Okf-Todo/bin/Release/net8.0/Okf-Todo.exe` because the running desktop app
+  (PID 10520) held that file open.
+
+final result: passed
+
+---
+
+# Design QA — Rail-aligned automatic header density
+
+## Evidence
+
+- Source visual truth:
+  `C:\Users\soere\AppData\Local\Temp\codex-clipboard-cafcc1f0-11f9-45fc-a87b-8dd1394b51e6.png`
+- Implementation:
+  `artifacts/ui-captures/workspace-capsule/workspace-capsule-density-compact.png`
+- Full-view comparison:
+  `artifacts/ui-captures/workspace-capsule/workspace-capsule-aligned-comparison.png`
+- Focused header comparison:
+  `artifacts/ui-captures/workspace-capsule/workspace-capsule-aligned-header-comparison.png`
+- Source pixels: 1920 × 1200.
+- Implementation pixels: 1920 × 1200.
+- Implementation CSS viewport: 1280 × 800 at device scale factor 1.5.
+- State: light theme, concrete task selected, single-row compact desktop
+  header.
+
+## Comparison history
+
+- Earlier P2: at the effective 1280px desktop width, the header switched to a
+  second row. The user could obtain the preferred single-row composition only
+  by manually reducing browser font/zoom.
+- Earlier P2: the workspace capsule was positioned independently of the Views
+  rail and therefore did not establish a deliberate vertical alignment with
+  the rail/list boundary.
+- Fix: added a compact header-density breakpoint from 1251px through 1380px.
+  Only header typography, button padding, gaps, mark size, capsule height, and
+  status width are reduced; the task workspace and editor retain their normal
+  scale.
+- Fix: the first header grid track now derives from
+  `--task-rail-width`, header padding, and column gap. The capsule's left edge
+  therefore equals the Views rail's right edge in both normal and compact
+  desktop density.
+- Post-fix evidence: Playwright measured the capsule and rail boundary within
+  1 CSS pixel at 1600px and 1280px. The 1280px header remained a single row
+  with no horizontal overflow. At 1200px it deliberately returned to the
+  safer two-row layout.
+
+## Fidelity review
+
+- Fonts and typography: the existing Segoe UI hierarchy is preserved. Compact
+  density reduces only the header and remains visibly comparable to the
+  manually reduced reference without globally shrinking task content.
+- Spacing and layout rhythm: capsule, brand, status, and actions retain the
+  reference's compact rhythm. The rail/capsule alignment is now deterministic
+  rather than visually approximate.
+- Colors and visual tokens: teal, mint, rose, navy, borders, shadows, and
+  semantic action hierarchy remain unchanged from the selected workspace
+  capsule design.
+- Image quality and assets: no new raster assets were required. Existing Segoe
+  Fluent icons remain sharp at normal and compact density.
+- Copy and content: labels match the reference. The implementation capture
+  shows the realistic test status **List move undone** rather than **Loaded**;
+  the component geometry supports both.
+- The full source includes native Photino title bar and Windows taskbar. The
+  focused comparison removes that chrome and compares the application-owned
+  header directly.
+- No actionable P0, P1, or P2 issues remain.
+
+## Verification
+
+- Focused Edge/Playwright list/header contract: passed.
+- Complete Edge/Playwright UI suite: 11 passed.
+- `dotnet build Okf-Todo.slnx -c Debug --no-restore`: passed.
+
+final result: passed

@@ -1024,7 +1024,8 @@ public sealed class NewTaskDialogUiTests
         });
         await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
         {
-            ViewportSize = new ViewportSize { Width = 1600, Height = 1000 }
+            ViewportSize = new ViewportSize { Width = 1600, Height = 1000 },
+            DeviceScaleFactor = 1.5f
         });
         await context.AddInitScriptAsync(BridgeAdapterScript);
         var page = await context.NewPageAsync();
@@ -1100,12 +1101,63 @@ public sealed class NewTaskDialogUiTests
         await page.WaitForFunctionAsync(
             "() => document.querySelector('.task-row.is-selected .task-list-pill')?.textContent.trim() === 'Support'");
 
+        var largeBrandBox = await page.Locator(".app-brand").BoundingBoxAsync();
+        var largeSwitcherBox = await page.Locator(".task-list-switcher-group").BoundingBoxAsync();
+        var largeRailBox = await page.Locator(".task-view-rail").BoundingBoxAsync();
+        Assert.NotNull(largeBrandBox);
+        Assert.NotNull(largeSwitcherBox);
+        Assert.NotNull(largeRailBox);
+        Assert.InRange(Math.Abs(largeSwitcherBox!.Y - largeBrandBox!.Y), 0, 8);
+        Assert.InRange(
+            Math.Abs(largeSwitcherBox.X - (largeRailBox!.X + largeRailBox.Width)),
+            0,
+            1);
+        Assert.Equal(
+            "rgb(242, 249, 248)",
+            await page.Locator(".task-list-switcher-group").EvaluateAsync<string>(
+                "element => getComputedStyle(element).backgroundColor"));
+        Assert.Equal("Manage", await page.Locator("#manage-task-lists-button span:last-child").TextContentAsync());
+        Assert.False(await page.Locator(".app-action-divider").IsHiddenAsync());
+        var largeActionFontSize = await page.Locator("#new-task-button").EvaluateAsync<double>(
+            "element => Number.parseFloat(getComputedStyle(element).fontSize)");
+        await AssertNoHorizontalPageOverflowAsync(page);
+        await CaptureWorkspaceAsync(page, "workspace-capsule-large.png");
+
+        await page.SetViewportSizeAsync(1280, 800);
+        var densityBrandBox = await page.Locator(".app-brand").BoundingBoxAsync();
+        var densitySwitcherBox = await page.Locator(".task-list-switcher-group").BoundingBoxAsync();
+        var densityRailBox = await page.Locator(".task-view-rail").BoundingBoxAsync();
+        Assert.NotNull(densityBrandBox);
+        Assert.NotNull(densitySwitcherBox);
+        Assert.NotNull(densityRailBox);
+        Assert.InRange(Math.Abs(densitySwitcherBox!.Y - densityBrandBox!.Y), 0, 8);
+        Assert.InRange(
+            Math.Abs(densitySwitcherBox.X - (densityRailBox!.X + densityRailBox.Width)),
+            0,
+            1);
+        var densityActionFontSize = await page.Locator("#new-task-button").EvaluateAsync<double>(
+            "element => Number.parseFloat(getComputedStyle(element).fontSize)");
+        Assert.True(densityActionFontSize < largeActionFontSize);
+        await AssertNoHorizontalPageOverflowAsync(page);
+        await CaptureViewportAsync(page, "workspace-capsule-density-compact.png");
+
+        await page.SetViewportSizeAsync(1200, 900);
+        var mediumBrandBox = await page.Locator(".app-brand").BoundingBoxAsync();
+        var mediumSwitcherBox = await page.Locator(".task-list-switcher-group").BoundingBoxAsync();
+        Assert.NotNull(mediumBrandBox);
+        Assert.NotNull(mediumSwitcherBox);
+        Assert.True(mediumSwitcherBox!.Y >= mediumBrandBox!.Y + mediumBrandBox.Height - 1);
+        await AssertNoHorizontalPageOverflowAsync(page);
+        await CaptureWorkspaceAsync(page, "workspace-capsule-medium.png");
+
         await page.SetViewportSizeAsync(820, 900);
         var brandBox = await page.Locator(".app-brand").BoundingBoxAsync();
         var switcherBox = await page.Locator(".task-list-switcher-group").BoundingBoxAsync();
         Assert.NotNull(brandBox);
         Assert.NotNull(switcherBox);
         Assert.True(switcherBox!.Y >= brandBox!.Y + brandBox.Height - 1);
+        await AssertNoHorizontalPageOverflowAsync(page);
+        await CaptureWorkspaceAsync(page, "workspace-capsule-compact.png");
 
         await page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync(
@@ -1337,6 +1389,22 @@ public sealed class NewTaskDialogUiTests
         {
             Path = Path.Combine(captureDirectory, fileName),
             FullPage = true
+        });
+    }
+
+    private static async Task CaptureViewportAsync(IPage page, string fileName)
+    {
+        var captureDirectory = Environment.GetEnvironmentVariable("OKF_TODO_UI_CAPTURE_DIR");
+        if (string.IsNullOrWhiteSpace(captureDirectory))
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(captureDirectory);
+        await page.ScreenshotAsync(new PageScreenshotOptions
+        {
+            Path = Path.Combine(captureDirectory, fileName),
+            FullPage = false
         });
     }
 
