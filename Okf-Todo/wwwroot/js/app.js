@@ -115,6 +115,7 @@
   let activeLookupSettingsGroup = 'taskTypes'
   let editingLookupCode = null
   let editingTagId = null
+  let hasLoadedLayoutPreference = false
   let layoutPreference = {
     taskListWidth: defaultTaskListWidth,
     taskListHeight: null,
@@ -125,6 +126,7 @@
     showRelationships: false,
     allowEditingCompletedTasks: false,
     allowEditingCancelledTasks: false,
+    taskSelectionCoachmarkSeen: false,
     taskSortModes: taskSortModes,
     taskSortDirections: taskSortDirections,
     colorScheme: document.documentElement.classList.contains('theme-dark')
@@ -969,11 +971,21 @@
                 <h2 id="task-list-title">Active</h2>
               </div>
               <div class="sidebar-header-actions">
-                <span id="task-list-header-count" class="task-list-header-count">0</span>
-                <button id="task-select-mode-button" class="secondary-button task-select-mode-button" type="button">Select</button>
+                <span id="task-list-header-count" class="task-list-header-count" aria-live="polite">0 tasks</span>
+                <button id="task-select-mode-button" class="secondary-button task-select-mode-button" type="button" aria-describedby="task-selection-coachmark" hidden>
+                  <span class="fluent-icon task-select-mode-icon" aria-hidden="true">&#xE73A;</span>
+                  <span class="task-select-mode-label">Select tasks</span>
+                </button>
+                <div id="task-selection-coachmark" class="task-selection-coachmark" role="note" aria-label="Task selection tip" hidden>
+                  <button id="task-selection-coachmark-dismiss" class="task-selection-coachmark-dismiss" type="button" aria-label="Dismiss selection tip">&times;</button>
+                  <strong>Select several tasks</strong>
+                  <span>Choose Select tasks, mark the items you need, then use the action bar.</span>
+                </div>
                 <div class="task-view-header-menu">
                   <button id="task-view-overflow-button" class="secondary-button task-view-overflow-button" type="button" aria-label="More view actions" title="More view actions" aria-haspopup="menu" aria-controls="task-view-overflow-menu" aria-expanded="false" hidden>
-                    <span aria-hidden="true">&hellip;</span>
+                    <span class="task-view-overflow-label">More</span>
+                    <span class="fluent-icon task-view-overflow-chevron" aria-hidden="true">&#xE70D;</span>
+                    <span class="task-view-overflow-compact" aria-hidden="true">&hellip;</span>
                   </button>
                   <div id="task-view-overflow-menu" class="task-view-overflow-menu" role="menu" hidden>
                     <button id="task-view-move-cancelled" class="task-view-overflow-menu-item" type="button" role="menuitem" hidden>
@@ -1051,8 +1063,8 @@
 
           <div id="task-selection-bar" class="task-selection-bar" role="toolbar" aria-label="Selected task actions" hidden>
             <label class="task-selection-all">
-              <input id="task-select-all" type="checkbox">
-              <span id="task-selection-count">0 selected</span>
+              <input id="task-select-all" type="checkbox" aria-label="Select all visible tasks">
+              <span>Select all</span>
             </label>
             <div class="task-selection-actions">
               <button id="task-bulk-star" class="secondary-button" type="button">Star</button>
@@ -1060,7 +1072,7 @@
               <button id="task-bulk-restore" class="secondary-button" type="button" hidden>Restore</button>
               <button id="task-bulk-trash" class="secondary-button danger-button" type="button">Move all selected to Trash</button>
               <button id="task-bulk-delete-permanently" class="secondary-button danger-button" type="button" hidden>Delete all selected permanently</button>
-              <button id="task-selection-cancel" class="task-selection-cancel" type="button">Cancel</button>
+              <button id="task-selection-cancel" class="task-selection-cancel" type="button">Done</button>
             </div>
           </div>
 
@@ -2755,6 +2767,7 @@
       showRelationships: layoutPreference.showRelationships,
       allowEditingCompletedTasks: layoutPreference.allowEditingCompletedTasks,
       allowEditingCancelledTasks: layoutPreference.allowEditingCancelledTasks,
+      taskSelectionCoachmarkSeen: layoutPreference.taskSelectionCoachmarkSeen,
       colorScheme: layoutPreference.colorScheme,
       taskSortModes: taskSortModes,
       taskSortDirections: taskSortDirections
@@ -2785,6 +2798,8 @@
     layoutPreference.showRelationships = preference.showRelationships === true
     layoutPreference.allowEditingCompletedTasks = preference.allowEditingCompletedTasks === true
     layoutPreference.allowEditingCancelledTasks = preference.allowEditingCancelledTasks === true
+    layoutPreference.taskSelectionCoachmarkSeen = preference.taskSelectionCoachmarkSeen === true
+    hasLoadedLayoutPreference = true
     taskSortModes = normalizeTaskSortModes(preference.taskSortModes)
     layoutPreference.taskSortModes = taskSortModes
     taskSortDirections = normalizeTaskSortDirections(preference.taskSortDirections, preference.taskSortModes)
@@ -3335,7 +3350,7 @@
     renderTaskFilterSummary(countLabel)
     $('#task-view').val(currentView)
     $('#task-list-title').text(viewLabels[currentView])
-    $('#task-list-header-count').text(visibleTasks.length)
+    $('#task-list-header-count').text(`${visibleTasks.length} ${visibleTasks.length === 1 ? 'task' : 'tasks'}`)
     const $activeViewButton = $('.task-view-rail-button')
       .removeClass('is-active is-transition-destination')
       .attr('aria-current', null)
@@ -3413,14 +3428,27 @@
       return selectedTaskIds.has(taskId)
     })
     const isTrashView = currentView === 'trash'
+    const renderedTaskCount = renderedTaskIds.length
+    const hasRenderedTasks = renderedTaskCount > 0
 
     $('.workspace-shell').toggleClass('is-task-selection-mode', isTaskSelectionMode)
     $('#task-selection-bar').prop('hidden', !isTaskSelectionMode)
+    $('#task-list-header-count')
+      .text(isTaskSelectionMode
+        ? `${selectedCount} selected`
+        : `${renderedTaskCount} ${renderedTaskCount === 1 ? 'task' : 'tasks'}`)
+      .toggleClass('is-selection-count', isTaskSelectionMode)
     $('#task-select-mode-button')
-      .text(isTaskSelectionMode ? 'Done' : 'Select')
       .attr('aria-pressed', String(isTaskSelectionMode))
-      .prop('disabled', renderedTaskIds.length === 0)
-    $('#task-selection-count').text(`${selectedCount} selected`)
+      .prop('hidden', !hasRenderedTasks)
+      .find('.task-select-mode-label')
+      .text(isTaskSelectionMode ? 'Done selecting' : 'Select tasks')
+    $('#task-selection-coachmark').prop(
+      'hidden',
+      !hasLoadedLayoutPreference
+        || layoutPreference.taskSelectionCoachmarkSeen
+        || isTaskSelectionMode
+        || !hasRenderedTasks)
     $('#task-select-all')
       .prop('checked', allRenderedSelected)
       .prop('indeterminate', someRenderedSelected && !allRenderedSelected)
@@ -3445,12 +3473,13 @@
       ? tasks.length
       : cancelledTaskCount
     const canShowViewOverflow = !isTaskSelectionMode
+      && availableViewActionCount > 0
       && (isTrashView || currentView === 'all')
     const viewActionLabel = `More ${viewLabels[currentView]} actions`
 
     $('#task-view-overflow-button')
       .prop('hidden', !canShowViewOverflow)
-      .prop('disabled', availableViewActionCount === 0)
+      .prop('disabled', false)
       .attr('aria-label', viewActionLabel)
       .attr('title', viewActionLabel)
     $('#task-view-move-cancelled')
@@ -3473,8 +3502,19 @@
     })
   }
 
+  function acknowledgeTaskSelectionCoachmark() {
+    if (layoutPreference.taskSelectionCoachmarkSeen) {
+      return
+    }
+
+    layoutPreference.taskSelectionCoachmarkSeen = true
+    $('#task-selection-coachmark').prop('hidden', true)
+    saveLayoutPreference()
+  }
+
   function enterTaskSelectionMode(taskId) {
     closeTaskActionMenu()
+    acknowledgeTaskSelectionCoachmark()
     isTaskSelectionMode = true
     if (Number.isSafeInteger(taskId) && taskId > 0) {
       selectedTaskIds.add(taskId)
@@ -5289,6 +5329,10 @@
       } else {
         enterTaskSelectionMode()
       }
+    })
+    $('#task-selection-coachmark-dismiss').on('click', function () {
+      acknowledgeTaskSelectionCoachmark()
+      $('#task-select-mode-button').trigger('focus')
     })
     $('#task-selection-cancel').on('click', exitTaskSelectionMode)
     $('#task-select-all').on('change', function () {

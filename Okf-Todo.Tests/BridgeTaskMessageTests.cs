@@ -626,6 +626,7 @@ public sealed class BridgeTaskMessageTests
         Assert.False(initial.GetProperty("showRelationships").GetBoolean());
         Assert.False(initial.GetProperty("allowEditingCompletedTasks").GetBoolean());
         Assert.False(initial.GetProperty("allowEditingCancelledTasks").GetBoolean());
+        Assert.False(initial.GetProperty("taskSelectionCoachmarkSeen").GetBoolean());
         Assert.Equal("LIGHT", initial.GetProperty("colorScheme").GetString());
         Assert.Equal("ATTENTION", initial.GetProperty("taskSortModes").GetProperty("active").GetString());
         Assert.Equal("ATTENTION", initial.GetProperty("taskSortModes").GetProperty("waiting").GetString());
@@ -648,6 +649,7 @@ public sealed class BridgeTaskMessageTests
             showRelationships = true,
             allowEditingCompletedTasks = true,
             allowEditingCancelledTasks = false,
+            taskSelectionCoachmarkSeen = true,
             colorScheme = "DARK",
             taskSortModes = new Dictionary<string, string>
             {
@@ -669,6 +671,7 @@ public sealed class BridgeTaskMessageTests
         Assert.True(saved.GetProperty("showRelationships").GetBoolean());
         Assert.True(saved.GetProperty("allowEditingCompletedTasks").GetBoolean());
         Assert.False(saved.GetProperty("allowEditingCancelledTasks").GetBoolean());
+        Assert.True(saved.GetProperty("taskSelectionCoachmarkSeen").GetBoolean());
         Assert.Equal("DARK", saved.GetProperty("colorScheme").GetString());
         Assert.Equal("RECENTLY_UPDATED", saved.GetProperty("taskSortModes").GetProperty("active").GetString());
         Assert.Equal("WAITING_LONGEST", saved.GetProperty("taskSortModes").GetProperty("waiting").GetString());
@@ -686,6 +689,7 @@ public sealed class BridgeTaskMessageTests
         Assert.True(loaded.GetProperty("showRelationships").GetBoolean());
         Assert.True(loaded.GetProperty("allowEditingCompletedTasks").GetBoolean());
         Assert.False(loaded.GetProperty("allowEditingCancelledTasks").GetBoolean());
+        Assert.True(loaded.GetProperty("taskSelectionCoachmarkSeen").GetBoolean());
         Assert.Equal("DARK", loaded.GetProperty("colorScheme").GetString());
         Assert.Equal("RECENTLY_UPDATED", loaded.GetProperty("taskSortModes").GetProperty("active").GetString());
         Assert.Equal("WAITING_LONGEST", loaded.GetProperty("taskSortModes").GetProperty("waiting").GetString());

@@ -518,6 +518,77 @@ public sealed class NewTaskDialogUiTests
     }
 
     [Fact]
+    public async Task TaskSelectionHeader_IsDiscoverableAndCoachmarkIsRemembered()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1295, Height = 900 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(
+            $"{fixture.BaseUrl}/index.html?v=selection-header-discoverability",
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list .task-row').length > 0");
+        await page.Locator("#task-selection-coachmark").WaitForAsync();
+
+        Assert.Equal("Select tasks", await page.Locator(".task-select-mode-label").TextContentAsync());
+        Assert.Matches(
+            @"^\d+ tasks$",
+            await page.Locator("#task-list-header-count").TextContentAsync() ?? string.Empty);
+        Assert.True(await page.Locator("#task-view-overflow-button").IsHiddenAsync());
+
+        await page.Locator("#task-selection-coachmark-dismiss").ClickAsync();
+        await page.Locator("#task-selection-coachmark").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Hidden
+        });
+        await page.WaitForTimeoutAsync(150);
+        Assert.Contains("layout.preference.save", fixture.BridgeMessageTypes);
+
+        await page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list .task-row').length > 0");
+        Assert.True(await page.Locator("#task-selection-coachmark").IsHiddenAsync());
+
+        await page.Locator("#task-select-mode-button").ClickAsync();
+        Assert.Equal("Done selecting", await page.Locator(".task-select-mode-label").TextContentAsync());
+        Assert.Equal("0 selected", await page.Locator("#task-list-header-count").TextContentAsync());
+        Assert.Equal("true", await page.Locator("#task-select-mode-button").GetAttributeAsync("aria-pressed"));
+        Assert.Equal("Select all", await page.Locator(".task-selection-all span").TextContentAsync());
+
+        await page.Locator(".task-row-select").First.CheckAsync();
+        Assert.Equal("1 selected", await page.Locator("#task-list-header-count").TextContentAsync());
+
+        await page.Locator("#task-selection-cancel").ClickAsync();
+        Assert.Equal("Select tasks", await page.Locator(".task-select-mode-label").TextContentAsync());
+        Assert.True(await page.Locator("#task-selection-bar").IsHiddenAsync());
+
+        await page.Locator(".task-view-rail-button[data-task-view='all']").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => !document.querySelector('#task-view-overflow-button')?.hidden");
+        Assert.Equal("More", await page.Locator(".task-view-overflow-label").TextContentAsync());
+
+        await page.SetViewportSizeAsync(430, 820);
+        Assert.Equal(
+            "none",
+            await page.Locator(".task-view-overflow-label")
+                .EvaluateAsync<string>("element => getComputedStyle(element).display"));
+        Assert.NotEqual(
+            "none",
+            await page.Locator(".task-view-overflow-compact")
+                .EvaluateAsync<string>("element => getComputedStyle(element).display"));
+        await AssertNoHorizontalPageOverflowAsync(page);
+    }
+
+    [Fact]
     public async Task StarTrashUndoAndBulkActions_WorkAcrossViewsWithoutHardDeletingByDefault()
     {
         await using var fixture = await UiAppFixture.CreateAsync();
@@ -592,11 +663,10 @@ public sealed class NewTaskDialogUiTests
         await page.Locator(".task-view-rail-button[data-task-view='all']").ClickAsync();
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#task-list-title')?.textContent === 'All'");
-        Assert.False(await page.Locator("#task-view-overflow-button").IsHiddenAsync());
-        Assert.True(await page.Locator("#task-view-overflow-button").IsDisabledAsync());
+        Assert.True(await page.Locator("#task-view-overflow-button").IsHiddenAsync());
         await page.Locator("#task-select-mode-button").ClickAsync();
         await page.Locator("#task-select-all").CheckAsync();
-        Assert.Equal("3 selected", await page.Locator("#task-selection-count").TextContentAsync());
+        Assert.Equal("3 selected", await page.Locator("#task-list-header-count").TextContentAsync());
         Assert.False(await page.Locator("#task-bulk-trash").IsHiddenAsync());
         Assert.Equal("Move all selected to Trash", await page.Locator("#task-bulk-trash").TextContentAsync());
         Assert.True(await page.Locator("#task-bulk-delete-permanently").IsHiddenAsync());
@@ -719,8 +789,8 @@ public sealed class NewTaskDialogUiTests
             await page.Locator("#confirmation-message").TextContentAsync());
         await page.Locator("#confirmation-confirm-button").ClickAsync();
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('#task-view-overflow-button')?.disabled && document.querySelector('#task-list .empty-list')");
-        Assert.True(await page.Locator("#task-view-overflow-button").IsDisabledAsync());
+            "() => document.querySelector('#task-view-overflow-button')?.hidden && document.querySelector('#task-list .empty-list')");
+        Assert.True(await page.Locator("#task-view-overflow-button").IsHiddenAsync());
     }
 
     [Fact]

@@ -580,6 +580,7 @@ Scope:
 - Add Starred and Trash views.
 - Provide row-level Star and individual task menus. Keep task-specific Star and Trash controls out of the global application header, and provide one contextual task-details menu in compact and stacked layouts where the selected row may be outside the visible area.
 - Add filtered bulk selection with Star, Unstar, Move all selected to Trash, Restore, and Delete all selected permanently.
+- Make bulk selection discoverable through a labeled Select tasks control, readable task/selection counts, an explicit Done selecting state, and a one-time dismissible coach mark persisted in user preferences.
 - Keep permanent-delete controls out of normal views. In Trash, use Select mode for arbitrary subsets and a compact header overflow action for Empty Trash across the complete Trash view.
 - Add Move all cancelled to Trash to All as a confirmed complete-view shortcut that includes matches hidden by client-side filters or collapsed groups.
 - Keep Trash reversible by default with an immediate Undo action.
@@ -593,10 +594,11 @@ Acceptance criteria:
 - Moving a task to Trash removes it from all normal views but preserves its complete record graph.
 - Bulk selection never reaches tasks hidden by the current view, filters, or collapsed group.
 - Small windows use a fixed bottom selection action bar without horizontal page overflow.
+- Select and complete-view More actions remain labeled at practical widths, collapse cleanly when the task queue is narrow, and are hidden when no applicable tasks or actions exist.
 - Permanent deletion is possible only from Trash and requires the application confirmation dialog.
 - Empty Trash confirms the complete Trash count and includes tasks hidden by current search or filters.
 - Star controls remain unavailable in Trash; previously starred tasks retain a passive marker as context.
 - Selection actions operate only on selected rendered tasks. The All-only cancelled Trash action confirms its complete matching count, includes hidden or collapsed matches, remains reversible through Undo, and never appears in other views.
 - Wide layouts use row controls without duplicating Star or Trash in the application header. Compact and stacked task details expose one contextual menu with Star/Unstar and the applicable Trash actions.
 - Restore returns an individually opened task to its appropriate lifecycle view and editable state.
-- Playwright coverage verifies individual star/trash/undo, bulk Trash, permanent deletion, restore, read-only behavior, and the responsive action bar.
+- Playwright coverage verifies selection discoverability and coach-mark persistence, individual star/trash/undo, bulk Trash, permanent deletion, restore, read-only behavior, and the responsive action bar.
