@@ -977,12 +977,20 @@
               <div class="sidebar-header-actions">
                 <span id="task-list-header-count" class="task-list-header-count">0</span>
                 <button id="task-select-mode-button" class="secondary-button task-select-mode-button" type="button">Select</button>
-                <div class="trash-header-menu">
-                  <button id="trash-overflow-button" class="secondary-button trash-overflow-button" type="button" aria-label="More Trash actions" title="More Trash actions" aria-haspopup="menu" aria-controls="trash-overflow-menu" aria-expanded="false" hidden>
+                <div class="task-view-header-menu">
+                  <button id="task-view-overflow-button" class="secondary-button task-view-overflow-button" type="button" aria-label="More view actions" title="More view actions" aria-haspopup="menu" aria-controls="task-view-overflow-menu" aria-expanded="false" hidden>
                     <span aria-hidden="true">&hellip;</span>
                   </button>
-                  <div id="trash-overflow-menu" class="trash-overflow-menu" role="menu" hidden>
-                    <button id="trash-empty-button" class="trash-overflow-menu-item is-danger" type="button" role="menuitem">
+                  <div id="task-view-overflow-menu" class="task-view-overflow-menu" role="menu" hidden>
+                    <button id="task-view-move-starred" class="task-view-overflow-menu-item" type="button" role="menuitem">
+                      <span class="fluent-icon" aria-hidden="true">&#xE735;</span>
+                      <span>Move all starred to Trash</span>
+                    </button>
+                    <button id="task-view-move-cancelled" class="task-view-overflow-menu-item" type="button" role="menuitem" hidden>
+                      <span class="fluent-icon" aria-hidden="true">&#xE711;</span>
+                      <span>Move all cancelled to Trash</span>
+                    </button>
+                    <button id="trash-empty-button" class="task-view-overflow-menu-item is-danger" type="button" role="menuitem" hidden>
                       <span class="fluent-icon" aria-hidden="true">&#xE74D;</span>
                       <span>Empty Trash&hellip;</span>
                     </button>
@@ -3438,12 +3446,37 @@
       .prop('hidden', !isTrashView)
       .prop('disabled', selectedCount === 0)
 
-    const canShowTrashOverflow = isTrashView && !isTaskSelectionMode
-    $('#trash-overflow-button')
-      .prop('hidden', !canShowTrashOverflow)
-      .prop('disabled', tasks.length === 0)
-    if (!canShowTrashOverflow || tasks.length === 0) {
-      setTrashOverflowMenuOpen(false, false)
+    const starredTaskCount = isTrashView
+      ? 0
+      : tasks.filter(function (task) { return task.isStarred }).length
+    const cancelledTaskCount = currentView === 'all'
+      ? tasks.filter(function (task) { return task.taskStatusCode === 'CANCELLED' }).length
+      : 0
+    const availableViewActionCount = isTrashView
+      ? tasks.length
+      : starredTaskCount + cancelledTaskCount
+    const canShowViewOverflow = !isTaskSelectionMode
+    const viewActionLabel = `More ${viewLabels[currentView]} actions`
+
+    $('#task-view-overflow-button')
+      .prop('hidden', !canShowViewOverflow)
+      .prop('disabled', availableViewActionCount === 0)
+      .attr('aria-label', viewActionLabel)
+      .attr('title', viewActionLabel)
+    $('#task-view-move-starred')
+      .prop('hidden', isTrashView)
+      .prop('disabled', starredTaskCount === 0)
+      .find('span:last')
+      .text(`Move all starred to Trash (${starredTaskCount})`)
+    $('#task-view-move-cancelled')
+      .prop('hidden', currentView !== 'all')
+      .prop('disabled', cancelledTaskCount === 0)
+      .find('span:last')
+      .text(`Move all cancelled to Trash (${cancelledTaskCount})`)
+    $('#trash-empty-button').prop('hidden', !isTrashView)
+
+    if (!canShowViewOverflow || availableViewActionCount === 0) {
+      setTaskViewOverflowMenuOpen(false, false)
     }
 
     $('.task-row-shell').each(function () {
@@ -3661,7 +3694,7 @@
       return Promise.resolve()
     }
 
-    setTrashOverflowMenuOpen(false, false)
+    setTaskViewOverflowMenuOpen(false, false)
     const taskLabel = taskIds.length === 1 ? 'task' : 'tasks'
     return deleteTasksPermanently(taskIds, {
       title: `Permanently delete ${taskIds.length} ${taskLabel}?`,
@@ -3670,13 +3703,64 @@
     })
   }
 
-  function setTrashOverflowMenuOpen(isOpen, shouldFocus) {
-    const canOpen = currentView === 'trash' && tasks.length > 0 && !isTaskSelectionMode
+  async function moveViewTasksToTrash(taskIds, kindLabel) {
+    if (!taskIds.length || currentView === 'trash') {
+      return
+    }
+
+    const viewLabel = viewLabels[currentView]
+    const taskLabel = taskIds.length === 1 ? 'task' : 'tasks'
+    setTaskViewOverflowMenuOpen(false, false)
+    const confirmed = await showConfirmationDialog(
+      `Move ${taskIds.length} ${kindLabel} ${taskLabel} to Trash?`,
+      `This moves all ${taskIds.length} ${kindLabel} ${taskLabel} in ${viewLabel} to Trash, including items hidden by current search, filters, or collapsed groups. You can undo immediately or restore them from Trash.`,
+      'Move to Trash')
+    if (!confirmed) {
+      return
+    }
+
+    await moveTasksToTrash(taskIds)
+  }
+
+  function moveAllStarredTasksToTrash() {
+    return moveViewTasksToTrash(
+      tasks
+        .filter(function (task) { return task.isStarred })
+        .map(function (task) { return task.id }),
+      'starred')
+  }
+
+  function moveAllCancelledTasksToTrash() {
+    if (currentView !== 'all') {
+      return Promise.resolve()
+    }
+
+    return moveViewTasksToTrash(
+      tasks
+        .filter(function (task) { return task.taskStatusCode === 'CANCELLED' })
+        .map(function (task) { return task.id }),
+      'cancelled')
+  }
+
+  function setTaskViewOverflowMenuOpen(isOpen, shouldFocus) {
+    const starredTaskCount = currentView === 'trash'
+      ? 0
+      : tasks.filter(function (task) { return task.isStarred }).length
+    const cancelledTaskCount = currentView === 'all'
+      ? tasks.filter(function (task) { return task.taskStatusCode === 'CANCELLED' }).length
+      : 0
+    const canOpen = !isTaskSelectionMode
+      && (currentView === 'trash'
+        ? tasks.length > 0
+        : starredTaskCount > 0 || cancelledTaskCount > 0)
     const nextOpen = !!isOpen && canOpen
-    $('#trash-overflow-menu').prop('hidden', !nextOpen)
-    $('#trash-overflow-button').attr('aria-expanded', String(nextOpen))
+    $('#task-view-overflow-menu').prop('hidden', !nextOpen)
+    $('#task-view-overflow-button').attr('aria-expanded', String(nextOpen))
     if (nextOpen && shouldFocus) {
-      $('#trash-empty-button').trigger('focus')
+      $('#task-view-overflow-menu')
+        .find('.task-view-overflow-menu-item:not([hidden]):not(:disabled)')
+        .first()
+        .trigger('focus')
     }
   }
 
@@ -5264,8 +5348,18 @@
         setStatus(getErrorMessage(error, 'Could not delete selected tasks permanently'), 'error')
       })
     })
-    $('#trash-overflow-button').on('click', function () {
-      setTrashOverflowMenuOpen($('#trash-overflow-menu').prop('hidden'), true)
+    $('#task-view-overflow-button').on('click', function () {
+      setTaskViewOverflowMenuOpen($('#task-view-overflow-menu').prop('hidden'), true)
+    })
+    $('#task-view-move-starred').on('click', function () {
+      moveAllStarredTasksToTrash().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not move starred tasks to Trash'), 'error')
+      })
+    })
+    $('#task-view-move-cancelled').on('click', function () {
+      moveAllCancelledTasksToTrash().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not move cancelled tasks to Trash'), 'error')
+      })
     })
     $('#trash-empty-button').on('click', function () {
       emptyTrash().catch(function (error) {
@@ -5338,8 +5432,8 @@
       if (!$(event.target).closest('#task-action-menu, .task-row-more, #task-detail-menu-button').length) {
         closeTaskActionMenu()
       }
-      if (!$(event.target).closest('.trash-header-menu').length) {
-        setTrashOverflowMenuOpen(false, false)
+      if (!$(event.target).closest('.task-view-header-menu').length) {
+        setTaskViewOverflowMenuOpen(false, false)
       }
     })
     $(document).on('keydown', function (event) {
@@ -5356,10 +5450,10 @@
         return
       }
 
-      if (event.key === 'Escape' && !$('#trash-overflow-menu').prop('hidden')) {
+      if (event.key === 'Escape' && !$('#task-view-overflow-menu').prop('hidden')) {
         event.preventDefault()
-        setTrashOverflowMenuOpen(false, false)
-        $('#trash-overflow-button').trigger('focus')
+        setTaskViewOverflowMenuOpen(false, false)
+        $('#task-view-overflow-button').trigger('focus')
         return
       }
 

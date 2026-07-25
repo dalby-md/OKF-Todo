@@ -3668,11 +3668,11 @@ body.is-resizing-editor * {
   background: #edf6f4;
 }
 
-.trash-header-menu {
+.task-view-header-menu {
   position: relative;
 }
 
-.trash-overflow-button {
+.task-view-overflow-button {
   display: grid;
   place-items: center;
   width: 30px;
@@ -3686,19 +3686,19 @@ body.is-resizing-editor * {
   line-height: 1;
 }
 
-.trash-overflow-button:hover:not(:disabled),
-.trash-overflow-button[aria-expanded="true"] {
+.task-view-overflow-button:hover:not(:disabled),
+.task-view-overflow-button[aria-expanded="true"] {
   border-color: #c9d7db;
   color: #0f766e;
   background: #edf6f4;
 }
 
-.trash-overflow-button[hidden],
-.trash-overflow-menu[hidden] {
+.task-view-overflow-button[hidden],
+.task-view-overflow-menu[hidden] {
   display: none;
 }
 
-.trash-overflow-menu {
+.task-view-overflow-menu {
   position: absolute;
   z-index: 90;
   top: calc(100% + 6px);
@@ -3711,7 +3711,7 @@ body.is-resizing-editor * {
   box-shadow: 0 14px 35px rgb(25 40 48 / 18%);
 }
 
-.trash-overflow-menu-item {
+.task-view-overflow-menu-item {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -3727,15 +3727,19 @@ body.is-resizing-editor * {
   white-space: nowrap;
 }
 
-.trash-overflow-menu-item:hover:not(:disabled) {
+.task-view-overflow-menu-item[hidden] {
+  display: none;
+}
+
+.task-view-overflow-menu-item:hover:not(:disabled) {
   background: #f3f6f7;
 }
 
-.trash-overflow-menu-item.is-danger {
+.task-view-overflow-menu-item.is-danger {
   color: #9b2c23;
 }
 
-.trash-overflow-menu-item.is-danger:hover:not(:disabled) {
+.task-view-overflow-menu-item.is-danger:hover:not(:disabled) {
   color: #812018;
   background: #fff0ed;
 }
