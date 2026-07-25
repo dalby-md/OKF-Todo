@@ -202,6 +202,7 @@ Acceptance criteria:
 - Body persists to SQLite.
 - Body format persists.
 - Existing task body loads correctly when editing.
+- Switching tasks or views with unsaved HTML or Markdown changes requires Save, Discard, or Cancel; Save persists before navigation and Cancel retains the current task.
 
 Suggested Codex prompt:
 

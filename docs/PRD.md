@@ -82,6 +82,8 @@ The task body is free text.
 
 The user should not be forced to choose Markdown or HTML directly. The editor decides the format and the app stores the selected format with the content.
 
+When navigation would replace an editable task that has unsaved field or body changes, the app must offer **Save**, **Discard**, and **Cancel**. Save persists the changes before navigation continues, Discard is the only choice that drops them, and Cancel keeps the current task and editor contents. This behavior applies equally to the Markdown and HTML editors.
+
 The editor provides a shared horizontal resize bar directly below the editing surface in both Markdown and HTML modes. Dragging the bar vertically previews height changes immediately, with a minimum height of 200 pixels, and the selected height persists as a user preference across application restarts. Editor height is controlled only through this resize bar; the preferences dialog does not expose a numeric height field.
 
 Store:

@@ -148,8 +148,6 @@
   let completeWaitDialogResolve = null
   let confirmationDialogResolve = null
   let dirtyTrackingSuppressions = 0
-  let markdownEditTypeSwitchCleanUntil = 0
-  let markdownEditTypeSwitchWasClean = false
   let activeHelpTopic = 'okf-layer'
   let activePreferenceSection = 'appearance'
   let taskTransitionReveal = null
@@ -601,13 +599,6 @@
     }
   }
 
-  function suppressDirtyTrackingFor(durationMs) {
-    dirtyTrackingSuppressions += 1
-    window.setTimeout(function () {
-      dirtyTrackingSuppressions = Math.max(0, dirtyTrackingSuppressions - 1)
-    }, durationMs)
-  }
-
   function normalizeSnapshotValue(value) {
     return value == null ? '' : String(value)
   }
@@ -634,6 +625,8 @@
       taskSourceCode: normalizeSnapshotValue(payload.taskSourceCode),
       sourceReference: normalizeSnapshotValue(payload.sourceReference),
       sourceUrl: normalizeSnapshotValue(payload.sourceUrl),
+      owner: normalizeSnapshotValue(payload.owner),
+      responsible: normalizeSnapshotValue(payload.responsible),
       deadline: normalizeSnapshotValue(payload.deadline),
       activeWaitingForLabel: normalizeSnapshotValue(payload.activeWaitingForLabel),
       tags: normalizeSnapshotTags(payload.tags)
@@ -651,8 +644,7 @@
   function markDirty() {
     if (!isEditorReady
       || !isTaskEditable(currentTask)
-      || dirtyTrackingSuppressions > 0
-      || Date.now() < markdownEditTypeSwitchCleanUntil) {
+      || dirtyTrackingSuppressions > 0) {
       return
     }
 
@@ -668,47 +660,23 @@
     setStatus('Unsaved changes', 'dirty')
   }
 
-  function restoreCleanAfterMarkdownEditTypeSwitch() {
-    if (!markdownEditTypeSwitchWasClean || !currentTask) {
-      return
-    }
-
-    setCleanTaskSnapshot()
-    isDirty = false
-    window.Editor.markClean()
-    setStatus(currentTask.id ? 'Loaded' : 'Draft', 'ready')
-  }
-
-  function preserveCleanStateDuringMarkdownEditTypeSwitch() {
-    if (!currentTask) {
-      return
-    }
-
-    if (Date.now() < markdownEditTypeSwitchCleanUntil) {
-      markdownEditTypeSwitchCleanUntil = Date.now() + 5000
-      suppressDirtyTrackingFor(5000)
-      if (markdownEditTypeSwitchWasClean) {
-        restoreCleanAfterMarkdownEditTypeSwitch()
-      }
-      return
-    }
-
-    markdownEditTypeSwitchWasClean = !isDirty
-    markdownEditTypeSwitchCleanUntil = Date.now() + 5000
-    suppressDirtyTrackingFor(5000)
-
-    if (!markdownEditTypeSwitchWasClean) {
-      return
-    }
-
-    restoreCleanAfterMarkdownEditTypeSwitch()
-    ;[0, 250, 1000, 2500, 5000].forEach(function (delay) {
-      window.setTimeout(restoreCleanAfterMarkdownEditTypeSwitch, delay)
-    })
-  }
-
   function hasUnsavedChanges() {
-    return !!(currentTask && isDirty)
+    if (!currentTask || !isEditorReady || !isTaskEditable(currentTask)) {
+      return false
+    }
+
+    const currentSnapshot = createCurrentTaskSnapshot()
+    if (!cleanTaskSnapshot || !currentSnapshot) {
+      return isDirty
+    }
+
+    isDirty = !snapshotsMatch(cleanTaskSnapshot, currentSnapshot)
+    if (isDirty) {
+      clearValidationState()
+      setStatus('Unsaved changes', 'dirty')
+    }
+
+    return isDirty
   }
 
   function resolveUnsavedChangesDialog(choice) {
@@ -4028,7 +3996,6 @@
       contentStyle:
         'body { color: #202124; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.55; }',
       onPickImage: pickEditorImage,
-      onMarkdownEditTypeChanging: handleMarkdownEditTypeChanging,
       onMarkdownEditTypeChanged: handleMarkdownEditTypeChanged
     })
 
@@ -4041,9 +4008,6 @@
     setEditorHeightControlEnabled(true)
     applyCurrentTaskEditability()
 
-    if (modeCode === 'MARKDOWN' && typeof window.Editor.getMarkdownEditType === 'function') {
-      handleMarkdownEditTypeChanged(window.Editor.getMarkdownEditType())
-    }
   }
 
   async function initializeEditorForTask(task) {
@@ -4511,15 +4475,17 @@
       renderTaskHeaderAndActions(task)
 
       await initializeEditorForTask(task)
+      isDirty = false
+      setCleanTaskSnapshot()
+      window.Editor.markClean()
       await loadRelationships(task.id)
       await loadChecklist(task.id)
       await loadAttachments(task.id)
       await loadTimeline(task.id)
       applyCurrentTaskEditability()
-      isDirty = false
-      setCleanTaskSnapshot()
-      window.Editor.markClean()
-      setStatus(task.id && !isTaskEditable(task) ? 'Read only' : task.id ? 'Loaded' : 'Draft', 'ready')
+      if (!hasUnsavedChanges()) {
+        setStatus(task.id && !isTaskEditable(task) ? 'Read only' : task.id ? 'Loaded' : 'Draft', 'ready')
+      }
       renderTaskList()
     } finally {
       releaseDirtyTracking()
@@ -4615,14 +4581,9 @@
   }
 
   function handleMarkdownEditTypeChanged(markdownEditType) {
-    preserveCleanStateDuringMarkdownEditTypeSwitch()
     saveMarkdownEditTypePreference(markdownEditType).catch(function (error) {
       setStatus(getErrorMessage(error, 'Could not save editor preference'), 'error')
     })
-  }
-
-  function handleMarkdownEditTypeChanging() {
-    preserveCleanStateDuringMarkdownEditTypeSwitch()
   }
 
   async function loadTasks(options) {

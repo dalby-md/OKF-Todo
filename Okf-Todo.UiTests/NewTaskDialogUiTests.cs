@@ -146,6 +146,92 @@ public sealed class NewTaskDialogUiTests
     }
 
     [Fact]
+    public async Task MarkdownUnsavedChanges_SwitchingTasks_CanCancelOrSaveBeforeNavigation()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync();
+        await fixture.SendBridgeAsync("editor.preference.save", new
+        {
+            bodyFormatCode = "MARKDOWN",
+            markdownEditType = "MARKDOWN",
+            editorHeight = 360
+        });
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1600, Height = 1000 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(
+            $"{fixture.BaseUrl}/index.html?v=markdown-unsaved-task-switch-contract",
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+
+        async Task CreateTaskAsync(string title)
+        {
+            await page.Locator("#new-task-button").ClickAsync();
+            await page.Locator("#new-task-title-input").FillAsync(title);
+            await page.Locator("#new-task-save-button").ClickAsync();
+            await page.Locator("#new-task-overlay").WaitForAsync(new LocatorWaitForOptions
+            {
+                State = WaitForSelectorState.Hidden
+            });
+            await page.WaitForFunctionAsync(
+                "expectedTitle => document.querySelector('#task-title')?.value === expectedTitle",
+                title);
+        }
+
+        const string sourceTitle = "Markdown unsaved source";
+        const string targetTitle = "Markdown unsaved target";
+        const string changedMarkdown = "# Keep this Markdown\n\nThis must be saved before navigation.";
+        await CreateTaskAsync(sourceTitle);
+        await CreateTaskAsync(targetTitle);
+
+        var sourceRow = page.Locator("#task-list .task-row")
+            .Filter(new LocatorFilterOptions { HasText = sourceTitle });
+        var targetRow = page.Locator("#task-list .task-row")
+            .Filter(new LocatorFilterOptions { HasText = targetTitle });
+
+        await sourceRow.ClickAsync();
+        await page.WaitForFunctionAsync(
+            "expectedTitle => document.querySelector('#task-title')?.value === expectedTitle",
+            sourceTitle);
+        await page.Locator("#editor-host .CodeMirror").First.WaitForAsync();
+        await page.EvaluateAsync(
+            "value => window.Editor.load(value)",
+            changedMarkdown);
+
+        await targetRow.ClickAsync();
+        await page.Locator("#unsaved-changes-overlay").WaitForAsync();
+
+        await page.Locator("#unsaved-cancel-button").ClickAsync();
+        await page.Locator("#unsaved-changes-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Hidden
+        });
+        Assert.Equal(sourceTitle, await page.Locator("#task-title").InputValueAsync());
+        Assert.Equal(
+            changedMarkdown,
+            await page.EvaluateAsync<string>(
+                "() => window.Editor.getMarkdown()"));
+
+        await targetRow.ClickAsync();
+        await page.Locator("#unsaved-changes-overlay").WaitForAsync();
+        await page.Locator("#unsaved-save-button").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "expectedTitle => document.querySelector('#task-title')?.value === expectedTitle",
+            targetTitle);
+        Assert.Contains("task.update", fixture.BridgeMessageTypes);
+        Assert.Equal(changedMarkdown, await fixture.ReadTaskBodyAsync(sourceTitle));
+    }
+
+    [Fact]
     public async Task OwnershipFields_HaveIndependentPersistedVisibilityAndParticipateInOverviewSearch()
     {
         await using var fixture = await UiAppFixture.CreateAsync();
@@ -1280,6 +1366,25 @@ public sealed class NewTaskDialogUiTests
                 reader.GetInt32(2),
                 reader.GetInt32(3),
                 reader.GetInt32(4));
+        }
+
+        public async Task<string> ReadTaskBodyAsync(string title)
+        {
+            await using var connection = new SqliteConnection(
+                $"Data Source={databasePath};Mode=ReadOnly;Pooling=False");
+            await connection.OpenAsync();
+
+            await using var command = connection.CreateCommand();
+            command.CommandText = """
+                SELECT Body
+                FROM TaskItems
+                WHERE Title = $title;
+                """;
+            command.Parameters.AddWithValue("$title", title);
+
+            var body = await command.ExecuteScalarAsync();
+            Assert.NotNull(body);
+            return Convert.ToString(body) ?? string.Empty;
         }
 
         public async ValueTask DisposeAsync()
