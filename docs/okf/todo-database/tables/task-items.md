@@ -6,7 +6,7 @@ resource: Okf-Todo/Data/AppDbContext.cs
 tags:
   - sqlite
   - todo
-timestamp: 2026-07-23T18:14:52Z
+timestamp: 2026-07-25T09:30:03Z
 ---
 
 
@@ -39,6 +39,9 @@ Stores the primary task records and lifecycle state.
 | `CancelledAt` | `TEXT` | Yes | `-` | value |
 | `Owner` | `TEXT` | Yes | `-` | value |
 | `Responsible` | `TEXT` | Yes | `-` | value |
+| `DeletedAt` | `TEXT` | Yes | `-` | value |
+| `IsStarred` | `INTEGER` | No | `0` | value |
+| `StarredAt` | `TEXT` | Yes | `-` | value |
 
 ## Relationships
 
@@ -51,6 +54,8 @@ Stores the primary task records and lifecycle state.
 ## Indexes
 
 - `IX_TaskItems_BodyFormatId` on `BodyFormatId`: non-unique.
+- `IX_TaskItems_DeletedAt_IsStarred` on `DeletedAt`, `IsStarred`: non-unique.
+- `IX_TaskItems_StarredAt` on `StarredAt`: non-unique.
 - `IX_TaskItems_TaskPriorityId` on `TaskPriorityId`: non-unique.
 - `IX_TaskItems_TaskSourceId` on `TaskSourceId`: non-unique.
 - `IX_TaskItems_TaskStatusId` on `TaskStatusId`: non-unique.
@@ -66,6 +71,10 @@ Structural facts are generated from the inspected SQLite database. Application b
 - `Owner` is optional free text identifying the person or team accountable for the task.
 - `Responsible` is optional free text identifying the person currently expected to perform or coordinate the work.
 - The overview text search includes both values even when their independently controlled task-detail fields are hidden.
+- `IsStarred` is independent of lifecycle state and defaults to `0`. Adding a star sets `StarredAt`; removing it clears `StarredAt`.
+- `DeletedAt` implements reversible Trash. A non-null value excludes the task from normal and Starred views without changing status, star state, or owned data.
+- A task in Trash is read only through application commands except for restore and permanent delete.
+- Permanent deletion is accepted only for a task already in Trash. Owned rows cascade and relationships involving the deleted task are removed explicitly.
 
 ## Sources
 

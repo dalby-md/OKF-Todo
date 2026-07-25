@@ -517,6 +517,109 @@ public sealed class NewTaskDialogUiTests
         await CaptureWorkspaceAsync(page, "triage-command-stacked.png");
     }
 
+    [Fact]
+    public async Task StarTrashUndoAndBulkActions_WorkAcrossViewsWithoutHardDeletingByDefault()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync();
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1487, Height = 1058 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(
+            $"{fixture.BaseUrl}/index.html?v=star-trash-bulk-contract",
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+
+        const string starredTaskTitle = "Star and restore browser contract";
+        const string bulkTaskTitle = "Bulk trash browser contract";
+        foreach (var title in new[] { starredTaskTitle, bulkTaskTitle })
+        {
+            await page.Locator("#new-task-button").ClickAsync();
+            await page.Locator("#new-task-title-input").FillAsync(title);
+            await page.Locator("#new-task-save-button").ClickAsync();
+            await page.Locator("#new-task-overlay").WaitForAsync(new LocatorWaitForOptions
+            {
+                State = WaitForSelectorState.Hidden
+            });
+        }
+
+        var starredTaskRow = page.Locator(".task-row").Filter(new LocatorFilterOptions
+        {
+            HasText = starredTaskTitle
+        });
+        await starredTaskRow.ClickAsync();
+        await page.WaitForFunctionAsync(
+            "title => document.querySelector('#task-title')?.value === title",
+            starredTaskTitle);
+        await page.Locator("#task-detail-star-button").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-detail-star-button')?.getAttribute('aria-pressed') === 'true'");
+
+        await page.Locator(".task-view-rail-button[data-task-view='starred']").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-list-title')?.textContent === 'Starred'");
+        await page.Locator(".task-row").Filter(new LocatorFilterOptions { HasText = starredTaskTitle }).WaitForAsync();
+        Assert.Single(await page.Locator("#task-list .task-row").AllAsync());
+
+        var starredShell = page.Locator(".task-row-shell").Filter(new LocatorFilterOptions
+        {
+            HasText = starredTaskTitle
+        });
+        await starredShell.Locator(".task-row-more").ClickAsync();
+        await page.Locator("#task-action-menu [data-task-action='trash']").ClickAsync();
+        await page.Locator("#task-undo-toast").WaitForAsync();
+        await page.Locator("#task-list .empty-list").WaitForAsync();
+        Assert.Contains("task.trash", fixture.BridgeMessageTypes);
+
+        await page.Locator("#task-undo-button").ClickAsync();
+        await page.Locator(".task-row").Filter(new LocatorFilterOptions { HasText = starredTaskTitle }).WaitForAsync();
+        Assert.Contains("task.trash.restore", fixture.BridgeMessageTypes);
+
+        await page.Locator(".task-view-rail-button[data-task-view='all']").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-list-title')?.textContent === 'All'");
+        await page.Locator("#task-select-mode-button").ClickAsync();
+        await page.Locator("#task-select-all").CheckAsync();
+        Assert.Equal("2 selected", await page.Locator("#task-selection-count").TextContentAsync());
+        await page.Locator("#task-bulk-delete").ClickAsync();
+        await page.Locator("#task-list .empty-list").WaitForAsync();
+
+        await page.Locator(".task-view-rail-button[data-task-view='trash']").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-list-title')?.textContent === 'Trash'");
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list .task-row').length === 2");
+        Assert.Equal("Restore", await page.Locator("#complete-button").TextContentAsync());
+        await AssertCurrentTaskReadOnlyAsync(page, "Task is in Trash", "Restore");
+
+        await page.SetViewportSizeAsync(820, 900);
+        await page.Locator("#task-select-mode-button").ClickAsync();
+        await page.Locator("#task-list .task-row-select").First.CheckAsync();
+        var selectionBarPosition = await page.Locator("#task-selection-bar")
+            .EvaluateAsync<string>("element => getComputedStyle(element).position");
+        Assert.Equal("fixed", selectionBarPosition);
+
+        await page.Locator("#task-bulk-delete").ClickAsync();
+        await page.Locator("#confirmation-overlay").WaitForAsync();
+        Assert.Equal("Delete permanently", await page.Locator("#confirmation-confirm-button").TextContentAsync());
+        await page.Locator("#confirmation-confirm-button").ClickAsync();
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list .task-row').length === 1");
+        Assert.Contains("task.trash.delete", fixture.BridgeMessageTypes);
+
+        await page.Locator("#task-read-only-reopen-button").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-list-title')?.textContent === 'Active' && !document.querySelector('#task-title')?.disabled");
+        Assert.Contains("task.trash.restore", fixture.BridgeMessageTypes);
+    }
+
     private static async Task OpenTaskDetailsPreferencesAsync(IPage page)
     {
         await page.Locator("#settings-button").ClickAsync();
@@ -634,11 +737,14 @@ public sealed class NewTaskDialogUiTests
         await AssertNoHorizontalPageOverflowAsync(page);
     }
 
-    private static async Task AssertCurrentTaskReadOnlyAsync(IPage page, string expectedTitle)
+    private static async Task AssertCurrentTaskReadOnlyAsync(
+        IPage page,
+        string expectedTitle,
+        string expectedLifecycleAction = "Reopen")
     {
         await page.WaitForFunctionAsync(
             """
-            expectedTitle => {
+            ({ expectedTitle, expectedLifecycleAction }) => {
               const notice = document.querySelector('#task-read-only-notice')
               return notice?.hidden === false
                 && document.querySelector('#task-read-only-title')?.textContent === expectedTitle
@@ -649,7 +755,7 @@ public sealed class NewTaskDialogUiTests
                 && document.querySelector('#task-tags')?.disabled === true
                 && document.querySelector('#save-button')?.disabled === true
                 && document.querySelector('#complete-button')?.disabled === false
-                && document.querySelector('#complete-button')?.textContent === 'Reopen'
+                && document.querySelector('#complete-button')?.textContent === expectedLifecycleAction
                 && document.querySelector('#task-read-only-reopen-button')?.disabled === false
                 && document.querySelector('#checklist-new-text')?.disabled === true
                 && document.querySelector('#checklist-add-button')?.disabled === true
@@ -659,7 +765,7 @@ public sealed class NewTaskDialogUiTests
                 && document.querySelector('#editor-host')?.getAttribute('aria-readonly') === 'true'
             }
             """,
-            expectedTitle);
+            new { expectedTitle, expectedLifecycleAction });
 
         var editorBody = page.FrameLocator("#editor-host iframe").Locator("body");
         await editorBody.WaitForAsync();

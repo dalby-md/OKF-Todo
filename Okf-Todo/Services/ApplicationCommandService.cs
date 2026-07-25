@@ -72,6 +72,16 @@ public sealed class ApplicationCommandService(IServiceProvider services)
                 .ReopenAsync(GetPayload<TaskIdRequest>(command).Id, cancellationToken),
             "task.cancel" => await scopedServices.GetRequiredService<TaskService>()
                 .CancelAsync(GetPayload<TaskIdRequest>(command).Id, cancellationToken),
+            "task.star.set" => await scopedServices.GetRequiredService<TaskService>()
+                .SetStarredAsync(GetPayload<TaskStarRequest>(command), cancellationToken),
+            "task.star.setMany" => await scopedServices.GetRequiredService<TaskService>()
+                .SetStarredManyAsync(GetPayload<TaskBulkStarRequest>(command), cancellationToken),
+            "task.trash" => await scopedServices.GetRequiredService<TaskService>()
+                .MoveToTrashAsync(GetPayload<TaskIdsRequest>(command), cancellationToken),
+            "task.trash.restore" => await scopedServices.GetRequiredService<TaskService>()
+                .RestoreFromTrashAsync(GetPayload<TaskIdsRequest>(command), cancellationToken),
+            "task.trash.delete" => await scopedServices.GetRequiredService<TaskService>()
+                .DeletePermanentlyAsync(GetPayload<TaskIdsRequest>(command), cancellationToken),
             "task.waiting.add" => await scopedServices.GetRequiredService<TaskService>()
                 .AddWaitingForAsync(GetPayload<TaskWaitingForSaveRequest>(command), cancellationToken),
             "task.waiting.clear" => await scopedServices.GetRequiredService<TaskService>()

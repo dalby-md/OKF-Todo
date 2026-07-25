@@ -77,6 +77,11 @@ Supported task mutation commands include:
 - `task.cancel`
 - `task.waiting.add`
 - `task.waiting.clear`
+- `task.star.set`
+- `task.star.setMany`
+- `task.trash`
+- `task.trash.restore`
+- `task.trash.delete`
 - `task.comment.create`
 - `task.comment.delete`
 - `task.checklist.create`, `task.checklist.update`, `task.checklist.complete`, `task.checklist.reorder`, and `task.checklist.delete`
@@ -153,6 +158,44 @@ Replace editable task fields with `task.update`:
 ```
 
 This is replacement semantics: call `task.get` first and preserve every field that must remain. A null or omitted optional value is cleared, and a null or empty tag collection removes all tags. The command returns the complete saved task detail and creates history for changed fields.
+
+## Star and Trash command contracts
+
+Set the star state for one task:
+
+```json
+{"messageId":"star-1","type":"task.star.set","payload":{"id":42,"isStarred":true}}
+```
+
+Set the same star state for multiple tasks:
+
+```json
+{"messageId":"star-many-1","type":"task.star.setMany","payload":{"taskIds":[42,43],"isStarred":true}}
+```
+
+Star changes update `IsStarred`, `StarredAt`, and `UpdatedAt` but deliberately do not create timeline entries.
+
+Move one or more tasks to reversible Trash:
+
+```json
+{"messageId":"trash-1","type":"task.trash","payload":{"taskIds":[42,43]}}
+```
+
+Restore tasks from Trash:
+
+```json
+{"messageId":"restore-1","type":"task.trash.restore","payload":{"taskIds":[42,43]}}
+```
+
+Moving to Trash sets `DeletedAt`; restoring clears it. Both operations preserve lifecycle status, star state, and task-owned data and create a `TASK_UPDATED` history entry. A trashed task remains readable but rejects normal mutations until restored.
+
+Permanently delete tasks that are already in Trash:
+
+```json
+{"messageId":"delete-1","type":"task.trash.delete","payload":{"taskIds":[42,43]}}
+```
+
+Permanent deletion rejects tasks outside Trash and removes task-owned rows plus relationships where a deleted task is either source or target. This cannot be undone.
 
 ## Attachment command contract
 

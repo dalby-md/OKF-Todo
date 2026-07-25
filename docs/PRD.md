@@ -60,6 +60,8 @@ Each task should support:
 - Optional source
 - Optional owner
 - Optional responsible person
+- Starred focus state
+- Reversible Trash state
 
 ## Required fields
 
@@ -159,6 +161,26 @@ Completed and cancelled task editing is controlled by two independent user prefe
 - **Allow editing cancelled tasks**
 
 Both preferences default to disabled, so completed and cancelled tasks are read only unless the user explicitly allows editing for that lifecycle state. The user can still inspect all fields and history, download attachments, follow task relationships, and reopen the task. Reopening always returns the task to `ACTIVE` and restores editing.
+
+## Starred tasks and Trash
+
+Stars are an everyday focus mechanism, independent of task type, priority, and lifecycle:
+
+- Any task outside Trash can be starred or unstarred from its list row or detail header.
+- Star state persists when a task is completed or cancelled.
+- The **Starred** view shows unfinished starred tasks first. Completed and cancelled starred tasks remain available in a collapsed **Finished** group.
+- Star and unstar actions do not add timeline noise.
+
+Deletion uses a reversible Trash workflow:
+
+- **Move to Trash** is available for active, completed, and cancelled tasks.
+- Moving a task to Trash removes it from all normal views without changing its lifecycle status or star state.
+- The app offers an immediate **Undo** action after moving one or more tasks to Trash.
+- A task in Trash is read only. It must be restored before its fields, lifecycle, checklist, attachments, comments, or relationships can be changed.
+- Restoring returns the task to the normal view implied by its lifecycle state.
+- Permanent deletion is available only in the **Trash** view, requires an application HTML confirmation dialog, and removes the complete task-owned record graph.
+
+The same action system supports individual and bulk work. Individual actions live in a compact task menu. **Select** mode operates only on tasks currently rendered by the active view and filters, offers Select all visible, Star, Unstar, Move to Trash, Restore, and Delete permanently as applicable, and uses a bottom action bar on smaller screens.
 
 ## Lifecycle timestamps
 
@@ -458,14 +480,18 @@ Suggested first views:
 
 ```text
 Active tasks
+Starred tasks
 Urgent active tasks
 Waiting tasks
 Overdue tasks
 Completed tasks
 All tasks
+Trash
 ```
 
 Cancelled tasks appear only in `All tasks`, where their titles use red struck-through text and all pills are gray. They do not appear in `Completed tasks`.
+
+Tasks in Trash appear only in `Trash`. Starred tasks in Trash do not appear in `Starred` until restored.
 
 An active task whose deadline is before the current local date uses a red deadline pill with white text. A task due today is not overdue.
 

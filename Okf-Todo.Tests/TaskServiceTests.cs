@@ -301,6 +301,77 @@ public sealed class TaskServiceTests
     }
 
     [Fact]
+    public async Task StarTrashRestoreAndPermanentDelete_SupportIndividualAndBulkTaskManagement()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var first = await database.Tasks.CreateAsync(CreateRequest("First"), CancellationToken.None);
+        var second = await database.Tasks.CreateAsync(CreateRequest("Second"), CancellationToken.None);
+        var third = await database.Tasks.CreateAsync(CreateRequest("Third"), CancellationToken.None);
+
+        var starred = await database.Tasks.SetStarredAsync(
+            new TaskStarRequest(first.Id, true),
+            CancellationToken.None);
+        Assert.True(starred.IsStarred);
+        Assert.NotNull(starred.StarredAt);
+
+        var bulkStarred = await database.Tasks.SetStarredManyAsync(
+            new TaskBulkStarRequest([second.Id, third.Id], true),
+            CancellationToken.None);
+        Assert.Equal(2, bulkStarred.AffectedCount);
+        Assert.Equal(
+            [first.Id, second.Id, third.Id],
+            (await database.Tasks.ListAsync(new TaskListRequest("starred"), CancellationToken.None))
+                .Select(task => task.Id)
+                .OrderBy(id => id));
+
+        var moved = await database.Tasks.MoveToTrashAsync(
+            new TaskIdsRequest([first.Id, second.Id]),
+            CancellationToken.None);
+        Assert.Equal(2, moved.AffectedCount);
+        Assert.DoesNotContain(
+            await database.Tasks.ListAsync(new TaskListRequest("all"), CancellationToken.None),
+            task => task.Id == first.Id || task.Id == second.Id);
+        Assert.Equal(
+            [first.Id, second.Id],
+            (await database.Tasks.ListAsync(new TaskListRequest("trash"), CancellationToken.None))
+                .Select(task => task.Id)
+                .OrderBy(id => id));
+        Assert.DoesNotContain(
+            await database.Tasks.ListAsync(new TaskListRequest("starred"), CancellationToken.None),
+            task => task.Id == first.Id || task.Id == second.Id);
+        Assert.Contains(
+            await database.Tasks.GetTimelineAsync(new TaskTimelineRequest(first.Id), CancellationToken.None),
+            item => item.Text == "Task moved to Trash");
+
+        var updateException = await Assert.ThrowsAsync<ValidationException>(() =>
+            database.Tasks.UpdateAsync(CreateRequest("Cannot edit in Trash") with { Id = first.Id }, CancellationToken.None));
+        Assert.Equal("taskId", updateException.Field);
+
+        var restored = await database.Tasks.RestoreFromTrashAsync(
+            new TaskIdsRequest([first.Id]),
+            CancellationToken.None);
+        Assert.Equal(1, restored.AffectedCount);
+        Assert.Contains(
+            await database.Tasks.ListAsync(new TaskListRequest("starred"), CancellationToken.None),
+            task => task.Id == first.Id);
+        Assert.Contains(
+            await database.Tasks.GetTimelineAsync(new TaskTimelineRequest(first.Id), CancellationToken.None),
+            item => item.Text == "Task restored from Trash");
+
+        var deleted = await database.Tasks.DeletePermanentlyAsync(
+            new TaskIdsRequest([second.Id]),
+            CancellationToken.None);
+        Assert.Equal(1, deleted.AffectedCount);
+        Assert.False(await database.DbContext.TaskItems.AnyAsync(task => task.Id == second.Id));
+        Assert.Contains(
+            await database.Tasks.ListAsync(new TaskListRequest("active"), CancellationToken.None),
+            task => task.Id == first.Id);
+        Assert.Contains(
+            await database.Tasks.ListAsync(new TaskListRequest("active"), CancellationToken.None),
+            task => task.Id == third.Id);
+    }
+
+    [Fact]
     public async Task Create_UsesSelectedLookupDefaultsWhenTypeAndPriorityAreOmitted()
     {
         await using var database = await TestDatabase.CreateAsync();

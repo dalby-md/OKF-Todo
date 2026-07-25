@@ -13,7 +13,7 @@ public sealed class TaskRelationService(AppDbContext dbContext)
                 .OrderBy(type => type.SortOrder)
                 .Select(type => new TaskRelationTypeDto(type.Code, type.Name, type.ReverseName))
                 .ToListAsync(token),
-            await dbContext.TaskItems.AsNoTracking().Where(task => task.Id != taskId)
+            await dbContext.TaskItems.AsNoTracking().Where(task => task.Id != taskId && task.DeletedAt == null)
                 .OrderBy(task => task.Title)
                 .Select(task => new RelatedTaskOptionDto(task.Id, task.Title))
                 .ToListAsync(token));
@@ -34,6 +34,8 @@ public sealed class TaskRelationService(AppDbContext dbContext)
             ?? throw new ValidationException("Task was not found.", "taskId");
         var target = await dbContext.TaskItems.SingleOrDefaultAsync(task => task.Id == request.TargetTaskId, token)
             ?? throw new ValidationException("Related task was not found.", "targetTaskId");
+        EnsureTaskIsNotInTrash(source);
+        EnsureTaskIsNotInTrash(target);
         var code = request.RelationTypeCode.Trim().ToUpperInvariant();
         var type = await dbContext.TaskRelationTypes.SingleOrDefaultAsync(item => item.Code == code && item.IsActive, token)
             ?? throw new ValidationException("Relationship type was not found.", "relationTypeCode");
@@ -71,6 +73,8 @@ public sealed class TaskRelationService(AppDbContext dbContext)
         var now = DateTime.UtcNow;
         var source = relation.SourceTask!;
         var target = relation.TargetTask!;
+        EnsureTaskIsNotInTrash(source);
+        EnsureTaskIsNotInTrash(target);
         var type = relation.TaskRelationType!;
         dbContext.TaskRelations.Remove(relation);
         await AddLogAsync(source.Id, "RELATION_REMOVED", $"Relationship removed: {type.Name} {target.Title}", target.Title, now, token);
@@ -111,6 +115,14 @@ public sealed class TaskRelationService(AppDbContext dbContext)
             NewValue = code == "RELATION_ADDED" ? value : null,
             CreatedAt = now
         });
+    }
+
+    private static void EnsureTaskIsNotInTrash(TaskItem task)
+    {
+        if (task.DeletedAt is not null)
+        {
+            throw new ValidationException("Task is in Trash and must be restored before it can be changed.", "taskId");
+        }
     }
 }
 

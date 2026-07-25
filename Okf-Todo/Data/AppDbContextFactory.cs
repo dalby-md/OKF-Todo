@@ -7,9 +7,13 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 {
     public AppDbContext CreateDbContext(string[] args)
     {
-        var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-        optionsBuilder.UseSqlite(DatabasePathProvider.GetConnectionString());
+        var databasePath = Path.Combine(
+            Path.GetTempPath(),
+            "okf-todo-ef-design-time.db");
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(DatabasePathProvider.CreateConnectionString(databasePath, pooling: false))
+            .Options;
 
-        return new AppDbContext(optionsBuilder.Options);
+        return new AppDbContext(options);
     }
 }

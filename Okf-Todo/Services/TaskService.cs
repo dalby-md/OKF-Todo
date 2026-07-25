@@ -303,27 +303,37 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
 
         query = view switch
         {
-            "active" => query.Where(task => task.TaskStatus != null
+            "starred" => query.Where(task => task.DeletedAt == null && task.IsStarred),
+            "trash" => query.Where(task => task.DeletedAt != null),
+            "active" => query.Where(task => task.DeletedAt == null
+                && task.TaskStatus != null
                 && task.TaskStatus.Code == TaskStatusCodes.Active),
-            "urgent" => query.Where(task => task.TaskStatus != null
+            "urgent" => query.Where(task => task.DeletedAt == null
+                && task.TaskStatus != null
                 && task.TaskStatus.Code == TaskStatusCodes.Active
                 && task.TaskPriority != null
                 && task.TaskPriority.Code == TaskPriorityCodes.Urgent),
-            "waiting" => query.Where(task => task.TaskStatus != null
+            "waiting" => query.Where(task => task.DeletedAt == null
+                && task.TaskStatus != null
                 && task.TaskStatus.Code == TaskStatusCodes.Active
                 && task.WaitingTargets.Any(waitingFor => waitingFor.ResolvedAt == null)),
-            "overdue" => query.Where(task => task.TaskStatus != null
+            "overdue" => query.Where(task => task.DeletedAt == null
+                && task.TaskStatus != null
                 && task.TaskStatus.Code == TaskStatusCodes.Active
                 && task.Deadline != null
                 && task.Deadline < today),
-            "completed" => query.Where(task => task.TaskStatus != null
+            "completed" => query.Where(task => task.DeletedAt == null
+                && task.TaskStatus != null
                 && task.TaskStatus.Code == TaskStatusCodes.Completed),
-            "all" => query,
-            _ => query.Where(task => task.TaskStatus != null
+            "all" => query.Where(task => task.DeletedAt == null),
+            _ => query.Where(task => task.DeletedAt == null
+                && task.TaskStatus != null
                 && task.TaskStatus.Code == TaskStatusCodes.Active)
         };
 
-        return await query
+        var orderedQuery = view == "trash"
+            ? query.OrderByDescending(task => task.DeletedAt)
+            : query
             .OrderBy(task => task.TaskStatus!.Code == TaskStatusCodes.Active
                     && task.Deadline != null
                     && task.Deadline < today
@@ -346,10 +356,15 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
                 : 5)
             .ThenBy(task => task.Deadline == null)
             .ThenBy(task => task.Deadline)
-            .ThenByDescending(task => task.UpdatedAt)
+            .ThenByDescending(task => task.UpdatedAt);
+
+        return await orderedQuery
             .Select(task => new TaskListItemDto(
                 task.Id,
                 task.Title,
+                task.IsStarred,
+                task.StarredAt,
+                task.DeletedAt,
                 task.TaskType!.Code,
                 task.TaskType!.Name,
                 task.TaskType.SortOrder,
@@ -452,6 +467,7 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
             .Include(item => item.WaitingTargets.Where(target => target.ResolvedAt == null))
             .SingleOrDefaultAsync(item => item.Id == request.Id.Value, cancellationToken)
             ?? throw new ValidationException("Task was not found.", "taskId");
+        EnsureTaskIsNotInTrash(task);
 
         var now = DateTime.UtcNow;
         var bodyFormat = string.IsNullOrWhiteSpace(request.BodyFormatCode)
@@ -532,6 +548,121 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         return await GetAsync(id, cancellationToken);
     }
 
+    public async Task<TaskDetailDto> SetStarredAsync(
+        TaskStarRequest request,
+        CancellationToken cancellationToken)
+    {
+        var task = await dbContext.TaskItems
+            .SingleOrDefaultAsync(item => item.Id == request.Id, cancellationToken)
+            ?? throw new ValidationException("Task was not found.", "taskId");
+        EnsureTaskIsNotInTrash(task);
+
+        if (task.IsStarred != request.IsStarred)
+        {
+            var now = DateTime.UtcNow;
+            task.IsStarred = request.IsStarred;
+            task.StarredAt = request.IsStarred ? now : null;
+            task.UpdatedAt = now;
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        return await GetAsync(task.Id, cancellationToken);
+    }
+
+    public async Task<TaskBulkActionResult> SetStarredManyAsync(
+        TaskBulkStarRequest request,
+        CancellationToken cancellationToken)
+    {
+        var taskIds = NormalizeTaskIds(request.TaskIds);
+        var tasksToUpdate = await dbContext.TaskItems
+            .Where(task => taskIds.Contains(task.Id) && task.DeletedAt == null)
+            .ToListAsync(cancellationToken);
+        EnsureAllTasksFound(taskIds, tasksToUpdate);
+
+        var now = DateTime.UtcNow;
+        var changedTasks = tasksToUpdate
+            .Where(task => task.IsStarred != request.IsStarred)
+            .ToList();
+        foreach (var task in changedTasks)
+        {
+            task.IsStarred = request.IsStarred;
+            task.StarredAt = request.IsStarred ? now : null;
+            task.UpdatedAt = now;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return new TaskBulkActionResult(taskIds, changedTasks.Count);
+    }
+
+    public async Task<TaskBulkActionResult> MoveToTrashAsync(
+        TaskIdsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var taskIds = NormalizeTaskIds(request.TaskIds);
+        var tasksToUpdate = await dbContext.TaskItems
+            .Include(task => task.LogEntries)
+            .Where(task => taskIds.Contains(task.Id) && task.DeletedAt == null)
+            .ToListAsync(cancellationToken);
+        EnsureAllTasksFound(taskIds, tasksToUpdate);
+
+        var now = DateTime.UtcNow;
+        var logType = await GetOrCreateTaskUpdatedLogTypeAsync(cancellationToken);
+        foreach (var task in tasksToUpdate)
+        {
+            task.DeletedAt = now;
+            task.UpdatedAt = now;
+            AddUpdateLog(task, logType, "Task moved to Trash", now);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return new TaskBulkActionResult(taskIds, tasksToUpdate.Count);
+    }
+
+    public async Task<TaskBulkActionResult> RestoreFromTrashAsync(
+        TaskIdsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var taskIds = NormalizeTaskIds(request.TaskIds);
+        var tasksToUpdate = await dbContext.TaskItems
+            .Include(task => task.LogEntries)
+            .Where(task => taskIds.Contains(task.Id) && task.DeletedAt != null)
+            .ToListAsync(cancellationToken);
+        EnsureAllTasksFound(taskIds, tasksToUpdate);
+
+        var now = DateTime.UtcNow;
+        var logType = await GetOrCreateTaskUpdatedLogTypeAsync(cancellationToken);
+        foreach (var task in tasksToUpdate)
+        {
+            task.DeletedAt = null;
+            task.UpdatedAt = now;
+            AddUpdateLog(task, logType, "Task restored from Trash", now);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return new TaskBulkActionResult(taskIds, tasksToUpdate.Count);
+    }
+
+    public async Task<TaskBulkActionResult> DeletePermanentlyAsync(
+        TaskIdsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var taskIds = NormalizeTaskIds(request.TaskIds);
+        var tasksToDelete = await dbContext.TaskItems
+            .Where(task => taskIds.Contains(task.Id) && task.DeletedAt != null)
+            .ToListAsync(cancellationToken);
+        EnsureAllTasksFound(taskIds, tasksToDelete);
+
+        var relations = await dbContext.TaskRelations
+            .Where(relation => taskIds.Contains(relation.SourceTaskId)
+                || taskIds.Contains(relation.TargetTaskId))
+            .ToListAsync(cancellationToken);
+        dbContext.TaskRelations.RemoveRange(relations);
+        dbContext.TaskItems.RemoveRange(tasksToDelete);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return new TaskBulkActionResult(taskIds, tasksToDelete.Count);
+    }
+
     public async Task<TaskDetailDto> AddWaitingForAsync(
         TaskWaitingForSaveRequest request,
         CancellationToken cancellationToken)
@@ -571,6 +702,7 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         var task = await dbContext.TaskItems
             .SingleOrDefaultAsync(item => item.Id == request.TaskId, cancellationToken)
             ?? throw new ValidationException("Task was not found.", "taskId");
+        EnsureTaskIsNotInTrash(task);
 
         var now = DateTime.UtcNow;
         dbContext.TaskComments.Add(new TaskComment
@@ -610,6 +742,7 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         var task = await dbContext.TaskItems
             .SingleOrDefaultAsync(item => item.Id == request.TaskId, cancellationToken)
             ?? throw new ValidationException("Task was not found.", "taskId");
+        EnsureTaskIsNotInTrash(task);
 
         task.UpdatedAt = DateTime.UtcNow;
         dbContext.TaskComments.Remove(comment);
@@ -1024,6 +1157,40 @@ public sealed class TaskService(AppDbContext dbContext, TaskLifecycleService lif
         return logType;
     }
 
+    private static IReadOnlyCollection<int> NormalizeTaskIds(IReadOnlyCollection<int>? taskIds)
+    {
+        var normalized = (taskIds ?? [])
+            .Where(taskId => taskId > 0)
+            .Distinct()
+            .ToArray();
+        if (normalized.Length == 0)
+        {
+            throw new ValidationException("Select at least one task.", "taskIds");
+        }
+
+        return normalized;
+    }
+
+    private static void EnsureAllTasksFound(
+        IReadOnlyCollection<int> requestedTaskIds,
+        IReadOnlyCollection<TaskItem> tasks)
+    {
+        if (tasks.Count != requestedTaskIds.Count)
+        {
+            throw new ValidationException(
+                "One or more tasks were not found or are not available for this action.",
+                "taskIds");
+        }
+    }
+
+    private static void EnsureTaskIsNotInTrash(TaskItem task)
+    {
+        if (task.DeletedAt is not null)
+        {
+            throw new ValidationException("Restore the task before editing it.", "taskId");
+        }
+    }
+
     private static void AddFieldChangeLog(
         TaskItem task,
         TaskLogType logType,
@@ -1282,6 +1449,9 @@ public sealed record TaskSaveRequest(
 public sealed record TaskListItemDto(
     int Id,
     string Title,
+    bool IsStarred,
+    DateTime? StarredAt,
+    DateTime? DeletedAt,
     string TaskTypeCode,
     string TaskTypeName,
     int TaskTypeSortOrder,
@@ -1311,6 +1481,9 @@ public sealed record TaskListItemDto(
 public sealed record TaskDetailDto(
     int Id,
     string Title,
+    bool IsStarred,
+    DateTime? StarredAt,
+    DateTime? DeletedAt,
     string? Body,
     string? BodyFormatCode,
     string TaskTypeCode,
@@ -1336,6 +1509,9 @@ public sealed record TaskDetailDto(
         return new TaskDetailDto(
             task.Id,
             task.Title,
+            task.IsStarred,
+            task.StarredAt,
+            task.DeletedAt,
             task.Body,
             task.BodyFormat?.Code,
             task.TaskType?.Code ?? string.Empty,
@@ -1364,6 +1540,18 @@ public sealed record TaskDetailDto(
             task.UpdatedAt);
     }
 }
+
+public sealed record TaskStarRequest(int Id, bool IsStarred);
+
+public sealed record TaskBulkStarRequest(
+    IReadOnlyCollection<int> TaskIds,
+    bool IsStarred);
+
+public sealed record TaskIdsRequest(IReadOnlyCollection<int> TaskIds);
+
+public sealed record TaskBulkActionResult(
+    IReadOnlyCollection<int> TaskIds,
+    int AffectedCount);
 
 public sealed record TaskWaitingForDto(
     int Id,

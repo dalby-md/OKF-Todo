@@ -569,3 +569,28 @@ Acceptance criteria:
 - The installed OKF structure and documented SQLite schema are validated against observable database metadata.
 
 See `docs/adr-0003-installed-contract-tests.md` for the complete boundary and tooling decision.
+
+## Milestone 16 — Starred focus and reversible task deletion
+
+Status: implemented.
+
+Scope:
+
+- Add persistent `IsStarred`, `StarredAt`, and `DeletedAt` task fields through an EF Core migration.
+- Add Starred and Trash views.
+- Provide row and detail-header star controls plus compact individual task menus.
+- Add filtered bulk selection with Star, Unstar, Move to Trash, Restore, and Delete permanently.
+- Keep Trash reversible by default with an immediate Undo action.
+- Make trashed tasks read only throughout the desktop UI and task mutation services.
+- Preserve star and lifecycle state across Trash and restore.
+
+Acceptance criteria:
+
+- Star state persists and is independent of lifecycle status.
+- Starred shows active focus first and keeps completed/cancelled stars in a collapsed Finished group.
+- Moving a task to Trash removes it from all normal views but preserves its complete record graph.
+- Bulk selection never reaches tasks hidden by the current view, filters, or collapsed group.
+- Small windows use a fixed bottom selection action bar without horizontal page overflow.
+- Permanent deletion is possible only from Trash and requires the application confirmation dialog.
+- Restore returns an individually opened task to its appropriate lifecycle view and editable state.
+- Playwright coverage verifies individual star/trash/undo, bulk Trash, permanent deletion, restore, read-only behavior, and the responsive action bar.

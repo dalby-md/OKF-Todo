@@ -31,6 +31,7 @@ public sealed class TaskAttachmentService(AppDbContext dbContext)
     {
         var task = await dbContext.TaskItems.SingleOrDefaultAsync(task => task.Id == request.TaskId, cancellationToken)
             ?? throw new ValidationException("Task was not found.", "taskId");
+        EnsureTaskIsNotInTrash(task);
         var fileName = Path.GetFileName(request.FileName?.Trim());
         if (string.IsNullOrWhiteSpace(fileName))
         {
@@ -89,6 +90,7 @@ public sealed class TaskAttachmentService(AppDbContext dbContext)
             .SingleOrDefaultAsync(item => item.Id == request.AttachmentId && item.TaskId == request.TaskId, cancellationToken)
             ?? throw new ValidationException("Attachment was not found.", "attachmentId");
         var task = await dbContext.TaskItems.SingleAsync(item => item.Id == request.TaskId, cancellationToken);
+        EnsureTaskIsNotInTrash(task);
         var now = DateTime.UtcNow;
         dbContext.TaskAttachments.Remove(attachment);
         await AddLogAsync(task.Id, "ATTACHMENT_REMOVED", $"Attachment removed: {attachment.FileName}", attachment.FileName, now, cancellationToken);
@@ -116,6 +118,14 @@ public sealed class TaskAttachmentService(AppDbContext dbContext)
         if (!await dbContext.TaskItems.AnyAsync(task => task.Id == taskId, token))
         {
             throw new ValidationException("Task was not found.", "taskId");
+        }
+    }
+
+    private static void EnsureTaskIsNotInTrash(TaskItem task)
+    {
+        if (task.DeletedAt is not null)
+        {
+            throw new ValidationException("Task is in Trash and must be restored before it can be changed.", "taskId");
         }
     }
 

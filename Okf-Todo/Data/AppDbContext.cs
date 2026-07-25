@@ -111,6 +111,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(task => task.Title).IsRequired();
             entity.Property(task => task.CreatedAt).IsRequired();
             entity.Property(task => task.UpdatedAt).IsRequired();
+            entity.Property(task => task.IsStarred).HasDefaultValue(false);
+            entity.HasIndex(task => new { task.DeletedAt, task.IsStarred });
+            entity.HasIndex(task => task.StarredAt);
 
             entity.HasOne(task => task.BodyFormat)
                 .WithMany(bodyFormat => bodyFormat.Tasks)

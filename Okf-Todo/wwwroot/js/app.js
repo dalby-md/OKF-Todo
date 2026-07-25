@@ -4,11 +4,13 @@
   const imageBridgeTimeoutMs = 120000
   const viewLabels = {
     active: 'Active',
+    starred: 'Starred',
     urgent: 'Urgent',
     waiting: 'Waiting',
     overdue: 'Overdue',
     completed: 'Completed',
-    all: 'All'
+    all: 'All',
+    trash: 'Trash'
   }
   const defaultTaskSortMode = 'ATTENTION'
   const defaultTaskSortDirection = 'ASC'
@@ -150,6 +152,12 @@
   let activePreferenceSection = 'appearance'
   let taskTransitionReveal = null
   let taskTransitionRevealTimer = null
+  let isTaskSelectionMode = false
+  let starredFinishedExpanded = false
+  let activeTaskActionMenuId = null
+  let lastTrashedTaskIds = []
+  let trashUndoTimer = null
+  const selectedTaskIds = new Set()
   const helpDocumentCache = new Map()
 
   function createMessageId() {
@@ -361,6 +369,10 @@
   }
 
   function getViewForTask(task) {
+    if (task && task.deletedAt) {
+      return 'trash'
+    }
+
     const statusCode = task && task.taskStatusCode
 
     if (statusCode === 'COMPLETED') {
@@ -804,11 +816,13 @@
   function renderTaskViewRail() {
     const viewIcons = {
       active: '&#xE80F;',
+      starred: '&#xE734;',
       urgent: '&#xE814;',
       waiting: '&#xE823;',
       overdue: '&#xE787;',
       completed: '&#xE73E;',
-      all: '&#xEA37;'
+      all: '&#xEA37;',
+      trash: '&#xE74D;'
     }
 
     return Object.keys(viewLabels).map(function (view) {
@@ -829,14 +843,16 @@
 
   function createDefaultTaskSortModes() {
     return Object.keys(viewLabels).reduce(function (modes, view) {
-      modes[view] = defaultTaskSortMode
+      modes[view] = view === 'trash' ? 'RECENTLY_UPDATED' : defaultTaskSortMode
       return modes
     }, {})
   }
 
   function createDefaultTaskSortDirections() {
     return Object.keys(viewLabels).reduce(function (directions, view) {
-      directions[view] = defaultTaskSortDirection
+      directions[view] = view === 'trash'
+        ? taskSortDirectionCodes.descending
+        : defaultTaskSortDirection
       return directions
     }, {})
   }
@@ -931,6 +947,12 @@
               <span class="fluent-icon" aria-hidden="true">&#xE710;</span>
               <span>New task</span>
             </button>
+            <button id="task-detail-star-button" class="icon-button task-detail-star-button" type="button" aria-label="Star task" title="Star task" aria-pressed="false" disabled>
+              <span class="fluent-icon" aria-hidden="true">&#xE734;</span>
+            </button>
+            <button id="task-detail-menu-button" class="icon-button task-detail-menu-button" type="button" aria-label="More task actions" title="More task actions" aria-expanded="false" disabled>
+              <span aria-hidden="true">&hellip;</span>
+            </button>
             <button id="complete-button" class="secondary-button" type="button" disabled>Complete</button>
             <button id="cancel-button" class="secondary-button danger-button" type="button" disabled>Cancel</button>
             <button id="save-button" type="button" disabled>Save</button>
@@ -952,7 +974,10 @@
                 <p class="eyebrow">Task queue</p>
                 <h2 id="task-list-title">Active</h2>
               </div>
-              <span id="task-list-header-count" class="task-list-header-count">0</span>
+              <div class="sidebar-header-actions">
+                <span id="task-list-header-count" class="task-list-header-count">0</span>
+                <button id="task-select-mode-button" class="secondary-button task-select-mode-button" type="button">Select</button>
+              </div>
             </header>
 
           <div class="task-browse-controls" aria-label="Browse tasks">
@@ -1013,6 +1038,20 @@
             <div id="task-filter-chips" class="task-filter-chips" aria-label="Active task filters"></div>
             <span id="task-result-count" class="task-result-count" aria-live="polite">0 tasks</span>
             <button id="task-filter-clear" class="task-filter-clear" type="button" hidden>Clear</button>
+          </div>
+
+          <div id="task-selection-bar" class="task-selection-bar" role="toolbar" aria-label="Selected task actions" hidden>
+            <label class="task-selection-all">
+              <input id="task-select-all" type="checkbox">
+              <span id="task-selection-count">0 selected</span>
+            </label>
+            <div class="task-selection-actions">
+              <button id="task-bulk-star" class="secondary-button" type="button">Star</button>
+              <button id="task-bulk-unstar" class="secondary-button" type="button">Unstar</button>
+              <button id="task-bulk-restore" class="secondary-button" type="button" hidden>Restore</button>
+              <button id="task-bulk-delete" class="secondary-button danger-button" type="button">Move to Trash</button>
+              <button id="task-selection-cancel" class="task-selection-cancel" type="button">Cancel</button>
+            </div>
           </div>
 
           <div id="task-list" class="task-list" aria-label="Tasks" tabindex="0"></div>
@@ -1525,6 +1564,27 @@
               <button id="confirmation-confirm-button" class="danger-button" type="button">Delete</button>
             </div>
           </section>
+        </div>
+
+        <div id="task-action-menu" class="task-action-menu" role="menu" hidden>
+          <button class="task-action-menu-item" type="button" data-task-action="restore" role="menuitem" hidden>
+            <span class="fluent-icon" aria-hidden="true">&#xE777;</span>
+            <span>Restore</span>
+          </button>
+          <button class="task-action-menu-item" type="button" data-task-action="trash" role="menuitem">
+            <span class="fluent-icon" aria-hidden="true">&#xE74D;</span>
+            <span>Move to Trash</span>
+          </button>
+          <button class="task-action-menu-item is-danger" type="button" data-task-action="delete-permanently" role="menuitem" hidden>
+            <span class="fluent-icon" aria-hidden="true">&#xE74D;</span>
+            <span>Delete permanently</span>
+          </button>
+        </div>
+
+        <div id="task-undo-toast" class="task-undo-toast" role="status" aria-live="polite" hidden>
+          <span id="task-undo-message">Task moved to Trash</span>
+          <button id="task-undo-button" type="button">Undo</button>
+          <button id="task-undo-dismiss" class="task-undo-dismiss" type="button" aria-label="Dismiss">&times;</button>
         </div>
       </main>
     `)
@@ -2587,7 +2647,16 @@
     $('#editor-mode').val(getSupportedBodyFormatCode(preferredBodyFormatCode))
     $('#waiting-text').val('')
     $('#task-form input, #task-form select').prop('disabled', true)
-    $('#complete-button, #cancel-button, #save-button').prop('disabled', true)
+    $('#complete-button, #cancel-button, #save-button, #task-detail-star-button, #task-detail-menu-button').prop('disabled', true)
+    $('#cancel-button').prop('hidden', false)
+    $('#task-detail-star-button')
+      .removeClass('is-starred')
+      .attr('aria-pressed', 'false')
+      .attr('aria-label', 'Star task')
+      .attr('title', 'Star task')
+      .find('.fluent-icon')
+      .html('&#xE734;')
+    closeTaskActionMenu()
     $('#editor-mode').prop('disabled', !lookups)
     $('#editor-host').html('<div class="empty-editor">Select a task to edit the body.</div>')
     $('#comment-text').val('').removeClass('is-invalid')
@@ -3148,6 +3217,81 @@
     return sortTasksForCurrentView(filteredTasks)
   }
 
+  function isFinishedTask(task) {
+    return task.taskStatusCode === 'COMPLETED' || task.taskStatusCode === 'CANCELLED'
+  }
+
+  function getNavigableTasks() {
+    const visibleTasks = getVisibleTasks()
+    if (currentView === 'starred' && !starredFinishedExpanded) {
+      return visibleTasks.filter(function (task) {
+        return !isFinishedTask(task)
+      })
+    }
+
+    return visibleTasks
+  }
+
+  function renderTaskRowShell(task) {
+    const selectedClass = currentTask && currentTask.id === task.id ? ' is-selected' : ''
+    const waitingClass = task.activeWaitingForLabel ? ' is-waiting' : ''
+    const cancelledClass = task.taskStatusCode === 'CANCELLED' ? ' is-cancelled' : ''
+    const bulkSelectedClass = selectedTaskIds.has(task.id) ? ' is-bulk-selected' : ''
+    const trashedClass = task.deletedAt ? ' is-in-trash' : ''
+    const transitionReveal = getTaskTransitionReveal(task)
+    const transitionClass = transitionReveal
+      ? ` is-transition-reveal is-transition-${transitionReveal.kind}`
+      : ''
+    const transitionLabel = transitionReveal
+      ? `
+        <span class="task-row-transition-label">
+          <span class="fluent-icon" aria-hidden="true">${transitionReveal.icon}</span>
+          <span>${encodeText(transitionReveal.rowLabel)}</span>
+        </span>
+      `
+      : ''
+    const priority = task.taskPriorityName
+      ? renderBadge(task.taskPriorityName, task.taskPriorityBackgroundColor, task.taskPriorityForegroundColor)
+      : ''
+    const deadline = task.deadline
+      ? `<span class="task-badge${isTaskOverdue(task) ? ' task-badge-overdue' : ''}">Due ${encodeText(formatShortDate(task.deadline))}</span>`
+      : ''
+    const waiting = task.activeWaitingForLabel
+      ? `<span class="task-badge task-badge-waiting">Waiting: ${encodeText(task.activeWaitingForLabel)}</span>`
+      : ''
+    const checklistProgress = task.checklistCount > 0
+      ? `<span class="task-badge">${task.completedChecklistCount}/${task.checklistCount}</span>`
+      : ''
+    const starGlyph = task.isStarred ? '&#xE735;' : '&#xE734;'
+    const starLabel = task.isStarred ? 'Unstar task' : 'Star task'
+
+    return `
+      <div class="task-row-shell${bulkSelectedClass}${trashedClass}" data-task-id="${task.id}">
+        <label class="task-row-select-control" title="Select ${encodeAttribute(task.title)}">
+          <input class="task-row-select" type="checkbox" data-task-id="${task.id}"${selectedTaskIds.has(task.id) ? ' checked' : ''} aria-label="Select ${encodeAttribute(task.title)}">
+        </label>
+        <button class="task-row${selectedClass}${waitingClass}${cancelledClass}${transitionClass}" type="button" data-task-id="${task.id}"${selectedClass ? ' aria-current="true"' : ''}>
+          ${transitionLabel}
+          <span class="task-row-title">${encodeText(task.title)}</span>
+          <span class="task-row-meta">
+            ${renderBadge(task.taskTypeName, task.taskTypeBackgroundColor, task.taskTypeForegroundColor)}
+            ${renderTaskStatusBadge(task)}
+            ${priority}
+            ${deadline}
+            ${waiting}
+            ${checklistProgress}
+          </span>
+        </button>
+        <button class="task-row-star${task.isStarred ? ' is-starred' : ''}" type="button" data-task-id="${task.id}" aria-label="${starLabel}" title="${starLabel}" aria-pressed="${String(!!task.isStarred)}"${task.deletedAt ? ' disabled' : ''}>
+          <span class="fluent-icon" aria-hidden="true">${starGlyph}</span>
+        </button>
+        <button class="task-row-more" type="button" data-task-id="${task.id}" aria-label="More actions for ${encodeAttribute(task.title)}" title="More actions" aria-expanded="false">
+          <span aria-hidden="true">&hellip;</span>
+        </button>
+      </div>
+    `
+  }
+
   function renderTaskList() {
     const query = getTaskSearchQuery()
     const selectedTags = getSelectedTaskTagFilters()
@@ -3187,53 +3331,291 @@
           <span>${encodeText(detail)}</span>
         </div>
       `)
+      syncTaskSelectionUi()
       return
     }
 
-    $('#task-list').html(visibleTasks.map(function (task) {
-      const selectedClass = currentTask && currentTask.id === task.id ? ' is-selected' : ''
-      const waitingClass = task.activeWaitingForLabel ? ' is-waiting' : ''
-      const cancelledClass = task.taskStatusCode === 'CANCELLED' ? ' is-cancelled' : ''
-      const transitionReveal = getTaskTransitionReveal(task)
-      const transitionClass = transitionReveal
-        ? ` is-transition-reveal is-transition-${transitionReveal.kind}`
-        : ''
-      const transitionLabel = transitionReveal
-        ? `
-          <span class="task-row-transition-label">
-            <span class="fluent-icon" aria-hidden="true">${transitionReveal.icon}</span>
-            <span>${encodeText(transitionReveal.rowLabel)}</span>
-          </span>
+    if (currentView === 'starred') {
+      const activeStarredTasks = visibleTasks.filter(function (task) { return !isFinishedTask(task) })
+      const finishedStarredTasks = visibleTasks.filter(isFinishedTask)
+      const finishedMarkup = finishedStarredTasks.length === 0
+        ? ''
+        : `
+          <button id="starred-finished-toggle" class="task-list-group-toggle" type="button" aria-expanded="${String(starredFinishedExpanded)}">
+            <span class="fluent-icon" aria-hidden="true">${starredFinishedExpanded ? '&#xE70D;' : '&#xE76C;'}</span>
+            <span>Finished</span>
+            <span class="task-list-group-count">${finishedStarredTasks.length}</span>
+          </button>
+          <div class="task-list-group" ${starredFinishedExpanded ? '' : 'hidden'}>
+            ${finishedStarredTasks.map(renderTaskRowShell).join('')}
+          </div>
         `
-        : ''
-      const priority = task.taskPriorityName
-        ? renderBadge(task.taskPriorityName, task.taskPriorityBackgroundColor, task.taskPriorityForegroundColor)
-        : ''
-      const deadline = task.deadline
-        ? `<span class="task-badge${isTaskOverdue(task) ? ' task-badge-overdue' : ''}">Due ${encodeText(formatShortDate(task.deadline))}</span>`
-        : ''
-      const waiting = task.activeWaitingForLabel
-        ? `<span class="task-badge task-badge-waiting">Waiting: ${encodeText(task.activeWaitingForLabel)}</span>`
-        : ''
-      const checklistProgress = task.checklistCount > 0
-        ? `<span class="task-badge">${task.completedChecklistCount}/${task.checklistCount}</span>`
-        : ''
 
-      return `
-        <button class="task-row${selectedClass}${waitingClass}${cancelledClass}${transitionClass}" type="button" data-task-id="${task.id}"${selectedClass ? ' aria-current="true"' : ''}>
-          ${transitionLabel}
-          <span class="task-row-title">${encodeText(task.title)}</span>
-          <span class="task-row-meta">
-            ${renderBadge(task.taskTypeName, task.taskTypeBackgroundColor, task.taskTypeForegroundColor)}
-            ${renderTaskStatusBadge(task)}
-            ${priority}
-            ${deadline}
-            ${waiting}
-            ${checklistProgress}
-          </span>
-        </button>
-      `
-    }).join(''))
+      $('#task-list').html(`
+        <div class="task-list-group task-list-group-active">
+          ${activeStarredTasks.map(renderTaskRowShell).join('')}
+        </div>
+        ${finishedMarkup}
+      `)
+    } else {
+      $('#task-list').html(visibleTasks.map(renderTaskRowShell).join(''))
+    }
+
+    syncTaskSelectionUi()
+  }
+
+  function getRenderedTaskIds() {
+    return $('#task-list .task-row').map(function () {
+      return Number($(this).attr('data-task-id'))
+    }).get().filter(function (taskId) {
+      return Number.isSafeInteger(taskId) && taskId > 0
+    })
+  }
+
+  function syncTaskSelectionUi() {
+    const renderedTaskIds = getRenderedTaskIds()
+    const renderedTaskIdSet = new Set(renderedTaskIds)
+    Array.from(selectedTaskIds).forEach(function (taskId) {
+      if (!renderedTaskIdSet.has(taskId)) {
+        selectedTaskIds.delete(taskId)
+      }
+    })
+
+    const selectedCount = selectedTaskIds.size
+    const allRenderedSelected = renderedTaskIds.length > 0
+      && renderedTaskIds.every(function (taskId) { return selectedTaskIds.has(taskId) })
+    const someRenderedSelected = renderedTaskIds.some(function (taskId) {
+      return selectedTaskIds.has(taskId)
+    })
+    const isTrashView = currentView === 'trash'
+
+    $('.workspace-shell').toggleClass('is-task-selection-mode', isTaskSelectionMode)
+    $('#task-selection-bar').prop('hidden', !isTaskSelectionMode)
+    $('#task-select-mode-button')
+      .text(isTaskSelectionMode ? 'Done' : 'Select')
+      .attr('aria-pressed', String(isTaskSelectionMode))
+      .prop('disabled', renderedTaskIds.length === 0)
+    $('#task-selection-count').text(`${selectedCount} selected`)
+    $('#task-select-all')
+      .prop('checked', allRenderedSelected)
+      .prop('indeterminate', someRenderedSelected && !allRenderedSelected)
+      .prop('disabled', renderedTaskIds.length === 0)
+    $('#task-bulk-star, #task-bulk-unstar')
+      .prop('hidden', isTrashView)
+      .prop('disabled', selectedCount === 0)
+    $('#task-bulk-restore')
+      .prop('hidden', !isTrashView)
+      .prop('disabled', selectedCount === 0)
+    $('#task-bulk-delete')
+      .text(isTrashView ? 'Delete permanently' : 'Move to Trash')
+      .prop('disabled', selectedCount === 0)
+
+    $('.task-row-shell').each(function () {
+      const taskId = Number($(this).attr('data-task-id'))
+      $(this)
+        .toggleClass('is-bulk-selected', selectedTaskIds.has(taskId))
+        .find('.task-row-select')
+        .prop('checked', selectedTaskIds.has(taskId))
+    })
+  }
+
+  function enterTaskSelectionMode(taskId) {
+    closeTaskActionMenu()
+    isTaskSelectionMode = true
+    if (Number.isSafeInteger(taskId) && taskId > 0) {
+      selectedTaskIds.add(taskId)
+    }
+    syncTaskSelectionUi()
+  }
+
+  function exitTaskSelectionMode() {
+    isTaskSelectionMode = false
+    selectedTaskIds.clear()
+    syncTaskSelectionUi()
+  }
+
+  function toggleTaskSelection(taskId, isSelected) {
+    if (isSelected) {
+      selectedTaskIds.add(taskId)
+    } else {
+      selectedTaskIds.delete(taskId)
+    }
+    syncTaskSelectionUi()
+  }
+
+  function closeTaskActionMenu() {
+    activeTaskActionMenuId = null
+    $('#task-action-menu').prop('hidden', true)
+    $('.task-row-more, #task-detail-menu-button').attr('aria-expanded', 'false')
+  }
+
+  function openTaskActionMenu(taskId, anchor) {
+    const task = tasks.find(function (item) { return item.id === taskId })
+      || (currentTask && currentTask.id === taskId ? currentTask : null)
+    if (!task || !anchor) {
+      return
+    }
+
+    activeTaskActionMenuId = taskId
+    const isInTrash = !!task.deletedAt
+    const menu = $('#task-action-menu')
+    menu.find('[data-task-action="restore"]').prop('hidden', !isInTrash)
+    menu.find('[data-task-action="trash"]').prop('hidden', isInTrash)
+    menu.find('[data-task-action="delete-permanently"]').prop('hidden', !isInTrash)
+    $('.task-row-more, #task-detail-menu-button').attr('aria-expanded', 'false')
+    $(anchor).attr('aria-expanded', 'true')
+    menu.prop('hidden', false)
+
+    const anchorRect = anchor.getBoundingClientRect()
+    const menuElement = menu[0]
+    const menuWidth = menuElement.offsetWidth
+    const menuHeight = menuElement.offsetHeight
+    const left = Math.max(12, Math.min(window.innerWidth - menuWidth - 12, anchorRect.right - menuWidth))
+    const top = Math.max(12, Math.min(window.innerHeight - menuHeight - 12, anchorRect.bottom + 6))
+    menu.css({ left: `${left}px`, top: `${top}px` })
+    menu.find('.task-action-menu-item:not([hidden])').first().trigger('focus')
+  }
+
+  function dismissTrashUndo() {
+    if (trashUndoTimer) {
+      window.clearTimeout(trashUndoTimer)
+      trashUndoTimer = null
+    }
+    lastTrashedTaskIds = []
+    $('#task-undo-toast').prop('hidden', true)
+  }
+
+  function showTrashUndo(taskIds) {
+    dismissTrashUndo()
+    lastTrashedTaskIds = taskIds.slice()
+    const count = taskIds.length
+    $('#task-undo-message').text(count === 1 ? 'Task moved to Trash' : `${count} tasks moved to Trash`)
+    $('#task-undo-toast').prop('hidden', false)
+    trashUndoTimer = window.setTimeout(dismissTrashUndo, 15000)
+  }
+
+  async function selectFirstAvailableTask() {
+    const firstTask = getNavigableTasks()[0]
+    if (!firstTask) {
+      renderEmptyEditor()
+      focusTaskList()
+      return
+    }
+
+    await selectTask(firstTask.id)
+    focusTaskRow(firstTask.id)
+  }
+
+  async function setTaskStarred(taskId, isStarred) {
+    const task = await sendBridgeMessage('task.star.set', {
+      id: taskId,
+      isStarred
+    })
+    if (currentTask && currentTask.id === taskId) {
+      refreshCurrentTaskWithoutEditor(task, { skipTaskListRender: true })
+    }
+
+    await loadTasks({ keepSelection: true })
+    if (currentTask && currentTask.id === taskId
+      && !tasks.some(function (item) { return item.id === taskId })) {
+      currentTask = null
+      await selectFirstAvailableTask()
+    }
+    setStatus(isStarred ? 'Task starred' : 'Star removed', 'saved')
+  }
+
+  async function setSelectedTasksStarred(isStarred) {
+    const taskIds = Array.from(selectedTaskIds)
+    if (taskIds.length === 0) {
+      return
+    }
+
+    await sendBridgeMessage('task.star.setMany', {
+      taskIds,
+      isStarred
+    })
+    exitTaskSelectionMode()
+    await loadTasks({ keepSelection: true })
+    if (currentTask && !tasks.some(function (task) { return task.id === currentTask.id })) {
+      currentTask = null
+      await selectFirstAvailableTask()
+    }
+    setStatus(isStarred ? 'Tasks starred' : 'Stars removed', 'saved')
+  }
+
+  async function moveTasksToTrash(taskIds) {
+    if (!taskIds.length) {
+      return
+    }
+
+    await sendBridgeMessage('task.trash', { taskIds })
+    closeTaskActionMenu()
+    exitTaskSelectionMode()
+    if (currentTask && taskIds.includes(currentTask.id)) {
+      currentTask = null
+    }
+    await loadTasks({ keepSelection: true })
+    if (!currentTask) {
+      await selectFirstAvailableTask()
+    }
+    showTrashUndo(taskIds)
+    setStatus(taskIds.length === 1 ? 'Task moved to Trash' : 'Tasks moved to Trash', 'saved')
+  }
+
+  async function restoreTasks(taskIds, options) {
+    if (!taskIds.length) {
+      return
+    }
+
+    await sendBridgeMessage('task.trash.restore', { taskIds })
+    closeTaskActionMenu()
+    exitTaskSelectionMode()
+    dismissTrashUndo()
+
+    if (options && options.openRestoredTask && taskIds.length === 1) {
+      const restoredTask = await sendBridgeMessage('task.get', { id: taskIds[0] })
+      currentView = getViewForTask(restoredTask)
+      currentTask = restoredTask
+      await renderTaskEditor(restoredTask)
+      await loadTasks({ keepSelection: true })
+      focusTaskRow(restoredTask.id)
+    } else {
+      if (currentTask && taskIds.includes(currentTask.id)) {
+        currentTask = null
+      }
+      await loadTasks({ keepSelection: true })
+      if (!currentTask) {
+        await selectFirstAvailableTask()
+      }
+    }
+
+    setStatus(taskIds.length === 1 ? 'Task restored' : 'Tasks restored', 'saved')
+  }
+
+  async function deleteTasksPermanently(taskIds) {
+    if (!taskIds.length) {
+      return
+    }
+
+    const confirmed = await showConfirmationDialog(
+      taskIds.length === 1 ? 'Delete task permanently?' : `Delete ${taskIds.length} tasks permanently?`,
+      'This removes the selected task data, attachments, history, and relationships. This cannot be undone.',
+      'Delete permanently')
+    if (!confirmed) {
+      return
+    }
+
+    await sendBridgeMessage('task.trash.delete', { taskIds })
+    closeTaskActionMenu()
+    exitTaskSelectionMode()
+    if (currentTask && taskIds.includes(currentTask.id)) {
+      currentTask = null
+    }
+    await loadTasks({ keepSelection: true })
+    if (!currentTask) {
+      await selectFirstAvailableTask()
+    }
+    setStatus(taskIds.length === 1 ? 'Task deleted permanently' : 'Tasks deleted permanently', 'saved')
   }
 
   function focusTaskRow(taskId) {
@@ -3357,7 +3739,7 @@
   }
 
   function selectVisibleTaskByIndex(index) {
-    const visibleTasks = getVisibleTasks()
+    const visibleTasks = getNavigableTasks()
     if (visibleTasks.length === 0) {
       return
     }
@@ -3367,7 +3749,7 @@
   }
 
   function selectRelativeTask(offset) {
-    const visibleTasks = getVisibleTasks()
+    const visibleTasks = getNavigableTasks()
     if (visibleTasks.length === 0) {
       return
     }
@@ -3436,7 +3818,10 @@
       }
 
       clearTaskTransitionReveal(false)
+      closeTaskActionMenu()
+      exitTaskSelectionMode()
       currentView = targetView
+      starredFinishedExpanded = false
       syncTaskSortControl()
       loadTasks({ selectFirst: true }).catch(showFatalError)
     })
@@ -3782,6 +4167,10 @@
       return true
     }
 
+    if (task.deletedAt) {
+      return false
+    }
+
     if (task.taskStatusCode === 'COMPLETED') {
       return layoutPreference.allowEditingCompletedTasks
     }
@@ -3798,7 +4187,7 @@
       return true
     }
 
-    setStatus('Reopen task to edit', 'ready')
+    setStatus(currentTask && currentTask.deletedAt ? 'Restore task to edit' : 'Reopen task to edit', 'ready')
     return false
   }
 
@@ -3810,22 +4199,26 @@
     }
 
     const isEditable = isTaskEditable(currentTask)
+    const isInTrash = !!currentTask.deletedAt
     const isCompleted = currentTask.taskStatusCode === 'COMPLETED'
     const stateName = isCompleted ? 'Completed' : 'Cancelled'
     const isReadOnlyFinalTask = !isEditable
-      && (isCompleted || currentTask.taskStatusCode === 'CANCELLED')
+      && (isInTrash || isCompleted || currentTask.taskStatusCode === 'CANCELLED')
 
     $('#task-read-only-notice').prop('hidden', !isReadOnlyFinalTask)
-    $('#task-read-only-title').text(`${stateName} task — read only`)
+    $('#task-read-only-title').text(isInTrash ? 'Task is in Trash' : `${stateName} task — read only`)
     $('#task-read-only-message').text(
-      'Reopen this task to make changes. History, relationships, and attachments remain available to review.')
+      isInTrash
+        ? 'Restore this task before making changes. Its history, relationships, and attachments remain available to review.'
+        : 'Reopen this task to make changes. History, relationships, and attachments remain available to review.')
+    $('#task-read-only-reopen-button').text(isInTrash ? 'Restore task' : 'Reopen to edit')
     $('#task-form')
       .toggleClass('is-task-read-only', isReadOnlyFinalTask)
       .attr('aria-readonly', isReadOnlyFinalTask ? 'true' : null)
     $('#task-form input, #task-form select').prop('disabled', !isEditable)
     $('#save-button')
       .prop('disabled', !isEditable)
-      .attr('title', isEditable ? null : 'Reopen this task to edit it')
+      .attr('title', isEditable ? null : (isInTrash ? 'Restore this task to edit it' : 'Reopen this task to edit it'))
     $('#editor-host').attr('aria-readonly', String(!isEditable))
 
     if (window.Editor && isEditorReady && typeof window.Editor.setReadOnly === 'function') {
@@ -3838,9 +4231,10 @@
 
   function renderTaskHeaderAndActions(task) {
     const isSavedTask = !!task.id
+    const isInTrash = !!task.deletedAt
     const isFinal = task.taskStatusCode === 'COMPLETED' || task.taskStatusCode === 'CANCELLED'
-    const canReopen = isSavedTask && isFinal
-    const canCompleteOrCancel = isSavedTask && !isFinal
+    const canReopen = isSavedTask && isFinal && !isInTrash
+    const canCompleteOrCancel = isSavedTask && !isFinal && !isInTrash
     const waitingLabel = task.activeWaitingFor ? describeWaiting(task.activeWaitingFor) : ''
     const transitionReveal = getTaskTransitionReveal(task)
     const contextLabel = transitionReveal
@@ -3859,9 +4253,20 @@
       .toggleClass('is-transition-cancelled', !!transitionReveal && transitionReveal.kind === 'cancelled')
       .toggleClass('is-transition-active', !!transitionReveal && transitionReveal.kind === 'active')
     $('#complete-button')
-      .text(canReopen ? 'Reopen' : 'Complete')
-      .prop('disabled', !(canCompleteOrCancel || canReopen))
-    $('#cancel-button').prop('disabled', !canCompleteOrCancel)
+      .text(isInTrash ? 'Restore' : (canReopen ? 'Reopen' : 'Complete'))
+      .prop('disabled', !(isInTrash || canCompleteOrCancel || canReopen))
+    $('#cancel-button')
+      .prop('disabled', !canCompleteOrCancel)
+      .prop('hidden', isInTrash)
+    $('#task-detail-star-button')
+      .prop('disabled', !isSavedTask || isInTrash)
+      .toggleClass('is-starred', !!task.isStarred)
+      .attr('aria-pressed', String(!!task.isStarred))
+      .attr('aria-label', task.isStarred ? 'Unstar task' : 'Star task')
+      .attr('title', task.isStarred ? 'Unstar task' : 'Star task')
+      .find('.fluent-icon')
+      .html(task.isStarred ? '&#xE735;' : '&#xE734;')
+    $('#task-detail-menu-button').prop('disabled', !isSavedTask)
     applyCurrentTaskEditability()
   }
 
@@ -4214,6 +4619,11 @@
   }
 
   async function runCompleteButtonAction() {
+    if (currentTask && currentTask.deletedAt) {
+      await restoreTasks([currentTask.id], { openRestoredTask: true })
+      return
+    }
+
     const type = currentTask && (currentTask.taskStatusCode === 'COMPLETED' || currentTask.taskStatusCode === 'CANCELLED')
       ? 'task.reopen'
       : 'task.complete'
@@ -4681,7 +5091,32 @@
 
     $('#task-list').on('click', '.task-row', function () {
       const taskId = Number($(this).attr('data-task-id'))
+      if (isTaskSelectionMode) {
+        toggleTaskSelection(taskId, !selectedTaskIds.has(taskId))
+        return
+      }
       selectTaskWithUnsavedCheck(taskId)
+    })
+
+    $('#task-list').on('change', '.task-row-select', function () {
+      toggleTaskSelection(Number($(this).attr('data-task-id')), $(this).prop('checked'))
+    })
+    $('#task-list').on('click', '.task-row-star', function () {
+      const taskId = Number($(this).attr('data-task-id'))
+      const task = tasks.find(function (item) { return item.id === taskId })
+      if (!task) {
+        return
+      }
+      setTaskStarred(taskId, !task.isStarred).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not update star'), 'error')
+      })
+    })
+    $('#task-list').on('click', '.task-row-more', function () {
+      openTaskActionMenu(Number($(this).attr('data-task-id')), this)
+    })
+    $('#task-list').on('click', '#starred-finished-toggle', function () {
+      starredFinishedExpanded = !starredFinishedExpanded
+      renderTaskList()
     })
 
     $('#task-list').on('keydown', function (event) {
@@ -4709,7 +5144,7 @@
 
       if (event.key === 'End') {
         event.preventDefault()
-        selectVisibleTaskByIndex(getVisibleTasks().length - 1)
+        selectVisibleTaskByIndex(getNavigableTasks().length - 1)
         return
       }
 
@@ -4726,6 +5161,80 @@
     $('.task-view-rail').on('click', '.task-view-rail-button', function () {
       switchTaskView($(this).attr('data-task-view'))
     })
+
+    $('#task-select-mode-button').on('click', function () {
+      if (isTaskSelectionMode) {
+        exitTaskSelectionMode()
+      } else {
+        enterTaskSelectionMode()
+      }
+    })
+    $('#task-selection-cancel').on('click', exitTaskSelectionMode)
+    $('#task-select-all').on('change', function () {
+      const isSelected = $(this).prop('checked')
+      getRenderedTaskIds().forEach(function (taskId) {
+        toggleTaskSelection(taskId, isSelected)
+      })
+    })
+    $('#task-bulk-star').on('click', function () {
+      setSelectedTasksStarred(true).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not star selected tasks'), 'error')
+      })
+    })
+    $('#task-bulk-unstar').on('click', function () {
+      setSelectedTasksStarred(false).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not unstar selected tasks'), 'error')
+      })
+    })
+    $('#task-bulk-restore').on('click', function () {
+      restoreTasks(Array.from(selectedTaskIds)).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not restore selected tasks'), 'error')
+      })
+    })
+    $('#task-bulk-delete').on('click', function () {
+      const taskIds = Array.from(selectedTaskIds)
+      const action = currentView === 'trash'
+        ? deleteTasksPermanently(taskIds)
+        : moveTasksToTrash(taskIds)
+      action.catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not update selected tasks'), 'error')
+      })
+    })
+    $('#task-detail-star-button').on('click', function () {
+      if (!currentTask || !currentTask.id || currentTask.deletedAt) {
+        return
+      }
+      setTaskStarred(currentTask.id, !currentTask.isStarred).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not update star'), 'error')
+      })
+    })
+    $('#task-detail-menu-button').on('click', function () {
+      if (currentTask && currentTask.id) {
+        openTaskActionMenu(currentTask.id, this)
+      }
+    })
+    $('#task-action-menu').on('click', '.task-action-menu-item', function () {
+      const taskId = activeTaskActionMenuId
+      const action = $(this).attr('data-task-action')
+      if (!taskId) {
+        return
+      }
+      const promise = action === 'restore'
+        ? restoreTasks([taskId], { openRestoredTask: currentTask && currentTask.id === taskId })
+        : action === 'delete-permanently'
+          ? deleteTasksPermanently([taskId])
+          : moveTasksToTrash([taskId])
+      promise.catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not update task'), 'error')
+      })
+    })
+    $('#task-undo-button').on('click', function () {
+      const taskIds = lastTrashedTaskIds.slice()
+      restoreTasks(taskIds).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not restore task'), 'error')
+      })
+    })
+    $('#task-undo-dismiss').on('click', dismissTrashUndo)
 
     $('#task-search').on('input', renderTaskList)
     $('#task-tag-filter').on('change', renderTaskList)
@@ -4754,12 +5263,27 @@
       if (!$(event.target).closest('.task-filter-menu').length) {
         setTaskFilterPopoverOpen(false, false)
       }
+      if (!$(event.target).closest('#task-action-menu, .task-row-more, #task-detail-menu-button').length) {
+        closeTaskActionMenu()
+      }
     })
     $(document).on('keydown', function (event) {
       if (event.key === 'Escape' && !$('#task-filter-popover').prop('hidden')) {
         event.preventDefault()
         setTaskFilterPopoverOpen(false, false)
         $('#task-filter-button').trigger('focus')
+        return
+      }
+
+      if (event.key === 'Escape' && !$('#task-action-menu').prop('hidden')) {
+        event.preventDefault()
+        closeTaskActionMenu()
+        return
+      }
+
+      if (event.key === 'Escape' && isTaskSelectionMode) {
+        event.preventDefault()
+        exitTaskSelectionMode()
         return
       }
 
@@ -4906,8 +5430,11 @@
       })
     })
     $('#task-read-only-reopen-button').on('click', function () {
-      runLifecycleAction('task.reopen').catch(function (error) {
-        setStatus(getErrorMessage(error, 'Could not reopen task'), 'error')
+      const action = currentTask && currentTask.deletedAt
+        ? restoreTasks([currentTask.id], { openRestoredTask: true })
+        : runLifecycleAction('task.reopen')
+      action.catch(function (error) {
+        setStatus(getErrorMessage(error, currentTask && currentTask.deletedAt ? 'Could not restore task' : 'Could not reopen task'), 'error')
       })
     })
     window.Editor.onChanged(markDirty)

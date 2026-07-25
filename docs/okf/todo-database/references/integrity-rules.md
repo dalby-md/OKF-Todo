@@ -6,7 +6,7 @@ resource: docs/DATA_MODEL.md
 tags:
   - sqlite
   - todo
-timestamp: 2026-07-23T18:14:52Z
+timestamp: 2026-07-25T09:30:03Z
 ---
 
 # Database Integrity Rules

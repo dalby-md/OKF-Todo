@@ -365,10 +365,17 @@ public sealed class TaskLifecycleService(
 
     private async Task<TaskItem> GetTaskWithStatusAsync(int taskId, CancellationToken cancellationToken)
     {
-        return await dbContext.TaskItems
+        var task = await dbContext.TaskItems
             .Include(task => task.TaskStatus)
             .SingleOrDefaultAsync(task => task.Id == taskId, cancellationToken)
             ?? throw new ValidationException("Task was not found.", "taskId");
+
+        if (task.DeletedAt is not null)
+        {
+            throw new ValidationException("Task is in Trash and must be restored before it can be changed.", "taskId");
+        }
+
+        return task;
     }
 
     private static async Task<TLookup> GetLookupByCodeAsync<TLookup>(

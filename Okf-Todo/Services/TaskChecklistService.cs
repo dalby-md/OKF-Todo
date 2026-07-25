@@ -143,8 +143,15 @@ public sealed class TaskChecklistService(AppDbContext dbContext)
 
     private async Task<TaskItem> GetTaskAsync(int taskId, CancellationToken cancellationToken)
     {
-        return await dbContext.TaskItems.SingleOrDefaultAsync(task => task.Id == taskId, cancellationToken)
+        var task = await dbContext.TaskItems.SingleOrDefaultAsync(task => task.Id == taskId, cancellationToken)
             ?? throw new ValidationException("Task was not found.", "taskId");
+
+        if (task.DeletedAt is not null)
+        {
+            throw new ValidationException("Task is in Trash and must be restored before it can be changed.", "taskId");
+        }
+
+        return task;
     }
 
     private async Task<TaskChecklistItem> GetItemAsync(int taskId, int checklistItemId, CancellationToken cancellationToken)

@@ -952,3 +952,96 @@ textarea.is-invalid {
   background: #173835;
   box-shadow: 0 0 0 3px rgb(92 199 186 / 10%);
 }
+
+.task-select-mode-button,
+.task-row-star,
+.task-row-more,
+.task-list-group-toggle,
+.task-selection-cancel {
+  color: var(--theme-muted);
+  background: transparent;
+}
+
+.task-select-mode-button:hover:not(:disabled),
+.task-select-mode-button[aria-pressed="true"],
+.task-row-more:hover:not(:disabled),
+.task-list-group-toggle:hover:not(:disabled) {
+  border-color: var(--theme-border-strong);
+  color: var(--theme-accent);
+  background: var(--theme-surface-hover);
+}
+
+.task-row-star:hover:not(:disabled),
+.task-row-star.is-starred,
+.task-detail-star-button.is-starred {
+  border-color: #6d5822;
+  color: #ffd36a;
+  background: #382e16;
+}
+
+.task-row-shell.is-bulk-selected .task-row,
+.task-row-shell.is-bulk-selected .task-row:hover:not(:disabled) {
+  background: #173835;
+}
+
+.task-row-shell.is-bulk-selected .task-row::before {
+  background: #5cc7ba;
+}
+
+.task-list-group-toggle {
+  border-top-color: var(--theme-border);
+}
+
+.task-list-group-count {
+  color: var(--theme-muted);
+  background: var(--theme-surface-hover);
+}
+
+.task-selection-bar {
+  border-color: #33544f;
+  background: #172a27;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 26%);
+}
+
+.task-selection-all {
+  color: #bfe6df;
+}
+
+.task-action-menu {
+  border-color: var(--theme-border-strong);
+  background: var(--theme-surface-raised);
+  box-shadow: 0 14px 35px rgb(0 0 0 / 42%);
+}
+
+.task-action-menu-item {
+  color: var(--theme-text);
+  background: transparent;
+}
+
+.task-action-menu-item:hover:not(:disabled),
+.task-action-menu-item:focus-visible {
+  color: var(--theme-accent);
+  background: var(--theme-surface-hover);
+}
+
+.task-action-menu-item.is-danger {
+  color: #ff9b91;
+}
+
+.task-action-menu-item.is-danger:hover:not(:disabled),
+.task-action-menu-item.is-danger:focus-visible {
+  color: #ffd3cf;
+  background: #3a1c19;
+}
+
+.task-undo-toast {
+  border-color: #5c6c72;
+  color: #ffffff;
+  background: #253238;
+}
+
+@media (max-width: 900px) {
+  .task-selection-bar {
+    background: rgb(23 42 39 / 98%);
+  }
+}

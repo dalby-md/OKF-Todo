@@ -18,6 +18,11 @@ namespace Photino.Okf_Todo
         [STAThread]
         static void Main(string[] args)
         {
+            if (EF.IsDesignTime)
+            {
+                return;
+            }
+
             var isOkfCommandMode = args.Any(argument => string.Equals(
                 argument,
                 "--okf-command",

@@ -50,6 +50,12 @@ public sealed class TaskItem
 
     public DateTime? CancelledAt { get; set; }
 
+    public bool IsStarred { get; set; }
+
+    public DateTime? StarredAt { get; set; }
+
+    public DateTime? DeletedAt { get; set; }
+
     public List<TaskWaitingFor> WaitingTargets { get; set; } = [];
 
     public List<TaskComment> Comments { get; set; } = [];
