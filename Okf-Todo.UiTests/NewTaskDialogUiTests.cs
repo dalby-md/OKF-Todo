@@ -1056,6 +1056,38 @@ public sealed class NewTaskDialogUiTests
         Assert.Equal(1, await page.Locator(".task-row-shell").CountAsync());
         await page.Locator("#task-search").FillAsync(string.Empty);
 
+        var supportTaskRow = page.Locator(".task-row-shell").Filter(
+            new LocatorFilterOptions { HasText = "List-aware support task" });
+        await supportTaskRow.Locator(".task-row-more").ClickAsync();
+        var moveToListAction = page.Locator("#task-action-menu [data-task-action='move-list']");
+        Assert.False(await moveToListAction.IsHiddenAsync());
+        Assert.Equal("Move to list", await moveToListAction.Locator("span:last-child").TextContentAsync());
+        await CaptureWorkspaceAsync(page, "task-menu-move-to-list.png");
+        await moveToListAction.ClickAsync();
+        Assert.Equal("Move task to list", await page.Locator("#task-list-move-title").TextContentAsync());
+        Assert.Equal(1, await page.Locator("#task-list-move-destination option").CountAsync());
+        Assert.Equal("Default list", await page.Locator("#task-list-move-destination option").TextContentAsync());
+        await page.Locator("#task-list-move-confirm").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('.task-row.is-selected .task-list-pill')?.textContent.trim() === 'Default list'");
+        await page.Locator("#task-undo-button").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('.task-row.is-selected .task-list-pill')?.textContent.trim() === 'Support'");
+
+        await page.Locator("#task-list-switcher").SelectOptionAsync(
+            new SelectOptionValue { Label = "Support" });
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-list-switcher option:checked')?.textContent === 'Support' && document.querySelector('#task-title')?.value === 'List-aware support task'");
+        await page.Locator(".task-row-shell .task-row-more").ClickAsync();
+        await page.Locator("#task-action-menu [data-task-action='move-list']").ClickAsync();
+        await page.Locator("#task-list-move-confirm").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-list-switcher option:checked')?.textContent === 'Default list' && document.querySelector('#task-title')?.value === 'List-aware support task'");
+        await page.Locator("#task-undo-button").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-list-switcher option:checked')?.textContent === 'Support' && document.querySelector('#task-title')?.value === 'List-aware support task'");
+        await page.Locator("#task-list-switcher").SelectOptionAsync("ALL");
+
         await page.Locator("#task-select-mode-button").ClickAsync();
         await page.Locator(".task-row-select").CheckAsync();
         await page.Locator("#task-bulk-move-list").ClickAsync();

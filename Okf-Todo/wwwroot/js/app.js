@@ -161,6 +161,7 @@
   let activeTaskActionMenuId = null
   let lastTrashedTaskIds = []
   let lastTaskListMove = null
+  let pendingTaskListMoveIds = []
   let trashUndoTimer = null
   const selectedTaskIds = new Set()
   const helpDocumentCache = new Map()
@@ -1650,6 +1651,10 @@
             <span class="fluent-icon" aria-hidden="true">&#xE734;</span>
             <span>Star task</span>
           </button>
+          <button class="task-action-menu-item" type="button" data-task-action="move-list" role="menuitem">
+            <span class="fluent-icon" aria-hidden="true">&#xE8FD;</span>
+            <span>Move to list</span>
+          </button>
           <button class="task-action-menu-item" type="button" data-task-action="restore" role="menuitem" hidden>
             <span class="fluent-icon" aria-hidden="true">&#xE777;</span>
             <span>Restore</span>
@@ -1937,30 +1942,63 @@
     setStatus('List order saved', 'saved')
   }
 
-  function openTaskListMoveDialog() {
-    if (!selectedTaskIds.size || currentView === 'trash') {
+  function openTaskListMoveDialog(taskIds) {
+    const requestedTaskIds = Array.isArray(taskIds)
+      ? taskIds.map(Number).filter(Number.isFinite)
+      : Array.from(selectedTaskIds)
+    const movingTasks = requestedTaskIds.map(function (taskId) {
+      return tasks.find(function (task) { return task.id === taskId })
+        || (currentTask && currentTask.id === taskId ? currentTask : null)
+    }).filter(Boolean)
+    if (!requestedTaskIds.length || movingTasks.some(function (task) { return !!task.deletedAt }) || currentView === 'trash') {
       return
     }
-    renderTaskListOptions()
-    const currentListId = activeTaskListId || (currentTask && currentTask.taskListId)
-    const firstAlternative = taskLists.find(function (taskList) { return taskList.id !== currentListId }) || taskLists[0]
+
+    const sourceListIds = new Set(movingTasks.map(function (task) { return task.taskListId }))
+    const destinationLists = sourceListIds.size === 1
+      ? taskLists.filter(function (taskList) { return !sourceListIds.has(taskList.id) })
+      : taskLists
+    if (!destinationLists.length) {
+      setStatus('Create another list before moving this task', 'error')
+      return
+    }
+
+    pendingTaskListMoveIds = requestedTaskIds
+    $('#task-list-move-destination').html(destinationLists.map(function (taskList) {
+      return `<option value="${taskList.id}">${encodeText(taskList.name)}</option>`
+    }).join(''))
+    const firstAlternative = destinationLists[0]
     $('#task-list-move-destination').val(String(firstAlternative.id))
-    $('#task-list-move-title').text(`Move ${selectedTaskIds.size} selected ${selectedTaskIds.size === 1 ? 'task' : 'tasks'}`)
+    $('#task-list-move-title').text(
+      requestedTaskIds.length === 1
+        ? 'Move task to list'
+        : `Move ${requestedTaskIds.length} selected tasks`)
+    $('#task-list-move-confirm').text(requestedTaskIds.length === 1 ? 'Move task' : 'Move tasks')
     $('#task-list-move-overlay').prop('hidden', false)
     window.setTimeout(function () { $('#task-list-move-destination').trigger('focus') }, 0)
   }
 
   function closeTaskListMoveDialog() {
     $('#task-list-move-overlay').prop('hidden', true)
+    pendingTaskListMoveIds = []
   }
 
   async function moveSelectedTasksToList() {
-    const taskIds = Array.from(selectedTaskIds)
+    const taskIds = pendingTaskListMoveIds.slice()
     const destinationListId = Number($('#task-list-move-destination').val())
     if (!taskIds.length || !destinationListId) {
       return
     }
     const result = await sendBridgeMessage('taskList.moveTasks', { taskIds, destinationListId })
+    const shouldFollowMovedTask = taskIds.length === 1
+      && currentTask
+      && currentTask.id === taskIds[0]
+      && activeTaskListId != null
+    if (shouldFollowMovedTask) {
+      activeTaskListId = destinationListId
+      layoutPreference.taskListScope = String(destinationListId)
+      await saveLayoutPreference()
+    }
     closeTaskListMoveDialog()
     exitTaskSelectionMode()
     lastTaskListMove = result
@@ -1975,14 +2013,23 @@
       currentTask = null
       await selectFirstAvailableTask()
     }
-    setStatus('Tasks moved', 'saved')
+    setStatus(result.affectedCount === 1 ? 'Task moved' : 'Tasks moved', 'saved')
   }
 
   async function undoTaskListMove() {
     if (!lastTaskListMove || !lastTaskListMove.items.length) {
       return
     }
-    await sendBridgeMessage('taskList.undoMove', { items: lastTaskListMove.items })
+    const moveToUndo = lastTaskListMove
+    const currentTaskMove = moveToUndo.items.length === 1
+      && currentTask
+      && moveToUndo.items.find(function (item) { return item.taskId === currentTask.id })
+    await sendBridgeMessage('taskList.undoMove', { items: moveToUndo.items })
+    if (currentTaskMove && activeTaskListId != null) {
+      activeTaskListId = currentTaskMove.originalListId
+      layoutPreference.taskListScope = String(currentTaskMove.originalListId)
+      await saveLayoutPreference()
+    }
     dismissTrashUndo()
     await loadTaskLists({ keepCurrentScope: true })
     await loadTasks({ keepSelection: true })
@@ -3902,6 +3949,9 @@
       .prop('disabled', isInTrash)
     starAction.find('.fluent-icon').html(task.isStarred ? '&#xE735;' : '&#xE734;')
     starAction.find('span:last').text(task.isStarred ? 'Unstar task' : 'Star task')
+    menu.find('[data-task-action="move-list"]')
+      .prop('hidden', isInTrash || taskLists.length < 2)
+      .prop('disabled', isInTrash || taskLists.length < 2)
     menu.find('[data-task-action="restore"]').prop('hidden', !isInTrash)
     menu.find('[data-task-action="trash"]').prop('hidden', isInTrash)
     menu.find('[data-task-action="delete-permanently"]').prop('hidden', !isInTrash)
@@ -5838,7 +5888,9 @@
         setStatus(getErrorMessage(error, 'Could not unstar selected tasks'), 'error')
       })
     })
-    $('#task-bulk-move-list').on('click', openTaskListMoveDialog)
+    $('#task-bulk-move-list').on('click', function () {
+      openTaskListMoveDialog()
+    })
     $('#task-bulk-restore').on('click', function () {
       restoreTasks(Array.from(selectedTaskIds)).catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not restore selected tasks'), 'error')
@@ -5887,6 +5939,9 @@
           return
         }
         promise = setTaskStarred(taskId, !task.isStarred)
+      } else if (action === 'move-list') {
+        openTaskListMoveDialog([taskId])
+        return
       } else if (action === 'restore') {
         promise = restoreTasks([taskId], { openRestoredTask: currentTask && currentTask.id === taskId })
       } else if (action === 'delete-permanently') {

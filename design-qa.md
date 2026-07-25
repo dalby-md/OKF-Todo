@@ -393,3 +393,40 @@ final result: passed
 - Isolated Release solution build.
 
 final result: passed
+
+---
+
+# Design QA — Task action menu: Move to list
+
+## Reference
+
+- Source: `C:\Users\soere\AppData\Local\Temp\codex-clipboard-96e93a1e-e4fc-40a0-ba9e-225d82e44f51.png`
+- Implemented browser capture: `artifacts/design-qa/task-menu-move-to-list.png`
+- Scope: the task-row overflow menu shown in the overview list.
+
+## Required criteria
+
+- The menu contains a clearly labelled **Move to list** action.
+- **Move to list** appears before the destructive **Move to Trash** action.
+- The new action uses the existing list icon, typography, spacing, hover/focus behavior, and menu width.
+- The action is available only when the task can move to another list.
+- Trash remains protected: deleted tasks cannot be moved between lists.
+- The action opens the existing destination-list dialog and retains the existing Undo pattern.
+
+## Visual comparison
+
+- The implemented menu preserves the existing compact popover size and alignment.
+- The list icon distinguishes ownership movement from deletion without adding visual noise.
+- The non-destructive action is first; the Trash action remains the final destructive choice.
+- No clipping, overlap, or new horizontal overflow was observed at the captured 1600 × 1000 viewport.
+
+## Interaction verification
+
+- Playwright opened the row overflow menu and found **Move to list**.
+- Playwright moved the task to another list and verified the updated list pill.
+- Playwright used Undo and verified the original list was restored.
+- In a concrete list scope, Playwright verified that moving the open task follows it to the destination and Undo follows it back.
+
+## Result
+
+passed
