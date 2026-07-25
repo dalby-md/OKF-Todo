@@ -538,7 +538,8 @@ public sealed class NewTaskDialogUiTests
             $"{fixture.BaseUrl}/index.html?v=star-trash-bulk-contract",
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
-        Assert.True(await page.Locator("#trash-permanent-actions").IsHiddenAsync());
+        Assert.Equal(0, await page.Locator("#trash-permanent-actions").CountAsync());
+        Assert.True(await page.Locator("#trash-overflow-button").IsHiddenAsync());
 
         const string starredTaskTitle = "Star and restore browser contract";
         const string bulkTaskTitle = "Bulk trash browser contract";
@@ -582,14 +583,16 @@ public sealed class NewTaskDialogUiTests
         await page.Locator("#task-list .empty-list").WaitForAsync();
         Assert.Contains("task.trash", fixture.BridgeMessageTypes);
 
-        await page.Locator("#task-undo-button").DispatchEventAsync("click");
+        await page.Locator("#task-undo-button").ClickAsync(new LocatorClickOptions { Force = true });
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#save-status')?.textContent === 'Task restored'");
         await page.Locator(".task-row").Filter(new LocatorFilterOptions { HasText = starredTaskTitle }).WaitForAsync();
         Assert.Contains("task.trash.restore", fixture.BridgeMessageTypes);
 
         await page.Locator(".task-view-rail-button[data-task-view='all']").ClickAsync();
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#task-list-title')?.textContent === 'All'");
-        Assert.True(await page.Locator("#trash-permanent-actions").IsHiddenAsync());
+        Assert.True(await page.Locator("#trash-overflow-button").IsHiddenAsync());
         await page.Locator("#task-select-mode-button").ClickAsync();
         await page.Locator("#task-select-all").CheckAsync();
         Assert.Equal("3 selected", await page.Locator("#task-selection-count").TextContentAsync());
@@ -603,14 +606,40 @@ public sealed class NewTaskDialogUiTests
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#task-list-title')?.textContent === 'Trash'");
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list .task-row').length === 3");
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#complete-button')?.textContent === 'Restore'");
         Assert.Equal("Restore", await page.Locator("#complete-button").TextContentAsync());
         await AssertCurrentTaskReadOnlyAsync(page, "Task is in Trash", "Restore");
-        Assert.False(await page.Locator("#trash-permanent-actions").IsHiddenAsync());
-        Assert.Equal("Delete all starred (1)", await page.Locator("#trash-delete-starred").TextContentAsync());
-        Assert.Equal("Delete all (3)", await page.Locator("#trash-delete-all").TextContentAsync());
+        Assert.False(await page.Locator("#trash-overflow-button").IsHiddenAsync());
+        Assert.False(await page.Locator("#trash-overflow-button").IsDisabledAsync());
+        Assert.True(await page.Locator("#task-detail-star-button").IsHiddenAsync());
+
+        var trashedStarredShell = page.Locator(".task-row-shell").Filter(new LocatorFilterOptions
+        {
+            HasText = starredTaskTitle
+        });
+        Assert.Equal(
+            "Starred before moved to Trash",
+            await trashedStarredShell.Locator(".task-row-star-static").GetAttributeAsync("title"));
+        var trashedUnstarredShell = page.Locator(".task-row-shell").Filter(new LocatorFilterOptions
+        {
+            HasText = bulkTaskTitle
+        });
+        Assert.Equal(0, await trashedUnstarredShell.Locator(".task-row-star").CountAsync());
+
+        await page.SetViewportSizeAsync(1295, 734);
+        await CaptureWorkspaceAsync(page, "trash-bulk-actions.png");
+        await page.Locator("#trash-overflow-button").ClickAsync();
+        Assert.False(await page.Locator("#trash-overflow-menu").IsHiddenAsync());
+        Assert.Contains("Empty Trash", await page.Locator("#trash-empty-button").TextContentAsync());
+        await CaptureWorkspaceAsync(page, "trash-empty-menu-open.png");
+        await page.Keyboard.PressAsync("Escape");
+        Assert.True(await page.Locator("#trash-overflow-menu").IsHiddenAsync());
+        Assert.Equal("false", await page.Locator("#trash-overflow-button").GetAttributeAsync("aria-expanded"));
 
         await page.SetViewportSizeAsync(820, 900);
         await page.Locator("#task-select-mode-button").ClickAsync();
+        Assert.True(await page.Locator("#trash-overflow-button").IsHiddenAsync());
         await page.Locator(".task-row-shell")
             .Filter(new LocatorFilterOptions { HasText = bulkTaskTitle })
             .Locator(".task-row-select")
@@ -628,54 +657,40 @@ public sealed class NewTaskDialogUiTests
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#save-status')?.textContent === 'Task deleted permanently' && document.querySelectorAll('#task-list .task-row').length === 2");
         Assert.Contains("task.trash.delete", fixture.BridgeMessageTypes);
-        Assert.Equal("Delete all (2)", await page.Locator("#trash-delete-all").TextContentAsync());
 
-        await page.Locator("#task-search").FillAsync(deleteAllTaskTitle);
-        await page.WaitForFunctionAsync(
-            "() => document.querySelectorAll('#task-list .task-row').length === 1 && document.querySelector('#task-result-count')?.textContent === '1 of 2 tasks'");
-        Assert.Equal("Delete all starred (1)", await page.Locator("#trash-delete-starred").TextContentAsync());
-        await page.Locator("#trash-delete-starred").ClickAsync();
-        await page.Locator("#confirmation-overlay").WaitForAsync();
-        Assert.Equal(
-            "Delete all starred",
-            await page.Locator("#confirmation-confirm-button").TextContentAsync());
-        Assert.Contains(
-            "including items hidden by filters",
-            await page.Locator("#confirmation-message").TextContentAsync());
-        await page.Locator("#confirmation-confirm-button").ClickAsync();
-        await page.WaitForFunctionAsync(
-            "() => document.querySelector('#save-status')?.textContent === 'Task deleted permanently' && document.querySelector('#trash-delete-starred')?.textContent === 'Delete all starred (0)' && document.querySelector('#task-result-count')?.textContent === '1 of 1 task'");
-        Assert.Equal("Delete all starred (0)", await page.Locator("#trash-delete-starred").TextContentAsync());
-        Assert.True(await page.Locator("#trash-delete-starred").IsDisabledAsync());
-        await page.Locator(".task-row").Filter(new LocatorFilterOptions { HasText = deleteAllTaskTitle }).WaitForAsync();
-        await page.Locator("#task-search").FillAsync("");
-
+        await page.Locator(".task-row").Filter(new LocatorFilterOptions { HasText = starredTaskTitle }).ClickAsync();
         await page.Locator("#task-read-only-reopen-button").ClickAsync();
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#task-list-title')?.textContent === 'Active' && !document.querySelector('#task-title')?.disabled");
         Assert.Contains("task.trash.restore", fixture.BridgeMessageTypes);
-        Assert.True(await page.Locator("#trash-permanent-actions").IsHiddenAsync());
+        Assert.True(await page.Locator("#trash-overflow-button").IsHiddenAsync());
+        Assert.False(await page.Locator("#task-detail-star-button").IsHiddenAsync());
+        Assert.Equal("true", await page.Locator("#task-detail-star-button").GetAttributeAsync("aria-pressed"));
 
         await page.Locator("#task-detail-menu-button").ClickAsync();
         Assert.True(await page.Locator("#task-action-menu [data-task-action='delete-permanently']").IsHiddenAsync());
-        await page.Locator("#task-action-menu [data-task-action='trash']").ClickAsync();
-        await page.WaitForFunctionAsync(
-            "() => document.querySelector('#save-status')?.textContent === 'Task moved to Trash'");
         await page.Locator(".task-view-rail-button[data-task-view='trash']").DispatchEventAsync("click");
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#task-list-title')?.textContent === 'Trash' && document.querySelectorAll('#task-list .task-row').length === 1");
         await page.Locator("#task-search").FillAsync("hide every trashed task");
         await page.Locator("#task-list .empty-list").WaitForAsync();
-        Assert.Equal("Delete all (1)", await page.Locator("#trash-delete-all").TextContentAsync());
+        Assert.False(await page.Locator("#trash-overflow-button").IsHiddenAsync());
+        Assert.False(await page.Locator("#trash-overflow-button").IsDisabledAsync());
 
-        await page.Locator("#trash-delete-all").ClickAsync();
+        await page.Locator("#trash-overflow-button").ClickAsync();
+        await page.Locator("#trash-empty-button").ClickAsync();
         await page.Locator("#confirmation-overlay").WaitForAsync();
-        Assert.Equal("Delete all", await page.Locator("#confirmation-confirm-button").TextContentAsync());
+        Assert.Equal(
+            "Permanently delete 1 task?",
+            await page.Locator("#confirmation-title").TextContentAsync());
+        Assert.Equal("Empty Trash", await page.Locator("#confirmation-confirm-button").TextContentAsync());
+        Assert.Contains(
+            "including items hidden by current search or filters",
+            await page.Locator("#confirmation-message").TextContentAsync());
         await page.Locator("#confirmation-confirm-button").ClickAsync();
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('#save-status')?.textContent === 'Task deleted permanently' && document.querySelector('#trash-delete-all')?.textContent === 'Delete all (0)' && document.querySelector('#task-list .empty-list')");
-        Assert.Equal("Delete all (0)", await page.Locator("#trash-delete-all").TextContentAsync());
-        Assert.True(await page.Locator("#trash-delete-all").IsDisabledAsync());
+            "() => document.querySelector('#save-status')?.textContent === 'Task deleted permanently' && document.querySelector('#trash-overflow-button')?.disabled && document.querySelector('#task-list .empty-list')");
+        Assert.True(await page.Locator("#trash-overflow-button").IsDisabledAsync());
     }
 
     private static async Task OpenTaskDetailsPreferencesAsync(IPage page)

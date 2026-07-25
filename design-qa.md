@@ -356,3 +356,40 @@ final result: blocked
   image.
 
 final result: passed
+
+---
+
+# Design QA — Trash selection and Empty Trash
+
+## Evidence
+
+- Reference: `C:\Users\soere\AppData\Local\Temp\okf-trash-audit-current.png`
+- Implementation: `artifacts/design-qa-trash/trash-empty-menu-open.png`
+- Same-input comparison: `artifacts/design-qa-trash/trash-comparison.png`
+- Desktop viewport: 1295 × 734 CSS pixels.
+- Responsive verification: 820 × 900 CSS pixels.
+
+## Visual and functional review
+
+- The persistent danger panel and contradictory Delete all starred action are
+  removed.
+- Select mode restores or permanently deletes any chosen subset.
+- Empty Trash is the only whole-Trash action and lives in a compact header menu.
+- Empty Trash remains available when search or filters hide every row and its
+  confirmation states the complete Trash count and irreversible scope.
+- Empty stars are absent in Trash. A task that was starred before deletion keeps
+  a passive filled-star marker for context.
+- The detail-level star control is hidden in Trash and returns when the task is
+  restored.
+- Menu state is exposed through `aria-expanded`; focus enters the menu, Escape
+  closes it and restores focus, and destructive actions require confirmation.
+- No actionable P0, P1, or P2 visual issues remain.
+
+## Verification
+
+- `node --check Okf-Todo/wwwroot/js/app.js`
+- Focused Edge/Playwright Trash contract.
+- Complete Edge/Playwright UI suite: 7 passed.
+- Isolated Release solution build.
+
+final result: passed

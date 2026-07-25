@@ -179,7 +179,8 @@ Deletion uses a reversible Trash workflow:
 - A task in Trash is read only. It must be restored before its fields, lifecycle, checklist, attachments, comments, or relationships can be changed.
 - Restoring returns the task to the normal view implied by its lifecycle state.
 - Permanent deletion controls are displayed only in the **Trash** view, require an application HTML confirmation dialog, and remove the complete task-owned record graph.
-- Trash provides **Delete all starred** and **Delete all** permanent actions with explicit counts. These actions apply to the complete Trash view, including tasks currently hidden by search or filters.
+- Trash uses Select mode to restore or permanently delete any chosen subset. A compact Trash header menu provides **Empty Trash** as the only whole-Trash action; its explicit confirmation covers every trashed task, including tasks currently hidden by search or filters.
+- Star controls are not interactive in Trash. A task that was starred before deletion keeps a passive star marker for context until it is restored or permanently deleted.
 
 The same action system supports individual and bulk work. Individual actions live in a compact task menu. **Select** mode operates only on tasks currently rendered by the active view and filters, offers Select all visible, Star, Unstar, Move to Trash, Restore, and Delete permanently as applicable, and uses a bottom action bar on smaller screens.
 

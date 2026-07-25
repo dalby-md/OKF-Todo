@@ -977,6 +977,17 @@
               <div class="sidebar-header-actions">
                 <span id="task-list-header-count" class="task-list-header-count">0</span>
                 <button id="task-select-mode-button" class="secondary-button task-select-mode-button" type="button">Select</button>
+                <div class="trash-header-menu">
+                  <button id="trash-overflow-button" class="secondary-button trash-overflow-button" type="button" aria-label="More Trash actions" title="More Trash actions" aria-haspopup="menu" aria-controls="trash-overflow-menu" aria-expanded="false" hidden>
+                    <span aria-hidden="true">&hellip;</span>
+                  </button>
+                  <div id="trash-overflow-menu" class="trash-overflow-menu" role="menu" hidden>
+                    <button id="trash-empty-button" class="trash-overflow-menu-item is-danger" type="button" role="menuitem">
+                      <span class="fluent-icon" aria-hidden="true">&#xE74D;</span>
+                      <span>Empty Trash&hellip;</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </header>
 
@@ -1039,17 +1050,6 @@
             <span id="task-result-count" class="task-result-count" aria-live="polite">0 tasks</span>
             <button id="task-filter-clear" class="task-filter-clear" type="button" hidden>Clear</button>
           </div>
-
-          <section id="trash-permanent-actions" class="trash-permanent-actions" aria-labelledby="trash-permanent-actions-title" hidden>
-            <div class="trash-permanent-actions-copy">
-              <strong id="trash-permanent-actions-title">Permanent deletion</strong>
-              <span>Applies to all tasks in Trash, including items hidden by filters.</span>
-            </div>
-            <div class="trash-permanent-actions-buttons">
-              <button id="trash-delete-starred" class="secondary-button danger-button" type="button">Delete all starred</button>
-              <button id="trash-delete-all" class="secondary-button danger-button" type="button">Delete all</button>
-            </div>
-          </section>
 
           <div id="task-selection-bar" class="task-selection-bar" role="toolbar" aria-label="Selected task actions" hidden>
             <label class="task-selection-all">
@@ -2662,6 +2662,7 @@
     $('#complete-button, #cancel-button, #save-button, #task-detail-star-button, #task-detail-menu-button').prop('disabled', true)
     $('#cancel-button').prop('hidden', false)
     $('#task-detail-star-button')
+      .prop('hidden', false)
       .removeClass('is-starred')
       .attr('aria-pressed', 'false')
       .attr('aria-label', 'Star task')
@@ -3276,9 +3277,23 @@
       : ''
     const starGlyph = task.isStarred ? '&#xE735;' : '&#xE734;'
     const starLabel = task.isStarred ? 'Unstar task' : 'Star task'
+    const passiveStarClass = task.deletedAt && task.isStarred ? ' has-passive-star' : ''
+    const starControl = task.deletedAt
+      ? (task.isStarred
+          ? `
+            <span class="task-row-star task-row-star-static is-starred" role="img" aria-label="Starred before moved to Trash" title="Starred before moved to Trash">
+              <span class="fluent-icon" aria-hidden="true">${starGlyph}</span>
+            </span>
+          `
+          : '')
+      : `
+        <button class="task-row-star task-row-star-button${task.isStarred ? ' is-starred' : ''}" type="button" data-task-id="${task.id}" aria-label="${starLabel}" title="${starLabel}" aria-pressed="${String(!!task.isStarred)}">
+          <span class="fluent-icon" aria-hidden="true">${starGlyph}</span>
+        </button>
+      `
 
     return `
-      <div class="task-row-shell${bulkSelectedClass}${trashedClass}" data-task-id="${task.id}">
+      <div class="task-row-shell${bulkSelectedClass}${trashedClass}${passiveStarClass}" data-task-id="${task.id}">
         <label class="task-row-select-control" title="Select ${encodeAttribute(task.title)}">
           <input class="task-row-select" type="checkbox" data-task-id="${task.id}"${selectedTaskIds.has(task.id) ? ' checked' : ''} aria-label="Select ${encodeAttribute(task.title)}">
         </label>
@@ -3294,9 +3309,7 @@
             ${checklistProgress}
           </span>
         </button>
-        <button class="task-row-star${task.isStarred ? ' is-starred' : ''}" type="button" data-task-id="${task.id}" aria-label="${starLabel}" title="${starLabel}" aria-pressed="${String(!!task.isStarred)}"${task.deletedAt ? ' disabled' : ''}>
-          <span class="fluent-icon" aria-hidden="true">${starGlyph}</span>
-        </button>
+        ${starControl}
         <button class="task-row-more" type="button" data-task-id="${task.id}" aria-label="More actions for ${encodeAttribute(task.title)}" title="More actions" aria-expanded="false">
           <span aria-hidden="true">&hellip;</span>
         </button>
@@ -3425,17 +3438,13 @@
       .prop('hidden', !isTrashView)
       .prop('disabled', selectedCount === 0)
 
-    const trashedTaskCount = isTrashView ? tasks.length : 0
-    const starredTrashedTaskCount = isTrashView
-      ? tasks.filter(function (task) { return task.isStarred }).length
-      : 0
-    $('#trash-permanent-actions').prop('hidden', !isTrashView)
-    $('#trash-delete-starred')
-      .text(`Delete all starred (${starredTrashedTaskCount})`)
-      .prop('disabled', starredTrashedTaskCount === 0)
-    $('#trash-delete-all')
-      .text(`Delete all (${trashedTaskCount})`)
-      .prop('disabled', trashedTaskCount === 0)
+    const canShowTrashOverflow = isTrashView && !isTaskSelectionMode
+    $('#trash-overflow-button')
+      .prop('hidden', !canShowTrashOverflow)
+      .prop('disabled', tasks.length === 0)
+    if (!canShowTrashOverflow || tasks.length === 0) {
+      setTrashOverflowMenuOpen(false, false)
+    }
 
     $('.task-row-shell').each(function () {
       const taskId = Number($(this).attr('data-task-id'))
@@ -3646,20 +3655,29 @@
     setStatus(taskIds.length === 1 ? 'Task deleted permanently' : 'Tasks deleted permanently', 'saved')
   }
 
-  function deleteAllTrashedTasks(starredOnly) {
-    const taskIds = tasks
-      .filter(function (task) { return !starredOnly || task.isStarred })
-      .map(function (task) { return task.id })
+  function emptyTrash() {
+    const taskIds = tasks.map(function (task) { return task.id })
     if (!taskIds.length) {
       return Promise.resolve()
     }
 
-    const scope = starredOnly ? 'starred ' : ''
+    setTrashOverflowMenuOpen(false, false)
+    const taskLabel = taskIds.length === 1 ? 'task' : 'tasks'
     return deleteTasksPermanently(taskIds, {
-      title: `Delete all ${scope}tasks permanently?`,
-      message: `This permanently deletes all ${taskIds.length} ${scope}tasks in Trash, including items hidden by filters. Their attachments, history, and relationships will also be removed. This cannot be undone.`,
-      confirmText: starredOnly ? 'Delete all starred' : 'Delete all'
+      title: `Permanently delete ${taskIds.length} ${taskLabel}?`,
+      message: `This permanently deletes all ${taskIds.length} ${taskLabel} in Trash, including items hidden by current search or filters. Their attachments, history, and relationships will also be removed. This cannot be undone.`,
+      confirmText: 'Empty Trash'
     })
+  }
+
+  function setTrashOverflowMenuOpen(isOpen, shouldFocus) {
+    const canOpen = currentView === 'trash' && tasks.length > 0 && !isTaskSelectionMode
+    const nextOpen = !!isOpen && canOpen
+    $('#trash-overflow-menu').prop('hidden', !nextOpen)
+    $('#trash-overflow-button').attr('aria-expanded', String(nextOpen))
+    if (nextOpen && shouldFocus) {
+      $('#trash-empty-button').trigger('focus')
+    }
   }
 
   function focusTaskRow(taskId) {
@@ -4303,6 +4321,7 @@
       .prop('disabled', !canCompleteOrCancel)
       .prop('hidden', isInTrash)
     $('#task-detail-star-button')
+      .prop('hidden', isInTrash)
       .prop('disabled', !isSavedTask || isInTrash)
       .toggleClass('is-starred', !!task.isStarred)
       .attr('aria-pressed', String(!!task.isStarred))
@@ -5145,7 +5164,7 @@
     $('#task-list').on('change', '.task-row-select', function () {
       toggleTaskSelection(Number($(this).attr('data-task-id')), $(this).prop('checked'))
     })
-    $('#task-list').on('click', '.task-row-star', function () {
+    $('#task-list').on('click', '.task-row-star-button', function () {
       const taskId = Number($(this).attr('data-task-id'))
       const task = tasks.find(function (item) { return item.id === taskId })
       if (!task) {
@@ -5245,14 +5264,12 @@
         setStatus(getErrorMessage(error, 'Could not delete selected tasks permanently'), 'error')
       })
     })
-    $('#trash-delete-starred').on('click', function () {
-      deleteAllTrashedTasks(true).catch(function (error) {
-        setStatus(getErrorMessage(error, 'Could not delete all starred tasks permanently'), 'error')
-      })
+    $('#trash-overflow-button').on('click', function () {
+      setTrashOverflowMenuOpen($('#trash-overflow-menu').prop('hidden'), true)
     })
-    $('#trash-delete-all').on('click', function () {
-      deleteAllTrashedTasks(false).catch(function (error) {
-        setStatus(getErrorMessage(error, 'Could not delete all tasks permanently'), 'error')
+    $('#trash-empty-button').on('click', function () {
+      emptyTrash().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not empty Trash'), 'error')
       })
     })
     $('#task-detail-star-button').on('click', function () {
@@ -5321,6 +5338,9 @@
       if (!$(event.target).closest('#task-action-menu, .task-row-more, #task-detail-menu-button').length) {
         closeTaskActionMenu()
       }
+      if (!$(event.target).closest('.trash-header-menu').length) {
+        setTrashOverflowMenuOpen(false, false)
+      }
     })
     $(document).on('keydown', function (event) {
       if (event.key === 'Escape' && !$('#task-filter-popover').prop('hidden')) {
@@ -5333,6 +5353,13 @@
       if (event.key === 'Escape' && !$('#task-action-menu').prop('hidden')) {
         event.preventDefault()
         closeTaskActionMenu()
+        return
+      }
+
+      if (event.key === 'Escape' && !$('#trash-overflow-menu').prop('hidden')) {
+        event.preventDefault()
+        setTrashOverflowMenuOpen(false, false)
+        $('#trash-overflow-button').trigger('focus')
         return
       }
 
