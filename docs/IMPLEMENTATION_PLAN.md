@@ -580,6 +580,7 @@ Scope:
 - Add Starred and Trash views.
 - Provide row and detail-header star controls plus compact individual task menus.
 - Add filtered bulk selection with Star, Unstar, Move to Trash, Restore, and Delete permanently.
+- Keep permanent-delete controls out of normal views and provide Trash-only Delete all starred and Delete all actions across the complete Trash view.
 - Keep Trash reversible by default with an immediate Undo action.
 - Make trashed tasks read only throughout the desktop UI and task mutation services.
 - Preserve star and lifecycle state across Trash and restore.
@@ -592,5 +593,6 @@ Acceptance criteria:
 - Bulk selection never reaches tasks hidden by the current view, filters, or collapsed group.
 - Small windows use a fixed bottom selection action bar without horizontal page overflow.
 - Permanent deletion is possible only from Trash and requires the application confirmation dialog.
+- Delete all starred and Delete all show their complete Trash counts and include tasks hidden by current search or filters.
 - Restore returns an individually opened task to its appropriate lifecycle view and editable state.
 - Playwright coverage verifies individual star/trash/undo, bulk Trash, permanent deletion, restore, read-only behavior, and the responsive action bar.

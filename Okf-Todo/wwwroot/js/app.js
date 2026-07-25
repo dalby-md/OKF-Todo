@@ -1040,6 +1040,17 @@
             <button id="task-filter-clear" class="task-filter-clear" type="button" hidden>Clear</button>
           </div>
 
+          <section id="trash-permanent-actions" class="trash-permanent-actions" aria-labelledby="trash-permanent-actions-title" hidden>
+            <div class="trash-permanent-actions-copy">
+              <strong id="trash-permanent-actions-title">Permanent deletion</strong>
+              <span>Applies to all tasks in Trash, including items hidden by filters.</span>
+            </div>
+            <div class="trash-permanent-actions-buttons">
+              <button id="trash-delete-starred" class="secondary-button danger-button" type="button">Delete all starred</button>
+              <button id="trash-delete-all" class="secondary-button danger-button" type="button">Delete all</button>
+            </div>
+          </section>
+
           <div id="task-selection-bar" class="task-selection-bar" role="toolbar" aria-label="Selected task actions" hidden>
             <label class="task-selection-all">
               <input id="task-select-all" type="checkbox">
@@ -1049,7 +1060,8 @@
               <button id="task-bulk-star" class="secondary-button" type="button">Star</button>
               <button id="task-bulk-unstar" class="secondary-button" type="button">Unstar</button>
               <button id="task-bulk-restore" class="secondary-button" type="button" hidden>Restore</button>
-              <button id="task-bulk-delete" class="secondary-button danger-button" type="button">Move to Trash</button>
+              <button id="task-bulk-trash" class="secondary-button danger-button" type="button">Move to Trash</button>
+              <button id="task-bulk-delete-permanently" class="secondary-button danger-button" type="button" hidden>Delete permanently</button>
               <button id="task-selection-cancel" class="task-selection-cancel" type="button">Cancel</button>
             </div>
           </div>
@@ -3406,9 +3418,24 @@
     $('#task-bulk-restore')
       .prop('hidden', !isTrashView)
       .prop('disabled', selectedCount === 0)
-    $('#task-bulk-delete')
-      .text(isTrashView ? 'Delete permanently' : 'Move to Trash')
+    $('#task-bulk-trash')
+      .prop('hidden', isTrashView)
       .prop('disabled', selectedCount === 0)
+    $('#task-bulk-delete-permanently')
+      .prop('hidden', !isTrashView)
+      .prop('disabled', selectedCount === 0)
+
+    const trashedTaskCount = isTrashView ? tasks.length : 0
+    const starredTrashedTaskCount = isTrashView
+      ? tasks.filter(function (task) { return task.isStarred }).length
+      : 0
+    $('#trash-permanent-actions').prop('hidden', !isTrashView)
+    $('#trash-delete-starred')
+      .text(`Delete all starred (${starredTrashedTaskCount})`)
+      .prop('disabled', starredTrashedTaskCount === 0)
+    $('#trash-delete-all')
+      .text(`Delete all (${trashedTaskCount})`)
+      .prop('disabled', trashedTaskCount === 0)
 
     $('.task-row-shell').each(function () {
       const taskId = Number($(this).attr('data-task-id'))
@@ -3592,15 +3619,16 @@
     setStatus(taskIds.length === 1 ? 'Task restored' : 'Tasks restored', 'saved')
   }
 
-  async function deleteTasksPermanently(taskIds) {
+  async function deleteTasksPermanently(taskIds, confirmation) {
     if (!taskIds.length) {
       return
     }
 
+    const dialog = confirmation || {}
     const confirmed = await showConfirmationDialog(
-      taskIds.length === 1 ? 'Delete task permanently?' : `Delete ${taskIds.length} tasks permanently?`,
-      'This removes the selected task data, attachments, history, and relationships. This cannot be undone.',
-      'Delete permanently')
+      dialog.title || (taskIds.length === 1 ? 'Delete task permanently?' : `Delete ${taskIds.length} tasks permanently?`),
+      dialog.message || 'This removes the selected task data, attachments, history, and relationships. This cannot be undone.',
+      dialog.confirmText || 'Delete permanently')
     if (!confirmed) {
       return
     }
@@ -3616,6 +3644,22 @@
       await selectFirstAvailableTask()
     }
     setStatus(taskIds.length === 1 ? 'Task deleted permanently' : 'Tasks deleted permanently', 'saved')
+  }
+
+  function deleteAllTrashedTasks(starredOnly) {
+    const taskIds = tasks
+      .filter(function (task) { return !starredOnly || task.isStarred })
+      .map(function (task) { return task.id })
+    if (!taskIds.length) {
+      return Promise.resolve()
+    }
+
+    const scope = starredOnly ? 'starred ' : ''
+    return deleteTasksPermanently(taskIds, {
+      title: `Delete all ${scope}tasks permanently?`,
+      message: `This permanently deletes all ${taskIds.length} ${scope}tasks in Trash, including items hidden by filters. Their attachments, history, and relationships will also be removed. This cannot be undone.`,
+      confirmText: starredOnly ? 'Delete all starred' : 'Delete all'
+    })
   }
 
   function focusTaskRow(taskId) {
@@ -5191,13 +5235,24 @@
         setStatus(getErrorMessage(error, 'Could not restore selected tasks'), 'error')
       })
     })
-    $('#task-bulk-delete').on('click', function () {
-      const taskIds = Array.from(selectedTaskIds)
-      const action = currentView === 'trash'
-        ? deleteTasksPermanently(taskIds)
-        : moveTasksToTrash(taskIds)
-      action.catch(function (error) {
-        setStatus(getErrorMessage(error, 'Could not update selected tasks'), 'error')
+    $('#task-bulk-trash').on('click', function () {
+      moveTasksToTrash(Array.from(selectedTaskIds)).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not move selected tasks to Trash'), 'error')
+      })
+    })
+    $('#task-bulk-delete-permanently').on('click', function () {
+      deleteTasksPermanently(Array.from(selectedTaskIds)).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not delete selected tasks permanently'), 'error')
+      })
+    })
+    $('#trash-delete-starred').on('click', function () {
+      deleteAllTrashedTasks(true).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not delete all starred tasks permanently'), 'error')
+      })
+    })
+    $('#trash-delete-all').on('click', function () {
+      deleteAllTrashedTasks(false).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not delete all tasks permanently'), 'error')
       })
     })
     $('#task-detail-star-button').on('click', function () {
