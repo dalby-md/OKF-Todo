@@ -181,10 +181,9 @@ Deletion uses a reversible Trash workflow:
 - Permanent deletion controls are displayed only in the **Trash** view, require an application HTML confirmation dialog, and remove the complete task-owned record graph.
 - Trash uses Select mode to restore or permanently delete any chosen subset. A compact Trash header menu provides **Empty Trash** as the only whole-Trash action; its explicit confirmation covers every trashed task, including tasks currently hidden by search or filters.
 - Star controls are not interactive in Trash. A task that was starred before deletion keeps a passive star marker for context until it is restored or permanently deleted.
-- Every normal view provides **Move all starred to Trash** in its compact view-action menu. The action covers every starred task in that view, including tasks hidden by current search or filters and finished tasks inside a collapsed group, requires explicit confirmation, and provides the normal immediate Undo.
-- The **All** view additionally provides **Move all cancelled to Trash** with the same complete-view scope, confirmation, and Undo behavior. This action is not shown in other views.
+- The **All** view provides **Move all cancelled to Trash** as a compact complete-view action. It includes cancelled tasks hidden by current search or filters, requires explicit confirmation, and provides the normal immediate Undo. This action is not shown in other views.
 
-The same action system supports individual and bulk work. Individual actions live in a compact task menu. **Select** mode operates only on tasks currently rendered by the active view and filters, offers Select all visible, Star, Unstar, Move to Trash, Restore, and Delete permanently as applicable, and uses a bottom action bar on smaller screens.
+The same action system supports individual and bulk work. Individual actions live in a compact task menu. **Select** mode operates only on tasks currently rendered by the active view and filters, offers Select all visible, Star, Unstar, **Move all selected to Trash**, Restore, and **Delete all selected permanently** as applicable, and uses a bottom action bar on smaller screens.
 
 ## Lifecycle timestamps
 

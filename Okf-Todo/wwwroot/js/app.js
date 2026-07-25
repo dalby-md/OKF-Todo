@@ -982,10 +982,6 @@
                     <span aria-hidden="true">&hellip;</span>
                   </button>
                   <div id="task-view-overflow-menu" class="task-view-overflow-menu" role="menu" hidden>
-                    <button id="task-view-move-starred" class="task-view-overflow-menu-item" type="button" role="menuitem">
-                      <span class="fluent-icon" aria-hidden="true">&#xE735;</span>
-                      <span>Move all starred to Trash</span>
-                    </button>
                     <button id="task-view-move-cancelled" class="task-view-overflow-menu-item" type="button" role="menuitem" hidden>
                       <span class="fluent-icon" aria-hidden="true">&#xE711;</span>
                       <span>Move all cancelled to Trash</span>
@@ -1068,8 +1064,8 @@
               <button id="task-bulk-star" class="secondary-button" type="button">Star</button>
               <button id="task-bulk-unstar" class="secondary-button" type="button">Unstar</button>
               <button id="task-bulk-restore" class="secondary-button" type="button" hidden>Restore</button>
-              <button id="task-bulk-trash" class="secondary-button danger-button" type="button">Move to Trash</button>
-              <button id="task-bulk-delete-permanently" class="secondary-button danger-button" type="button" hidden>Delete permanently</button>
+              <button id="task-bulk-trash" class="secondary-button danger-button" type="button">Move all selected to Trash</button>
+              <button id="task-bulk-delete-permanently" class="secondary-button danger-button" type="button" hidden>Delete all selected permanently</button>
               <button id="task-selection-cancel" class="task-selection-cancel" type="button">Cancel</button>
             </div>
           </div>
@@ -3446,16 +3442,14 @@
       .prop('hidden', !isTrashView)
       .prop('disabled', selectedCount === 0)
 
-    const starredTaskCount = isTrashView
-      ? 0
-      : tasks.filter(function (task) { return task.isStarred }).length
     const cancelledTaskCount = currentView === 'all'
       ? tasks.filter(function (task) { return task.taskStatusCode === 'CANCELLED' }).length
       : 0
     const availableViewActionCount = isTrashView
       ? tasks.length
-      : starredTaskCount + cancelledTaskCount
+      : cancelledTaskCount
     const canShowViewOverflow = !isTaskSelectionMode
+      && (isTrashView || currentView === 'all')
     const viewActionLabel = `More ${viewLabels[currentView]} actions`
 
     $('#task-view-overflow-button')
@@ -3463,11 +3457,6 @@
       .prop('disabled', availableViewActionCount === 0)
       .attr('aria-label', viewActionLabel)
       .attr('title', viewActionLabel)
-    $('#task-view-move-starred')
-      .prop('hidden', isTrashView)
-      .prop('disabled', starredTaskCount === 0)
-      .find('span:last')
-      .text(`Move all starred to Trash (${starredTaskCount})`)
     $('#task-view-move-cancelled')
       .prop('hidden', currentView !== 'all')
       .prop('disabled', cancelledTaskCount === 0)
@@ -3722,14 +3711,6 @@
     await moveTasksToTrash(taskIds)
   }
 
-  function moveAllStarredTasksToTrash() {
-    return moveViewTasksToTrash(
-      tasks
-        .filter(function (task) { return task.isStarred })
-        .map(function (task) { return task.id }),
-      'starred')
-  }
-
   function moveAllCancelledTasksToTrash() {
     if (currentView !== 'all') {
       return Promise.resolve()
@@ -3743,16 +3724,13 @@
   }
 
   function setTaskViewOverflowMenuOpen(isOpen, shouldFocus) {
-    const starredTaskCount = currentView === 'trash'
-      ? 0
-      : tasks.filter(function (task) { return task.isStarred }).length
     const cancelledTaskCount = currentView === 'all'
       ? tasks.filter(function (task) { return task.taskStatusCode === 'CANCELLED' }).length
       : 0
     const canOpen = !isTaskSelectionMode
       && (currentView === 'trash'
         ? tasks.length > 0
-        : starredTaskCount > 0 || cancelledTaskCount > 0)
+        : currentView === 'all' && cancelledTaskCount > 0)
     const nextOpen = !!isOpen && canOpen
     $('#task-view-overflow-menu').prop('hidden', !nextOpen)
     $('#task-view-overflow-button').attr('aria-expanded', String(nextOpen))
@@ -5350,11 +5328,6 @@
     })
     $('#task-view-overflow-button').on('click', function () {
       setTaskViewOverflowMenuOpen($('#task-view-overflow-menu').prop('hidden'), true)
-    })
-    $('#task-view-move-starred').on('click', function () {
-      moveAllStarredTasksToTrash().catch(function (error) {
-        setStatus(getErrorMessage(error, 'Could not move starred tasks to Trash'), 'error')
-      })
     })
     $('#task-view-move-cancelled').on('click', function () {
       moveAllCancelledTasksToTrash().catch(function (error) {
