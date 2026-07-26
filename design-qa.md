@@ -33,6 +33,82 @@ No blocking follow-up. Lookup-defined badge colors intentionally differ from amb
 
 final result: passed
 
+---
+
+# Design QA — Compact task title rail, option 3
+
+## Evidence
+
+- Selected visual target:
+  `C:\Users\soere\.codex\generated_images\019f64d1-7fc6-7900-afb4-ee49130ff5eb\call_VOsClEw6cCr7wd4kvqmOLZNb.png`
+- Large implementation:
+  `artifacts/design-qa/task-title-rail-option-3.png`
+- Compact implementation:
+  `artifacts/design-qa/task-title-rail-option-3-compact.png`
+- Same-input comparison:
+  `artifacts/design-qa/task-title-rail-option-3-comparison.png`
+- Large viewport: 1600 × 1000 CSS pixels.
+- Compact viewport: 820 × 900 CSS pixels.
+- State: Light theme, newly saved active task selected and editable.
+
+## Visual review
+
+- The redundant **Task details** and **Title** labels are removed.
+- The editable task title is now the first and strongest element in the detail
+  pane, with the lifecycle pill immediately beside it.
+- A quiet pale-teal rail, three-pixel teal leading edge, and compact vertical
+  padding distinguish task identity without introducing a card, shadow, or new
+  action.
+- Metadata begins directly below the title rail. At narrow widths the rail
+  wraps safely, retains the contextual task menu, and introduces no horizontal
+  page overflow.
+- Empty and read-only states retain an accessible task-title name, readable
+  placeholder, lifecycle context, focus treatment, and existing editability
+  rules.
+
+## Required fidelity surfaces
+
+- Fonts and typography: the existing Segoe UI family is retained; the title
+  uses the selected compact bold hierarchy and the lifecycle remains a small
+  uppercase pill.
+- Spacing and layout rhythm: title, pill, and metadata follow the target's tight
+  rail-to-form rhythm at both tested widths.
+- Colors and visual tokens: the rail reuses the product's teal and mint tokens;
+  waiting and lifecycle-transition variants keep their established semantic
+  colors.
+- Image quality and assets: no new image assets were required.
+- Copy and content: no duplicate title labels remain, and task content is
+  unchanged.
+
+## Interaction and accessibility verification
+
+- The title remains a real editable input and participates in existing dirty
+  tracking, Save, unsaved-change protection, validation, and read-only rules.
+- `aria-label="Task title"` replaces the removed visible field label.
+- The lifecycle message remains an ARIA live status.
+- The compact contextual task menu remains available where the selected row may
+  be outside the visible area.
+- Playwright verifies DOM order, rail geometry, title/pill alignment, metadata
+  proximity, color and border treatment, responsive containment, and absence of
+  horizontal page overflow.
+
+## Comparison history
+
+1. Initial build: the unrelated one-time selection coach mark obscured the
+   queue in the QA capture.
+2. Final capture: the coach mark was dismissed before evidence capture. No
+   actionable P0, P1, or P2 visual differences remain.
+
+## Verification
+
+- `node --check Okf-Todo/wwwroot/js/app.js`
+- Focused Edge/Playwright contract:
+  `TaskTitleRail_UsesEditableTitleAsHeadingAndKeepsLifecycleBesideIt`
+- Selected target and final implementation inspected together in one comparison
+  image.
+
+final result: passed
+
 # Design QA — lifecycle destination reveal, option 3
 
 ## Evidence

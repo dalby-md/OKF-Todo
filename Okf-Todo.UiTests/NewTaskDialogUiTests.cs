@@ -146,6 +146,93 @@ public sealed class NewTaskDialogUiTests
     }
 
     [Fact]
+    public async Task TaskTitleRail_UsesEditableTitleAsHeadingAndKeepsLifecycleBesideIt()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync();
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1600, Height = 1000 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(
+            $"{fixture.BaseUrl}/index.html?v=task-title-rail-option-3",
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+
+        const string taskTitle = "Prepare release readiness checklist";
+        await page.Locator("#new-task-button").ClickAsync();
+        await page.Locator("#new-task-title-input").FillAsync(taskTitle);
+        await page.Locator("#new-task-save-button").ClickAsync();
+        await page.Locator("#new-task-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Hidden
+        });
+        if (await page.Locator("#task-selection-coachmark").IsVisibleAsync())
+        {
+            await page.Locator("#task-selection-coachmark-dismiss").ClickAsync();
+        }
+
+        var title = page.Locator("#task-title");
+        var status = page.Locator("#task-status-label");
+        var rail = page.Locator(".task-title-rail");
+        Assert.Equal(taskTitle, await title.InputValueAsync());
+        Assert.Equal("Task title", await title.GetAttributeAsync("aria-label"));
+        Assert.Equal(0, await page.Locator("label[for='task-title']").CountAsync());
+        Assert.Equal(0, await page.Locator("#task-editor-title").CountAsync());
+        Assert.Equal(
+            "true",
+            await rail.EvaluateAsync<string>(
+                "element => String(element.children[0].id === 'task-title' && element.children[1].id === 'task-status-label')"));
+
+        var railBox = await rail.BoundingBoxAsync();
+        var titleBox = await title.BoundingBoxAsync();
+        var statusBox = await status.BoundingBoxAsync();
+        var metadataBox = await page.Locator(".metadata-grid").BoundingBoxAsync();
+        Assert.NotNull(railBox);
+        Assert.NotNull(titleBox);
+        Assert.NotNull(statusBox);
+        Assert.NotNull(metadataBox);
+        Assert.InRange(railBox!.Height, 42, 74);
+        Assert.InRange(Math.Abs((titleBox!.Y + titleBox.Height / 2) - (statusBox!.Y + statusBox.Height / 2)), 0, 8);
+        Assert.InRange(statusBox.X - (titleBox.X + titleBox.Width), 0, 18);
+        Assert.InRange(metadataBox!.Y - (railBox.Y + railBox.Height), 0, 20);
+
+        var railStyles = await rail.EvaluateAsync<string[]>(
+            """
+            element => {
+              const styles = getComputedStyle(element);
+              return [styles.backgroundColor, styles.borderLeftWidth, styles.borderLeftStyle];
+            }
+            """);
+        Assert.Equal("rgb(237, 247, 245)", railStyles[0]);
+        Assert.Equal("3px", railStyles[1]);
+        Assert.Equal("solid", railStyles[2]);
+        await AssertNoHorizontalPageOverflowAsync(page);
+        await CaptureWorkspaceAsync(page, "task-title-rail-option-3.png");
+
+        await page.SetViewportSizeAsync(820, 900);
+        await AssertNoHorizontalPageOverflowAsync(page);
+        var compactRailBox = await rail.BoundingBoxAsync();
+        var compactTitleBox = await title.BoundingBoxAsync();
+        var compactStatusBox = await status.BoundingBoxAsync();
+        Assert.NotNull(compactRailBox);
+        Assert.NotNull(compactTitleBox);
+        Assert.NotNull(compactStatusBox);
+        Assert.True(compactTitleBox!.X + compactTitleBox.Width <= compactRailBox!.X + compactRailBox.Width + 1);
+        Assert.True(compactStatusBox!.X + compactStatusBox.Width <= compactRailBox.X + compactRailBox.Width + 1);
+        Assert.InRange(compactRailBox.Height, 40, 104);
+        await CaptureWorkspaceAsync(page, "task-title-rail-option-3-compact.png");
+    }
+
+    [Fact]
     public async Task SaveNewTask_RevealsSelectedTaskInsideQueueAndKeepsEditorFocused()
     {
         await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);

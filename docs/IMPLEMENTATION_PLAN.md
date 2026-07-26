@@ -159,6 +159,8 @@ Acceptance criteria:
 
 - User can create a task quickly.
 - New task starts as `ACTIVE`.
+- Task details present the editable title as the heading with the lifecycle
+  pill beside it, without duplicate Task details or Title labels.
 - User can edit title/body/type/priority/deadline/source.
 - User can edit optional owner and responsible values when their independently persisted visibility switches are enabled.
 - Overview text search includes owner and responsible values even when their detail fields are hidden.

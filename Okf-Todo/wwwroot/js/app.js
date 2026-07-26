@@ -1079,18 +1079,24 @@
 
           <div id="layout-resizer" class="layout-resizer" role="separator" aria-label="Resize task list" aria-orientation="vertical" tabindex="0"></div>
 
-          <section class="task-editor-panel" aria-labelledby="task-editor-title">
-            <header class="editor-header">
-              <div class="task-editor-heading">
-                <p id="task-status-label" class="eyebrow" role="status" aria-live="polite">No task selected</p>
-                <h2 id="task-editor-title">Select or create a task</h2>
-              </div>
+          <section class="task-editor-panel" aria-label="Task details">
+            <form id="task-form" class="task-form">
+            <div class="task-title-rail">
+              <input
+                id="task-title"
+                class="title-input"
+                type="text"
+                autocomplete="off"
+                aria-label="Task title"
+                placeholder="Select or create a task"
+                required
+                disabled>
+              <p id="task-status-label" class="eyebrow" role="status" aria-live="polite">No task selected</p>
               <button id="task-detail-context-menu-button" class="task-detail-context-menu-button" type="button" aria-label="More task actions" title="More task actions" aria-haspopup="menu" aria-controls="task-action-menu" aria-expanded="false" disabled hidden>
                 <span aria-hidden="true">&hellip;</span>
               </button>
-            </header>
+            </div>
 
-          <form id="task-form" class="task-form">
             <div id="task-read-only-notice" class="task-read-only-notice" role="status" hidden>
               <span class="task-read-only-icon fluent-icon" aria-hidden="true">&#xE72E;</span>
               <span class="task-read-only-copy">
@@ -1099,9 +1105,6 @@
               </span>
               <button id="task-read-only-reopen-button" class="secondary-button" type="button">Reopen to edit</button>
             </div>
-
-            <label class="field-label" for="task-title">Title</label>
-            <input id="task-title" class="title-input" type="text" autocomplete="off" required disabled>
 
             <div class="metadata-grid">
               <label class="field-block task-list-field" for="task-list-owner">
@@ -3220,7 +3223,6 @@
       .text('No task selected')
       .attr('title', 'No task selected')
       .removeClass('is-waiting-context')
-    $('#task-editor-title').text('Select or create a task')
     $('#task-read-only-notice').prop('hidden', true)
     $('#task-form').removeClass('is-task-read-only').attr('aria-readonly', null)
     $('#task-title').val('')
@@ -5006,7 +5008,6 @@
         ? `Waiting · ${waitingLabel}`
         : task.taskStatusName || 'Draft'
 
-    $('#task-editor-title').text(task.id ? 'Task details' : 'New task')
     $('#task-status-label')
       .text(contextLabel)
       .attr('title', contextLabel)
@@ -5638,6 +5639,7 @@
       requireSavedTaskId(savedTask)
       await renderTaskEditor(savedTask)
       closeNewTaskDialog()
+      window.Editor.focus()
       selectViewForTask(savedTask)
       await loadTaskLists({ keepCurrentScope: true })
       await loadTasks({

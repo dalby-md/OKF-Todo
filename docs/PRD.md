@@ -102,6 +102,12 @@ Cross-list relationships remain supported. Opening a related task switches to it
 
 Confirming the title in the **New task** dialog immediately creates the task in SQLite. The returned saved task opens in the editor with task-owned controls such as attachments, checklist items, relationships, comments, Complete, and Cancel available immediately. A second press of the main **Save** button is not required to finish creation; that button saves subsequent edits. The new task is selected and scrolled fully into view inside the task queue without moving the surrounding workspace. When the dialog closes after a successful creation, keyboard focus moves directly into the active HTML or Markdown body editor.
 
+Task details use a compact title rail. The editable task title is the visible
+heading, followed immediately by the lifecycle-context pill. Do not repeat
+**Task details** or a separate visible **Title** label above it. Metadata starts
+directly below the rail, and the title, pill, and compact contextual action wrap
+without horizontal overflow on narrow screens.
+
 ## Task body
 
 The task body is free text.
