@@ -124,6 +124,11 @@ namespace Photino.Okf_Todo
                         });
                     });
 
+            if (OperatingSystem.IsWindows())
+            {
+                window.SetIconFile(Path.Combine(AppContext.BaseDirectory, "wwwroot", "favicon.ico"));
+            }
+
             services.GetRequiredService<PhotinoBackupDestinationPicker>().Attach(window);
 
             ApplyStartupWindowPlacement(window, windowPreference);

@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<OutputType>Exe</OutputType>
+		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0</TargetFramework>
 		<Platforms>AnyCPU</Platforms>
+		<ApplicationIcon>wwwroot\favicon.ico</ApplicationIcon>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
    		<!-- Generate embedded file manifest when using the Photino.NET StaticFileServer -->

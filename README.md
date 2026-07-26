@@ -289,3 +289,7 @@ Use `publish-github-release.ps1` only for the alternative versioned, non-alpha r
 
 ## AI harness
 OKF-Todo is built using Codex but is not tied to Codex. It uses AGENTS.md and skills and other crosss platform designs.
+
+## Testing the installed Windows application
+
+See [Installed contract tests](Okf-Todo.InstalledContractTests/README.md) for the command and requirements for testing the installed GUI, MCP server, OKF bundle, and isolated SQLite databases.

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection.PortableExecutable;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using Photino.Okf_Todo.Data;
@@ -8,7 +9,23 @@ namespace Okf_Todo.Tests;
 
 public sealed class OkfCommandProcessTests
 {
+    private const string ApplicationPathVariable = "OKF_TODO_TEST_APPLICATION_PATH";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    [Fact]
+    public void WindowsApplicationExecutable_UsesGuiSubsystem()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var applicationPath = GetWindowsApplicationPath();
+        using var stream = File.OpenRead(applicationPath);
+        using var reader = new PEReader(stream);
+
+        Assert.Equal(Subsystem.WindowsGui, reader.PEHeaders.PEHeader?.Subsystem);
+    }
 
     [Fact]
     public async Task OkfCommandMode_WritesJsonToStdoutLogsToStderrAndBypassesDesktopMutex()
@@ -133,12 +150,14 @@ public sealed class OkfCommandProcessTests
 
     private static async Task<CommandProcessResult> RunCommandAsync(string databasePath, string standardInput)
     {
-        var applicationPath = Path.Combine(AppContext.BaseDirectory, "Okf-Todo.dll");
-        Assert.True(File.Exists(applicationPath), $"Application assembly was not found at {applicationPath}.");
+        var applicationPath = OperatingSystem.IsWindows()
+            ? GetWindowsApplicationPath()
+            : Path.Combine(AppContext.BaseDirectory, "Okf-Todo.dll");
+        Assert.True(File.Exists(applicationPath), $"Application was not found at {applicationPath}.");
 
         var startInfo = new ProcessStartInfo
         {
-            FileName = "dotnet",
+            FileName = OperatingSystem.IsWindows() ? applicationPath : "dotnet",
             WorkingDirectory = AppContext.BaseDirectory,
             UseShellExecute = false,
             CreateNoWindow = true,
@@ -146,7 +165,11 @@ public sealed class OkfCommandProcessTests
             RedirectStandardOutput = true,
             RedirectStandardError = true
         };
-        startInfo.ArgumentList.Add(applicationPath);
+        if (!OperatingSystem.IsWindows())
+        {
+            startInfo.ArgumentList.Add(applicationPath);
+        }
+
         startInfo.ArgumentList.Add("--okf-command");
         startInfo.ArgumentList.Add("--okf-database-path");
         startInfo.ArgumentList.Add(databasePath);
@@ -174,6 +197,18 @@ public sealed class OkfCommandProcessTests
             process.ExitCode,
             await standardOutputTask,
             await standardErrorTask);
+    }
+
+    private static string GetWindowsApplicationPath()
+    {
+        var configuredPath = Environment.GetEnvironmentVariable(ApplicationPathVariable);
+        var applicationPath = string.IsNullOrWhiteSpace(configuredPath)
+            ? Path.Combine(AppContext.BaseDirectory, "Okf-Todo.exe")
+            : Path.GetFullPath(configuredPath);
+        Assert.True(
+            File.Exists(applicationPath),
+            $"Windows application executable was not found at {applicationPath}.");
+        return applicationPath;
     }
 
     private static string CreateTestDirectory()
