@@ -68,9 +68,6 @@ The installer includes the desktop application and OKF context layer. Installing
 
 **You don't need to be a local administrator to install this.**
 
-## Screenshots
-
-[Browse the OKF-Todo screenshot gallery](docs/images/promotional/README.md) to see the workspace, task workflow, offline Help, Preferences, backup, and dark mode. All screenshots use fictional demonstration data.
 
 # Section for IT professionals
 
