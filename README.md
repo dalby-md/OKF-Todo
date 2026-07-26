@@ -13,7 +13,7 @@ An open-source, offline To-Do application for developers and supporters built wi
 
 OKF-Todo is designed to help an AI coding harness turn unstructured work into practical artifacts. Give Codex, Claude Code, or another compatible harness a customer email thread, support transcript, meeting notes, diagnostic output, or similar source material and ask it to prepare an internal task, investigation plan, customer reply, handover, status update, or another useful artifact.
 
-The application is not dependent on AI. It also works as a traditional desktop To-Do application where you can create, organize, update, and complete tasks entirely through the user interface. No hosted account is required, and your data remains local.
+The application is not dependent on AI. It also works as a traditional desktop To-Do application where you can create, organize, update, and complete tasks entirely through the user interface. No hosted account is required, and your data remains local. See [Using OKF-Todo day to day](docs/help/using-okf-todo.md) for the complete end-user workflow.
 
 For AI-assisted work, the recommended workflow is **draft, review, save, verify**: ask the harness to analyze the source without changing anything, review its proposal, explicitly approve any task creation or update, and then read the saved result back. The [OKF user guide](docs/help/okf-layer.md) and [MCP user guide](docs/help/mcp-server.md) provide complete examples and reusable prompts.
 
@@ -27,7 +27,7 @@ An AI harness can work with OKF-Todo in several ways:
 
 The desktop interface, CLI, and MCP server use the same application services, so their changes consistently apply validation, lifecycle rules, and automatic task history. Direct SQLite writes are also possible, but they bypass those services; the caller is therefore responsible for preserving data integrity and recording any required history.
 
-The [OKF](docs/help/okf-layer.md) and [MCP](docs/help/mcp-server.md) Markdown guides are also the source for the offline in-app Help. The desktop build copies and renders them locally so repository and application guidance stay synchronized.
+The [desktop application](docs/help/using-okf-todo.md), [OKF](docs/help/okf-layer.md), and [MCP](docs/help/mcp-server.md) Markdown guides are also the source for the offline in-app Help. The desktop build copies and renders them locally so repository and application guidance stay synchronized.
 
 
 ## Coming Next
@@ -56,7 +56,7 @@ It is designed for the work that often falls between formal systems: production 
 - Editable task types, priorities, and statuses.
 - Light and dark color schemes with flexible desktop layouts.
 - Complete database backup from inside the application.
-- Offline in-app Help for using the OKF layer and optional MCP server.
+- Offline in-app Help for the desktop application, OKF layer, and optional MCP server.
 
 ## Windows Installer
 

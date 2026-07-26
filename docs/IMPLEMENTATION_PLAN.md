@@ -33,6 +33,9 @@ Add:
 /docs/PRD.md
 /docs/DATA_MODEL.md
 /docs/IMPLEMENTATION_PLAN.md
+/docs/help/using-okf-todo.md
+/docs/help/okf-layer.md
+/docs/help/mcp-server.md
 /AGENTS.md
 ```
 
@@ -42,6 +45,14 @@ Purpose:
 - Give Codex stable context.
 - Reduce repeated explanation.
 - Avoid rebuilding the wrong thing.
+
+The three files under `docs/help` are canonical end-user guides and are copied
+unchanged into the desktop build and publish output. Every user-visible feature
+change must update `using-okf-todo.md` when it changes a workflow, label,
+shortcut, setting, navigation rule, or other behavior covered by that guide.
+Changes to OKF or MCP behavior must update their respective guides. A build must
+verify that each changed canonical file exactly matches the corresponding
+`wwwroot/help` output file.
 
 ## Milestone 2 — Data foundation
 

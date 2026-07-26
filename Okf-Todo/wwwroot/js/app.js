@@ -95,6 +95,7 @@
   const colorSchemeStorageKey = 'okf-todo-color-scheme'
   const allTaskListsScope = 'ALL'
   const helpTopics = {
+    'using-okf-todo': '/help/using-okf-todo.md',
     'okf-layer': '/help/okf-layer.md',
     'mcp-server': '/help/mcp-server.md'
   }
@@ -154,7 +155,7 @@
   let completeWaitDialogResolve = null
   let confirmationDialogResolve = null
   let dirtyTrackingSuppressions = 0
-  let activeHelpTopic = 'okf-layer'
+  let activeHelpTopic = 'using-okf-todo'
   let activePreferenceSection = 'appearance'
   let taskTransitionReveal = null
   let taskTransitionRevealTimer = null
@@ -1238,7 +1239,7 @@
           <section class="settings-dialog help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title">
             <header class="settings-header help-header">
               <div>
-                <p class="eyebrow">Local integration guides</p>
+                <p class="eyebrow">User guides</p>
                 <h2 id="help-title">Help</h2>
               </div>
               <button id="help-close-button" class="icon-button" type="button" aria-label="Close help" title="Close">&times;</button>
@@ -1246,7 +1247,11 @@
 
             <div class="help-layout">
               <nav class="help-topic-list" aria-label="Help topics">
-                <button class="help-topic-button is-active" type="button" data-help-topic="okf-layer" aria-current="page">
+                <button class="help-topic-button is-active" type="button" data-help-topic="using-okf-todo" aria-current="page">
+                  <strong>Using OKF-Todo</strong>
+                  <span>Create, organize, and finish tasks</span>
+                </button>
+                <button class="help-topic-button" type="button" data-help-topic="okf-layer">
                   <strong>OKF layer</strong>
                   <span>Context graph and command adapter</span>
                 </button>
@@ -5423,11 +5428,13 @@
 
     article.querySelectorAll('a[href]').forEach(function (link) {
       const href = link.getAttribute('href') || ''
-      const linkedTopic = href.includes('mcp-server.md')
-        ? 'mcp-server'
-        : href.includes('okf-layer.md')
-          ? 'okf-layer'
-          : null
+      const linkedTopic = href.includes('using-okf-todo.md')
+        ? 'using-okf-todo'
+        : href.includes('mcp-server.md')
+          ? 'mcp-server'
+          : href.includes('okf-layer.md')
+            ? 'okf-layer'
+            : null
 
       if (linkedTopic) {
         link.setAttribute('href', `#help-${linkedTopic}`)

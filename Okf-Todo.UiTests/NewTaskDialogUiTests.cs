@@ -261,6 +261,65 @@ public sealed class NewTaskDialogUiTests
     }
 
     [Fact]
+    public async Task Help_DefaultsToDesktopGuideAndLoadsAllCanonicalTopics()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync();
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1400, Height = 900 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(
+            $"{fixture.BaseUrl}/index.html?v=end-user-help",
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+
+        await page.Locator("#help-button").ClickAsync();
+        await page.Locator("#help-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Visible
+        });
+
+        var topicButtons = page.Locator(".help-topic-button");
+        Assert.Equal(3, await topicButtons.CountAsync());
+        Assert.Equal(
+            "page",
+            await page.Locator("[data-help-topic='using-okf-todo']").GetAttributeAsync("aria-current"));
+        await page.Locator("#help-content h1").WaitForAsync();
+        Assert.Equal("Use OKF-Todo Day to Day", await page.Locator("#help-content h1").TextContentAsync());
+        await page.Locator("#help-content").GetByText("Start with one task", new LocatorGetByTextOptions
+        {
+            Exact = true
+        }).WaitForAsync();
+
+        await page.Locator("[data-help-topic='okf-layer']").ClickAsync();
+        await page.Locator("#help-content h1").WaitForAsync();
+        Assert.Equal(
+            "Use the OKF Layer with an AI Assistant",
+            await page.Locator("#help-content h1").TextContentAsync());
+
+        await page.Locator("[data-help-topic='mcp-server']").ClickAsync();
+        await page.Locator("#help-content h1").WaitForAsync();
+        Assert.Equal(
+            "Use the MCP Server with Codex or Claude Code",
+            await page.Locator("#help-content h1").TextContentAsync());
+
+        await page.Locator("[data-help-topic='using-okf-todo']").ClickAsync();
+        await page.Locator("#help-content h1").WaitForAsync();
+        Assert.Equal("Use OKF-Todo Day to Day", await page.Locator("#help-content h1").TextContentAsync());
+        await AssertNoHorizontalPageOverflowAsync(page);
+        await CaptureViewportAsync(page, "help-using-okf-todo.png");
+    }
+
+    [Fact]
     public async Task SaveNewTask_RevealsSelectedTaskInsideQueueAndKeepsEditorFocused()
     {
         await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
@@ -1766,6 +1825,11 @@ public sealed class NewTaskDialogUiTests
             builder.Services.AddSingleton<BridgeMessageHandler>();
 
             var application = builder.Build();
+            application.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(Path.Combine(workspaceRoot, "docs", "help")),
+                RequestPath = "/help"
+            });
             application.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(Path.Combine(workspaceRoot, "Okf-Todo", "wwwroot"))

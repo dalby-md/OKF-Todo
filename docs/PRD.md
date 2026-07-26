@@ -15,8 +15,9 @@ The app already has a Photino prototype demonstrating usage of an HTML/Markdown 
 - Very few required fields.
 - Structured enough for sorting, filtering, and history.
 - Avoid unnecessary multi-user concepts.
-- Provide offline in-app Help that loads the shipped OKF-layer and MCP-server guides from local application assets.
-- Make those guides task-oriented user guidance: show how a harness such as Codex or Claude Code can turn user-supplied email threads, support transcripts, notes, and logs into reviewable tasks, investigation plans, customer replies, handovers, and similar artifacts.
+- Provide offline in-app Help that loads the shipped desktop-application, OKF-layer, and MCP-server guides from local application assets.
+- Keep the desktop guide current with every covered user-facing behavior change. It must describe workflows in the order users encounter them, use current interface labels, and remain focused on user outcomes rather than implementation details.
+- Make the OKF and MCP guides task-oriented integration guidance: show how a harness such as Codex or Claude Code can turn user-supplied email threads, support transcripts, notes, and logs into reviewable tasks, investigation plans, customer replies, handovers, and similar artifacts.
 - Use a draft-review-save-verify workflow for AI-assisted changes. Treat OKF as the context layer and the optional MCP server as the local task action bridge; neither component is an email connector or an AI model.
 - Keep database schemas, command envelopes, and other implementation details in advanced references rather than making them prerequisites for the user workflow.
 - Prefer table-based lookup values over hardcoded enums.

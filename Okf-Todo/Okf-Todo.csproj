@@ -33,6 +33,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Include="..\docs\help\using-okf-todo.md" Link="wwwroot\help\using-okf-todo.md">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	    <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+	  </None>
 	  <None Include="..\docs\help\okf-layer.md" Link="wwwroot\help\okf-layer.md">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	    <CopyToPublishDirectory>Always</CopyToPublishDirectory>
