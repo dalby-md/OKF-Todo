@@ -1093,6 +1093,7 @@
                 required
                 disabled>
               <p id="task-status-label" class="eyebrow" role="status" aria-live="polite">No task selected</p>
+              <span id="task-id-label" class="task-id-reference task-detail-id" aria-label="Task ID" title="Task ID" hidden></span>
               <button id="task-detail-context-menu-button" class="task-detail-context-menu-button" type="button" aria-label="More task actions" title="More task actions" aria-haspopup="menu" aria-controls="task-action-menu" aria-expanded="false" disabled hidden>
                 <span aria-hidden="true">&hellip;</span>
               </button>
@@ -3228,6 +3229,7 @@
       .text('No task selected')
       .attr('title', 'No task selected')
       .removeClass('is-waiting-context')
+    $('#task-id-label').text('').prop('hidden', true)
     $('#task-read-only-notice').prop('hidden', true)
     $('#task-form').removeClass('is-task-read-only').attr('aria-readonly', null)
     $('#task-title').val('')
@@ -3886,7 +3888,10 @@
         </label>
         <button class="task-row${selectedClass}${waitingClass}${cancelledClass}${transitionClass}" type="button" data-task-id="${task.id}"${selectedClass ? ' aria-current="true"' : ''}>
           ${transitionLabel}
-          <span class="task-row-title">${encodeText(task.title)}</span>
+          <span class="task-row-heading">
+            <span class="task-row-title">${encodeText(task.title)}</span>
+            <span class="task-id-reference task-row-id" aria-label="Task ID ${task.id}" title="Task ID ${task.id}">#${task.id}</span>
+          </span>
           <span class="task-row-meta">
             ${taskListPill}
             ${renderBadge(task.taskTypeName, task.taskTypeBackgroundColor, task.taskTypeForegroundColor)}
@@ -5021,6 +5026,11 @@
       .toggleClass('is-transition-completed', !!transitionReveal && transitionReveal.kind === 'completed')
       .toggleClass('is-transition-cancelled', !!transitionReveal && transitionReveal.kind === 'cancelled')
       .toggleClass('is-transition-active', !!transitionReveal && transitionReveal.kind === 'active')
+    $('#task-id-label')
+      .text(isSavedTask ? `#${task.id}` : '')
+      .attr('aria-label', isSavedTask ? `Task ID ${task.id}` : 'Task ID')
+      .attr('title', isSavedTask ? `Task ID ${task.id}` : 'Task ID')
+      .prop('hidden', !isSavedTask)
     $('#complete-button')
       .text(isInTrash ? 'Restore' : (canReopen ? 'Reopen' : 'Complete'))
       .prop('disabled', !(isInTrash || canCompleteOrCancel || canReopen))

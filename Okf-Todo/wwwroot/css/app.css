@@ -5478,3 +5478,60 @@ body.is-resizing-editor * {
     max-width: calc(100% - 42px);
   }
 }
+
+/* Quiet, support-friendly task references in the list and selected-task header. */
+.task-id-reference {
+  color: #6f7f88;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  letter-spacing: 0.025em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.task-row-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+
+.task-row-id {
+  flex: 0 0 auto;
+  color: #788891;
+  font-size: 0.64rem;
+}
+
+.task-row-heading .task-row-title {
+  min-width: 0;
+}
+
+.task-detail-id {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border: 1px solid #cfdddf;
+  border-radius: 999px;
+  color: #5e7078;
+  background: rgb(255 255 255 / 62%);
+}
+
+:root.theme-dark .task-row-id {
+  color: #9eb0b5;
+}
+
+:root.theme-dark .task-detail-id {
+  border-color: #435b60;
+  color: #b8c9cc;
+  background: rgb(25 41 45 / 72%);
+}
+
+@media (max-width: 640px) {
+  .task-row-heading {
+    gap: 6px;
+  }
+
+  .task-detail-id {
+    padding-inline: 6px;
+  }
+}
