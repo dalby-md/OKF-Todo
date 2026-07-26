@@ -3520,12 +3520,12 @@ body.is-resizing-editor * {
 }
 
 .metadata-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 @media (min-width: 901px) {
   .metadata-grid .tags-field {
-    grid-column: span 3;
+    grid-column: auto;
   }
 }
 

@@ -105,8 +105,9 @@ Confirming the title in the **New task** dialog immediately creates the task in 
 Task details use a compact title rail. The editable task title is the visible
 heading, followed immediately by the lifecycle-context pill. Do not repeat
 **Task details** or a separate visible **Title** label above it. Metadata starts
-directly below the rail, and the title, pill, and compact contextual action wrap
-without horizontal overflow on narrow screens.
+directly below the rail. Wide layouts present the six primary metadata controls
+as two balanced rows of three fields. The title, pill, metadata, and compact
+contextual action wrap without horizontal overflow on narrow screens.
 
 ## Task body
 

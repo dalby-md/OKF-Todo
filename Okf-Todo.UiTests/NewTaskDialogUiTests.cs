@@ -196,6 +196,7 @@ public sealed class NewTaskDialogUiTests
         var titleBox = await title.BoundingBoxAsync();
         var statusBox = await status.BoundingBoxAsync();
         var metadataBox = await page.Locator(".metadata-grid").BoundingBoxAsync();
+        var metadataFields = page.Locator(".metadata-grid > .field-block");
         Assert.NotNull(railBox);
         Assert.NotNull(titleBox);
         Assert.NotNull(statusBox);
@@ -204,6 +205,22 @@ public sealed class NewTaskDialogUiTests
         Assert.InRange(Math.Abs((titleBox!.Y + titleBox.Height / 2) - (statusBox!.Y + statusBox.Height / 2)), 0, 8);
         Assert.InRange(statusBox.X - (titleBox.X + titleBox.Width), 0, 18);
         Assert.InRange(metadataBox!.Y - (railBox.Y + railBox.Height), 0, 20);
+        Assert.Equal(
+            3,
+            await page.Locator(".metadata-grid").EvaluateAsync<int>(
+                "element => getComputedStyle(element).gridTemplateColumns.split(' ').length"));
+        Assert.Equal(6, await metadataFields.CountAsync());
+        var firstRowField = await metadataFields.Nth(0).BoundingBoxAsync();
+        var firstRowLastField = await metadataFields.Nth(2).BoundingBoxAsync();
+        var secondRowField = await metadataFields.Nth(3).BoundingBoxAsync();
+        var secondRowLastField = await metadataFields.Nth(5).BoundingBoxAsync();
+        Assert.NotNull(firstRowField);
+        Assert.NotNull(firstRowLastField);
+        Assert.NotNull(secondRowField);
+        Assert.NotNull(secondRowLastField);
+        Assert.InRange(Math.Abs(firstRowField!.Y - firstRowLastField!.Y), 0, 1);
+        Assert.True(secondRowField!.Y > firstRowField.Y);
+        Assert.InRange(Math.Abs(secondRowField.Y - secondRowLastField!.Y), 0, 1);
 
         var railStyles = await rail.EvaluateAsync<string[]>(
             """
