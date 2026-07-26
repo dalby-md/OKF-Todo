@@ -100,7 +100,7 @@ The list manager supports inline add and rename, drag-to-reorder, task counts in
 
 Cross-list relationships remain supported. Opening a related task switches to its concrete list when currently scoped, while **All lists** remains global. A task in Trash shows its list but must be restored before list ownership can change.
 
-Confirming the title in the **New task** dialog immediately creates the task in SQLite. The returned saved task opens in the editor with task-owned controls such as attachments, checklist items, relationships, comments, Complete, and Cancel available immediately. A second press of the main **Save** button is not required to finish creation; that button saves subsequent edits. When the dialog closes after a successful creation, keyboard focus moves directly into the active HTML or Markdown body editor.
+Confirming the title in the **New task** dialog immediately creates the task in SQLite. The returned saved task opens in the editor with task-owned controls such as attachments, checklist items, relationships, comments, Complete, and Cancel available immediately. A second press of the main **Save** button is not required to finish creation; that button saves subsequent edits. The new task is selected and scrolled fully into view inside the task queue without moving the surrounding workspace. When the dialog closes after a successful creation, keyboard focus moves directly into the active HTML or Markdown body editor.
 
 ## Task body
 

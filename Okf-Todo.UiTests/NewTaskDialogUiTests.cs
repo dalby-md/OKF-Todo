@@ -146,6 +146,82 @@ public sealed class NewTaskDialogUiTests
     }
 
     [Fact]
+    public async Task SaveNewTask_RevealsSelectedTaskInsideQueueAndKeepsEditorFocused()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1600, Height = 1000 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(
+            $"{fixture.BaseUrl}/index.html?v=new-task-reveal-contract",
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list .task-row').length > 10");
+        await page.Locator("#task-sort").SelectOptionAsync("TITLE_ASC");
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-list')?.scrollHeight > document.querySelector('#task-list')?.clientHeight");
+        await page.Locator("#task-list").EvaluateAsync("element => { element.scrollTop = 0; }");
+        var expectedWorkspaceScrollPosition = await ReadWorkspaceScrollPositionAsync(page);
+
+        const string taskTitle = "ZZZ newly revealed task";
+        await page.Locator("#new-task-button").ClickAsync();
+        await page.Locator("#new-task-title-input").FillAsync(taskTitle);
+        await page.Locator("#new-task-save-button").ClickAsync();
+        await page.Locator("#new-task-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Hidden
+        });
+
+        await page.WaitForFunctionAsync(
+            """
+            expectedTitle => {
+              const selectedRow = document.querySelector('#task-list .task-row.is-selected')
+              return selectedRow?.querySelector('.task-row-title')?.textContent.trim() === expectedTitle
+            }
+            """,
+            taskTitle);
+        await page.WaitForFunctionAsync(
+            """
+            expectedTitle => {
+              const taskList = document.querySelector('#task-list')
+              const selectedRow = document.querySelector('#task-list .task-row.is-selected')
+              if (!taskList || !selectedRow
+                  || selectedRow.querySelector('.task-row-title')?.textContent.trim() !== expectedTitle) {
+                return false
+              }
+
+              const listBox = taskList.getBoundingClientRect()
+              const rowBox = selectedRow.getBoundingClientRect()
+              return taskList.scrollTop > 0
+                && rowBox.top >= listBox.top - 1
+                && rowBox.bottom <= listBox.bottom + 1
+            }
+            """,
+            taskTitle);
+
+        Assert.Equal(taskTitle, await page.Locator("#task-title").InputValueAsync());
+        Assert.True(await IsEditorFocusedAsync(page), "Expected the editor to keep keyboard focus after revealing the new task.");
+        var actualWorkspaceScrollPosition = await ReadWorkspaceScrollPositionAsync(page);
+        Assert.Equal(expectedWorkspaceScrollPosition.Length, actualWorkspaceScrollPosition.Length);
+        for (var index = 0; index < expectedWorkspaceScrollPosition.Length; index++)
+        {
+            Assert.InRange(
+                Math.Abs(actualWorkspaceScrollPosition[index] - expectedWorkspaceScrollPosition[index]),
+                0,
+                1);
+        }
+    }
+
+    [Fact]
     public async Task MarkdownUnsavedChanges_SwitchingTasks_CanCancelOrSaveBeforeNavigation()
     {
         await using var fixture = await UiAppFixture.CreateAsync();

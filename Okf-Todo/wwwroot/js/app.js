@@ -4365,13 +4365,14 @@
     }, 0)
   }
 
-  function revealTaskRow(taskId) {
+  function revealTaskRow(taskId, shouldFocus) {
     const taskList = document.querySelector('#task-list')
     const taskRow = document.querySelector(`#task-list .task-row[data-task-id="${taskId}"]`)
     if (!taskList || !taskRow) {
       return false
     }
 
+    const focusRow = shouldFocus !== false
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     window.requestAnimationFrame(function () {
       const documentScroller = document.scrollingElement
@@ -4388,10 +4389,12 @@
         taskListTop: taskList.scrollTop
       }
 
-      try {
-        taskRow.focus({ preventScroll: true })
-      } catch {
-        taskRow.focus()
+      if (focusRow) {
+        try {
+          taskRow.focus({ preventScroll: true })
+        } catch {
+          taskRow.focus()
+        }
       }
 
       if (documentScroller) {
@@ -5222,6 +5225,7 @@
     const keepSelection = options && options.keepSelection
     const selectFirst = options && options.selectFirst
     const revealTaskId = options && Number(options.revealTaskId)
+    const focusRevealRow = !options || options.focusRevealRow !== false
     tasks = await sendBridgeMessage('task.list', {
       view: currentView,
       taskListId: getEffectiveTaskListId()
@@ -5235,7 +5239,7 @@
       if (stillVisible) {
         if (Number.isSafeInteger(revealTaskId) && revealTaskId === currentTask.id) {
           ensureTaskVisibleForTransition(revealTaskId)
-          revealTaskRow(revealTaskId)
+          revealTaskRow(revealTaskId, focusRevealRow)
         }
         return currentTask
       }
@@ -5634,10 +5638,14 @@
       requireSavedTaskId(savedTask)
       await renderTaskEditor(savedTask)
       closeNewTaskDialog()
-      window.Editor.focus()
       selectViewForTask(savedTask)
       await loadTaskLists({ keepCurrentScope: true })
-      await loadTasks({ keepSelection: true })
+      await loadTasks({
+        keepSelection: true,
+        revealTaskId: taskId,
+        focusRevealRow: false
+      })
+      window.Editor.focus()
       isDirty = false
       window.Editor.markClean()
       setStatus('Saved', 'saved')
