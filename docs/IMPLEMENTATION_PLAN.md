@@ -161,8 +161,8 @@ Acceptance criteria:
 - New task starts as `ACTIVE`.
 - Task details present the editable title as the heading with the lifecycle
   pill beside it, without duplicate Task details or Title labels.
-- Wide task details arrange the six primary metadata controls in two rows of
-  three fields, while smaller layouts continue to reflow responsively.
+- Wide task details arrange the six primary metadata controls in three rows of
+  two fields, while smaller layouts continue to reflow responsively.
 - User can edit title/body/type/priority/deadline/source.
 - User can edit optional owner and responsible values when their independently persisted visibility switches are enabled.
 - Overview text search includes owner and responsible values even when their detail fields are hidden.

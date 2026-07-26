@@ -206,21 +206,32 @@ public sealed class NewTaskDialogUiTests
         Assert.InRange(statusBox.X - (titleBox.X + titleBox.Width), 0, 18);
         Assert.InRange(metadataBox!.Y - (railBox.Y + railBox.Height), 0, 20);
         Assert.Equal(
-            3,
+            2,
             await page.Locator(".metadata-grid").EvaluateAsync<int>(
                 "element => getComputedStyle(element).gridTemplateColumns.split(' ').length"));
         Assert.Equal(6, await metadataFields.CountAsync());
-        var firstRowField = await metadataFields.Nth(0).BoundingBoxAsync();
-        var firstRowLastField = await metadataFields.Nth(2).BoundingBoxAsync();
-        var secondRowField = await metadataFields.Nth(3).BoundingBoxAsync();
-        var secondRowLastField = await metadataFields.Nth(5).BoundingBoxAsync();
-        Assert.NotNull(firstRowField);
+        var firstRowFirstField = await metadataFields.Nth(0).BoundingBoxAsync();
+        var firstRowLastField = await metadataFields.Nth(1).BoundingBoxAsync();
+        var secondRowFirstField = await metadataFields.Nth(2).BoundingBoxAsync();
+        var secondRowLastField = await metadataFields.Nth(3).BoundingBoxAsync();
+        var thirdRowFirstField = await metadataFields.Nth(4).BoundingBoxAsync();
+        var thirdRowLastField = await metadataFields.Nth(5).BoundingBoxAsync();
+        Assert.NotNull(firstRowFirstField);
         Assert.NotNull(firstRowLastField);
-        Assert.NotNull(secondRowField);
+        Assert.NotNull(secondRowFirstField);
         Assert.NotNull(secondRowLastField);
-        Assert.InRange(Math.Abs(firstRowField!.Y - firstRowLastField!.Y), 0, 1);
-        Assert.True(secondRowField!.Y > firstRowField.Y);
-        Assert.InRange(Math.Abs(secondRowField.Y - secondRowLastField!.Y), 0, 1);
+        Assert.NotNull(thirdRowFirstField);
+        Assert.NotNull(thirdRowLastField);
+        Assert.InRange(Math.Abs(firstRowFirstField!.Y - firstRowLastField!.Y), 0, 1);
+        Assert.True(secondRowFirstField!.Y > firstRowFirstField.Y);
+        Assert.InRange(Math.Abs(secondRowFirstField.Y - secondRowLastField!.Y), 0, 1);
+        Assert.True(thirdRowFirstField!.Y > secondRowFirstField.Y);
+        Assert.InRange(Math.Abs(thirdRowFirstField.Y - thirdRowLastField!.Y), 0, 1);
+        var waitingInputBox = await page.Locator("#waiting-text").BoundingBoxAsync();
+        var tagsInputBox = await page.Locator(".tags-field .select2-selection--multiple").BoundingBoxAsync();
+        Assert.NotNull(waitingInputBox);
+        Assert.NotNull(tagsInputBox);
+        Assert.InRange(Math.Abs(waitingInputBox!.Height - tagsInputBox!.Height), 0, 1);
 
         var railStyles = await rail.EvaluateAsync<string[]>(
             """
