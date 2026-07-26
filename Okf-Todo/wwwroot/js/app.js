@@ -102,6 +102,8 @@
   let lookups = null
   let taskLists = []
   let activeTaskListId = null
+  let selectedTaskListManagerId = null
+  let isTaskListManagerCreating = false
   let tasks = []
   let currentTask = null
   let currentView = 'active'
@@ -1532,19 +1534,72 @@
         <div id="task-lists-overlay" class="modal-overlay" hidden>
           <section class="settings-dialog task-lists-dialog" role="dialog" aria-modal="true" aria-labelledby="task-lists-title">
             <header class="settings-header task-lists-dialog-header">
-              <div>
-                <p class="eyebrow">Organize work</p>
-                <h2 id="task-lists-title">Manage lists</h2>
+              <div class="task-lists-dialog-heading">
+                <span class="task-lists-dialog-icon fluent-icon" aria-hidden="true">&#xE8FD;</span>
+                <div>
+                  <p class="eyebrow">Organize work</p>
+                  <h2 id="task-lists-title">Manage lists</h2>
+                  <p class="task-lists-dialog-intro">Reorder, rename, or delete lists to keep your workspace organized.</p>
+                </div>
               </div>
-              <button id="task-lists-close-button" class="secondary-button" type="button">Close</button>
+              <button id="task-lists-close-button" class="secondary-button task-lists-close-button" type="button" aria-label="Close Manage lists" title="Close">
+                <span class="fluent-icon" aria-hidden="true">&#xE711;</span>
+              </button>
             </header>
-            <p class="settings-help">Drag lists into the order you want. Every task always belongs to one list.</p>
-            <div id="task-lists-manager" class="task-lists-manager" aria-live="polite"></div>
-            <form id="task-list-add-form" class="task-list-add-form">
-              <label class="sr-only" for="task-list-add-name">New list name</label>
-              <input id="task-list-add-name" type="text" maxlength="120" placeholder="New list name" autocomplete="off">
-              <button id="task-list-add-button" type="submit">Add list</button>
-            </form>
+            <div class="task-list-manager-layout">
+              <aside class="task-list-manager-pane" aria-labelledby="task-list-manager-pane-title">
+                <div class="task-list-manager-pane-header">
+                  <div>
+                    <p id="task-list-manager-pane-title" class="task-list-manager-section-label">Your lists</p>
+                    <p id="task-list-manager-summary" class="task-list-manager-summary"></p>
+                  </div>
+                  <button id="task-list-new-button" class="task-list-new-button" type="button">
+                    <span class="fluent-icon" aria-hidden="true">&#xE710;</span>
+                    <span>New list</span>
+                  </button>
+                </div>
+                <div id="task-lists-manager" class="task-lists-manager" role="listbox" aria-label="Task lists" aria-live="polite"></div>
+                <p class="task-list-manager-reorder-note">
+                  <span class="fluent-icon" aria-hidden="true">&#xE946;</span>
+                  <span>Drag the grip to reorder lists.</span>
+                </p>
+              </aside>
+
+              <section class="task-list-detail-pane" aria-labelledby="task-list-detail-heading">
+                <p id="task-list-detail-mode" class="task-list-manager-section-label">List details</p>
+                <h3 id="task-list-detail-heading" class="sr-only">Edit selected list</h3>
+                <form id="task-list-detail-form" class="task-list-detail-form">
+                  <label class="settings-field" for="task-list-detail-name">
+                    <span>List name</span>
+                    <input id="task-list-detail-name" type="text" maxlength="120" autocomplete="off" required>
+                  </label>
+                  <p id="task-list-detail-count" class="task-list-detail-count"></p>
+                  <div class="task-list-detail-actions">
+                    <button id="task-list-detail-cancel" class="secondary-button" type="button" hidden>Cancel</button>
+                    <button id="task-list-detail-save" type="submit">Save changes</button>
+                  </div>
+                </form>
+
+                <div id="task-list-delete-guidance" class="task-list-delete-guidance">
+                  <span class="task-list-guidance-icon fluent-icon" aria-hidden="true">&#xE946;</span>
+                  <div>
+                    <strong>Moving tasks before deleting</strong>
+                    <p>Delete a list only after moving its tasks to another list. This keeps every task and its history safe.</p>
+                  </div>
+                </div>
+
+                <div id="task-list-danger-zone" class="task-list-danger-zone">
+                  <div>
+                    <p class="task-list-danger-label">Danger zone</p>
+                    <p id="task-list-danger-copy">Deleting a list is permanent and cannot be undone.</p>
+                  </div>
+                  <button id="task-list-delete-button" class="secondary-button danger-button" type="button">
+                    <span class="fluent-icon" aria-hidden="true">&#xE74D;</span>
+                    <span>Delete list</span>
+                  </button>
+                </div>
+              </section>
+            </div>
             <p id="task-list-manager-error" class="form-error" hidden></p>
           </section>
         </div>
@@ -1812,48 +1867,155 @@
       return
     }
 
+    if (!isTaskListManagerCreating && !getTaskListById(selectedTaskListManagerId)) {
+      const preferredList = getTaskListById(activeTaskListId)
+        || taskLists.find(function (taskList) {
+          return taskList.name.toLocaleLowerCase() === 'default list'
+        })
+        || taskLists[0]
+      selectedTaskListManagerId = preferredList ? preferredList.id : null
+    }
+
+    const totalTaskCount = taskLists.reduce(function (sum, taskList) {
+      return sum + taskList.taskCount
+    }, 0)
+    $('#task-list-manager-summary').text(
+      `${taskLists.length} ${taskLists.length === 1 ? 'list' : 'lists'} · ${totalTaskCount} ${totalTaskCount === 1 ? 'task' : 'tasks'}`)
+
     $('#task-lists-manager').html(taskLists.map(function (taskList) {
       const taskLabel = `${taskList.taskCount} ${taskList.taskCount === 1 ? 'task' : 'tasks'}`
       const trashLabel = taskList.trashTaskCount
         ? ` · ${taskList.trashTaskCount} in Trash`
         : ''
+      const isSelected = !isTaskListManagerCreating && selectedTaskListManagerId === taskList.id
       return `
-        <div class="task-list-manager-row" draggable="true" data-task-list-id="${taskList.id}">
-          <span class="task-list-drag-handle fluent-icon" aria-hidden="true">&#xE700;</span>
-          <label class="task-list-manager-name">
-            <span class="sr-only">List name</span>
-            <input class="task-list-name-input" type="text" maxlength="120" value="${encodeAttribute(taskList.name)}" data-original-name="${encodeAttribute(taskList.name)}">
-          </label>
-          <span class="task-list-manager-count">${taskLabel}${trashLabel}</span>
-          <button class="task-list-delete-button secondary-button danger-button" type="button"${taskLists.length === 1 ? ' disabled title="The final list cannot be deleted"' : ''}>Delete</button>
+        <div class="task-list-manager-row${isSelected ? ' is-selected' : ''}" draggable="true" data-task-list-id="${taskList.id}" role="option" aria-selected="${isSelected}">
+          <span class="task-list-drag-handle fluent-icon" aria-hidden="true" title="Drag to reorder">&#xE700;</span>
+          <button class="task-list-manager-select" type="button" aria-label="Edit ${encodeAttribute(taskList.name)}">
+            <span class="task-list-manager-name">${encodeText(taskList.name)}</span>
+            <span class="task-list-manager-count" title="${encodeAttribute(taskLabel + trashLabel)}">${taskLabel}</span>
+          </button>
         </div>
       `
     }).join(''))
+    renderTaskListManagerDetails()
   }
 
-  async function renameTaskList(row) {
-    const id = Number(row.attr('data-task-list-id'))
-    const input = row.find('.task-list-name-input')
+  function renderTaskListManagerDetails() {
+    if (isTaskListManagerCreating) {
+      $('#task-list-detail-mode').text('New list')
+      $('#task-list-detail-heading').text('Create a new list')
+      $('#task-list-detail-name')
+        .val('')
+        .attr('data-original-name', '')
+        .attr('placeholder', 'New list name')
+      $('#task-list-detail-count').text('Create a focused home for related work.')
+      $('#task-list-detail-save').text('Add list').prop('disabled', true)
+      $('#task-list-detail-cancel').prop('hidden', false)
+      $('#task-list-delete-guidance, #task-list-danger-zone').prop('hidden', true)
+      return
+    }
+
+    const taskList = getTaskListById(selectedTaskListManagerId)
+    if (!taskList) {
+      return
+    }
+
+    const taskLabel = `${taskList.taskCount} ${taskList.taskCount === 1 ? 'task belongs' : 'tasks belong'} to this list`
+    const trashLabel = taskList.trashTaskCount
+      ? `, including ${taskList.trashTaskCount} in Trash`
+      : ''
+    const isFinalList = taskLists.length === 1
+    $('#task-list-detail-mode').text('List details')
+    $('#task-list-detail-heading').text(`Edit ${taskList.name}`)
+    $('#task-list-detail-name')
+      .val(taskList.name)
+      .attr('data-original-name', taskList.name)
+      .attr('placeholder', null)
+    $('#task-list-detail-count').text(`${taskLabel}${trashLabel}.`)
+    $('#task-list-detail-save').text('Save changes').prop('disabled', true)
+    $('#task-list-detail-cancel').prop('hidden', true)
+    $('#task-list-delete-guidance, #task-list-danger-zone').prop('hidden', false)
+    $('#task-list-delete-button')
+      .prop('disabled', isFinalList)
+      .attr('title', isFinalList ? 'The final list cannot be deleted' : null)
+    $('#task-list-danger-copy').text(
+      isFinalList
+        ? 'This is the final list. Create another list before deleting it.'
+        : 'Deleting a list is permanent. Tasks are moved safely before the list is removed.')
+  }
+
+  function syncTaskListDetailSaveState() {
+    const name = $('#task-list-detail-name').val().toString().trim()
+    const originalName = $('#task-list-detail-name').attr('data-original-name') || ''
+    $('#task-list-detail-save').prop(
+      'disabled',
+      !name || (!isTaskListManagerCreating && name === originalName))
+  }
+
+  function selectTaskListManagerList(taskListId, focusSelection) {
+    const taskList = getTaskListById(taskListId)
+    if (!taskList) {
+      return
+    }
+
+    selectedTaskListManagerId = taskList.id
+    isTaskListManagerCreating = false
+    $('#task-list-manager-error').prop('hidden', true)
+    renderTaskListManager()
+    if (focusSelection) {
+      $(`.task-list-manager-row[data-task-list-id="${taskList.id}"] .task-list-manager-select`).trigger('focus')
+    }
+  }
+
+  function startTaskListCreation() {
+    selectedTaskListManagerId = null
+    isTaskListManagerCreating = true
+    $('#task-list-manager-error').prop('hidden', true)
+    $('#task-lists-manager .task-list-manager-row')
+      .removeClass('is-selected')
+      .attr('aria-selected', 'false')
+    renderTaskListManagerDetails()
+    window.setTimeout(function () {
+      $('#task-list-detail-name').trigger('focus')
+    }, 0)
+  }
+
+  function cancelTaskListCreation() {
+    const preferredList = getTaskListById(activeTaskListId) || taskLists[0]
+    if (preferredList) {
+      selectTaskListManagerList(preferredList.id, true)
+    }
+  }
+
+  async function renameTaskList() {
+    const id = selectedTaskListManagerId
+    const input = $('#task-list-detail-name')
     const name = input.val().toString().trim()
     const originalName = input.attr('data-original-name')
     if (!name || name === originalName) {
       input.val(originalName)
+      syncTaskListDetailSaveState()
       return
     }
 
     try {
       await sendBridgeMessage('taskList.rename', { id, name })
+      selectedTaskListManagerId = id
       await loadTaskLists({ keepCurrentScope: true })
       await loadTasks({ keepSelection: true })
       setStatus('List renamed', 'saved')
+      $('#task-list-detail-name').trigger('focus').trigger('select')
     } catch (error) {
       input.val(originalName)
       $('#task-list-manager-error').text(getErrorMessage(error, 'Could not rename list')).prop('hidden', false)
+    } finally {
+      syncTaskListDetailSaveState()
     }
   }
 
   async function addTaskList() {
-    const input = $('#task-list-add-name')
+    const input = $('#task-list-detail-name')
     const name = input.val().toString().trim()
     if (!name) {
       input.trigger('focus')
@@ -1862,14 +2024,24 @@
 
     try {
       const created = await sendBridgeMessage('taskList.create', { name })
-      input.val('')
       $('#task-list-manager-error').prop('hidden', true)
+      selectedTaskListManagerId = created.id
+      isTaskListManagerCreating = false
       await loadTaskLists({ keepCurrentScope: true })
-      $(`.task-list-manager-row[data-task-list-id="${created.id}"] .task-list-name-input`).trigger('focus').trigger('select')
       setStatus('List added', 'saved')
+      $('#task-list-detail-name').trigger('focus').trigger('select')
     } catch (error) {
       $('#task-list-manager-error').text(getErrorMessage(error, 'Could not add list')).prop('hidden', false)
     }
+  }
+
+  async function saveTaskListManagerDetails() {
+    if (isTaskListManagerCreating) {
+      await addTaskList()
+      return
+    }
+
+    await renameTaskList()
   }
 
   function openTaskListDeleteDialog(taskListId) {
@@ -1923,6 +2095,9 @@
         layoutPreference.taskListScope = String(activeTaskListId)
         await saveLayoutPreference()
       }
+      selectedTaskListManagerId = result.destinationListId
+        || (getTaskListById(activeTaskListId) ? activeTaskListId : taskLists.find(function (item) { return item.id !== listId }).id)
+      isTaskListManagerCreating = false
       await loadTaskLists({ keepCurrentScope: true })
       await loadTasks({ selectFirst: true })
       setStatus(
@@ -5495,9 +5670,18 @@
         }
 
         $('#task-list-manager-error').prop('hidden', true)
+        const preferredList = getTaskListById(activeTaskListId)
+          || taskLists.find(function (taskList) {
+            return taskList.name.toLocaleLowerCase() === 'default list'
+          })
+          || taskLists[0]
+        selectedTaskListManagerId = preferredList ? preferredList.id : null
+        isTaskListManagerCreating = false
         renderTaskListManager()
         $('#task-lists-overlay').prop('hidden', false)
-        $('#task-list-add-name').trigger('focus')
+        window.setTimeout(function () {
+          $(`.task-list-manager-row[data-task-list-id="${selectedTaskListManagerId}"] .task-list-manager-select`).trigger('focus')
+        }, 0)
       }).catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not open task lists'), 'error')
       })
@@ -5506,21 +5690,25 @@
       $('#task-lists-overlay').prop('hidden', true)
       $('#manage-task-lists-button').trigger('focus')
     })
-    $('#task-list-add-form').on('submit', function (event) {
-      event.preventDefault()
-      addTaskList()
-    })
-    $('#task-lists-manager').on('change', '.task-list-name-input', function () {
-      renameTaskList($(this).closest('.task-list-manager-row'))
-    })
-    $('#task-lists-manager').on('keydown', '.task-list-name-input', function (event) {
-      if (event.key === 'Enter') {
-        event.preventDefault()
-        $(this).trigger('change')
+    $('#task-lists-overlay').on('click', function (event) {
+      if (event.target === this) {
+        $('#task-lists-close-button').trigger('click')
       }
     })
-    $('#task-lists-manager').on('click', '.task-list-delete-button', function () {
-      openTaskListDeleteDialog(Number($(this).closest('.task-list-manager-row').attr('data-task-list-id')))
+    $('#task-list-new-button').on('click', startTaskListCreation)
+    $('#task-list-detail-cancel').on('click', cancelTaskListCreation)
+    $('#task-list-detail-form').on('submit', function (event) {
+      event.preventDefault()
+      saveTaskListManagerDetails().catch(function (error) {
+        $('#task-list-manager-error').text(getErrorMessage(error, 'Could not save list')).prop('hidden', false)
+      })
+    })
+    $('#task-list-detail-name').on('input', syncTaskListDetailSaveState)
+    $('#task-lists-manager').on('click', '.task-list-manager-select', function () {
+      selectTaskListManagerList(Number($(this).closest('.task-list-manager-row').attr('data-task-list-id')), false)
+    })
+    $('#task-list-delete-button').on('click', function () {
+      openTaskListDeleteDialog(selectedTaskListManagerId)
     })
     $('#task-lists-manager').on('dragstart', '.task-list-manager-row', function (event) {
       event.originalEvent.dataTransfer.setData('text/plain', $(this).attr('data-task-list-id'))

@@ -547,3 +547,86 @@ final result: passed
 - `dotnet build Okf-Todo.slnx -c Debug --no-restore`: passed.
 
 final result: passed
+
+---
+
+# Design QA — Manage lists master-detail modal, option 2
+
+## Evidence
+
+- Selected visual target:
+  `C:\Users\soere\.codex\generated_images\019f64d1-7fc6-7900-afb4-ee49130ff5eb\call_HnfHDb0P3jkDt200imwGkTqc.png`
+- Large implementation:
+  `artifacts/design-qa/task-list-manager-master-detail.png`
+- Compact implementation:
+  `artifacts/design-qa/task-list-manager-master-detail-compact.png`
+- Full-view comparison:
+  `artifacts/design-qa/task-list-manager-comparison.png`
+- Focused modal comparison:
+  `artifacts/design-qa/task-list-manager-modal-comparison.png`
+- Large implementation viewport: 1600 × 1000 CSS pixels at device scale
+  factor 1.
+- State: Light theme, Manage lists open, three concrete lists, Default list
+  selected.
+
+## Visual review
+
+- The former flat stack of permanently editable rows is now a focused
+  master-detail workflow: lists and task counts on the left; the selected
+  list's editable details, guidance, and destructive action on the right.
+- The selected row uses the application's teal family, a leading accent, and
+  an outlined surface. Drag handles and count pills remain quiet until needed.
+- Add, rename, reorder, and delete retain the existing bridge behavior. The
+  final remaining list cannot be deleted, and list deletion still delegates to
+  the existing safe move-before-delete confirmation.
+- The danger zone is visually isolated from normal editing. The outlined
+  Delete list action no longer competes with Save changes.
+- Below 760 pixels, the panes stack into one scrollable dialog without
+  horizontal page overflow.
+
+## Required fidelity surfaces
+
+- Fonts and typography: the existing Segoe UI hierarchy is retained, with a
+  stronger dialog title, section labels, list names, and subdued supporting
+  copy matching the selected direction.
+- Spacing and layout rhythm: the 940 × 600 desktop dialog, 46/54 split, 68-pixel
+  list rows, and consistent 20-pixel pane padding closely match the target.
+- Colors and visual tokens: the redesign reuses the application's teal, mint,
+  navy, border, danger, focus, and shadow tokens.
+- Image quality and assets: no raster assets were needed inside the modal.
+  Existing Segoe Fluent glyphs provide the list, drag, information, settings,
+  and delete icons.
+- Copy and content: the target's organize/reorder guidance is preserved, while
+  task counts and delete guidance remain grounded in the real product rules.
+
+## Comparison history
+
+1. Initial build: P2, the modal was larger than the selected target and its
+   typography was too small. The danger action lacked a clear outlined
+   boundary, and the selected row still exposed an inner hover surface.
+2. Refinement: reduced the desktop modal to 940 × 600, raised the modal type
+   scale, set the pane split to 46/54, standardized row height, added the
+   explicit danger outline, and removed the selected row's inner hover block.
+3. Final combined comparison: no actionable P0, P1, or P2 differences remain.
+   The implementation test data differs from the promotional target, and Save
+   changes is intentionally disabled until the name changes.
+
+## Interaction and accessibility verification
+
+- Select list and update the detail pane.
+- Create a list, rename it, drag it to reorder, and safely delete it.
+- Disable deletion when only one list remains.
+- Stack the manager panes at 700 × 900 with no horizontal overflow.
+- Preserve the wider task-list scenario: per-task movement, bulk movement,
+  Undo, scope persistence, and header responsiveness.
+- Browser console errors are collected for the complete scenario and must
+  remain empty.
+
+## Verification
+
+- `node --check Okf-Todo/wwwroot/js/app.js`
+- Focused Edge/Playwright contract:
+  `TaskLists_CanBeManagedSelectedSearchedMovedAndUndone`
+- Reference and implementation inspected together in the focused comparison.
+
+final result: passed

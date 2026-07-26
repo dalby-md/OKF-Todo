@@ -1025,17 +1025,87 @@ public sealed class NewTaskDialogUiTests
         await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
         {
             ViewportSize = new ViewportSize { Width = 1600, Height = 1000 },
-            DeviceScaleFactor = 1.5f
+            DeviceScaleFactor = 1
         });
         await context.AddInitScriptAsync(BridgeAdapterScript);
         var page = await context.NewPageAsync();
+        var consoleErrors = new ConcurrentQueue<string>();
+        page.Console += (_, message) =>
+        {
+            if (message.Type == "error")
+            {
+                consoleErrors.Enqueue(message.Text);
+            }
+        };
         await page.GotoAsync($"{fixture.BaseUrl}/index.html?v=task-lists-contract");
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list-switcher option').length === 2");
 
         await page.Locator("#manage-task-lists-button").ClickAsync();
-        await page.Locator("#task-list-add-name").FillAsync("Support");
-        await page.Locator("#task-list-add-button").ClickAsync();
+        await page.Locator("#task-lists-overlay").WaitForAsync();
+        Assert.Equal(
+            "Default list",
+            await page.Locator(".task-list-manager-row.is-selected .task-list-manager-name").TextContentAsync());
+        Assert.Equal("Default list", await page.Locator("#task-list-detail-name").InputValueAsync());
+        Assert.False(await page.Locator("#task-list-delete-guidance").IsHiddenAsync());
+        Assert.True(await page.Locator("#task-list-delete-button").IsDisabledAsync());
+
+        await page.Locator("#task-list-new-button").ClickAsync();
+        Assert.Equal("New list", await page.Locator("#task-list-detail-mode").TextContentAsync());
+        Assert.True(await page.Locator("#task-list-danger-zone").IsHiddenAsync());
+        await page.Locator("#task-list-detail-name").FillAsync("Support draft");
+        Assert.False(await page.Locator("#task-list-detail-save").IsDisabledAsync());
+        await page.Locator("#task-list-detail-save").ClickAsync();
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list-switcher option').length === 3");
+
+        Assert.Equal("Support draft", await page.Locator("#task-list-detail-name").InputValueAsync());
+        await page.Locator("#task-list-detail-name").FillAsync("Support");
+        Assert.Equal("Save changes", await page.Locator("#task-list-detail-save").TextContentAsync());
+        await page.Locator("#task-list-detail-save").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => [...document.querySelectorAll('#task-list-switcher option')].some(option => option.textContent === 'Support')");
+
+        await page.Locator("#task-list-new-button").ClickAsync();
+        await page.Locator("#task-list-detail-name").FillAsync("Temporary");
+        await page.Locator("#task-list-detail-save").ClickAsync();
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list-switcher option').length === 4");
+        await page.Locator(".task-list-manager-row")
+            .Filter(new LocatorFilterOptions { HasText = "Default list" })
+            .Locator(".task-list-manager-select")
+            .ClickAsync();
+        await CaptureViewportAsync(page, "task-list-manager-master-detail.png");
+        await page.Locator(".task-list-manager-row")
+            .Filter(new LocatorFilterOptions { HasText = "Temporary" })
+            .Locator(".task-list-manager-select")
+            .ClickAsync();
+        await page.Locator("#task-list-delete-button").ClickAsync();
+        await page.Locator("#task-list-delete-overlay").WaitForAsync();
+        Assert.Equal("Delete list", await page.Locator("#task-list-delete-confirm").TextContentAsync());
+        await page.Locator("#task-list-delete-confirm").ClickAsync();
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list-switcher option').length === 3");
+
+        var supportListRow = page.Locator(".task-list-manager-row")
+            .Filter(new LocatorFilterOptions { HasText = "Support" });
+        var defaultListRow = page.Locator(".task-list-manager-row")
+            .Filter(new LocatorFilterOptions { HasText = "Default list" });
+        await supportListRow.DragToAsync(defaultListRow);
+        await page.WaitForFunctionAsync("() => document.querySelector('#save-status')?.textContent === 'List order saved'");
+        Assert.Equal(
+            "Support",
+            await page.Locator(".task-list-manager-row").First.Locator(".task-list-manager-name").TextContentAsync());
+
+        await page.SetViewportSizeAsync(700, 900);
+        await page.WaitForFunctionAsync(
+            """
+            () => {
+              const listPane = document.querySelector('.task-list-manager-pane')?.getBoundingClientRect()
+              const detailPane = document.querySelector('.task-list-detail-pane')?.getBoundingClientRect()
+              return listPane && detailPane && detailPane.top >= listPane.bottom - 1
+            }
+            """);
+        await AssertNoHorizontalPageOverflowAsync(page);
+        await CaptureViewportAsync(page, "task-list-manager-master-detail-compact.png");
+        await page.SetViewportSizeAsync(1600, 1000);
+
         await page.Locator("#task-lists-close-button").ClickAsync();
 
         await page.Locator("#task-list-switcher").SelectOptionAsync("ALL");
@@ -1164,9 +1234,13 @@ public sealed class NewTaskDialogUiTests
             "() => document.querySelector('#task-list-switcher')?.value === 'ALL'");
 
         Assert.Contains("taskList.create", fixture.BridgeMessageTypes);
+        Assert.Contains("taskList.rename", fixture.BridgeMessageTypes);
+        Assert.Contains("taskList.reorder", fixture.BridgeMessageTypes);
+        Assert.Contains("taskList.delete", fixture.BridgeMessageTypes);
         Assert.Contains("taskList.moveTasks", fixture.BridgeMessageTypes);
         Assert.Contains("taskList.undoMove", fixture.BridgeMessageTypes);
         Assert.Contains("layout.preference.save", fixture.BridgeMessageTypes);
+        Assert.Empty(consoleErrors);
     }
 
     private static async Task OpenTaskDetailsPreferencesAsync(IPage page)
