@@ -137,6 +137,61 @@ public sealed class AppPreferenceServiceTests
         }
     }
 
+    [Fact]
+    public async Task LayoutPreference_PersistsReadyViewSort()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+
+        var preferencesDirectory = Path.Combine(
+            Path.GetTempPath(),
+            "Okf-Todo.Tests",
+            Guid.NewGuid().ToString("N"));
+        var preferencesPath = Path.Combine(preferencesDirectory, "app-preferences.json");
+
+        try
+        {
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlite(connection)
+                .Options;
+
+            await using var dbContext = new AppDbContext(options);
+            var service = new AppPreferenceService(
+                dbContext,
+                new TestAppPreferencePathProvider(preferencesPath),
+                NullLogger<AppPreferenceService>.Instance);
+
+            var saved = await service.SaveLayoutPreferenceAsync(
+                new LayoutPreferenceSaveRequest(
+                    null,
+                    null,
+                    null,
+                    TaskSortModes: new Dictionary<string, string>
+                    {
+                        ["ready"] = TaskListSortModes.DueDate
+                    },
+                    TaskSortDirections: new Dictionary<string, string>
+                    {
+                        ["ready"] = TaskListSortDirections.Descending
+                    }),
+                CancellationToken.None);
+
+            Assert.Equal(TaskListSortModes.DueDate, saved.TaskSortModes["ready"]);
+            Assert.Equal(TaskListSortDirections.Descending, saved.TaskSortDirections["ready"]);
+
+            var loaded = await service.GetLayoutPreferenceAsync(CancellationToken.None);
+            Assert.Equal(TaskListSortModes.DueDate, loaded.TaskSortModes["ready"]);
+            Assert.Equal(TaskListSortDirections.Descending, loaded.TaskSortDirections["ready"]);
+        }
+        finally
+        {
+            if (Directory.Exists(preferencesDirectory))
+            {
+                Directory.Delete(preferencesDirectory, recursive: true);
+            }
+        }
+    }
+
     private sealed class TestAppPreferencePathProvider(string preferencesPath) : IAppPreferencePathProvider
     {
         public string GetPreferencesPath()

@@ -4,6 +4,7 @@
   const imageBridgeTimeoutMs = 120000
   const viewLabels = {
     active: 'Active',
+    ready: 'Ready',
     starred: 'Starred',
     urgent: 'Urgent',
     waiting: 'Waiting',
@@ -801,6 +802,7 @@
   function renderTaskViewRail() {
     const viewIcons = {
       active: '&#xE80F;',
+      ready: '&#xE768;',
       starred: '&#xE734;',
       urgent: '&#xE814;',
       waiting: '&#xE823;',
@@ -5309,7 +5311,9 @@
 
     const isNewTask = !currentTask.id
     const previousTaskListId = currentTask.taskListId
+    const wasWaiting = Boolean((currentTask.activeWaitingForLabel || '').toString().trim())
     const wasGlobalScope = activeTaskListId == null
+    let switchedOperationalView = false
     clearValidationState()
     const payload = getTaskPayload()
     if (!payload.title) {
@@ -5348,6 +5352,17 @@
 
       if (isNewTask) {
         selectViewForTask(savedTask)
+      } else if (savedTask.taskStatusCode === 'ACTIVE') {
+        const isWaiting = Boolean((savedTask.activeWaitingForLabel || '').toString().trim())
+        if (wasWaiting !== isWaiting) {
+          if (currentView === 'ready' && isWaiting) {
+            currentView = 'waiting'
+            switchedOperationalView = true
+          } else if (currentView === 'waiting' && !isWaiting) {
+            currentView = 'ready'
+            switchedOperationalView = true
+          }
+        }
       }
 
       if (!wasGlobalScope && previousTaskListId !== savedTask.taskListId) {
@@ -5357,7 +5372,11 @@
       }
 
       await loadTaskLists({ keepCurrentScope: true })
-      await loadTasks({ keepSelection: true })
+      await loadTasks({
+        keepSelection: true,
+        revealTaskId: switchedOperationalView ? savedTask.id : null,
+        focusRevealRow: false
+      })
       isDirty = false
       window.Editor.markClean()
       $('#save-button').prop('disabled', false)

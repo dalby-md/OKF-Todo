@@ -282,6 +282,11 @@ public sealed class TaskServiceTests
             [overdue.Id, urgent.Id, active.Id, waiting.Id, canWait.Id],
             activeTasks.Select(task => task.Id));
 
+        var readyTasks = await database.Tasks.ListAsync(new TaskListRequest("ready"), CancellationToken.None);
+        Assert.Equal(
+            [overdue.Id, urgent.Id, active.Id, canWait.Id],
+            readyTasks.Select(task => task.Id));
+
         var urgentTasks = await database.Tasks.ListAsync(new TaskListRequest("urgent"), CancellationToken.None);
         Assert.Equal([urgent.Id], urgentTasks.Select(task => task.Id));
 

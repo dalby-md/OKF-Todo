@@ -519,6 +519,7 @@ Suggested first views:
 
 ```text
 Active tasks
+Ready tasks
 Starred tasks
 Urgent active tasks
 Waiting tasks
@@ -527,6 +528,8 @@ Completed tasks
 All tasks
 Trash
 ```
+
+`Active tasks` is the complete unfinished-work umbrella and includes tasks that are waiting. `Ready tasks` contains active tasks with no unresolved wait target. `Waiting tasks` contains active tasks with an unresolved wait target. Ready and Waiting are therefore complementary operational queues within Active.
 
 Cancelled tasks appear only in `All tasks`, where their titles use red struck-through text and all pills are gray. They do not appear in `Completed tasks`.
 

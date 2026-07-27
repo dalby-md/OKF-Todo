@@ -220,9 +220,9 @@ final result: passed
 - The implementation now preserves the reference's three clearly separated
   zones: persistent task-view navigation, focused triage list, and spacious
   task-detail work surface.
-- Queue navigation now uses stable semantic colors for Active, Urgent, Waiting,
-  Overdue, Completed, and All. Labels, distinct icons, tooltips, and current
-  state remain available so color is supplementary.
+- Queue navigation now uses stable semantic colors for Active, Ready, Urgent,
+  Waiting, Overdue, Completed, and All. Labels, distinct icons, tooltips, and
+  current state remain available so color is supplementary.
 - Full-row waiting tint was removed. Waiting uses an amber rail and pill while
   teal remains the selected-row signal.
 - The title, metadata, editor, checklist, and attachments retain the real
@@ -233,7 +233,7 @@ final result: passed
 ## Responsive review
 
 - Large desktop keeps the labelled rail and all three work zones.
-- Compact desktop keeps a color-coded icon rail with accessible labels.
+- Compact desktop keeps a color-coded rail with visible labels beside the icons.
 - Automatic small-window mode removes the rail and stacks list over details.
 - Explicit Stacked mode now caps the list according to screen height, reserves
   detail space, and shows the body editor without an initial resize or scroll.

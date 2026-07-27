@@ -317,6 +317,10 @@ public sealed class TaskService(
             "active" => query.Where(task => task.DeletedAt == null
                 && task.TaskStatus != null
                 && task.TaskStatus.Code == TaskStatusCodes.Active),
+            "ready" => query.Where(task => task.DeletedAt == null
+                && task.TaskStatus != null
+                && task.TaskStatus.Code == TaskStatusCodes.Active
+                && !task.WaitingTargets.Any(waitingFor => waitingFor.ResolvedAt == null)),
             "urgent" => query.Where(task => task.DeletedAt == null
                 && task.TaskStatus != null
                 && task.TaskStatus.Code == TaskStatusCodes.Active

@@ -470,6 +470,7 @@ Add first useful views:
 
 ```text
 Active tasks
+Ready tasks
 Urgent active tasks
 Waiting tasks
 Overdue tasks
@@ -492,6 +493,7 @@ Acceptance criteria:
 
 - Views use lookup codes, not display names.
 - Completed tasks are hidden by default in active views.
+- Active includes all unfinished work, Ready contains active tasks without an unresolved waiting target, and Waiting contains active tasks with an unresolved waiting target.
 - Cancelled tasks appear in All, not Completed, and use red struck-through titles with gray pills in the list.
 - Active overdue deadlines use a red pill with white text; deadlines due today are not overdue.
 - Waiting tasks remain easy to find.

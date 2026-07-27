@@ -44,7 +44,7 @@ It is designed for the work that often falls between formal systems: production 
 ## Product Highlights
 
 - Fast task capture with only a title and task type required.
-- Active, urgent, waiting, overdue, completed, and all-task views.
+- Active, ready, urgent, waiting, overdue, completed, and all-task views.
 - HTML and Markdown-capable rich-text editors.
 - Paste, drop, or select images for task bodies.
 - Priorities, deadlines, waiting targets, tags, and optional source references.

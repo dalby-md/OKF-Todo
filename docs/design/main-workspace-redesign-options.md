@@ -48,8 +48,8 @@ mental model of the workspace.
 Triage Command is a three-zone workbench designed for people who repeatedly move
 between queues while keeping one task open.
 
-- A persistent task-view rail makes Active, Urgent, Waiting, Overdue, Completed,
-  and All immediately available.
+- A persistent task-view rail makes Active, Ready, Urgent, Waiting, Overdue,
+  Completed, and All immediately available.
 - The middle column is a purpose-built triage list with search, Tags, Type,
   Priority, sort, direction, result count, and concise task rows.
 - The detail area is a spacious work surface rather than another card.
@@ -57,9 +57,10 @@ between queues while keeping one task open.
   content changes below it.
 - Selected and urgent work uses controlled accent colour; ordinary work remains
   visually quiet.
-- Every task view has a stable semantic accent: teal for Active, red for Urgent,
-  amber for Waiting, rose for Overdue, green for Completed, and slate for All.
-  Labels and icons remain present so meaning never depends on colour alone.
+- Every task view has a stable semantic accent: teal for Active, blue for Ready,
+  red for Urgent, amber for Waiting, rose for Overdue, green for Completed, and
+  slate for All. Labels and icons remain present so meaning never depends on
+  colour alone.
 - The implementation preserves OKF-Todo terminology and current filtering
   behaviour even where the concept image uses simplified example labels.
 
@@ -67,8 +68,9 @@ Responsive intent:
 
 - **Full command center (1280 px and wider):** labelled navigation rail, task
   list, resizer, and detail area remain visible together.
-- **Compact desktop (901–1279 px):** the navigation rail becomes icon-only with
-  tooltips and accessible labels; the list remains resizable.
+- **Compact desktop (901–1279 px):** the navigation rail becomes slightly
+  narrower but keeps every visible label beside its icon; the list remains
+  resizable.
 - **Small window (900 px and narrower):** the rail is removed, the task-view
   selector returns to the list header, and the existing resizable stacked
   list/detail workflow is used.

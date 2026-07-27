@@ -27,7 +27,7 @@ The workspace has four parts:
 | Area | What it controls |
 | --- | --- |
 | **List switcher** | Chooses which task list you are working in, or selects **All lists**. |
-| **Views** | Chooses the kind of work to show, such as Active, Waiting, Completed, or Trash. |
+| **Views** | Chooses the kind of work to show, such as Active, Ready, Waiting, Completed, or Trash. |
 | **Task queue** | Searches, filters, sorts, selects, and opens tasks in the current list and view. |
 | **Task details** | Shows and edits the selected task. |
 
@@ -83,7 +83,8 @@ Views are shortcuts to meaningful subsets of work:
 
 | View | Use it when you want to… |
 | --- | --- |
-| **Active** | See current unfinished work. |
+| **Active** | See all current unfinished work, including tasks that are waiting. |
+| **Ready** | See active tasks that have no unresolved waiting target and can be worked on now. |
 | **Starred** | Return to tasks you deliberately marked for focus. Finished starred tasks remain available in a collapsed Finished group. |
 | **Urgent** | Review active work with urgent priority. |
 | **Waiting** | See tasks that depend on a person, team, case, response, or other external event. |
@@ -91,6 +92,10 @@ Views are shortcuts to meaningful subsets of work:
 | **Completed** | Review completed work. |
 | **All statuses** | See active, completed, and cancelled work together. |
 | **Trash** | Restore tasks or permanently remove them. |
+
+**Ready** and **Waiting** divide active work by whether it has an unresolved waiting target. Use **Ready** as the focused queue for work you can advance now, and return to **Active** when you need the complete unfinished picture.
+
+When you add a waiting target while working in **Ready**, saving moves the task to **Waiting** and keeps it selected. Clearing the waiting target from **Waiting** moves it back to **Ready** in the same way.
 
 When completing, cancelling, reopening, or restoring a task changes the view in which it belongs, OKF-Todo switches to that view and keeps the affected task selected. Only the task queue scrolls to reveal it; the surrounding workspace stays in place.
 

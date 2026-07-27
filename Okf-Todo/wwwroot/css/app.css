@@ -2684,33 +2684,24 @@ body.is-resizing-editor * {
 
 @media (max-width: 1279px) and (min-width: 901px) {
   :root {
-    --task-rail-width: 68px;
+    --task-rail-width: 176px;
   }
 
   .task-view-rail {
-    align-items: center;
-    padding-inline: 9px;
+    align-items: stretch;
+    padding-inline: 12px;
   }
 
   .task-view-rail-heading {
-    justify-content: center;
+    justify-content: flex-start;
     width: 100%;
-    margin-inline: 0;
-  }
-
-  .task-view-rail-heading > span:last-child,
-  .task-view-rail-label {
-    display: none;
+    margin-inline: 8px;
   }
 
   .task-view-rail-button {
-    justify-content: center;
-    width: 46px;
-    padding: 0;
-  }
-
-  .task-view-rail-button .fluent-icon {
-    width: auto;
+    justify-content: flex-start;
+    width: 100%;
+    padding: 7px 10px;
   }
 
   .app-topbar .setup-button > span:last-child {
@@ -3114,6 +3105,11 @@ body.is-resizing-editor * {
   --view-soft: #e5f4f1;
 }
 
+.task-view-rail-button[data-task-view="ready"] {
+  --view-color: #2563a8;
+  --view-soft: #e9f2fc;
+}
+
 .task-view-rail-button[data-task-view="urgent"] {
   --view-color: #c43d32;
   --view-soft: #feeeec;
@@ -3350,16 +3346,16 @@ body.is-resizing-editor * {
 
 @media (max-width: 1279px) and (min-width: 901px) {
   :root {
-    --task-rail-width: 74px;
+    --task-rail-width: 176px;
   }
 
   .task-view-rail {
-    padding-inline: 10px;
+    padding-inline: 12px;
   }
 
   .task-view-rail-button {
-    width: 52px;
-    min-height: 52px;
+    width: 100%;
+    min-height: 50px;
   }
 }
 
