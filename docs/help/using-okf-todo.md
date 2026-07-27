@@ -81,6 +81,8 @@ After a bulk move, the confirmation message offers **Undo**.
 
 Views are shortcuts to meaningful subsets of work:
 
+Hover over a view in the navigation rail to see a one-line description of the work it contains.
+
 | View | Use it when you want to… |
 | --- | --- |
 | **Active** | See all current unfinished work, including tasks that are waiting. |

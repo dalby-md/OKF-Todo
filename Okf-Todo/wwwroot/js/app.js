@@ -13,6 +13,17 @@
     all: 'All statuses',
     trash: 'Trash'
   }
+  const viewDescriptions = {
+    active: 'All active tasks, including tasks that are waiting',
+    ready: 'Active tasks that are not waiting',
+    starred: 'Tasks you marked for focus',
+    urgent: 'Active tasks with urgent priority',
+    waiting: 'Active tasks waiting for a person, response, or other event',
+    overdue: 'Active tasks with a deadline before today',
+    completed: 'Tasks that have been completed',
+    all: 'Active, completed, and cancelled tasks',
+    trash: 'Deleted tasks that can be restored or removed permanently'
+  }
   const defaultTaskSortMode = 'ATTENTION'
   const defaultTaskSortDirection = 'ASC'
   const taskSortDirectionCodes = {
@@ -814,7 +825,7 @@
 
     return Object.keys(viewLabels).map(function (view) {
       return `
-        <button class="task-view-rail-button" type="button" data-task-view="${view}" aria-label="${viewLabels[view]}" title="${viewLabels[view]}">
+        <button class="task-view-rail-button" type="button" data-task-view="${view}" aria-label="${viewLabels[view]}: ${viewDescriptions[view]}" title="${viewDescriptions[view]}">
           <span class="fluent-icon" aria-hidden="true">${viewIcons[view]}</span>
           <span class="task-view-rail-label">${viewLabels[view]}</span>
         </button>
