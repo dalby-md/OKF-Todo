@@ -174,6 +174,12 @@ Acceptance criteria:
   pill beside it, without duplicate Task details or Title labels.
 - Wide task details arrange the six primary metadata controls in three rows of
   two fields, while smaller layouts continue to reflow responsively.
+- Optional Source, Owner, and Responsible fields use fixed task-detail slots
+  above the body; preference switches only control visibility.
+- Read-only completed, cancelled, and Trash tasks replace disabled metadata and
+  editor chrome with readable values and a compact expandable body reader.
+- Relationships, checklist, and attachments follow the body, while Timeline
+  and Add comment remain the final section.
 - User can edit title/body/type/priority/deadline/source.
 - User can edit optional owner and responsible values when their independently persisted visibility switches are enabled.
 - Overview text search includes owner and responsible values even when their detail fields are hidden.

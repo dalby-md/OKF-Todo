@@ -164,6 +164,19 @@ Only the title, task type, and list are required. Add other information when it 
 
 Task type and lifecycle status are different. A task can be an Investigation or Request while its status is Active, Completed, or Cancelled.
 
+### Owner and Responsible
+
+These optional free-text fields have different meanings:
+
+- **Owner** is the person or team accountable for the outcome.
+- **Responsible** is the person currently expected to perform or coordinate the work.
+
+They are hidden independently by default. Enable either field under **Setup → Task details**. Enabled fields appear with the other task details above the body. Search matches both fields even when they are hidden.
+
+### Source fields
+
+Enable **Show source fields** under **Setup → Task details** when you want to record where work came from, such as ServiceDesk, email, deployment, or monitoring. The enabled fields appear above the body. Source, source reference, and source URL are descriptive information; OKF-Todo does not open or synchronize external systems automatically.
+
 ### Body editor
 
 Use the body for context that does not fit in fields: the problem statement, evidence, links, diagnostic notes, decisions, draft replies, or next steps.
@@ -171,6 +184,12 @@ Use the body for context that does not fit in fields: the problem statement, evi
 OKF-Todo supports HTML and Markdown editing. Choose your preferred default under **Setup → General → Editor mode**. The mode selector below the editor lets you work with the active task in Markdown or WYSIWYG form.
 
 Drag the horizontal resize bar below the editor to change its height. The minimum is 200 pixels, and OKF-Todo remembers the chosen height.
+
+### Relationships
+
+Enable **Show relationships** under **Setup → Task details** to connect tasks that block, depend on, duplicate, follow, or otherwise relate to each other.
+
+Following a relationship opens the related task. If it belongs to another list, OKF-Todo changes the concrete list scope as needed. **All lists** remains global.
 
 ### Checklist
 
@@ -183,25 +202,6 @@ The task queue shows checklist progress, such as `2/3`. Adding, completing, or r
 Use **Add file** to keep supporting material with the task. Attachments are stored inside the local OKF-Todo database, so they are included in a database backup and do not depend on the original file path.
 
 The current attachment limit is 25 MB per file. You can download or remove an attachment from the task.
-
-### Owner and Responsible
-
-These optional free-text fields have different meanings:
-
-- **Owner** is the person or team accountable for the outcome.
-- **Responsible** is the person currently expected to perform or coordinate the work.
-
-They are hidden independently by default. Enable either field under **Setup → Task details**. Search matches both fields even when they are hidden.
-
-### Source fields
-
-Enable **Show source fields** under **Setup → Task details** when you want to record where work came from, such as ServiceDesk, email, deployment, or monitoring. Source, source reference, and source URL are descriptive information; OKF-Todo does not open or synchronize external systems automatically.
-
-### Relationships
-
-Enable **Show relationships** under **Setup → Task details** to connect tasks that block, depend on, duplicate, follow, or otherwise relate to each other.
-
-Following a relationship opens the related task. If it belongs to another list, OKF-Todo changes the concrete list scope as needed. **All lists** remains global.
 
 ### Timeline and comments
 
@@ -239,7 +239,9 @@ Select **Done selecting** when finished.
 
 Use **Complete** when the intended work is finished. Use **Cancel** when the task should not be completed.
 
-Completed and cancelled tasks are read only by default. You can still inspect their details, download attachments, follow relationships, and read the Timeline. Select **Reopen to edit** to return a finished task to Active.
+Completed and cancelled tasks are read only by default. Their details are shown as readable values rather than disabled fields, and their body is shown without editing toolbars. Select **Show full body** when a long body is collapsed. Empty optional fields and unavailable mutation controls stay out of the way, while attachments, relationships, checklist results, and the Timeline remain available for review.
+
+Select **Reopen to edit** to return a finished task to Active and restore the normal fields and HTML or Markdown editor.
 
 If your workflow requires direct editing of finished work, enable **Allow editing completed tasks** or **Allow editing cancelled tasks** independently under **Setup → Task details**.
 
@@ -249,7 +251,7 @@ Moving a task to Trash is reversible. It removes the task from normal views but 
 
 Use **Undo** in the confirmation message when you moved something by mistake.
 
-Tasks in Trash are read only. Restore a task before changing its fields or related content.
+Tasks in Trash use the same compact read-only review presentation. Restore a task before changing its fields or related content.
 
 ### Restore or permanently delete
 

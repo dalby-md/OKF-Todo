@@ -903,6 +903,39 @@ textarea.is-invalid {
   color: var(--theme-muted);
 }
 
+.task-read-only-details,
+.task-read-only-body {
+  border-color: var(--theme-border);
+  background: var(--theme-surface);
+}
+
+.task-read-only-detail dt,
+.task-read-only-empty-value {
+  color: var(--theme-muted);
+}
+
+.task-read-only-detail dd,
+.task-read-only-section-header h3,
+.task-read-only-body-content {
+  color: var(--theme-text);
+}
+
+.task-read-only-tag {
+  border-color: #3f5754;
+  color: #bddbd6;
+  background: #213431;
+}
+
+.task-read-only-body-content pre {
+  background: #171a1b;
+}
+
+.task-read-only-body-toggle {
+  border-color: var(--theme-border);
+  color: var(--theme-accent);
+  background: var(--theme-accent-soft);
+}
+
 .task-form.is-task-read-only input:disabled,
 .task-form.is-task-read-only select:disabled,
 .task-form.is-task-read-only textarea:disabled,
@@ -910,6 +943,11 @@ textarea.is-invalid {
   border-color: var(--theme-border);
   color: var(--theme-muted);
   background: #171a1b;
+}
+
+.task-form.is-task-read-only .checklist-text:disabled {
+  color: var(--theme-text);
+  background: transparent;
 }
 
 .task-row.is-transition-reveal,

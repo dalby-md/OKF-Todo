@@ -1121,82 +1121,101 @@
               <button id="task-read-only-reopen-button" class="secondary-button" type="button">Reopen to edit</button>
             </div>
 
-            <div class="metadata-grid">
-              <label class="field-block task-list-field" for="task-list-owner">
-                <span>List</span>
-                <select id="task-list-owner" required disabled></select>
-              </label>
-              <label class="field-block" for="task-type">
-                <span>Task type</span>
-                <select id="task-type" required disabled></select>
-              </label>
-              <label class="field-block" for="task-priority">
-                <span>Priority</span>
-                <select id="task-priority" disabled></select>
-              </label>
-              <label class="field-block" for="task-deadline">
-                <span>Deadline</span>
-                <input id="task-deadline" type="date" disabled>
-              </label>
-              <label class="field-block waiting-field" for="waiting-text">
-                <span>Waiting for</span>
-                <input id="waiting-text" type="text" autocomplete="off" disabled>
-              </label>
-              <label class="field-block tags-field" for="task-tags">
-                <span>Tags</span>
-                <select id="task-tags" multiple disabled></select>
-                <small class="field-help">Type a tag, then press Enter to add it.</small>
-              </label>
+            <div id="task-editable-details" class="task-editable-details">
+              <div class="metadata-grid">
+                <label class="field-block task-list-field" for="task-list-owner">
+                  <span>List</span>
+                  <select id="task-list-owner" required disabled></select>
+                </label>
+                <label class="field-block" for="task-type">
+                  <span>Task type</span>
+                  <select id="task-type" required disabled></select>
+                </label>
+                <label class="field-block" for="task-priority">
+                  <span>Priority</span>
+                  <select id="task-priority" disabled></select>
+                </label>
+                <label class="field-block" for="task-deadline">
+                  <span>Deadline</span>
+                  <input id="task-deadline" type="date" disabled>
+                </label>
+                <label class="field-block waiting-field" for="waiting-text">
+                  <span>Waiting for</span>
+                  <input id="waiting-text" type="text" autocomplete="off" disabled>
+                </label>
+                <label class="field-block tags-field" for="task-tags">
+                  <span>Tags</span>
+                  <select id="task-tags" multiple disabled></select>
+                  <small class="field-help">Type a tag, then press Enter to add it.</small>
+                </label>
+              </div>
+
+              <div class="ownership-grid" hidden>
+                <label class="field-block owner-field" for="task-owner" hidden>
+                  <span>Owner</span>
+                  <input id="task-owner" type="text" autocomplete="off" disabled>
+                </label>
+                <label class="field-block responsible-field" for="task-responsible" hidden>
+                  <span>Responsible</span>
+                  <input id="task-responsible" type="text" autocomplete="off" disabled>
+                </label>
+              </div>
+
+              <div class="source-grid" hidden>
+                <label class="field-block" for="task-source">
+                  <span>Source</span>
+                  <select id="task-source" disabled></select>
+                </label>
+                <label class="field-block" for="task-source-reference">
+                  <span>Source reference</span>
+                  <input id="task-source-reference" type="text" autocomplete="off" disabled>
+                </label>
+                <label class="field-block" for="task-source-url">
+                  <span>Source URL</span>
+                  <input id="task-source-url" type="url" autocomplete="off" disabled>
+                </label>
+              </div>
             </div>
 
-            <div class="body-header">
-              <label class="field-label" for="text-body">Body</label>
-            </div>
-            <div id="editor-host" class="editor-host">
-              <textarea id="text-body"></textarea>
-            </div>
-            <div
-              id="editor-height-resizer"
-              class="editor-height-resizer"
-              role="separator"
-              aria-label="Resize editor height"
-              aria-orientation="horizontal"
-              aria-valuemin="${minimumEditorHeight}"
-              aria-valuemax="${maximumEditorHeight}"
-              aria-valuenow="${defaultEditorHeight}"
-              aria-valuetext="${defaultEditorHeight} pixels"
-              aria-disabled="true"
-              tabindex="-1"
-              title="Drag vertically to resize the editor"
-              hidden>
-              <span class="editor-height-resizer-grip" aria-hidden="true"></span>
+            <section id="task-read-only-details" class="task-read-only-details" aria-label="Task details" hidden></section>
+
+            <div id="task-editable-body" class="task-editable-body">
+              <div class="body-header">
+                <label class="field-label" for="text-body">Body</label>
+              </div>
+              <div id="editor-host" class="editor-host">
+                <textarea id="text-body"></textarea>
+              </div>
+              <div
+                id="editor-height-resizer"
+                class="editor-height-resizer"
+                role="separator"
+                aria-label="Resize editor height"
+                aria-orientation="horizontal"
+                aria-valuemin="${minimumEditorHeight}"
+                aria-valuemax="${maximumEditorHeight}"
+                aria-valuenow="${defaultEditorHeight}"
+                aria-valuetext="${defaultEditorHeight} pixels"
+                aria-disabled="true"
+                tabindex="-1"
+                title="Drag vertically to resize the editor"
+                hidden>
+                <span class="editor-height-resizer-grip" aria-hidden="true"></span>
+              </div>
             </div>
 
-            <div class="ownership-grid" hidden>
-              <label class="field-block owner-field" for="task-owner" hidden>
-                <span>Owner</span>
-                <input id="task-owner" type="text" autocomplete="off" disabled>
-              </label>
-              <label class="field-block responsible-field" for="task-responsible" hidden>
-                <span>Responsible</span>
-                <input id="task-responsible" type="text" autocomplete="off" disabled>
-              </label>
-            </div>
-
-            <div class="source-grid" hidden>
-              <label class="field-block" for="task-source">
-                <span>Source</span>
-                <select id="task-source" disabled></select>
-              </label>
-              <label class="field-block" for="task-source-reference">
-                <span>Source reference</span>
-                <input id="task-source-reference" type="text" autocomplete="off" disabled>
-              </label>
-              <label class="field-block" for="task-source-url">
-                <span>Source URL</span>
-                <input id="task-source-url" type="url" autocomplete="off" disabled>
-              </label>
-            </div>
+            <section id="task-read-only-body" class="task-read-only-body" aria-labelledby="task-read-only-body-title" hidden>
+              <div class="task-read-only-section-header">
+                <h3 id="task-read-only-body-title">Body</h3>
+              </div>
+              <div id="task-read-only-body-content" class="task-read-only-body-content"></div>
+              <button
+                id="task-read-only-body-toggle"
+                class="task-read-only-body-toggle"
+                type="button"
+                aria-expanded="false"
+                hidden>Show full body</button>
+            </section>
 
             <section class="relationships-section" aria-labelledby="relationships-title" hidden>
               <div class="relationships-header"><h3 id="relationships-title">Relationships</h3></div>
@@ -1369,7 +1388,7 @@
                   <label class="preference-row preference-toggle-row" for="show-owner">
                     <span class="preference-row-copy">
                       <strong>Show owner</strong>
-                      <span>Display the optional task owner field below the editor.</span>
+                      <span>Display the optional task owner with the task details above the body.</span>
                     </span>
                     <input id="show-owner" type="checkbox" role="switch">
                   </label>
@@ -1377,7 +1396,7 @@
                   <label class="preference-row preference-toggle-row" for="show-responsible">
                     <span class="preference-row-copy">
                       <strong>Show responsible</strong>
-                      <span>Display the optional responsible person field below the editor.</span>
+                      <span>Display the optional responsible person with the task details above the body.</span>
                     </span>
                     <input id="show-responsible" type="checkbox" role="switch">
                   </label>
@@ -3245,6 +3264,9 @@
     $('#task-id-label').text('').prop('hidden', true)
     $('#task-read-only-notice').prop('hidden', true)
     $('#task-form').removeClass('is-task-read-only').attr('aria-readonly', null)
+    $('#task-editable-details, #task-editable-body').prop('hidden', false)
+    $('#task-read-only-details, #task-read-only-body').prop('hidden', true)
+    $('#task-read-only-details, #task-read-only-body-content').empty()
     $('#task-title').val('')
     $('#task-list-owner').val('')
     $('#task-type').val('')
@@ -3480,6 +3502,9 @@
     $('#show-relationships').prop('checked', layoutPreference.showRelationships)
     $('#allow-editing-completed-tasks').prop('checked', layoutPreference.allowEditingCompletedTasks)
     $('#allow-editing-cancelled-tasks').prop('checked', layoutPreference.allowEditingCancelledTasks)
+    if (currentTask && !isTaskEditable(currentTask)) {
+      renderReadOnlyTaskDetails(currentTask)
+    }
   }
 
   function applyStoredLayoutSplit(shouldSave) {
@@ -4979,10 +5004,132 @@
     return false
   }
 
+  function getSelectedControlText(selector, fallback) {
+    const selectedOption = document.querySelector(`${selector} option:checked`)
+    const value = selectedOption ? selectedOption.textContent.trim() : ''
+    return value || fallback
+  }
+
+  function renderReadOnlyDetail(label, value, options) {
+    const settings = options || {}
+    const classNames = ['task-read-only-detail']
+    if (settings.isWide) {
+      classNames.push('is-wide')
+    }
+
+    return `
+      <div class="${classNames.join(' ')}">
+        <dt>${encodeText(label)}</dt>
+        <dd>${settings.html || encodeText(value || '')}</dd>
+      </div>
+    `
+  }
+
+  function renderReadOnlyTaskDetails(task) {
+    if (!task) {
+      $('#task-read-only-details').empty()
+      return
+    }
+
+    const tags = (task.tags || []).map(function (tag) {
+      return `<span class="task-read-only-tag">${encodeText(tag)}</span>`
+    }).join('')
+    const details = [
+      renderReadOnlyDetail('List', task.taskListName || getSelectedControlText('#task-list-owner', 'No list')),
+      renderReadOnlyDetail('Task type', task.taskTypeName || getSelectedControlText('#task-type', 'Not set')),
+      renderReadOnlyDetail('Priority', task.taskPriorityName || getSelectedControlText('#task-priority', 'No priority')),
+      renderReadOnlyDetail('Deadline', task.deadline ? formatShortDate(task.deadline) : 'No deadline'),
+      renderReadOnlyDetail(
+        'Waiting for',
+        task.activeWaitingFor ? describeWaiting(task.activeWaitingFor) : 'Not waiting'),
+      renderReadOnlyDetail(
+        'Tags',
+        '',
+        {
+          isWide: true,
+          html: tags || '<span class="task-read-only-empty-value">No tags</span>'
+        })
+    ]
+
+    if (layoutPreference.showOwner && String(task.owner || '').trim()) {
+      details.push(renderReadOnlyDetail('Owner', task.owner))
+    }
+
+    if (layoutPreference.showResponsible && String(task.responsible || '').trim()) {
+      details.push(renderReadOnlyDetail('Responsible', task.responsible))
+    }
+
+    if (layoutPreference.showSourceFields) {
+      const sourceName = task.taskSourceName || getSelectedControlText('#task-source', '')
+      if (sourceName) {
+        details.push(renderReadOnlyDetail('Source', sourceName))
+      }
+      if (String(task.sourceReference || '').trim()) {
+        details.push(renderReadOnlyDetail('Source reference', task.sourceReference))
+      }
+      if (String(task.sourceUrl || '').trim()) {
+        details.push(renderReadOnlyDetail('Source URL', task.sourceUrl, { isWide: true }))
+      }
+    }
+
+    $('#task-read-only-details').html(`<dl>${details.join('')}</dl>`)
+  }
+
+  function syncReadOnlyBodyOverflow() {
+    const content = document.getElementById('task-read-only-body-content')
+    const toggle = document.getElementById('task-read-only-body-toggle')
+    if (!content || !toggle || $('#task-read-only-body').prop('hidden')) {
+      return
+    }
+
+    const isExpanded = content.classList.contains('is-expanded')
+    if (isExpanded) {
+      toggle.hidden = false
+      return
+    }
+
+    toggle.hidden = content.scrollHeight <= content.clientHeight + 1
+  }
+
+  function renderReadOnlyTaskBody() {
+    const $content = $('#task-read-only-body-content')
+    $content.removeClass('is-expanded')
+    $('#task-read-only-body-toggle')
+      .attr('aria-expanded', 'false')
+      .text('Show full body')
+      .prop('hidden', true)
+
+    if (!isEditorReady || !window.Editor) {
+      $content.html('<p class="task-read-only-empty-value">Loading body…</p>')
+      return
+    }
+
+    const html = window.Editor.getHtml()
+    $content.html(html || '<p class="task-read-only-empty-value">No body content.</p>')
+    window.requestAnimationFrame(syncReadOnlyBodyOverflow)
+  }
+
+  function renderReadOnlyTaskReview(task) {
+    renderReadOnlyTaskDetails(task)
+    renderReadOnlyTaskBody()
+  }
+
+  function toggleReadOnlyTaskBody() {
+    const $content = $('#task-read-only-body-content')
+    const isExpanded = !$content.hasClass('is-expanded')
+    $content.toggleClass('is-expanded', isExpanded)
+    $('#task-read-only-body-toggle')
+      .attr('aria-expanded', String(isExpanded))
+      .text(isExpanded ? 'Show less' : 'Show full body')
+      .prop('hidden', false)
+  }
+
   function applyCurrentTaskEditability() {
     if (!currentTask) {
       $('#task-read-only-notice').prop('hidden', true)
       $('#task-form').removeClass('is-task-read-only').attr('aria-readonly', null)
+      $('#task-editable-details, #task-editable-body').prop('hidden', false)
+      $('#task-read-only-details, #task-read-only-body').prop('hidden', true)
       return
     }
 
@@ -5003,6 +5150,8 @@
     $('#task-form')
       .toggleClass('is-task-read-only', isReadOnlyFinalTask)
       .attr('aria-readonly', isReadOnlyFinalTask ? 'true' : null)
+    $('#task-editable-details, #task-editable-body').prop('hidden', isReadOnlyFinalTask)
+    $('#task-read-only-details, #task-read-only-body').prop('hidden', !isReadOnlyFinalTask)
     $('#task-form input, #task-form select').prop('disabled', !isEditable)
     $('#save-button')
       .prop('disabled', !isEditable)
@@ -5011,6 +5160,10 @@
 
     if (window.Editor && isEditorReady && typeof window.Editor.setReadOnly === 'function') {
       window.Editor.setReadOnly(!isEditable)
+    }
+
+    if (isReadOnlyFinalTask) {
+      renderReadOnlyTaskReview(currentTask)
     }
 
     setTaskOwnedControlsEnabled(!!currentTask.id && isEditable)
@@ -5116,6 +5269,7 @@
 
     try {
       currentTask = task
+      isEditorReady = false
       isDirty = false
       clearValidationState()
 
@@ -6432,6 +6586,7 @@
         setStatus(getErrorMessage(error, currentTask && currentTask.deletedAt ? 'Could not restore task' : 'Could not reopen task'), 'error')
       })
     })
+    $('#task-read-only-body-toggle').on('click', toggleReadOnlyTaskBody)
     window.Editor.onChanged(markDirty)
   }
 

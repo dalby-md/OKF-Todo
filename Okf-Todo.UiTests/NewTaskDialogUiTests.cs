@@ -625,6 +625,127 @@ public sealed class NewTaskDialogUiTests
     }
 
     [Fact]
+    public async Task OptionalDetails_StayAboveBodyAndReadOnlyTasksUseCompactReviewPresentation()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync();
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1487, Height = 1058 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(
+            $"{fixture.BaseUrl}/index.html?v=semantic-task-detail-slots",
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+
+        const string taskTitle = "Review optional task details";
+        await page.Locator("#new-task-button").ClickAsync();
+        await page.Locator("#new-task-title-input").FillAsync(taskTitle);
+        await page.Locator("#new-task-save-button").ClickAsync();
+        await page.Locator("#new-task-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Hidden
+        });
+
+        await OpenTaskDetailsPreferencesAsync(page);
+        await page.Locator("#show-source-fields").CheckAsync();
+        await page.Locator("#show-owner").CheckAsync();
+        await page.Locator("#show-responsible").CheckAsync();
+        await page.Locator("#show-relationships").CheckAsync();
+        await WaitForDisplayPreferenceSavedAsync(page);
+        await page.Locator("#settings-close-button").ClickAsync();
+
+        Assert.Equal(
+            "true",
+            await page.EvaluateAsync<string>(
+                """
+                () => {
+                  const editableDetails = document.querySelector('#task-editable-details')
+                  const editableBody = document.querySelector('#task-editable-body')
+                  const ownership = document.querySelector('.ownership-grid')
+                  const source = document.querySelector('.source-grid')
+                  if (!editableDetails || !editableBody || !ownership || !source) return 'false'
+
+                  const detailsBeforeBody = Boolean(
+                    editableDetails.compareDocumentPosition(editableBody)
+                      & Node.DOCUMENT_POSITION_FOLLOWING)
+                  const ownershipBeforeBody = Boolean(
+                    ownership.compareDocumentPosition(editableBody)
+                      & Node.DOCUMENT_POSITION_FOLLOWING)
+                  const sourceBeforeBody = Boolean(
+                    source.compareDocumentPosition(editableBody)
+                      & Node.DOCUMENT_POSITION_FOLLOWING)
+                  return String(detailsBeforeBody && ownershipBeforeBody && sourceBeforeBody)
+                }
+                """));
+
+        await page.Locator("#task-owner").FillAsync("Developer Support");
+        await page.Locator("#task-responsible").FillAsync("Anna Jensen");
+        await page.Locator("#task-source").SelectOptionAsync("EMAIL");
+        await page.Locator("#task-source-reference").FillAsync("Customer thread 4711");
+        await page.Locator("#task-source-url").FillAsync("https://example.invalid/customer-thread/4711");
+        var longBody = string.Join(
+            string.Empty,
+            Enumerable.Range(1, 24)
+                .Select(index => $"<p>Review detail {index}: preserve this information for the finished task.</p>"));
+        await page.EvaluateAsync("value => window.Editor.load(value)", longBody);
+        await page.Locator("#save-button").ClickAsync();
+        await page.WaitForFunctionAsync("() => document.querySelector('#save-status')?.textContent === 'Saved'");
+
+        await page.Locator("#complete-button").ClickAsync();
+        await AssertCurrentTaskReadOnlyAsync(page, "Completed task — read only");
+
+        Assert.True(await page.Locator("#task-editable-details").IsHiddenAsync());
+        Assert.True(await page.Locator("#task-editable-body").IsHiddenAsync());
+        Assert.True(await page.Locator("#task-read-only-details").IsVisibleAsync());
+        Assert.True(await page.Locator("#task-read-only-body").IsVisibleAsync());
+        Assert.True(await page.Locator("#editor-host").IsHiddenAsync());
+        await page.Locator("#task-read-only-details").GetByText("Developer Support", new LocatorGetByTextOptions
+        {
+            Exact = true
+        }).WaitForAsync();
+        await page.Locator("#task-read-only-details").GetByText("Anna Jensen", new LocatorGetByTextOptions
+        {
+            Exact = true
+        }).WaitForAsync();
+        await page.Locator("#task-read-only-details").GetByText("Customer thread 4711", new LocatorGetByTextOptions
+        {
+            Exact = true
+        }).WaitForAsync();
+        await page.Locator("#task-read-only-body-content").GetByText(
+            "Review detail 1: preserve this information for the finished task.",
+            new LocatorGetByTextOptions { Exact = true }).WaitForAsync();
+
+        Assert.True(await page.Locator(".relationship-add-form").IsHiddenAsync());
+        Assert.True(await page.Locator(".checklist-add-form").IsHiddenAsync());
+        Assert.True(await page.Locator(".attachment-actions").IsHiddenAsync());
+        Assert.True(await page.Locator(".comment-form").IsHiddenAsync());
+
+        var bodyToggle = page.Locator("#task-read-only-body-toggle");
+        await bodyToggle.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
+        Assert.Equal("false", await bodyToggle.GetAttributeAsync("aria-expanded"));
+        await bodyToggle.ClickAsync();
+        Assert.Equal("true", await bodyToggle.GetAttributeAsync("aria-expanded"));
+        Assert.True(await page.Locator("#task-read-only-body-content").EvaluateAsync<bool>(
+            "element => element.classList.contains('is-expanded')"));
+
+        await page.Locator("#task-read-only-reopen-button").ClickAsync();
+        await AssertCurrentTaskEditableAsync(page);
+        Assert.True(await page.Locator("#task-editable-details").IsVisibleAsync());
+        Assert.True(await page.Locator("#task-editable-body").IsVisibleAsync());
+        Assert.True(await page.Locator("#task-read-only-details").IsHiddenAsync());
+        Assert.True(await page.Locator("#task-read-only-body").IsHiddenAsync());
+    }
+
+    [Fact]
     public async Task LifecycleActions_SwitchViewAndKeepChangedTaskSelectedRevealedAndFocused()
     {
         await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
@@ -826,10 +947,10 @@ public sealed class NewTaskDialogUiTests
         await CaptureWorkspaceAsync(page, "triage-command-large.png");
 
         await page.SetViewportSizeAsync(1100, 900);
-        var compactRail = await page.Locator(".task-view-rail").BoundingBoxAsync();
-        Assert.NotNull(compactRail);
-        Assert.InRange(compactRail.Width, 60, 76);
-        Assert.True(await page.Locator(".task-view-rail-label").First.IsHiddenAsync());
+        var mediumRail = await page.Locator(".task-view-rail").BoundingBoxAsync();
+        Assert.NotNull(mediumRail);
+        Assert.InRange(mediumRail.Width, 160, 190);
+        Assert.False(await page.Locator(".task-view-rail-label").First.IsHiddenAsync());
         Assert.True(await page.Locator(".task-view-compact").IsHiddenAsync());
         await AssertNoHorizontalPageOverflowAsync(page);
         await CaptureWorkspaceAsync(page, "triage-command-compact.png");
@@ -1540,11 +1661,16 @@ public sealed class NewTaskDialogUiTests
                 .find(candidate => candidate.querySelector('.task-row-title')?.textContent === title)
               const list = document.querySelector('#task-list')
               const activeView = document.querySelector(`.task-view-rail-button[data-task-view="${view}"]`)
+              const expectedListTitle = {
+                active: 'Active',
+                completed: 'Completed',
+                all: 'All statuses'
+              }[view]
               if (!row || !list || !activeView) return false
 
               const rowBox = row.getBoundingClientRect()
               const listBox = list.getBoundingClientRect()
-              return document.querySelector('#task-list-title')?.textContent === activeView.title
+              return document.querySelector('#task-list-title')?.textContent === expectedListTitle
                 && activeView.classList.contains('is-active')
                 && activeView.classList.contains('is-transition-destination')
                 && row.classList.contains('is-selected')
@@ -1569,11 +1695,16 @@ public sealed class NewTaskDialogUiTests
                     .find(candidate => candidate.querySelector('.task-row-title')?.textContent === title)
                   const list = document.querySelector('#task-list')
                   const activeView = document.querySelector(`.task-view-rail-button[data-task-view="${view}"]`)
+                  const expectedListTitle = {
+                    active: 'Active',
+                    completed: 'Completed',
+                    all: 'All statuses'
+                  }[view]
                   const rowBox = row?.getBoundingClientRect()
                   const listBox = list?.getBoundingClientRect()
                   return JSON.stringify({
                     listTitle: document.querySelector('#task-list-title')?.textContent,
-                    expectedListTitle: activeView?.title,
+                    expectedListTitle,
                     activeView: activeView?.className,
                     rowClass: row?.className,
                     rowTransitionLabel: row?.querySelector('.task-row-transition-label')?.textContent,
@@ -1641,7 +1772,10 @@ public sealed class NewTaskDialogUiTests
             new { expectedTitle, expectedLifecycleAction });
 
         var editorBody = page.FrameLocator("#editor-host iframe").Locator("body");
-        await editorBody.WaitForAsync();
+        await editorBody.WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Attached
+        });
         Assert.Equal("false", await editorBody.GetAttributeAsync("contenteditable"));
     }
 

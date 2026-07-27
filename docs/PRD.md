@@ -110,6 +110,19 @@ directly below the rail. Wide layouts present the six primary metadata controls
 as three balanced rows of two fields. The title, pill, metadata, and compact
 contextual action wrap without horizontal overflow on narrow screens.
 
+Task details use fixed semantic placement slots. The primary metadata and any
+enabled Source, Owner, or Responsible fields appear before the body. Enabling a
+feature changes its visibility, never its placement. Relationships, checklist,
+and attachments follow the body as related work. Timeline and Add comment
+remain the final section.
+
+Completed, cancelled, and Trash tasks that are not editable use a review
+presentation instead of a disabled editing form. Metadata is shown as readable
+values, empty optional metadata is omitted, and the body is rendered without
+editor toolbars. Long bodies start in a compact reader and can be expanded.
+Task-owned mutation controls are hidden while review and navigation remain
+available. Reopen or Restore returns the normal editing presentation.
+
 ## Task body
 
 The task body is free text.
@@ -449,7 +462,8 @@ Tasks can optionally record two separate free-text values:
 - `Owner`: the person or team accountable for the task.
 - `Responsible`: the person currently expected to perform or coordinate the work.
 
-The fields do not require a user directory or lookup table. They appear side by side directly below the body editor when both are enabled.
+The fields do not require a user directory or lookup table. They appear side by
+side with the additional task details above the body when both are enabled.
 
 Owner and Responsible are hidden independently by default. User preferences provide separate **Show owner** and **Show responsible** switches, and each choice persists across application restarts.
 
