@@ -234,6 +234,23 @@ Deletion uses a reversible Trash workflow:
 
 The same action system supports individual and bulk work. Individual actions live on each task row. The application header contains only application-level and lifecycle actions; it does not duplicate Star or Trash controls for the selected task. Compact and stacked task-details layouts provide a contextual menu with Star/Unstar and the applicable Trash actions because the selected row may be outside the visible area. The task-queue header exposes bulk work as a clearly outlined **Select tasks** action beside a readable task count, with a one-time dismissible coach mark that is remembered in user preferences. Entering selection mode changes the header to the selected count and **Done selecting**, and exposes **Select all** plus the applicable Star, Unstar, **Move all selected to Trash**, Restore, and **Delete all selected permanently** actions. Selection operates only on tasks currently rendered by the active view and filters and uses a bottom action bar on smaller screens. Complete-view actions use a labeled **More** menu only when an action is currently available; unavailable Select and More controls are hidden instead of appearing disabled.
 
+## Markdown task export
+
+The task-queue header provides a visible **Export** action for creating a portable Markdown work inventory. Export is deliberately based on a complete, predictable scope rather than on the rows currently visible after view, search, tag, type, priority, sort, or collapsed-group choices.
+
+The export dialog offers two modes:
+
+- **Current list** exports every non-Trash task in the selected concrete list, across active, completed, and cancelled statuses.
+- **Starred tasks** exports every starred non-Trash task in the selected list scope, including completed and cancelled tasks.
+
+When the synthetic **All lists** scope is selected, both modes operate across every concrete list. The first mode is presented as **All lists**, and the Markdown table includes a List column. A concrete-list export omits the redundant List column.
+
+Each row contains the task ID, title, list when global, type, status, priority, deadline, waiting target, owner, responsible person, source, tags, checklist progress, and last-updated timestamp. Multiline text and Markdown table delimiters are escaped so the generated table remains valid. Bodies, comments, Timeline entries, relationships, and attachment content are not included; this is an operational work inventory, not an archival export.
+
+If the selected task has unsaved changes, the export flow requires those changes to be saved first. The user chooses the destination through the native save-file dialog. Files use UTF-8 without a byte-order mark, are written through a temporary file before replacement, receive a useful timestamped `.md` default name, and start in the directory of the last successful task export. Cancelling or failing an export does not change that preference.
+
+Trash is never included in Markdown task export. A database backup remains the only supported complete portable copy of task bodies, attachments, relationships, comments, checklists, history, and trashed tasks.
+
 ## Lifecycle timestamps
 
 Store timestamps directly on the task for fast querying:

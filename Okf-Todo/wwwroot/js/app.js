@@ -177,6 +177,8 @@
   let lastTrashedTaskIds = []
   let lastTaskListMove = null
   let pendingTaskListMoveIds = []
+  let taskExportTaskListId = null
+  let taskExportCounts = { currentList: 0, starred: 0 }
   let trashUndoTimer = null
   const selectedTaskIds = new Set()
   const helpDocumentCache = new Map()
@@ -983,6 +985,10 @@
               </div>
               <div class="sidebar-header-actions">
                 <span id="task-list-header-count" class="task-list-header-count" aria-live="polite">0 tasks</span>
+                <button id="task-export-button" class="secondary-button task-export-button" type="button">
+                  <span class="fluent-icon" aria-hidden="true">&#xEDE1;</span>
+                  <span>Export</span>
+                </button>
                 <button id="task-select-mode-button" class="secondary-button task-select-mode-button" type="button" aria-describedby="task-selection-coachmark" hidden>
                   <span class="fluent-icon task-select-mode-icon" aria-hidden="true">&#xE73A;</span>
                   <span class="task-select-mode-label">Select tasks</span>
@@ -1679,6 +1685,72 @@
           </section>
         </div>
 
+        <div id="task-export-overlay" class="modal-overlay" hidden>
+          <section class="settings-dialog task-export-dialog" role="dialog" aria-modal="true" aria-labelledby="task-export-title" aria-describedby="task-export-intro">
+            <header class="task-export-header">
+              <div class="task-export-heading">
+                <span class="task-export-heading-icon fluent-icon" aria-hidden="true">&#xEDE1;</span>
+                <div>
+                  <p class="eyebrow">Share a task overview</p>
+                  <h2 id="task-export-title">Export Markdown table</h2>
+                </div>
+              </div>
+              <button id="task-export-close-button" class="secondary-button task-export-close-button" type="button" aria-label="Close export" title="Close">
+                <span class="fluent-icon" aria-hidden="true">&#xE711;</span>
+              </button>
+            </header>
+
+            <p id="task-export-intro" class="task-export-intro">
+              Choose a complete scope. Search, filters, and the current status view never hide rows from the export.
+            </p>
+
+            <fieldset class="task-export-options">
+              <legend class="sr-only">Tasks to export</legend>
+              <label class="task-export-option" for="task-export-current-list">
+                <input id="task-export-current-list" type="radio" name="task-export-kind" value="currentList" checked>
+                <span class="task-export-option-icon fluent-icon" aria-hidden="true">&#xE8FD;</span>
+                <span class="task-export-option-copy">
+                  <strong id="task-export-current-title">Current list</strong>
+                  <span id="task-export-current-description">All non-Trash tasks across every status.</span>
+                </span>
+                <span id="task-export-current-count" class="task-export-option-count">0</span>
+              </label>
+
+              <label class="task-export-option" for="task-export-starred">
+                <input id="task-export-starred" type="radio" name="task-export-kind" value="starred">
+                <span class="task-export-option-icon is-starred fluent-icon" aria-hidden="true">&#xE735;</span>
+                <span class="task-export-option-copy">
+                  <strong>Starred tasks</strong>
+                  <span id="task-export-starred-description">Starred non-Trash tasks, including completed and cancelled work.</span>
+                </span>
+                <span id="task-export-starred-count" class="task-export-option-count">0</span>
+              </label>
+            </fieldset>
+
+            <div class="task-export-columns">
+              <span class="fluent-icon" aria-hidden="true">&#xE946;</span>
+              <p>
+                Includes ID, title, list when global, type, status, priority, deadline, waiting target,
+                ownership, source, tags, checklist progress, and last update.
+              </p>
+            </div>
+
+            <div id="task-export-unsaved-warning" class="task-export-unsaved-warning" hidden>
+              <span class="fluent-icon" aria-hidden="true">&#xE7BA;</span>
+              <p><strong>Unsaved task changes.</strong> They will be saved before the export is created.</p>
+            </div>
+
+            <p id="task-export-error" class="form-error" hidden></p>
+            <div class="modal-actions task-export-actions">
+              <button id="task-export-cancel-button" class="secondary-button" type="button">Cancel</button>
+              <button id="task-export-confirm-button" type="button">
+                <span class="fluent-icon" aria-hidden="true">&#xEDE1;</span>
+                <span>Export Markdown</span>
+              </button>
+            </div>
+          </section>
+        </div>
+
         <div id="new-task-overlay" class="modal-overlay" hidden>
           <section class="settings-dialog new-task-dialog" role="dialog" aria-modal="true" aria-labelledby="new-task-dialog-title">
             <header class="settings-header">
@@ -2235,6 +2307,147 @@
       await selectFirstAvailableTask()
     }
     setStatus(result.affectedCount === 1 ? 'Task moved' : 'Tasks moved', 'saved')
+  }
+
+  function getTaskExportScopeName() {
+    if (taskExportTaskListId == null) {
+      return 'All lists'
+    }
+
+    const taskList = getTaskListById(taskExportTaskListId)
+    return taskList ? taskList.name : 'Current list'
+  }
+
+  function setTaskExportBusy(isBusy) {
+    $('#task-export-close-button, #task-export-cancel-button').prop('disabled', isBusy)
+    $('#task-export-confirm-button')
+      .prop('disabled', isBusy || getSelectedTaskExportCount() === 0)
+      .find('span:last')
+      .text(isBusy ? 'Exporting…' : (hasUnsavedChanges() ? 'Save and export' : 'Export Markdown'))
+    $('input[name="task-export-kind"]').prop('disabled', function () {
+      return isBusy || taskExportCounts[$(this).val()] === 0
+    })
+  }
+
+  function getSelectedTaskExportKind() {
+    return $('input[name="task-export-kind"]:checked').val() || 'currentList'
+  }
+
+  function getSelectedTaskExportCount() {
+    return taskExportCounts[getSelectedTaskExportKind()] || 0
+  }
+
+  function renderTaskExportPreview(currentTasks, starredTasks) {
+    const scopeName = getTaskExportScopeName()
+    const isGlobal = taskExportTaskListId == null
+    taskExportCounts = {
+      currentList: currentTasks.length,
+      starred: starredTasks.length
+    }
+
+    $('#task-export-current-title').text(isGlobal ? 'All lists' : scopeName)
+    $('#task-export-current-description').text(
+      isGlobal
+        ? 'All non-Trash tasks across every list and status.'
+        : `All non-Trash tasks in ${scopeName}, across every status.`)
+    $('#task-export-starred-description').text(
+      isGlobal
+        ? 'Starred non-Trash tasks across every list, including completed and cancelled work.'
+        : `Starred non-Trash tasks in ${scopeName}, including completed and cancelled work.`)
+    $('#task-export-current-count').text(currentTasks.length)
+    $('#task-export-starred-count').text(starredTasks.length)
+
+    const currentKind = getSelectedTaskExportKind()
+    if (taskExportCounts[currentKind] === 0) {
+      const fallbackKind = currentTasks.length > 0 ? 'currentList' : 'starred'
+      $(`input[name="task-export-kind"][value="${fallbackKind}"]`).prop('checked', true)
+    }
+
+    $('#task-export-unsaved-warning').prop('hidden', !hasUnsavedChanges())
+    setTaskExportBusy(false)
+  }
+
+  async function refreshTaskExportPreview() {
+    const payload = { taskListId: taskExportTaskListId }
+    const [currentTasks, starredTasks] = await Promise.all([
+      sendBridgeMessage('task.list', { ...payload, view: 'all' }),
+      sendBridgeMessage('task.list', { ...payload, view: 'starred' })
+    ])
+    renderTaskExportPreview(currentTasks, starredTasks)
+  }
+
+  async function openTaskExportDialog() {
+    taskExportTaskListId = activeTaskListId
+    taskExportCounts = { currentList: 0, starred: 0 }
+    $('#task-export-error').text('').prop('hidden', true)
+    $('#task-export-current-count, #task-export-starred-count').text('…')
+    $('#task-export-overlay').prop('hidden', false)
+    $('#task-export-confirm-button').prop('disabled', true)
+
+    try {
+      await refreshTaskExportPreview()
+      const selectedKind = getSelectedTaskExportKind()
+      $(`input[name="task-export-kind"][value="${selectedKind}"]`).trigger('focus')
+    } catch (error) {
+      $('#task-export-error')
+        .text(getErrorMessage(error, 'Could not prepare the task export'))
+        .prop('hidden', false)
+      setTaskExportBusy(false)
+    }
+  }
+
+  function closeTaskExportDialog() {
+    $('#task-export-overlay').prop('hidden', true)
+    $('#task-export-error').text('').prop('hidden', true)
+  }
+
+  async function exportTasksToMarkdown() {
+    if (getSelectedTaskExportCount() === 0) {
+      return
+    }
+
+    const scopeBeforeSave = taskExportTaskListId
+    setTaskExportBusy(true)
+    $('#task-export-error').text('').prop('hidden', true)
+
+    try {
+      if (hasUnsavedChanges()) {
+        const saved = await saveTask()
+        if (!saved) {
+          return
+        }
+
+        $('#task-export-unsaved-warning').prop('hidden', true)
+        if (activeTaskListId !== scopeBeforeSave) {
+          taskExportTaskListId = activeTaskListId
+          await refreshTaskExportPreview()
+          $('#task-export-error')
+            .text('The task was saved and its list changed. Review the updated export scope, then export again.')
+            .prop('hidden', false)
+          return
+        }
+      }
+
+      const result = await sendBridgeMessage('task.export.markdown', {
+        exportKind: getSelectedTaskExportKind(),
+        taskListId: taskExportTaskListId
+      })
+      if (result.cancelled) {
+        setStatus('Export cancelled', 'ready')
+        return
+      }
+
+      closeTaskExportDialog()
+      setStatus(
+        `Exported ${result.taskCount} ${result.taskCount === 1 ? 'task' : 'tasks'}`,
+        'saved')
+    } catch (error) {
+      const message = getErrorMessage(error, 'Could not export tasks')
+      $('#task-export-error').text(message).prop('hidden', false)
+      setStatus(message, 'error')
+    } finally {
+      setTaskExportBusy(false)
+    }
   }
 
   async function undoTaskListMove() {
@@ -5960,6 +6173,28 @@
         setStatus(getErrorMessage(error, 'Could not move selected tasks'), 'error')
       })
     })
+    $('#task-export-button').on('click', function () {
+      openTaskExportDialog().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not prepare the task export'), 'error')
+      })
+    })
+    $('#task-export-close-button, #task-export-cancel-button').on('click', closeTaskExportDialog)
+    $('#task-export-overlay').on('click', function (event) {
+      if (event.target === this) {
+        closeTaskExportDialog()
+      }
+    })
+    $('input[name="task-export-kind"]').on('change', function () {
+      setTaskExportBusy(false)
+      $('#task-export-error').text('').prop('hidden', true)
+    })
+    $('#task-export-confirm-button').on('click', function () {
+      exportTasksToMarkdown().catch(function (error) {
+        const message = getErrorMessage(error, 'Could not export tasks')
+        $('#task-export-error').text(message).prop('hidden', false)
+        setStatus(message, 'error')
+      })
+    })
 
     $('#new-task-button').on('click', function () {
       allowContextSwitch().then(function (isAllowed) {
@@ -6175,6 +6410,10 @@
       }
       if (event.key === 'Escape' && !$('#help-overlay').prop('hidden')) {
         closeHelp()
+        return
+      }
+      if (event.key === 'Escape' && !$('#task-export-overlay').prop('hidden')) {
+        closeTaskExportDialog()
         return
       }
       if (event.key === 'Escape' && !$('#unsaved-changes-overlay').prop('hidden')) {

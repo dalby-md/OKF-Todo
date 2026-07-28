@@ -896,6 +896,86 @@ public sealed class NewTaskDialogUiTests
     }
 
     [Fact]
+    public async Task TaskExport_UsesCompleteCurrentOrStarredScopeAndCreatesMarkdownTable()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1487, Height = 1058 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(
+            $"{fixture.BaseUrl}/index.html?v=task-markdown-export-contract",
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        await page.Locator(".task-row-star-button[aria-pressed='false']").First.ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('.task-row-star-button[aria-pressed=\"true\"]')");
+
+        await page.Locator("#task-export-button").ClickAsync();
+        await page.Locator("#task-export-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Visible
+        });
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-export-current-title')?.textContent === 'Default list'");
+        Assert.Equal("Default list", await page.Locator("#task-export-current-title").TextContentAsync());
+        Assert.Contains(
+            "every status",
+            await page.Locator("#task-export-current-description").TextContentAsync());
+        Assert.Contains(
+            "including completed and cancelled",
+            await page.Locator("#task-export-starred-description").TextContentAsync());
+        Assert.True(
+            await page.Locator("#task-export-current-count").EvaluateAsync<int>(
+                "element => Number(element.textContent)") > 0);
+        await page.Locator("#task-export-confirm-button").ClickAsync();
+        await page.Locator("#task-export-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Hidden
+        });
+
+        var currentListMarkdown = await fixture.ReadTaskExportAsync();
+        Assert.Contains("- Scope: All non-Trash tasks in Default list", currentListMarkdown);
+        Assert.Contains("| ID | Title | Type | Status | Priority |", currentListMarkdown);
+        Assert.DoesNotContain("| ID | Title | List |", currentListMarkdown);
+
+        await page.Locator("#task-list-switcher").SelectOptionAsync("ALL");
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-list-switcher')?.value === 'ALL' && document.querySelector('.task-row .task-list-pill')");
+        await page.Locator("#task-export-button").ClickAsync();
+        await page.Locator("#task-export-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Visible
+        });
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-export-current-title')?.textContent === 'All lists'");
+        Assert.Equal("All lists", await page.Locator("#task-export-current-title").TextContentAsync());
+        Assert.True(
+            await page.Locator("#task-export-starred-count").EvaluateAsync<int>(
+                "element => Number(element.textContent)") > 0);
+        await page.Locator("#task-export-starred").CheckAsync();
+        await page.Locator("#task-export-confirm-button").ClickAsync();
+        await page.Locator("#task-export-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Hidden
+        });
+
+        var starredMarkdown = await fixture.ReadTaskExportAsync();
+        Assert.Contains("- Scope: Starred non-Trash tasks in All lists", starredMarkdown);
+        Assert.Contains("| ID | Title | List | Type |", starredMarkdown);
+        Assert.Contains("task.export.markdown", fixture.BridgeMessageTypes);
+    }
+
+    [Fact]
     public async Task TriageCommandWorkspace_AdaptsAcrossLargeCompactAndSmallWindows()
     {
         await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
@@ -1943,6 +2023,8 @@ public sealed class NewTaskDialogUiTests
             builder.Services.AddSingleton<IAppPreferencePathProvider>(
                 new TestPreferencePathProvider(Path.Combine(testDirectory, "app-preferences.json")));
             builder.Services.AddSingleton<IBackupDestinationPicker, CancelledBackupDestinationPicker>();
+            builder.Services.AddSingleton<ITaskMarkdownExportDestinationPicker>(
+                new TestMarkdownExportDestinationPicker(Path.Combine(testDirectory, "task-export.md")));
             builder.Services.AddScoped<LookupSeedService>();
             builder.Services.AddScoped<TaskLifecycleService>();
             builder.Services.AddScoped<TaskListService>();
@@ -1954,6 +2036,7 @@ public sealed class NewTaskDialogUiTests
             builder.Services.AddScoped<IssueService>();
             builder.Services.AddScoped<ImageService>();
             builder.Services.AddScoped<DatabaseBackupService>();
+            builder.Services.AddScoped<TaskMarkdownExportService>();
             builder.Services.AddScoped<SampleDataSeeder>();
             builder.Services.AddSingleton<ApplicationCommandService>();
             builder.Services.AddSingleton<BridgeMessageHandler>();
@@ -2053,6 +2136,13 @@ public sealed class NewTaskDialogUiTests
             return Convert.ToString(body) ?? string.Empty;
         }
 
+        public async Task<string> ReadTaskExportAsync()
+        {
+            var exportPath = Path.Combine(testDirectory, "task-export.md");
+            Assert.True(File.Exists(exportPath), "The Markdown export file was not created.");
+            return await File.ReadAllTextAsync(exportPath);
+        }
+
         public async ValueTask DisposeAsync()
         {
             await application.StopAsync();
@@ -2092,6 +2182,15 @@ public sealed class NewTaskDialogUiTests
             string suggestedFileName,
             string? initialDirectory,
             CancellationToken cancellationToken) => Task.FromResult<string?>(null);
+    }
+
+    private sealed class TestMarkdownExportDestinationPicker(string exportPath)
+        : ITaskMarkdownExportDestinationPicker
+    {
+        public Task<string?> PickAsync(
+            string suggestedFileName,
+            string? initialDirectory,
+            CancellationToken cancellationToken) => Task.FromResult<string?>(exportPath);
     }
 
     private sealed record TaskEvidence(

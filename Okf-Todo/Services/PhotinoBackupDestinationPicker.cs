@@ -13,7 +13,17 @@ public interface IBackupDestinationPicker
         CancellationToken cancellationToken);
 }
 
-public sealed class PhotinoBackupDestinationPicker : IBackupDestinationPicker
+public interface ITaskMarkdownExportDestinationPicker
+{
+    Task<string?> PickAsync(
+        string suggestedFileName,
+        string? initialDirectory,
+        CancellationToken cancellationToken);
+}
+
+public sealed class PhotinoFileSavePicker :
+    IBackupDestinationPicker,
+    ITaskMarkdownExportDestinationPicker
 {
     private PhotinoWindow? window;
 
@@ -22,9 +32,43 @@ public sealed class PhotinoBackupDestinationPicker : IBackupDestinationPicker
         window = photinoWindow;
     }
 
-    public async Task<string?> PickAsync(
+    Task<string?> IBackupDestinationPicker.PickAsync(
         string suggestedFileName,
         string? initialDirectory,
+        CancellationToken cancellationToken)
+    {
+        return PickAsync(
+            title: "Back up OKF Todo database",
+            suggestedFileName,
+            initialDirectory,
+            filterLabel: "SQLite database",
+            extensions: ["db"],
+            defaultExtension: "db",
+            cancellationToken);
+    }
+
+    Task<string?> ITaskMarkdownExportDestinationPicker.PickAsync(
+        string suggestedFileName,
+        string? initialDirectory,
+        CancellationToken cancellationToken)
+    {
+        return PickAsync(
+            title: "Export OKF-Todo tasks",
+            suggestedFileName,
+            initialDirectory,
+            filterLabel: "Markdown document",
+            extensions: ["md"],
+            defaultExtension: "md",
+            cancellationToken);
+    }
+
+    private async Task<string?> PickAsync(
+        string title,
+        string suggestedFileName,
+        string? initialDirectory,
+        string filterLabel,
+        string[] extensions,
+        string defaultExtension,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -39,12 +83,16 @@ public sealed class PhotinoBackupDestinationPicker : IBackupDestinationPicker
         var selectedPath = OperatingSystem.IsWindows()
             ? await ShowWindowsSaveFileAsync(
                 activeWindow.WindowHandle,
+                title,
                 suggestedFileName,
-                defaultDirectory)
-            : await activeWindow.ShowSaveFileAsync(
-                "Back up OKF Todo database",
                 defaultDirectory,
-                [("SQLite database", ["db"])]);
+                filterLabel,
+                extensions,
+                defaultExtension)
+            : await activeWindow.ShowSaveFileAsync(
+                title,
+                defaultDirectory,
+                [(filterLabel, extensions)]);
 
         cancellationToken.ThrowIfCancellationRequested();
         return string.IsNullOrWhiteSpace(selectedPath) ? null : selectedPath;
@@ -53,8 +101,12 @@ public sealed class PhotinoBackupDestinationPicker : IBackupDestinationPicker
     [SupportedOSPlatform("windows")]
     private static Task<string?> ShowWindowsSaveFileAsync(
         IntPtr ownerHandle,
+        string title,
         string suggestedFileName,
-        string initialDirectory)
+        string initialDirectory,
+        string filterLabel,
+        string[] extensions,
+        string defaultExtension)
     {
         var completion = new TaskCompletionSource<string?>(
             TaskCreationOptions.RunContinuationsAsynchronously);
@@ -64,8 +116,12 @@ public sealed class PhotinoBackupDestinationPicker : IBackupDestinationPicker
             {
                 completion.SetResult(ShowWindowsSaveFile(
                     ownerHandle,
+                    title,
                     suggestedFileName,
-                    initialDirectory));
+                    initialDirectory,
+                    filterLabel,
+                    extensions,
+                    defaultExtension));
             }
             catch (Exception exception)
             {
@@ -81,13 +137,20 @@ public sealed class PhotinoBackupDestinationPicker : IBackupDestinationPicker
     [SupportedOSPlatform("windows")]
     private static string? ShowWindowsSaveFile(
         IntPtr ownerHandle,
+        string title,
         string suggestedFileName,
-        string initialDirectory)
+        string initialDirectory,
+        string filterLabel,
+        string[] extensions,
+        string defaultExtension)
     {
         const int fileBufferCharacters = 32768;
         var fileBuffer = Marshal.AllocHGlobal(fileBufferCharacters * sizeof(char));
+        var extensionPattern = string.Join(
+            ";",
+            extensions.Select(extension => $"*.{extension.TrimStart('.')}"));
         var filterBuffer = Marshal.StringToHGlobalUni(
-            "SQLite database (*.db)\0*.db\0All files (*.*)\0*.*\0\0");
+            $"{filterLabel} ({extensionPattern})\0{extensionPattern}\0All files (*.*)\0*.*\0\0");
 
         try
         {
@@ -104,13 +167,13 @@ public sealed class PhotinoBackupDestinationPicker : IBackupDestinationPicker
                 File = fileBuffer,
                 MaxFile = fileBufferCharacters,
                 InitialDirectory = initialDirectory,
-                Title = "Back up OKF Todo database",
+                Title = title,
                 Flags = OpenFileNameFlags.OverwritePrompt
                     | OpenFileNameFlags.PathMustExist
                     | OpenFileNameFlags.NoChangeDirectory
                     | OpenFileNameFlags.Explorer
                     | OpenFileNameFlags.EnableSizing,
-                DefaultExtension = "db"
+                DefaultExtension = defaultExtension
             };
 
             if (GetSaveFileName(ref dialog))
@@ -126,7 +189,7 @@ public sealed class PhotinoBackupDestinationPicker : IBackupDestinationPicker
 
             throw new Win32Exception(
                 unchecked((int)error),
-                $"The native backup dialog failed with error 0x{error:X}.");
+                $"The native save-file dialog failed with error 0x{error:X}.");
         }
         finally
         {

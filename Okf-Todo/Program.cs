@@ -129,7 +129,7 @@ namespace Photino.Okf_Todo
                 window.SetIconFile(Path.Combine(AppContext.BaseDirectory, "wwwroot", "favicon.ico"));
             }
 
-            services.GetRequiredService<PhotinoBackupDestinationPicker>().Attach(window);
+            services.GetRequiredService<PhotinoFileSavePicker>().Attach(window);
 
             ApplyStartupWindowPlacement(window, windowPreference);
             window.WindowClosing += (_, _) =>
@@ -384,9 +384,11 @@ namespace Photino.Okf_Todo
                 options.UseSqlite(DatabasePathProvider.CreateConnectionString(databasePath)));
             services.AddSingleton<HtmlSanitizerService>();
             services.AddSingleton<IAppPreferencePathProvider, AppPreferencePathProvider>();
-            services.AddSingleton<PhotinoBackupDestinationPicker>();
+            services.AddSingleton<PhotinoFileSavePicker>();
             services.AddSingleton<IBackupDestinationPicker>(serviceProvider =>
-                serviceProvider.GetRequiredService<PhotinoBackupDestinationPicker>());
+                serviceProvider.GetRequiredService<PhotinoFileSavePicker>());
+            services.AddSingleton<ITaskMarkdownExportDestinationPicker>(serviceProvider =>
+                serviceProvider.GetRequiredService<PhotinoFileSavePicker>());
             services.AddScoped<LookupSeedService>();
             services.AddScoped<TaskLifecycleService>();
             services.AddScoped<TaskListService>();
@@ -398,6 +400,7 @@ namespace Photino.Okf_Todo
             services.AddScoped<IssueService>();
             services.AddScoped<ImageService>();
             services.AddScoped<DatabaseBackupService>();
+            services.AddScoped<TaskMarkdownExportService>();
             services.AddScoped<SampleDataSeeder>();
             services.AddSingleton<ApplicationCommandService>();
             services.AddSingleton<BridgeMessageHandler>();

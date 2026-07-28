@@ -34,6 +34,8 @@ public sealed class ApplicationCommandService(IServiceProvider services)
                 .SaveLayoutPreferenceAsync(GetPayload<LayoutPreferenceSaveRequest>(command), cancellationToken),
             "database.backup.create" => await scopedServices.GetRequiredService<DatabaseBackupService>()
                 .CreateAsync(cancellationToken),
+            "task.export.markdown" => await scopedServices.GetRequiredService<TaskMarkdownExportService>()
+                .ExportAsync(GetPayload<TaskMarkdownExportRequest>(command), cancellationToken),
             "task.lookups.get" => await scopedServices.GetRequiredService<TaskService>()
                 .GetLookupsAsync(cancellationToken),
             "lookup.settings.get" => await scopedServices.GetRequiredService<TaskService>()

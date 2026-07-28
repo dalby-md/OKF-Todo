@@ -28,7 +28,7 @@ The workspace has four parts:
 | --- | --- |
 | **List switcher** | Chooses which task list you are working in, or selects **All lists**. |
 | **Views** | Chooses the kind of work to show, such as Active, Ready, Waiting, Completed, or Trash. |
-| **Task queue** | Searches, filters, sorts, selects, and opens tasks in the current list and view. |
+| **Task queue** | Searches, filters, sorts, selects, opens, and exports tasks in the current list scope. |
 | **Task details** | Shows and edits the selected task. |
 
 The list switcher and the Views rail work together. For example, selecting the **Support** list and the **Waiting** view shows waiting tasks in Support. Selecting **All lists** and **Waiting** shows waiting tasks across every list.
@@ -232,6 +232,25 @@ Select **Select tasks** beside the result count to enter selection mode. You can
 Selection applies only to tasks currently shown by the active list, view, search, filters, and expanded groups. On a smaller window, the available actions move to a bottom action bar.
 
 Select **Done selecting** when finished.
+
+## Export a Markdown work inventory
+
+Select **Export** beside the task count when you need a task overview for a handover, incident review, planning note, customer-status preparation, or another document that accepts Markdown.
+
+Choose one of these export scopes:
+
+- **Current list** includes every task in the selected list except tasks in Trash. It includes active, completed, and cancelled tasks.
+- **Starred tasks** includes every starred task in the selected list scope except tasks in Trash. Completed and cancelled starred tasks are included.
+
+If **All lists** is selected, the first option is shown as **All lists** and exports across every concrete list. Global exports include a List column so readers can see where each task belongs.
+
+The export scope is intentionally stable. The current view, search text, tags, type and priority filters, sort order, and collapsed Finished group do not remove rows from the export. Use the counts in the export dialog to confirm the result before continuing.
+
+If the open task has unsaved changes, OKF-Todo asks you to save them as part of the export flow. After saving, choose the `.md` destination in the Windows save dialog. The application remembers the directory used by the last successful task export.
+
+The table includes each task's ID, title, list when relevant, type, status, priority, deadline, waiting target, owner, responsible person, source, tags, checklist progress, and last-updated time. It does not include the task body, attachment contents, comments, relationships, or Timeline.
+
+Treat the Markdown file as a readable snapshot for communication and analysis. It is not a backup and cannot restore your tasks. Use **Setup → Backup** when you need a complete portable copy of the database.
 
 ## Complete, cancel, reopen, and delete safely
 

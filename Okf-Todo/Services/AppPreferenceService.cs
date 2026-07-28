@@ -305,6 +305,33 @@ public sealed class AppPreferenceService(
         logger.LogInformation("Saved backup directory preference {BackupDirectory}.", normalizedDirectory);
     }
 
+    public async Task<string?> GetTaskExportDirectoryAsync(CancellationToken cancellationToken)
+    {
+        var preferences = await ReadPreferencesAsync(cancellationToken);
+        return !string.IsNullOrWhiteSpace(preferences.TaskExportDirectory)
+            && Directory.Exists(preferences.TaskExportDirectory)
+                ? Path.GetFullPath(preferences.TaskExportDirectory)
+                : null;
+    }
+
+    public async Task SaveTaskExportDirectoryAsync(
+        string taskExportDirectory,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(taskExportDirectory) || !Directory.Exists(taskExportDirectory))
+        {
+            throw new ValidationException("Task export directory is invalid.", "taskExportDirectory");
+        }
+
+        var normalizedDirectory = Path.GetFullPath(taskExportDirectory);
+        var preferences = await ReadPreferencesAsync(cancellationToken);
+        await WritePreferencesAsync(
+            preferences with { TaskExportDirectory = normalizedDirectory },
+            cancellationToken);
+
+        logger.LogInformation("Saved task export directory preference {TaskExportDirectory}.", normalizedDirectory);
+    }
+
     private async Task<StoredPreferences> ReadPreferencesAsync(CancellationToken cancellationToken)
     {
         var preferencesPath = pathProvider.GetPreferencesPath();
@@ -885,6 +912,7 @@ internal sealed record StoredPreferences(
     bool? WindowIsMaximized,
     string? ColorScheme,
     string? BackupDirectory = null,
+    string? TaskExportDirectory = null,
     IReadOnlyDictionary<string, string>? TaskSortModes = null,
     IReadOnlyDictionary<string, string>? TaskSortDirections = null,
     bool? TaskSelectionCoachmarkSeen = null,

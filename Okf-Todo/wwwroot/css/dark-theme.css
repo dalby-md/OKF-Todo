@@ -1217,3 +1217,109 @@ textarea.is-invalid {
   background: #22413d;
   box-shadow: 0 0 0 3px rgb(92 199 186 / 10%);
 }
+
+.task-export-button {
+  border-color: #4a5055;
+  color: #e7e2d7;
+  background: #232629;
+  box-shadow: none;
+}
+
+.task-export-button:hover:not(:disabled),
+.task-export-button:focus-visible {
+  border-color: #d29b2b;
+  color: #ffd166;
+  background: #2b2e31;
+  box-shadow: 0 0 0 3px rgb(210 155 43 / 16%);
+}
+
+.task-export-dialog {
+  border-color: #4b5156;
+  background: #1d2023;
+  box-shadow: 0 28px 80px rgb(0 0 0 / 52%);
+}
+
+.task-export-header {
+  border-color: #40464a;
+  background:
+    radial-gradient(circle at 4% 0%, rgb(210 155 43 / 14%), transparent 36%),
+    linear-gradient(135deg, #25292c 0%, #202427 100%);
+}
+
+.task-export-heading-icon {
+  color: #17191b;
+  background: #e0a632;
+  box-shadow: 0 8px 18px rgb(0 0 0 / 32%);
+}
+
+.task-export-heading .eyebrow,
+.task-export-intro,
+.task-export-option-copy span,
+.task-export-columns {
+  color: #b9b5ac;
+}
+
+.task-export-heading h2,
+.task-export-option-copy strong {
+  color: #f4efe5;
+}
+
+.task-export-close-button {
+  color: #c8c3b8;
+  background: rgb(31 34 37 / 70%);
+}
+
+.task-export-close-button:hover:not(:disabled),
+.task-export-close-button:focus-visible {
+  color: #ffd166;
+  background: #303438;
+}
+
+.task-export-option {
+  border-color: #464c51;
+  background: #23272a;
+}
+
+.task-export-option:hover {
+  border-color: #826b3d;
+  background: #292d30;
+}
+
+.task-export-option:has(input:checked) {
+  border-color: #d29b2b;
+  background: #302c22;
+  box-shadow: 0 0 0 3px rgb(210 155 43 / 13%);
+}
+
+.task-export-option input {
+  accent-color: #d29b2b;
+}
+
+.task-export-option-icon {
+  color: #e9b84f;
+  background: #3b3528;
+}
+
+.task-export-option-icon.is-starred {
+  color: #ffd166;
+  background: #443719;
+}
+
+.task-export-option-count {
+  color: #e2ddd2;
+  background: #383d41;
+}
+
+.task-export-columns {
+  background: #282c2f;
+}
+
+.task-export-unsaved-warning {
+  color: #f2d58b;
+  background: #3a301b;
+}
+
+.task-export-actions {
+  border-color: #40464a;
+  background: #202326;
+}
