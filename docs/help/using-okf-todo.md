@@ -246,9 +246,11 @@ Collapsing a group does not remove its matching tasks from the export. For examp
 
 When **All lists** is selected, the export includes a List column so readers can see where each task belongs. A concrete-list export omits that redundant column. Export is not available in the Trash view, and trashed tasks are never included.
 
+Use **Columns** to choose any combination of ID, Title, List, Type, Status, Priority, Deadline, Waiting for, Owner, Responsible, Source, Tags, Checklist, and Updated. Select at least one column available in the current list scope. **List** applies only when **All lists** is selected, but your List choice is retained when you return to a concrete list. OKF-Todo saves the last valid selection in your user preferences and restores it the next time you open Export.
+
 If the open task has unsaved changes, OKF-Todo asks you to save them as part of the export flow. After saving, choose the `.md` destination in the Windows save dialog. The application remembers the directory used by the last successful task export.
 
-The table includes each task's ID, title, list when relevant, type, status, priority, deadline, waiting target, owner, responsible person, source, tags, checklist progress, and last-updated time. It does not include the task body, attachment contents, comments, relationships, or Timeline.
+The table includes only the columns you selected. It does not include the task body, attachment contents, comments, relationships, or Timeline.
 
 Treat the Markdown file as a readable snapshot for communication and analysis. It is not a backup and cannot restore your tasks. Use **Setup → Backup** when you need a complete portable copy of the database.
 

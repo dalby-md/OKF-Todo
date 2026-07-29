@@ -242,7 +242,9 @@ Collapsed groups are presentation only and do not remove matching tasks from the
 
 When the synthetic **All lists** scope is selected, the Markdown table includes a List column. A concrete-list export omits the redundant List column.
 
-Each row contains the task ID, title, list when global, type, status, priority, deadline, waiting target, owner, responsible person, source, tags, checklist progress, and last-updated timestamp. Multiline text and Markdown table delimiters are escaped so the generated table remains valid. Bodies, comments, Timeline entries, relationships, and attachment content are not included; this is an operational work inventory, not an archival export.
+The export dialog provides a column picker limited to the existing task-inventory fields: task ID, title, list when global, type, status, priority, deadline, waiting target, owner, responsible person, source, tags, checklist progress, and last-updated timestamp. At least one column available in the current list scope is required. The selected column set is stored in the current user's application preferences and restored the next time the dialog opens. The List selection is retained but only applies when **All lists** is selected.
+
+Multiline text and Markdown table delimiters are escaped so the generated table remains valid. Bodies, comments, Timeline entries, relationships, and attachment content are not included; this is an operational work inventory, not an archival export.
 
 If the selected task has unsaved changes, the export flow requires those changes to be saved first. The user chooses the destination through the native save-file dialog. Files use UTF-8 without a byte-order mark, are written through a temporary file before replacement, receive a useful timestamped `.md` default name, and start in the directory of the last successful task export. Cancelling or failing an export does not change that preference.
 

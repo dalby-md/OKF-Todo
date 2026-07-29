@@ -32,6 +32,15 @@ public sealed class TaskMarkdownExportService(
             request.SortDescription,
             "Current view order",
             160);
+        var selectedColumns = TaskMarkdownExportColumns.Normalize(request.Columns)
+            .Where(column => column != TaskMarkdownExportColumns.List || scope.IncludeListColumn)
+            .ToList();
+        if (selectedColumns.Count == 0)
+        {
+            throw new ValidationException(
+                "Select at least one column available in the current list scope.",
+                "columns");
+        }
         var suggestedFileName = BuildSuggestedFileName(scope.Name, exportedAt);
         var initialDirectory = await preferenceService.GetTaskExportDirectoryAsync(cancellationToken);
         var selectedPath = await destinationPicker.PickAsync(
@@ -59,7 +68,13 @@ public sealed class TaskMarkdownExportService(
 
         try
         {
-            var markdown = RenderMarkdown(scope, viewName, sortDescription, rows, exportedAt);
+            var markdown = RenderMarkdown(
+                scope,
+                viewName,
+                sortDescription,
+                selectedColumns,
+                rows,
+                exportedAt);
             await File.WriteAllTextAsync(
                 temporaryPath,
                 markdown,
@@ -198,33 +213,12 @@ public sealed class TaskMarkdownExportService(
         TaskExportScope scope,
         string viewName,
         string sortDescription,
+        IReadOnlyList<string> selectedColumns,
         IReadOnlyList<TaskMarkdownExportRow> rows,
         DateTime exportedAt)
     {
         var scopeDescription = $"{viewName} results in {scope.Name}";
-        var columns = new List<string>
-        {
-            "ID",
-            "Title"
-        };
-        if (scope.IncludeListColumn)
-        {
-            columns.Add("List");
-        }
-        columns.AddRange(
-        [
-            "Type",
-            "Status",
-            "Priority",
-            "Deadline",
-            "Waiting for",
-            "Owner",
-            "Responsible",
-            "Source",
-            "Tags",
-            "Checklist",
-            "Updated"
-        ]);
+        var columns = selectedColumns.Select(GetColumnHeader).ToList();
 
         var builder = new StringBuilder();
         builder.AppendLine("# OKF-Todo task export");
@@ -239,35 +233,60 @@ public sealed class TaskMarkdownExportService(
 
         foreach (var row in rows)
         {
-            var values = new List<string>
-            {
-                $"#{row.Id}",
-                row.Title
-            };
-            if (scope.IncludeListColumn)
-            {
-                values.Add(row.TaskListName);
-            }
-            values.AddRange(
-            [
-                row.TaskTypeName,
-                row.TaskStatusName,
-                row.TaskPriorityName ?? string.Empty,
-                row.Deadline?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty,
-                row.WaitingFor ?? string.Empty,
-                row.Owner ?? string.Empty,
-                row.Responsible ?? string.Empty,
-                FormatSource(row.TaskSourceName, row.SourceReference),
-                string.Join(", ", row.Tags),
-                row.ChecklistCount == 0
-                    ? string.Empty
-                    : $"{row.CompletedChecklistCount}/{row.ChecklistCount}",
-                $"{row.UpdatedAt:yyyy-MM-dd HH:mm} UTC"
-            ]);
+            var values = selectedColumns
+                .Select(column => GetColumnValue(column, row))
+                .ToList();
             AppendTableRow(builder, values);
         }
 
         return builder.ToString();
+    }
+
+    private static string GetColumnHeader(string column)
+    {
+        return column switch
+        {
+            TaskMarkdownExportColumns.Id => "ID",
+            TaskMarkdownExportColumns.Title => "Title",
+            TaskMarkdownExportColumns.List => "List",
+            TaskMarkdownExportColumns.Type => "Type",
+            TaskMarkdownExportColumns.Status => "Status",
+            TaskMarkdownExportColumns.Priority => "Priority",
+            TaskMarkdownExportColumns.Deadline => "Deadline",
+            TaskMarkdownExportColumns.WaitingFor => "Waiting for",
+            TaskMarkdownExportColumns.Owner => "Owner",
+            TaskMarkdownExportColumns.Responsible => "Responsible",
+            TaskMarkdownExportColumns.Source => "Source",
+            TaskMarkdownExportColumns.Tags => "Tags",
+            TaskMarkdownExportColumns.Checklist => "Checklist",
+            TaskMarkdownExportColumns.Updated => "Updated",
+            _ => throw new InvalidOperationException($"Unsupported task export column '{column}'.")
+        };
+    }
+
+    private static string GetColumnValue(string column, TaskMarkdownExportRow row)
+    {
+        return column switch
+        {
+            TaskMarkdownExportColumns.Id => $"#{row.Id}",
+            TaskMarkdownExportColumns.Title => row.Title,
+            TaskMarkdownExportColumns.List => row.TaskListName,
+            TaskMarkdownExportColumns.Type => row.TaskTypeName,
+            TaskMarkdownExportColumns.Status => row.TaskStatusName,
+            TaskMarkdownExportColumns.Priority => row.TaskPriorityName ?? string.Empty,
+            TaskMarkdownExportColumns.Deadline =>
+                row.Deadline?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty,
+            TaskMarkdownExportColumns.WaitingFor => row.WaitingFor ?? string.Empty,
+            TaskMarkdownExportColumns.Owner => row.Owner ?? string.Empty,
+            TaskMarkdownExportColumns.Responsible => row.Responsible ?? string.Empty,
+            TaskMarkdownExportColumns.Source => FormatSource(row.TaskSourceName, row.SourceReference),
+            TaskMarkdownExportColumns.Tags => string.Join(", ", row.Tags),
+            TaskMarkdownExportColumns.Checklist => row.ChecklistCount == 0
+                ? string.Empty
+                : $"{row.CompletedChecklistCount}/{row.ChecklistCount}",
+            TaskMarkdownExportColumns.Updated => $"{row.UpdatedAt:yyyy-MM-dd HH:mm} UTC",
+            _ => throw new InvalidOperationException($"Unsupported task export column '{column}'.")
+        };
     }
 
     private static void AppendTableRow(StringBuilder builder, IEnumerable<string> values)
@@ -398,11 +417,70 @@ public static class TaskMarkdownExportKinds
     public const string CurrentResults = "currentResults";
 }
 
+public static class TaskMarkdownExportColumns
+{
+    public const string Id = "ID";
+    public const string Title = "TITLE";
+    public const string List = "LIST";
+    public const string Type = "TYPE";
+    public const string Status = "STATUS";
+    public const string Priority = "PRIORITY";
+    public const string Deadline = "DEADLINE";
+    public const string WaitingFor = "WAITING_FOR";
+    public const string Owner = "OWNER";
+    public const string Responsible = "RESPONSIBLE";
+    public const string Source = "SOURCE";
+    public const string Tags = "TAGS";
+    public const string Checklist = "CHECKLIST";
+    public const string Updated = "UPDATED";
+
+    public static readonly string[] All =
+    [
+        Id,
+        Title,
+        List,
+        Type,
+        Status,
+        Priority,
+        Deadline,
+        WaitingFor,
+        Owner,
+        Responsible,
+        Source,
+        Tags,
+        Checklist,
+        Updated
+    ];
+
+    public static IReadOnlyList<string> Normalize(IReadOnlyCollection<string>? values)
+    {
+        if (values is null)
+        {
+            return All;
+        }
+
+        var normalized = values
+            .Select(value => value?.Trim().ToUpperInvariant())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Cast<string>()
+            .ToList();
+        if (normalized.Count == 0
+            || normalized.Distinct(StringComparer.Ordinal).Count() != normalized.Count
+            || normalized.Any(value => !All.Contains(value, StringComparer.Ordinal)))
+        {
+            throw new ValidationException("Task export columns are invalid.", "columns");
+        }
+
+        return normalized;
+    }
+}
+
 public sealed record TaskMarkdownExportRequest(
     IReadOnlyCollection<int>? TaskIds,
     int? TaskListId,
     string? ViewName,
-    string? SortDescription);
+    string? SortDescription,
+    IReadOnlyCollection<string>? Columns);
 
 public sealed record TaskMarkdownExportResult(
     bool Cancelled,

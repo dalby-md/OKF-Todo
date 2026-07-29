@@ -36,6 +36,12 @@ public sealed class ApplicationCommandService(IServiceProvider services)
                 .CreateAsync(cancellationToken),
             "task.export.markdown" => await scopedServices.GetRequiredService<TaskMarkdownExportService>()
                 .ExportAsync(GetPayload<TaskMarkdownExportRequest>(command), cancellationToken),
+            "task.export.columns.get" => await scopedServices.GetRequiredService<AppPreferenceService>()
+                .GetTaskExportColumnPreferenceAsync(cancellationToken),
+            "task.export.columns.save" => await scopedServices.GetRequiredService<AppPreferenceService>()
+                .SaveTaskExportColumnPreferenceAsync(
+                    GetPayload<TaskExportColumnPreferenceSaveRequest>(command),
+                    cancellationToken),
             "task.lookups.get" => await scopedServices.GetRequiredService<TaskService>()
                 .GetLookupsAsync(cancellationToken),
             "lookup.settings.get" => await scopedServices.GetRequiredService<TaskService>()

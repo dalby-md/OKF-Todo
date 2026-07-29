@@ -192,6 +192,59 @@ public sealed class AppPreferenceServiceTests
         }
     }
 
+    [Fact]
+    public async Task TaskExportColumnPreference_PersistsSelectedColumnsForCurrentUser()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+
+        var preferencesDirectory = Path.Combine(
+            Path.GetTempPath(),
+            "Okf-Todo.Tests",
+            Guid.NewGuid().ToString("N"));
+        var preferencesPath = Path.Combine(preferencesDirectory, "app-preferences.json");
+
+        try
+        {
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlite(connection)
+                .Options;
+
+            await using var dbContext = new AppDbContext(options);
+            var service = new AppPreferenceService(
+                dbContext,
+                new TestAppPreferencePathProvider(preferencesPath),
+                NullLogger<AppPreferenceService>.Instance);
+
+            var defaults = await service.GetTaskExportColumnPreferenceAsync(CancellationToken.None);
+            Assert.Equal(TaskMarkdownExportColumns.All, defaults.Columns);
+
+            var saved = await service.SaveTaskExportColumnPreferenceAsync(
+                new TaskExportColumnPreferenceSaveRequest(
+                    [TaskMarkdownExportColumns.Title, TaskMarkdownExportColumns.Tags]),
+                CancellationToken.None);
+            Assert.Equal(
+                [TaskMarkdownExportColumns.Title, TaskMarkdownExportColumns.Tags],
+                saved.Columns);
+
+            var loaded = await service.GetTaskExportColumnPreferenceAsync(CancellationToken.None);
+            Assert.Equal(saved.Columns, loaded.Columns);
+
+            var exception = await Assert.ThrowsAsync<ValidationException>(() =>
+                service.SaveTaskExportColumnPreferenceAsync(
+                    new TaskExportColumnPreferenceSaveRequest([]),
+                    CancellationToken.None));
+            Assert.Equal("columns", exception.Field);
+        }
+        finally
+        {
+            if (Directory.Exists(preferencesDirectory))
+            {
+                Directory.Delete(preferencesDirectory, recursive: true);
+            }
+        }
+    }
+
     private sealed class TestAppPreferencePathProvider(string preferencesPath) : IAppPreferencePathProvider
     {
         public string GetPreferencesPath()

@@ -964,6 +964,11 @@ public sealed class NewTaskDialogUiTests
             "Title, descending",
             await page.Locator("#task-export-current-description").TextContentAsync());
         Assert.Equal(0, await page.Locator("input[name='task-export-kind']").CountAsync());
+        await page.Locator("#task-export-columns-none").ClickAsync();
+        await page.Locator("#task-export-column-options input[value='TITLE']").CheckAsync();
+        await page.Locator("#task-export-column-options input[value='STATUS']").CheckAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-export-columns-summary')?.textContent.startsWith('2 of')");
         await page.Locator("#task-export-confirm-button").ClickAsync();
         await page.Locator("#task-export-overlay").WaitForAsync(new LocatorWaitForOptions
         {
@@ -973,7 +978,10 @@ public sealed class NewTaskDialogUiTests
         var markdown = await fixture.ReadTaskExportAsync();
         Assert.Contains("- Scope: Active results in All lists", markdown);
         Assert.Contains("- Ordering: Title, descending", markdown);
-        Assert.Contains("| ID | Title | List | Type |", markdown);
+        Assert.Contains("| Title | Status |", markdown);
+        Assert.DoesNotContain("| ID |", markdown);
+        Assert.DoesNotContain("| List |", markdown);
+        Assert.DoesNotContain("| Type |", markdown);
         Assert.Contains("Verify deployment variable replacement", markdown);
         Assert.Contains("Fix failed production deployment", markdown);
         Assert.DoesNotContain("Prepare Power Platform release notes", markdown);
@@ -981,6 +989,19 @@ public sealed class NewTaskDialogUiTests
             markdown.IndexOf("Verify deployment variable replacement", StringComparison.Ordinal)
             < markdown.IndexOf("Fix failed production deployment", StringComparison.Ordinal));
         Assert.Contains("task.export.markdown", fixture.BridgeMessageTypes);
+        Assert.Contains("task.export.columns.save", fixture.BridgeMessageTypes);
+
+        await page.Locator("#task-export-button").ClickAsync();
+        await page.Locator("#task-export-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Visible
+        });
+        Assert.True(await page.Locator("#task-export-column-options input[value='TITLE']").IsCheckedAsync());
+        Assert.True(await page.Locator("#task-export-column-options input[value='STATUS']").IsCheckedAsync());
+        Assert.Equal(
+            2,
+            await page.Locator("#task-export-column-options input:checked").CountAsync());
+        await page.Locator("#task-export-cancel-button").ClickAsync();
     }
 
     [Fact]

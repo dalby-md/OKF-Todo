@@ -332,6 +332,31 @@ public sealed class AppPreferenceService(
         logger.LogInformation("Saved task export directory preference {TaskExportDirectory}.", normalizedDirectory);
     }
 
+    public async Task<TaskExportColumnPreferenceDto> GetTaskExportColumnPreferenceAsync(
+        CancellationToken cancellationToken)
+    {
+        var preferences = await ReadPreferencesAsync(cancellationToken);
+        return new TaskExportColumnPreferenceDto(
+            NormalizeOrDefaultTaskExportColumns(preferences.TaskExportColumns));
+    }
+
+    public async Task<TaskExportColumnPreferenceDto> SaveTaskExportColumnPreferenceAsync(
+        TaskExportColumnPreferenceSaveRequest request,
+        CancellationToken cancellationToken)
+    {
+        var columns = TaskMarkdownExportColumns.Normalize(request.Columns);
+        var preferences = await ReadPreferencesAsync(cancellationToken);
+        await WritePreferencesAsync(
+            preferences with { TaskExportColumns = columns },
+            cancellationToken);
+
+        logger.LogInformation(
+            "Saved task export column preference {TaskExportColumns}.",
+            columns);
+
+        return new TaskExportColumnPreferenceDto(columns);
+    }
+
     private async Task<StoredPreferences> ReadPreferencesAsync(CancellationToken cancellationToken)
     {
         var preferencesPath = pathProvider.GetPreferencesPath();
@@ -551,6 +576,20 @@ public sealed class AppPreferenceService(
         }
 
         throw new ValidationException("Layout mode is invalid.", "layoutMode");
+    }
+
+    private IReadOnlyList<string> NormalizeOrDefaultTaskExportColumns(
+        IReadOnlyCollection<string>? columns)
+    {
+        try
+        {
+            return TaskMarkdownExportColumns.Normalize(columns);
+        }
+        catch (ValidationException exception)
+        {
+            logger.LogWarning(exception, "Stored task export column preference is invalid.");
+            return TaskMarkdownExportColumns.All;
+        }
     }
 
     private static string NormalizeColorScheme(string? colorScheme)
@@ -892,6 +931,10 @@ public sealed record WindowPreferenceDto(int? Left, int? Top, int? Width, int? H
 
 public sealed record WindowPreferenceSaveRequest(int? Left, int? Top, int? Width, int? Height, bool IsMaximized);
 
+public sealed record TaskExportColumnPreferenceDto(IReadOnlyList<string> Columns);
+
+public sealed record TaskExportColumnPreferenceSaveRequest(IReadOnlyCollection<string>? Columns);
+
 internal sealed record StoredPreferences(
     string? EditorBodyFormatCode,
     string? MarkdownEditType,
@@ -916,4 +959,5 @@ internal sealed record StoredPreferences(
     IReadOnlyDictionary<string, string>? TaskSortModes = null,
     IReadOnlyDictionary<string, string>? TaskSortDirections = null,
     bool? TaskSelectionCoachmarkSeen = null,
-    string? TaskListScope = null);
+    string? TaskListScope = null,
+    IReadOnlyCollection<string>? TaskExportColumns = null);

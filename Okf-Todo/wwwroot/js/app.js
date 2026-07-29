@@ -64,6 +64,22 @@
   const taskSortOptions = taskSortGroups.reduce(function (options, group) {
     return options.concat(group.options)
   }, [])
+  const taskExportColumns = [
+    { code: 'ID', label: 'ID' },
+    { code: 'TITLE', label: 'Title' },
+    { code: 'LIST', label: 'List' },
+    { code: 'TYPE', label: 'Type' },
+    { code: 'STATUS', label: 'Status' },
+    { code: 'PRIORITY', label: 'Priority' },
+    { code: 'DEADLINE', label: 'Deadline' },
+    { code: 'WAITING_FOR', label: 'Waiting for' },
+    { code: 'OWNER', label: 'Owner' },
+    { code: 'RESPONSIBLE', label: 'Responsible' },
+    { code: 'SOURCE', label: 'Source' },
+    { code: 'TAGS', label: 'Tags' },
+    { code: 'CHECKLIST', label: 'Checklist' },
+    { code: 'UPDATED', label: 'Updated' }
+  ]
   const lookupSettingsGroups = {
     taskTypes: 'Task types',
     taskPriorities: 'Priorities',
@@ -179,6 +195,8 @@
   let pendingTaskListMoveIds = []
   let taskExportTaskListId = null
   let taskExportTaskIds = []
+  let taskExportSelectedColumns = taskExportColumns.map(function (column) { return column.code })
+  let taskExportColumnSavePromise = Promise.resolve()
   let trashUndoTimer = null
   const selectedTaskIds = new Set()
   const helpDocumentCache = new Map()
@@ -803,6 +821,17 @@
         return `<option value="${option.code}">${option.label}</option>`
       }).join('')
       return `<optgroup label="${group.label}">${options}</optgroup>`
+    }).join('')
+  }
+
+  function renderTaskExportColumnOptions() {
+    return taskExportColumns.map(function (column) {
+      return `
+        <label class="task-export-column-option">
+          <input type="checkbox" value="${column.code}">
+          <span>${column.label}</span>
+        </label>
+      `
     }).join('')
   }
 
@@ -1723,13 +1752,24 @@
               </div>
             </fieldset>
 
-            <div class="task-export-columns">
-              <span class="fluent-icon" aria-hidden="true">&#xE946;</span>
-              <p>
-                Includes ID, title, list when global, type, status, priority, deadline, waiting target,
-                ownership, source, tags, checklist progress, and last update.
+            <section class="task-export-columns" aria-labelledby="task-export-columns-title">
+              <div class="task-export-columns-header">
+                <div>
+                  <strong id="task-export-columns-title">Columns</strong>
+                  <span id="task-export-columns-summary">All columns selected</span>
+                </div>
+                <div class="task-export-column-actions">
+                  <button id="task-export-columns-all" class="text-button" type="button">Select all</button>
+                  <button id="task-export-columns-none" class="text-button" type="button">Clear</button>
+                </div>
+              </div>
+              <div id="task-export-column-options" class="task-export-column-options">
+                ${renderTaskExportColumnOptions()}
+              </div>
+              <p id="task-export-list-column-note" class="task-export-list-column-note" hidden>
+                List is available only when All lists is selected.
               </p>
-            </div>
+            </section>
 
             <div id="task-export-unsaved-warning" class="task-export-unsaved-warning" hidden>
               <span class="fluent-icon" aria-hidden="true">&#xE7BA;</span>
@@ -2318,7 +2358,9 @@
   function setTaskExportBusy(isBusy) {
     $('#task-export-close-button, #task-export-cancel-button').prop('disabled', isBusy)
     $('#task-export-confirm-button')
-      .prop('disabled', isBusy || taskExportTaskIds.length === 0)
+      .prop(
+        'disabled',
+        isBusy || taskExportTaskIds.length === 0 || getApplicableTaskExportColumns().length === 0)
       .find('span:last')
       .text(isBusy ? 'Exporting…' : (hasUnsavedChanges() ? 'Save and export' : 'Export Markdown'))
   }
@@ -2331,6 +2373,57 @@
     return `${option.label}, ${direction}`
   }
 
+  function getApplicableTaskExportColumns() {
+    return taskExportSelectedColumns.filter(function (column) {
+      return column !== 'LIST' || taskExportTaskListId == null
+    })
+  }
+
+  function renderTaskExportColumns() {
+    const isGlobal = taskExportTaskListId == null
+    $('#task-export-column-options input').each(function () {
+      const code = $(this).val().toString()
+      $(this)
+        .prop('checked', taskExportSelectedColumns.includes(code))
+        .prop('disabled', code === 'LIST' && !isGlobal)
+    })
+
+    const applicableColumns = getApplicableTaskExportColumns()
+    const availableCount = isGlobal ? taskExportColumns.length : taskExportColumns.length - 1
+    $('#task-export-columns-summary').text(
+      applicableColumns.length === availableCount
+        ? 'All available columns selected'
+        : `${applicableColumns.length} of ${availableCount} available columns selected`)
+    $('#task-export-list-column-note').prop('hidden', isGlobal)
+  }
+
+  function queueTaskExportColumnPreferenceSave() {
+    if (taskExportSelectedColumns.length === 0) {
+      return
+    }
+
+    const columns = taskExportSelectedColumns.slice()
+    taskExportColumnSavePromise = taskExportColumnSavePromise
+      .then(function () {
+        return sendBridgeMessage('task.export.columns.save', { columns })
+      })
+      .catch(function (error) {
+        $('#task-export-error')
+          .text(getErrorMessage(error, 'Could not save the export columns'))
+          .prop('hidden', false)
+      })
+  }
+
+  function updateTaskExportColumnSelection() {
+    renderTaskExportColumns()
+    const hasApplicableColumns = getApplicableTaskExportColumns().length > 0
+    $('#task-export-error')
+      .text(hasApplicableColumns ? '' : 'Select at least one column available in this list scope.')
+      .prop('hidden', hasApplicableColumns)
+    setTaskExportBusy(false)
+    queueTaskExportColumnPreferenceSave()
+  }
+
   function renderTaskExportPreview() {
     const scopeName = getTaskExportScopeName()
     const visibleTasks = currentView === 'trash' ? [] : getVisibleTasks()
@@ -2340,6 +2433,11 @@
     $('#task-export-current-description').text(
       `Current search and filters; ${getTaskExportSortDescription()}.`)
     $('#task-export-current-count').text(taskExportTaskIds.length)
+    renderTaskExportColumns()
+    const hasApplicableColumns = getApplicableTaskExportColumns().length > 0
+    $('#task-export-error')
+      .text(hasApplicableColumns ? '' : 'Select at least one column available in this list scope.')
+      .prop('hidden', hasApplicableColumns)
     $('#task-export-unsaved-warning').prop('hidden', !hasUnsavedChanges())
     setTaskExportBusy(false)
   }
@@ -2353,6 +2451,12 @@
     $('#task-export-confirm-button').prop('disabled', true)
 
     try {
+      const preference = await sendBridgeMessage('task.export.columns.get', {})
+      taskExportSelectedColumns = (preference.columns || []).filter(function (column) {
+        return taskExportColumns.some(function (availableColumn) {
+          return availableColumn.code === column
+        })
+      })
       renderTaskExportPreview()
       $('#task-export-confirm-button').trigger('focus')
     } catch (error) {
@@ -2369,7 +2473,7 @@
   }
 
   async function exportTasksToMarkdown() {
-    if (taskExportTaskIds.length === 0) {
+    if (taskExportTaskIds.length === 0 || getApplicableTaskExportColumns().length === 0) {
       return
     }
 
@@ -2394,13 +2498,21 @@
           .prop('hidden', false)
         return
       }
+      if (getApplicableTaskExportColumns().length === 0) {
+        $('#task-export-error')
+          .text('Select at least one column available in this list scope.')
+          .prop('hidden', false)
+        return
+      }
+      await taskExportColumnSavePromise
       setTaskExportBusy(true)
 
       const result = await sendBridgeMessage('task.export.markdown', {
         taskIds: taskExportTaskIds,
         taskListId: taskExportTaskListId,
         viewName: viewLabels[currentView],
-        sortDescription: getTaskExportSortDescription()
+        sortDescription: getTaskExportSortDescription(),
+        columns: taskExportSelectedColumns
       })
       if (result.cancelled) {
         setStatus('Export cancelled', 'ready')
@@ -6164,6 +6276,27 @@
       if (event.target === this) {
         closeTaskExportDialog()
       }
+    })
+    $('#task-export-column-options').on('change', 'input', function () {
+      const code = $(this).val().toString()
+      taskExportSelectedColumns = $(this).prop('checked')
+        ? taskExportSelectedColumns.concat(code).filter(function (value, index, values) {
+            return values.indexOf(value) === index
+          })
+        : taskExportSelectedColumns.filter(function (value) { return value !== code })
+      taskExportSelectedColumns = taskExportColumns
+        .map(function (column) { return column.code })
+        .filter(function (column) { return taskExportSelectedColumns.includes(column) })
+      updateTaskExportColumnSelection()
+    })
+    $('#task-export-columns-all').on('click', function () {
+      taskExportSelectedColumns = taskExportColumns.map(function (column) { return column.code })
+      updateTaskExportColumnSelection()
+    })
+    $('#task-export-columns-none').on('click', function () {
+      taskExportSelectedColumns = []
+      updateTaskExportColumnSelection()
+      $('#task-export-column-options input:not(:disabled)').first().trigger('focus')
     })
     $('#task-export-confirm-button').on('click', function () {
       exportTasksToMarkdown().catch(function (error) {

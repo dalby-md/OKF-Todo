@@ -658,7 +658,8 @@ Scope:
 - Add a visible task-queue **Export** action and a focused current-results preview dialog.
 - Export the ordered task IDs produced by the selected concrete list or synthetic **All lists**, active lifecycle view, search, tag/type/status/priority filters, and current sort field and direction.
 - Keep collapsed groups presentation-only, so matching finished Starred tasks remain included, and exclude Trash entirely.
-- Generate a compact operational Markdown table with IDs, planning fields, ownership, source, tags, checklist progress, and updated timestamps.
+- Provide a picker for the existing operational columns and persist the selected column set in the current user's application preferences.
+- Generate a compact operational Markdown table with the selected IDs, planning fields, ownership, source, tags, checklist progress, and updated timestamps.
 - Use the native save-file dialog, remember the last successful export directory, and write UTF-8 files atomically.
 - Require the current task's unsaved edits to be saved before exporting.
 
@@ -668,6 +669,7 @@ Acceptance criteria:
 - A global export contains exactly the current filtered results across concrete lists and includes the List column.
 - A Starred-view export includes matching completed and cancelled tasks even when the Finished group is collapsed.
 - Trash is excluded and the Export action is unavailable in the Trash view.
+- The export dialog restores the current user's last valid column selection, requires at least one applicable column, and applies List only to global exports.
 - Markdown-reserved characters and multiline values cannot break the generated table.
 - Cancelling the native picker creates no file; a successful export is valid UTF-8 without a byte-order mark.
 - Focused service tests and Playwright coverage verify the export contract through the application bridge.

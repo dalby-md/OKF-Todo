@@ -58,7 +58,16 @@ public sealed class TaskMarkdownExportServiceTests
                     [secondTask.Id, exportedTask.Id],
                     defaultList.Id,
                     "All",
-                    "Title, descending"),
+                    "Title, descending",
+                    [
+                        TaskMarkdownExportColumns.Id,
+                        TaskMarkdownExportColumns.Title,
+                        TaskMarkdownExportColumns.Status,
+                        TaskMarkdownExportColumns.Owner,
+                        TaskMarkdownExportColumns.Responsible,
+                        TaskMarkdownExportColumns.Source,
+                        TaskMarkdownExportColumns.Tags
+                    ]),
                 CancellationToken.None);
 
             Assert.False(result.Cancelled);
@@ -73,7 +82,9 @@ public sealed class TaskMarkdownExportServiceTests
             var markdown = await File.ReadAllTextAsync(exportPath);
             Assert.Contains("- Scope: All results in Default list", markdown);
             Assert.Contains("- Ordering: Title, descending", markdown);
-            Assert.Contains("| ID | Title | Type | Status | Priority |", markdown);
+            Assert.Contains("| ID | Title | Status | Owner | Responsible | Source | Tags |", markdown);
+            Assert.DoesNotContain("| Type |", markdown);
+            Assert.DoesNotContain("| Priority |", markdown);
             Assert.DoesNotContain("| ID | Title | List |", markdown);
             Assert.Contains($"| #{exportedTask.Id} | Investigate \\| \\[mail\\]<br>thread |", markdown);
             Assert.Contains("Platform \\| team", markdown);
@@ -137,7 +148,8 @@ public sealed class TaskMarkdownExportServiceTests
                     [activeTask.Id, trashedTask.Id],
                     null,
                     "All",
-                    "Smart priority, ascending"),
+                    "Smart priority, ascending",
+                    [TaskMarkdownExportColumns.Title]),
                 CancellationToken.None));
 
             Assert.Equal("taskIds", exception.Field);
@@ -175,7 +187,8 @@ public sealed class TaskMarkdownExportServiceTests
                     [1],
                     null,
                     "Active",
-                    "Smart priority, ascending"),
+                    "Smart priority, ascending",
+                    [TaskMarkdownExportColumns.Title]),
                 CancellationToken.None);
 
             Assert.True(result.Cancelled);
