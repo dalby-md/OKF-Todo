@@ -52,6 +52,7 @@ public sealed class TaskServiceTests
         Assert.Contains(lookups.TaskTypes, item =>
             item.Code == "ERROR" && item.BackgroundColor == "#facc15" && item.ForegroundColor == "#111827");
         Assert.Contains(lookups.TaskTypes, item => item.Code == "REQUEST" && item.IsSelected);
+        Assert.Contains(lookups.TaskStatuses, item => item.Code == "CANCELLED" && item.Name == "Cancelled");
         Assert.Contains(lookups.TaskPriorities, item => item.Code == "NORMAL" && item.Name == "Normal");
         Assert.Contains(lookups.TaskPriorities, item => item.Code == "NORMAL" && item.IsSelected);
         Assert.Contains(lookups.TaskPriorities, item =>

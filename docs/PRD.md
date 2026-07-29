@@ -443,7 +443,7 @@ The backup contains the complete SQLite database, including tasks, body images, 
 
 A task can have zero or more tags. Each tag is only a string expression with no color, order, activation state, or other metadata.
 
-Task-list text search includes tag values. The task list also provides an existing-tag multi-select filter. When multiple tags are selected, a task matches when it has any selected tag; it does not need to have all selected tags.
+Task-list text search includes tag values. The task list also provides an existing-tag multi-select filter and exact single-select filters for task type, lifecycle status, and priority. Status filtering uses the stable lifecycle code so renamed display values do not change the result. When multiple tags are selected, a task matches when it has any selected tag; it does not need to have all selected tags.
 
 Entering a new value creates the tag and attaches it to the task. Removing a tag chip detaches it from the task.
 

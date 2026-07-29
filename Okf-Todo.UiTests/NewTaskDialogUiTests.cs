@@ -810,6 +810,18 @@ public sealed class NewTaskDialogUiTests
             "Reopen",
             workspaceScrollPosition);
 
+        Assert.Equal(
+            new[] { "Any", "Active", "Completed", "Cancelled" },
+            await page.Locator("#task-status-filter option").AllTextContentsAsync());
+        await page.Locator("#task-status-filter").SelectOptionAsync("CANCELLED");
+        await page.WaitForFunctionAsync(
+            "() => document.querySelectorAll('#task-list .task-row').length > 0 && [...document.querySelectorAll('#task-list .task-row')].every(row => row.classList.contains('is-cancelled'))");
+        Assert.Equal(
+            "Status: Cancelled",
+            await page.Locator("#task-filter-chips [data-filter='task-status']").TextContentAsync());
+        await page.Locator("#task-filter-chips [data-filter='task-status']").ClickAsync();
+        Assert.Equal(string.Empty, await page.Locator("#task-status-filter").InputValueAsync());
+
         Assert.Contains("task.complete", fixture.BridgeMessageTypes);
         Assert.Contains("task.reopen", fixture.BridgeMessageTypes);
         Assert.Contains("task.cancel", fixture.BridgeMessageTypes);

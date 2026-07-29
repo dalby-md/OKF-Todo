@@ -126,9 +126,12 @@ Use the controls below search to narrow the current view:
 
 - **Tags** opens an existing-tag selector.
 - **Type** selects one task type.
+- **Status** selects one lifecycle status, such as Active, Completed, or Cancelled.
 - **Priority** selects one priority.
 
 When several tags are selected, a task matches if it has any selected tag. Active filters appear as removable chips. Select **Clear** to remove all current search and filter criteria.
+
+To isolate cancelled tasks without adding another view, select **All statuses**, then select **Cancelled** under **Status**. Choose **All lists** first when the result should span every list.
 
 Filters affect only the current on-screen result. They do not change or delete tasks.
 

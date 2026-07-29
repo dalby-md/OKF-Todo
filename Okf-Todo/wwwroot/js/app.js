@@ -1054,6 +1054,13 @@
                 </select>
               </label>
 
+              <label class="task-quick-filter" for="task-status-filter" title="Filter by task status">
+                <span>Status</span>
+                <select id="task-status-filter" aria-label="Filter by task status">
+                  <option value="">Any</option>
+                </select>
+              </label>
+
               <label class="task-quick-filter" for="task-priority-filter" title="Filter by priority">
                 <span>Priority</span>
                 <select id="task-priority-filter" aria-label="Filter by priority">
@@ -1882,6 +1889,7 @@
     renderLookupOptions('#task-source', lookups.taskSources, true)
     renderLookupOptions('#editor-mode', lookups.bodyFormats, false)
     renderTaskListFilterOptions('#task-type-filter', lookups.taskTypes)
+    renderTaskListFilterOptions('#task-status-filter', lookups.taskStatuses)
     renderTaskListFilterOptions('#task-priority-filter', lookups.taskPriorities)
     renderTagOptions(lookups.tags || [])
     renderTaskTagFilterOptions(lookups.tags || [])
@@ -3894,11 +3902,13 @@
   function renderTaskFilterSummary(countLabel) {
     const selectedTags = getSelectedTaskTagFilterValues()
     const taskTypeCode = getTaskListFilterValue('#task-type-filter')
+    const taskStatusCode = getTaskListFilterValue('#task-status-filter')
     const taskPriorityCode = getTaskListFilterValue('#task-priority-filter')
     const query = getTaskSearchQuery()
     const hasFilters = query.length > 0
       || selectedTags.length > 0
       || taskTypeCode.length > 0
+      || taskStatusCode.length > 0
       || taskPriorityCode.length > 0
 
     const chips = selectedTags.map(function (tag) {
@@ -3907,6 +3917,10 @@
     if (taskTypeCode) {
       const taskTypeName = getTaskListFilterName(lookups.taskTypes, taskTypeCode)
       chips.push(`<button class="task-filter-chip" type="button" data-filter="task-type" aria-label="Remove task type filter: ${encodeAttribute(taskTypeName)}" title="Remove task type filter">Type: ${encodeText(taskTypeName)}</button>`)
+    }
+    if (taskStatusCode) {
+      const taskStatusName = getTaskListFilterName(lookups.taskStatuses, taskStatusCode)
+      chips.push(`<button class="task-filter-chip" type="button" data-filter="task-status" aria-label="Remove status filter: ${encodeAttribute(taskStatusName)}" title="Remove status filter">Status: ${encodeText(taskStatusName)}</button>`)
     }
     if (taskPriorityCode) {
       const taskPriorityName = getTaskListFilterName(lookups.taskPriorities, taskPriorityCode)
@@ -3929,7 +3943,7 @@
   function clearTaskFilters() {
     $('#task-search').val('')
     $('#task-tag-filter').val([]).trigger('change.select2')
-    $('#task-type-filter, #task-priority-filter').val('')
+    $('#task-type-filter, #task-status-filter, #task-priority-filter').val('')
     setTaskFilterPopoverOpen(false, false)
     renderTaskList()
   }
@@ -4038,6 +4052,7 @@
     const query = getTaskSearchQuery()
     const selectedTags = getSelectedTaskTagFilters()
     const taskTypeCode = getTaskListFilterValue('#task-type-filter')
+    const taskStatusCode = getTaskListFilterValue('#task-status-filter')
     const taskPriorityCode = getTaskListFilterValue('#task-priority-filter')
 
     const filteredTasks = tasks.filter(function (task) {
@@ -4059,9 +4074,10 @@
           return taskTags.includes(selectedTag)
         })
       const matchesTaskType = !taskTypeCode || task.taskTypeCode === taskTypeCode
+      const matchesStatus = !taskStatusCode || task.taskStatusCode === taskStatusCode
       const matchesPriority = !taskPriorityCode || task.taskPriorityCode === taskPriorityCode
 
-      return matchesSearch && matchesTags && matchesTaskType && matchesPriority
+      return matchesSearch && matchesTags && matchesTaskType && matchesStatus && matchesPriority
     })
 
     return sortTasksForCurrentView(filteredTasks)
@@ -4165,6 +4181,7 @@
     const query = getTaskSearchQuery()
     const selectedTags = getSelectedTaskTagFilters()
     const taskTypeCode = getTaskListFilterValue('#task-type-filter')
+    const taskStatusCode = getTaskListFilterValue('#task-status-filter')
     const taskPriorityCode = getTaskListFilterValue('#task-priority-filter')
     const visibleTasks = getVisibleTasks()
 
@@ -4172,6 +4189,7 @@
     const hasFilters = query.length > 0
       || selectedTags.length > 0
       || taskTypeCode.length > 0
+      || taskStatusCode.length > 0
       || taskPriorityCode.length > 0
     const countLabel = hasFilters
       ? `${visibleTasks.length} of ${tasks.length} ${tasks.length === 1 ? 'task' : 'tasks'}`
@@ -4716,7 +4734,7 @@
     }
 
     $('#task-tag-filter').val([]).trigger('change.select2')
-    $('#task-type-filter, #task-priority-filter').val('')
+    $('#task-type-filter, #task-status-filter, #task-priority-filter').val('')
     setTaskFilterPopoverOpen(false, false)
     renderTaskList()
     return isVisible()
@@ -6614,7 +6632,7 @@
 
     $('#task-search').on('input', renderTaskList)
     $('#task-tag-filter').on('change', renderTaskList)
-    $('#task-type-filter, #task-priority-filter').on('change', renderTaskList)
+    $('#task-type-filter, #task-status-filter, #task-priority-filter').on('change', renderTaskList)
     $('#task-filter-button').on('click', function () {
       const isOpen = $('#task-filter-popover').prop('hidden')
       setTaskFilterPopoverOpen(isOpen, isOpen)

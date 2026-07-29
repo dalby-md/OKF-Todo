@@ -265,7 +265,7 @@ h2 {
 }
 
 .task-browse-secondary {
-  grid-template-columns: auto minmax(185px, 1.2fr) minmax(135px, 0.85fr) minmax(185px, 1.25fr);
+  grid-template-columns: auto minmax(150px, 1fr) minmax(140px, 0.9fr) minmax(135px, 0.85fr) minmax(185px, 1.25fr);
 }
 
 .task-view-field,
@@ -541,7 +541,7 @@ h2 {
   }
 
   .task-browse-secondary {
-    grid-template-columns: minmax(96px, 0.72fr) minmax(0, 1fr) auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .task-sort-field {
@@ -2657,7 +2657,7 @@ body.is-resizing-editor * {
 }
 
 .task-browse-secondary {
-  grid-template-columns: minmax(76px, auto) repeat(2, minmax(118px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .task-sort-field {
@@ -2856,7 +2856,6 @@ body.is-resizing-editor * {
     grid-template-columns: minmax(76px, 0.8fr) minmax(0, 1.4fr);
   }
 
-  .task-quick-filter:last-of-type,
   .task-sort-field {
     grid-column: 1 / -1;
   }
@@ -3153,7 +3152,7 @@ body.is-resizing-editor * {
   }
 
   .task-browse-secondary {
-    grid-template-columns: minmax(74px, auto) repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .sidebar-header,

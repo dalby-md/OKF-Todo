@@ -12,6 +12,7 @@ public sealed class TaskService(
     {
         return new TaskLookupsDto(
             await GetLookupItemsAsync(dbContext.TaskTypes, cancellationToken),
+            await GetLookupItemsAsync(dbContext.TaskStatuses, cancellationToken),
             await GetLookupItemsAsync(dbContext.TaskPriorities, cancellationToken),
             await GetLookupItemsAsync(dbContext.TaskSources, cancellationToken),
             await GetLookupItemsAsync(dbContext.BodyFormats, cancellationToken),
@@ -1370,6 +1371,7 @@ public sealed class TaskService(
 
 public sealed record TaskLookupsDto(
     IReadOnlyCollection<LookupItemDto> TaskTypes,
+    IReadOnlyCollection<LookupItemDto> TaskStatuses,
     IReadOnlyCollection<LookupItemDto> TaskPriorities,
     IReadOnlyCollection<LookupItemDto> TaskSources,
     IReadOnlyCollection<LookupItemDto> BodyFormats,

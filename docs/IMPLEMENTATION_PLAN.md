@@ -506,9 +506,9 @@ Acceptance criteria:
 - Every view defaults to visibly explained smart priority and offers focus, activity, and organization sort modes suited to developer and support triage. The lifecycle-status option states that it follows configured status order and is mainly useful in the All view.
 - Lookup-based modes use configured sort order; time-based modes use due, waiting, created, and updated timestamps.
 - The sort control explains the selected field, reports the filtered result count, provides ascending/descending ordering, and persists both selections separately for each view.
-- View and search form the primary browse row; tags, task type, priority, and sorting use a responsive secondary row before controls become cramped.
+- View and search form the primary browse row; tags, task type, lifecycle status, priority, and sorting use a responsive secondary row before controls become cramped.
 - Text search includes task tags, while explicit multi-tag filtering remains available on demand with OR semantics and removable filter chips.
-- Task type and priority provide immediate single-select filters and participate in the shared result count, clear action, and removable filter summary.
+- Task type, lifecycle status, and priority provide immediate single-select filters and participate in the shared result count, clear action, and removable filter summary.
 
 ## Milestone 14 — Database backup
 
