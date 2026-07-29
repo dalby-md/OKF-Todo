@@ -908,7 +908,7 @@ public sealed class NewTaskDialogUiTests
     }
 
     [Fact]
-    public async Task TaskExport_UsesCompleteCurrentOrStarredScopeAndCreatesMarkdownTable()
+    public async Task TaskExport_UsesCurrentFilteredResultsInCurrentSortOrder()
     {
         await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
         using var playwright = await Playwright.CreateAsync();
@@ -928,9 +928,26 @@ public sealed class NewTaskDialogUiTests
             $"{fixture.BaseUrl}/index.html?v=task-markdown-export-contract",
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
-        await page.Locator(".task-row-star-button[aria-pressed='false']").First.ClickAsync();
+        await page.Locator(".task-view-rail-button[data-task-view='active']").ClickAsync();
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('.task-row-star-button[aria-pressed=\"true\"]')");
+            "() => document.querySelector('#task-list-title')?.textContent === 'Active'"
+                + " && !document.querySelector('#task-export-button')?.hidden");
+        await page.Locator("#task-list-switcher").SelectOptionAsync("ALL");
+        await page.Locator("#task-search").FillAsync("deployment");
+        await page.Locator("#task-sort").SelectOptionAsync("TITLE_ASC");
+        await page.Locator("#task-sort-direction").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => {"
+                + " const rows = document.querySelectorAll('#task-list .task-row-title');"
+                + " return rows.length >= 2 && rows.length < 30"
+                + " && document.querySelector('#task-sort')?.value === 'TITLE_ASC'"
+                + " && document.querySelector('#task-sort-direction')?.textContent.trim() === 'Desc';"
+                + " }");
+        var visibleTitles = await page.Locator("#task-list .task-row-title").AllTextContentsAsync();
+        Assert.True(visibleTitles.Count >= 2);
+        Assert.Equal(
+            visibleTitles.OrderByDescending(title => title, StringComparer.OrdinalIgnoreCase),
+            visibleTitles);
 
         await page.Locator("#task-export-button").ClickAsync();
         await page.Locator("#task-export-overlay").WaitForAsync(new LocatorWaitForOptions
@@ -938,52 +955,31 @@ public sealed class NewTaskDialogUiTests
             State = WaitForSelectorState.Visible
         });
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('#task-export-current-title')?.textContent === 'Default list'");
-        Assert.Equal("Default list", await page.Locator("#task-export-current-title").TextContentAsync());
+            $"() => document.querySelector('#task-export-current-count')?.textContent === '{visibleTitles.Count}'");
+        Assert.Equal("Active in All lists", await page.Locator("#task-export-current-title").TextContentAsync());
         Assert.Contains(
-            "every status",
+            "Current search and filters",
             await page.Locator("#task-export-current-description").TextContentAsync());
         Assert.Contains(
-            "including completed and cancelled",
-            await page.Locator("#task-export-starred-description").TextContentAsync());
-        Assert.True(
-            await page.Locator("#task-export-current-count").EvaluateAsync<int>(
-                "element => Number(element.textContent)") > 0);
+            "Title, descending",
+            await page.Locator("#task-export-current-description").TextContentAsync());
+        Assert.Equal(0, await page.Locator("input[name='task-export-kind']").CountAsync());
         await page.Locator("#task-export-confirm-button").ClickAsync();
         await page.Locator("#task-export-overlay").WaitForAsync(new LocatorWaitForOptions
         {
             State = WaitForSelectorState.Hidden
         });
 
-        var currentListMarkdown = await fixture.ReadTaskExportAsync();
-        Assert.Contains("- Scope: All non-Trash tasks in Default list", currentListMarkdown);
-        Assert.Contains("| ID | Title | Type | Status | Priority |", currentListMarkdown);
-        Assert.DoesNotContain("| ID | Title | List |", currentListMarkdown);
-
-        await page.Locator("#task-list-switcher").SelectOptionAsync("ALL");
-        await page.WaitForFunctionAsync(
-            "() => document.querySelector('#task-list-switcher')?.value === 'ALL' && document.querySelector('.task-row .task-list-pill')");
-        await page.Locator("#task-export-button").ClickAsync();
-        await page.Locator("#task-export-overlay").WaitForAsync(new LocatorWaitForOptions
-        {
-            State = WaitForSelectorState.Visible
-        });
-        await page.WaitForFunctionAsync(
-            "() => document.querySelector('#task-export-current-title')?.textContent === 'All lists'");
-        Assert.Equal("All lists", await page.Locator("#task-export-current-title").TextContentAsync());
+        var markdown = await fixture.ReadTaskExportAsync();
+        Assert.Contains("- Scope: Active results in All lists", markdown);
+        Assert.Contains("- Ordering: Title, descending", markdown);
+        Assert.Contains("| ID | Title | List | Type |", markdown);
+        Assert.Contains("Verify deployment variable replacement", markdown);
+        Assert.Contains("Fix failed production deployment", markdown);
+        Assert.DoesNotContain("Prepare Power Platform release notes", markdown);
         Assert.True(
-            await page.Locator("#task-export-starred-count").EvaluateAsync<int>(
-                "element => Number(element.textContent)") > 0);
-        await page.Locator("#task-export-starred").CheckAsync();
-        await page.Locator("#task-export-confirm-button").ClickAsync();
-        await page.Locator("#task-export-overlay").WaitForAsync(new LocatorWaitForOptions
-        {
-            State = WaitForSelectorState.Hidden
-        });
-
-        var starredMarkdown = await fixture.ReadTaskExportAsync();
-        Assert.Contains("- Scope: Starred non-Trash tasks in All lists", starredMarkdown);
-        Assert.Contains("| ID | Title | List | Type |", starredMarkdown);
+            markdown.IndexOf("Verify deployment variable replacement", StringComparison.Ordinal)
+            < markdown.IndexOf("Fix failed production deployment", StringComparison.Ordinal));
         Assert.Contains("task.export.markdown", fixture.BridgeMessageTypes);
     }
 

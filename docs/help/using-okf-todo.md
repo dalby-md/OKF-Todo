@@ -240,14 +240,11 @@ Select **Done selecting** when finished.
 
 Select **Export** beside the task count when you need a task overview for a handover, incident review, planning note, customer-status preparation, or another document that accepts Markdown.
 
-Choose one of these export scopes:
+The export contains exactly the tasks in the current results: the selected list or **All lists**, the current lifecycle view, search text, tag, type, status, and priority filters, in the current sort order. The dialog shows the scope, ordering, and resulting task count before you continue.
 
-- **Current list** includes every task in the selected list except tasks in Trash. It includes active, completed, and cancelled tasks.
-- **Starred tasks** includes every starred task in the selected list scope except tasks in Trash. Completed and cancelled starred tasks are included.
+Collapsing a group does not remove its matching tasks from the export. For example, completed and cancelled Starred tasks remain included when the Finished group is collapsed.
 
-If **All lists** is selected, the first option is shown as **All lists** and exports across every concrete list. Global exports include a List column so readers can see where each task belongs.
-
-The export scope is intentionally stable. The current view, search text, tags, type and priority filters, sort order, and collapsed Finished group do not remove rows from the export. Use the counts in the export dialog to confirm the result before continuing.
+When **All lists** is selected, the export includes a List column so readers can see where each task belongs. A concrete-list export omits that redundant column. Export is not available in the Trash view, and trashed tasks are never included.
 
 If the open task has unsaved changes, OKF-Todo asks you to save them as part of the export flow. After saving, choose the `.md` destination in the Windows save dialog. The application remembers the directory used by the last successful task export.
 

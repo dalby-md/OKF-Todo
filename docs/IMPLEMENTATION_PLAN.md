@@ -655,19 +655,19 @@ Status: implemented.
 
 Scope:
 
-- Add a visible task-queue **Export** action and a focused dialog for **Current list** or **Starred tasks**.
-- Resolve export scope from the selected concrete list or synthetic **All lists**, independently of the active status view, search, filters, sort order, and collapsed groups.
-- Exclude Trash while including completed and cancelled tasks where the chosen mode requires them.
+- Add a visible task-queue **Export** action and a focused current-results preview dialog.
+- Export the ordered task IDs produced by the selected concrete list or synthetic **All lists**, active lifecycle view, search, tag/type/status/priority filters, and current sort field and direction.
+- Keep collapsed groups presentation-only, so matching finished Starred tasks remain included, and exclude Trash entirely.
 - Generate a compact operational Markdown table with IDs, planning fields, ownership, source, tags, checklist progress, and updated timestamps.
 - Use the native save-file dialog, remember the last successful export directory, and write UTF-8 files atomically.
 - Require the current task's unsaved edits to be saved before exporting.
 
 Acceptance criteria:
 
-- A concrete current-list export contains every non-Trash task in that list and omits the redundant List column.
-- A global export contains tasks across concrete lists and includes the List column.
-- A starred export includes completed and cancelled starred tasks but excludes unstarred and trashed tasks.
-- Search, filters, sort, lifecycle view, and collapsed groups do not silently reduce the export.
+- A concrete-list export contains exactly the current filtered results in view sort order and omits the redundant List column.
+- A global export contains exactly the current filtered results across concrete lists and includes the List column.
+- A Starred-view export includes matching completed and cancelled tasks even when the Finished group is collapsed.
+- Trash is excluded and the Export action is unavailable in the Trash view.
 - Markdown-reserved characters and multiline values cannot break the generated table.
 - Cancelling the native picker creates no file; a successful export is valid UTF-8 without a byte-order mark.
 - Focused service tests and Playwright coverage verify the export contract through the application bridge.

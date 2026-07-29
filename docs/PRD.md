@@ -236,20 +236,17 @@ The same action system supports individual and bulk work. Individual actions liv
 
 ## Markdown task export
 
-The task-queue header provides a visible **Export** action for creating a portable Markdown work inventory. Export is deliberately based on a complete, predictable scope rather than on the rows currently visible after view, search, tag, type, priority, sort, or collapsed-group choices.
+The task-queue header provides a visible **Export** action for creating a portable Markdown work inventory. The export contains exactly the current results: the selected concrete list or synthetic **All lists** scope, active lifecycle view, search text, tag, type, status, and priority filters, in the current sort field and direction. The dialog previews the resulting count before continuing.
 
-The export dialog offers two modes:
+Collapsed groups are presentation only and do not remove matching tasks from the export. In particular, completed and cancelled tasks in the Starred view remain included when its Finished group is collapsed.
 
-- **Current list** exports every non-Trash task in the selected concrete list, across active, completed, and cancelled statuses.
-- **Starred tasks** exports every starred non-Trash task in the selected list scope, including completed and cancelled tasks.
-
-When the synthetic **All lists** scope is selected, both modes operate across every concrete list. The first mode is presented as **All lists**, and the Markdown table includes a List column. A concrete-list export omits the redundant List column.
+When the synthetic **All lists** scope is selected, the Markdown table includes a List column. A concrete-list export omits the redundant List column.
 
 Each row contains the task ID, title, list when global, type, status, priority, deadline, waiting target, owner, responsible person, source, tags, checklist progress, and last-updated timestamp. Multiline text and Markdown table delimiters are escaped so the generated table remains valid. Bodies, comments, Timeline entries, relationships, and attachment content are not included; this is an operational work inventory, not an archival export.
 
 If the selected task has unsaved changes, the export flow requires those changes to be saved first. The user chooses the destination through the native save-file dialog. Files use UTF-8 without a byte-order mark, are written through a temporary file before replacement, receive a useful timestamped `.md` default name, and start in the directory of the last successful task export. Cancelling or failing an export does not change that preference.
 
-Trash is never included in Markdown task export. A database backup remains the only supported complete portable copy of task bodies, attachments, relationships, comments, checklists, history, and trashed tasks.
+Trash is never included in Markdown task export, and the Export action is not available in the Trash view. A database backup remains the only supported complete portable copy of task bodies, attachments, relationships, comments, checklists, history, and trashed tasks.
 
 ## Lifecycle timestamps
 

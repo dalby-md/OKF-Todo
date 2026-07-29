@@ -6,7 +6,7 @@ namespace Okf_Todo.Tests;
 public sealed class TaskMarkdownExportServiceTests
 {
     [Fact]
-    public async Task ExportAsync_CurrentList_WritesCompleteOperationalTableAndEscapesMarkdown()
+    public async Task ExportAsync_CurrentResults_PreservesRequestedOrderAndEscapesMarkdown()
     {
         await using var database = await TestDatabase.CreateAsync();
         var directory = CreateTestDirectory();
@@ -30,7 +30,7 @@ public sealed class TaskMarkdownExportServiceTests
                     responsible: "Ada *Lovelace*",
                     tags: ["customer", "mail|thread"]),
                 CancellationToken.None);
-            await database.Tasks.CreateAsync(
+            var secondTask = await database.Tasks.CreateAsync(
                 CreateRequest("Second task", defaultList.Id),
                 CancellationToken.None);
             await database.Tasks.CreateAsync(
@@ -54,19 +54,25 @@ public sealed class TaskMarkdownExportServiceTests
                 loggerFactory.CreateLogger<TaskMarkdownExportService>());
 
             var result = await service.ExportAsync(
-                new TaskMarkdownExportRequest(TaskMarkdownExportKinds.CurrentList, defaultList.Id),
+                new TaskMarkdownExportRequest(
+                    [secondTask.Id, exportedTask.Id],
+                    defaultList.Id,
+                    "All",
+                    "Title, descending"),
                 CancellationToken.None);
 
             Assert.False(result.Cancelled);
             Assert.Equal(2, result.TaskCount);
             Assert.Equal("Default list", result.ScopeName);
             Assert.Equal(Path.GetFullPath(exportPath), result.FilePath);
+            Assert.Equal(TaskMarkdownExportKinds.CurrentResults, result.ExportKind);
             Assert.Matches(
-                "^okf-todo-tasks-default-list-[0-9]{8}-[0-9]{4}\\.md$",
+                "^okf-todo-results-default-list-[0-9]{8}-[0-9]{4}\\.md$",
                 picker.SuggestedFileNames.Single());
 
             var markdown = await File.ReadAllTextAsync(exportPath);
-            Assert.Contains("- Scope: All non-Trash tasks in Default list", markdown);
+            Assert.Contains("- Scope: All results in Default list", markdown);
+            Assert.Contains("- Ordering: Title, descending", markdown);
             Assert.Contains("| ID | Title | Type | Status | Priority |", markdown);
             Assert.DoesNotContain("| ID | Title | List |", markdown);
             Assert.Contains($"| #{exportedTask.Id} | Investigate \\| \\[mail\\]<br>thread |", markdown);
@@ -75,6 +81,9 @@ public sealed class TaskMarkdownExportServiceTests
             Assert.Contains("Email: CASE\\_42", markdown);
             Assert.Contains("mail\\|thread", markdown);
             Assert.Contains("Second task", markdown);
+            Assert.True(
+                markdown.IndexOf("Second task", StringComparison.Ordinal)
+                < markdown.IndexOf("Investigate", StringComparison.Ordinal));
             Assert.DoesNotContain("Different list task", markdown);
             Assert.DoesNotContain("Trashed task", markdown);
             Assert.Equal(
@@ -94,38 +103,25 @@ public sealed class TaskMarkdownExportServiceTests
     }
 
     [Fact]
-    public async Task ExportAsync_StarredAcrossAllLists_IncludesFinishedButExcludesUnstarredAndTrash()
+    public async Task ExportAsync_WhenTaskIdsContainTrash_RejectsStaleResults()
     {
         await using var database = await TestDatabase.CreateAsync();
         var directory = CreateTestDirectory();
-        var exportPath = Path.Combine(directory, "starred.md");
+            var exportPath = Path.Combine(directory, "results.md");
 
         try
         {
             var defaultList = (await database.TaskLists.ListAsync(CancellationToken.None))
                 .Single(taskList => taskList.Name == "Default list");
-            var supportList = await database.TaskLists.CreateAsync(
-                new TaskListCreateRequest("Support"),
+            var activeTask = await database.Tasks.CreateAsync(
+                CreateRequest("Active task", defaultList.Id),
                 CancellationToken.None);
-            var defaultStar = await database.Tasks.CreateAsync(
-                CreateRequest("Default star", defaultList.Id),
-                CancellationToken.None);
-            var supportStar = await database.Tasks.CreateAsync(
-                CreateRequest("Completed support star", supportList.Id),
-                CancellationToken.None);
-            var unstarred = await database.Tasks.CreateAsync(
-                CreateRequest("Ordinary task", supportList.Id),
-                CancellationToken.None);
-            var trashedStar = await database.Tasks.CreateAsync(
-                CreateRequest("Trashed star", defaultList.Id),
+            var trashedTask = await database.Tasks.CreateAsync(
+                CreateRequest("Trashed task", defaultList.Id),
                 CancellationToken.None);
 
-            await database.Tasks.SetStarredManyAsync(
-                new TaskBulkStarRequest([defaultStar.Id, supportStar.Id, trashedStar.Id], true),
-                CancellationToken.None);
-            await database.Tasks.CompleteAsync(supportStar.Id, CancellationToken.None);
             await database.Tasks.MoveToTrashAsync(
-                new TaskIdsRequest([trashedStar.Id]),
+                new TaskIdsRequest([trashedTask.Id]),
                 CancellationToken.None);
 
             var picker = new TestMarkdownExportDestinationPicker(exportPath);
@@ -136,21 +132,17 @@ public sealed class TaskMarkdownExportServiceTests
                 CreatePreferenceService(database, directory, loggerFactory),
                 loggerFactory.CreateLogger<TaskMarkdownExportService>());
 
-            var result = await service.ExportAsync(
-                new TaskMarkdownExportRequest(TaskMarkdownExportKinds.Starred, null),
-                CancellationToken.None);
+            var exception = await Assert.ThrowsAsync<ValidationException>(() => service.ExportAsync(
+                new TaskMarkdownExportRequest(
+                    [activeTask.Id, trashedTask.Id],
+                    null,
+                    "All",
+                    "Smart priority, ascending"),
+                CancellationToken.None));
 
-            Assert.False(result.Cancelled);
-            Assert.Equal(2, result.TaskCount);
-            var markdown = await File.ReadAllTextAsync(exportPath);
-            Assert.Contains("- Scope: Starred non-Trash tasks in All lists", markdown);
-            Assert.Contains("| ID | Title | List | Type |", markdown);
-            Assert.Contains("Default star", markdown);
-            Assert.Contains("Completed support star", markdown);
-            Assert.Contains("| Support |", markdown);
-            Assert.Contains("| Completed |", markdown);
-            Assert.DoesNotContain(unstarred.Title, markdown);
-            Assert.DoesNotContain("Trashed star", markdown);
+            Assert.Equal("taskIds", exception.Field);
+            Assert.Contains("changed before export", exception.Message);
+            Assert.False(File.Exists(exportPath));
         }
         finally
         {
@@ -179,7 +171,11 @@ public sealed class TaskMarkdownExportServiceTests
                 loggerFactory.CreateLogger<TaskMarkdownExportService>());
 
             var result = await service.ExportAsync(
-                new TaskMarkdownExportRequest(TaskMarkdownExportKinds.CurrentList, null),
+                new TaskMarkdownExportRequest(
+                    [1],
+                    null,
+                    "Active",
+                    "Smart priority, ascending"),
                 CancellationToken.None);
 
             Assert.True(result.Cancelled);

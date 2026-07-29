@@ -16,18 +16,23 @@ public sealed class TaskMarkdownExportService(
         TaskMarkdownExportRequest request,
         CancellationToken cancellationToken)
     {
-        var exportKind = NormalizeExportKind(request.ExportKind);
         var scope = await ResolveScopeAsync(request.TaskListId, cancellationToken);
-        var rows = await LoadRowsAsync(exportKind, scope.TaskListId, cancellationToken);
+        var taskIds = NormalizeTaskIds(request.TaskIds);
+        var rows = await LoadRowsAsync(taskIds, scope.TaskListId, cancellationToken);
         if (rows.Count == 0)
         {
             throw new ValidationException(
-                "There are no tasks in the selected export scope.",
-                "exportKind");
+                "There are no tasks in the current results.",
+                "taskIds");
         }
 
         var exportedAt = DateTime.UtcNow;
-        var suggestedFileName = BuildSuggestedFileName(exportKind, scope.Name, exportedAt);
+        var viewName = NormalizeDisplayValue(request.ViewName, "Current view", 80);
+        var sortDescription = NormalizeDisplayValue(
+            request.SortDescription,
+            "Current view order",
+            160);
+        var suggestedFileName = BuildSuggestedFileName(scope.Name, exportedAt);
         var initialDirectory = await preferenceService.GetTaskExportDirectoryAsync(cancellationToken);
         var selectedPath = await destinationPicker.PickAsync(
             suggestedFileName,
@@ -35,7 +40,12 @@ public sealed class TaskMarkdownExportService(
             cancellationToken);
         if (string.IsNullOrWhiteSpace(selectedPath))
         {
-            return new TaskMarkdownExportResult(true, null, rows.Count, exportKind, scope.Name);
+            return new TaskMarkdownExportResult(
+                true,
+                null,
+                rows.Count,
+                TaskMarkdownExportKinds.CurrentResults,
+                scope.Name);
         }
 
         var destinationPath = EnsureMarkdownExtension(Path.GetFullPath(selectedPath));
@@ -49,7 +59,7 @@ public sealed class TaskMarkdownExportService(
 
         try
         {
-            var markdown = RenderMarkdown(exportKind, scope, rows, exportedAt);
+            var markdown = RenderMarkdown(scope, viewName, sortDescription, rows, exportedAt);
             await File.WriteAllTextAsync(
                 temporaryPath,
                 markdown,
@@ -80,7 +90,7 @@ public sealed class TaskMarkdownExportService(
                 false,
                 destinationPath,
                 rows.Count,
-                exportKind,
+                TaskMarkdownExportKinds.CurrentResults,
                 scope.Name);
         }
         catch (ValidationException)
@@ -133,49 +143,20 @@ public sealed class TaskMarkdownExportService(
     }
 
     private async Task<IReadOnlyList<TaskMarkdownExportRow>> LoadRowsAsync(
-        string exportKind,
+        IReadOnlyList<int> taskIds,
         int? taskListId,
         CancellationToken cancellationToken)
     {
-        var today = DateTime.UtcNow.Date;
         var query = dbContext.TaskItems
             .AsNoTracking()
-            .Where(task => task.DeletedAt == null);
+            .Where(task => task.DeletedAt == null && taskIds.Contains(task.Id));
 
         if (taskListId is not null)
         {
             query = query.Where(task => task.TaskListId == taskListId.Value);
         }
 
-        if (exportKind == TaskMarkdownExportKinds.Starred)
-        {
-            query = query.Where(task => task.IsStarred);
-        }
-
-        return await query
-            .OrderBy(task => task.TaskStatus!.Code == TaskStatusCodes.Active
-                    && task.Deadline != null
-                    && task.Deadline < today
-                ? 0
-                : task.TaskStatus.Code == TaskStatusCodes.Active
-                    && task.TaskPriority != null
-                    && task.TaskPriority.Code == TaskPriorityCodes.Urgent
-                ? 1
-                : task.TaskStatus.Code == TaskStatusCodes.Active
-                    && !task.WaitingTargets.Any(waitingFor => waitingFor.ResolvedAt == null)
-                    && (task.TaskPriority == null || task.TaskPriority.Code != TaskPriorityCodes.CanWait)
-                ? 2
-                : task.TaskStatus.Code == TaskStatusCodes.Active
-                    && task.WaitingTargets.Any(waitingFor => waitingFor.ResolvedAt == null)
-                ? 3
-                : task.TaskStatus.Code == TaskStatusCodes.Active
-                    && task.TaskPriority != null
-                    && task.TaskPriority.Code == TaskPriorityCodes.CanWait
-                ? 4
-                : 5)
-            .ThenBy(task => task.Deadline == null)
-            .ThenBy(task => task.Deadline)
-            .ThenByDescending(task => task.UpdatedAt)
+        var loadedRows = await query
             .Select(task => new TaskMarkdownExportRow(
                 task.Id,
                 task.Title,
@@ -201,17 +182,26 @@ public sealed class TaskMarkdownExportService(
                 task.ChecklistItems.Count,
                 task.UpdatedAt))
             .ToListAsync(cancellationToken);
+
+        if (loadedRows.Count != taskIds.Count)
+        {
+            throw new ValidationException(
+                "The current results changed before export. Refresh the task list and try again.",
+                "taskIds");
+        }
+
+        var rowsById = loadedRows.ToDictionary(row => row.Id);
+        return taskIds.Select(taskId => rowsById[taskId]).ToList();
     }
 
     private static string RenderMarkdown(
-        string exportKind,
         TaskExportScope scope,
+        string viewName,
+        string sortDescription,
         IReadOnlyList<TaskMarkdownExportRow> rows,
         DateTime exportedAt)
     {
-        var scopeDescription = exportKind == TaskMarkdownExportKinds.Starred
-            ? $"Starred non-Trash tasks in {scope.Name}"
-            : $"All non-Trash tasks in {scope.Name}";
+        var scopeDescription = $"{viewName} results in {scope.Name}";
         var columns = new List<string>
         {
             "ID",
@@ -242,7 +232,7 @@ public sealed class TaskMarkdownExportService(
         builder.AppendLine($"- Scope: {EscapeInline(scopeDescription)}");
         builder.AppendLine($"- Exported: {exportedAt:yyyy-MM-dd HH:mm} UTC");
         builder.AppendLine($"- Tasks: {rows.Count}");
-        builder.AppendLine("- Ordering: Smart priority, then earliest deadline, then most recently updated");
+        builder.AppendLine($"- Ordering: {EscapeInline(sortDescription)}");
         builder.AppendLine();
         AppendTableRow(builder, columns);
         AppendTableRow(builder, columns.Select(_ => "---"));
@@ -332,21 +322,37 @@ public sealed class TaskMarkdownExportService(
             : $"{sourceName}: {sourceReference.Trim()}";
     }
 
-    private static string NormalizeExportKind(string? value)
+    private static IReadOnlyList<int> NormalizeTaskIds(IReadOnlyCollection<int>? values)
     {
-        var normalized = value?.Trim();
-        return normalized switch
+        if (values is null || values.Count == 0)
         {
-            TaskMarkdownExportKinds.CurrentList => TaskMarkdownExportKinds.CurrentList,
-            TaskMarkdownExportKinds.Starred => TaskMarkdownExportKinds.Starred,
-            _ => throw new ValidationException("Export kind is invalid.", "exportKind")
-        };
+            throw new ValidationException(
+                "There are no tasks in the current results.",
+                "taskIds");
+        }
+
+        if (values.Any(taskId => taskId <= 0) || values.Distinct().Count() != values.Count)
+        {
+            throw new ValidationException("Task IDs are invalid.", "taskIds");
+        }
+
+        return values.ToList();
     }
 
-    private static string BuildSuggestedFileName(string exportKind, string scopeName, DateTime exportedAt)
+    private static string NormalizeDisplayValue(
+        string? value,
+        string fallback,
+        int maximumLength)
     {
-        var kind = exportKind == TaskMarkdownExportKinds.Starred ? "starred" : "tasks";
-        return $"okf-todo-{kind}-{CreateFileNameSlug(scopeName)}-{exportedAt:yyyyMMdd-HHmm}.md";
+        var normalized = value?.Trim();
+        return string.IsNullOrWhiteSpace(normalized)
+            ? fallback
+            : normalized[..Math.Min(normalized.Length, maximumLength)];
+    }
+
+    private static string BuildSuggestedFileName(string scopeName, DateTime exportedAt)
+    {
+        return $"okf-todo-results-{CreateFileNameSlug(scopeName)}-{exportedAt:yyyyMMdd-HHmm}.md";
     }
 
     private static string CreateFileNameSlug(string value)
@@ -389,11 +395,14 @@ public sealed class TaskMarkdownExportService(
 
 public static class TaskMarkdownExportKinds
 {
-    public const string CurrentList = "currentList";
-    public const string Starred = "starred";
+    public const string CurrentResults = "currentResults";
 }
 
-public sealed record TaskMarkdownExportRequest(string? ExportKind, int? TaskListId);
+public sealed record TaskMarkdownExportRequest(
+    IReadOnlyCollection<int>? TaskIds,
+    int? TaskListId,
+    string? ViewName,
+    string? SortDescription);
 
 public sealed record TaskMarkdownExportResult(
     bool Cancelled,
