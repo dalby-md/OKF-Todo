@@ -35,6 +35,37 @@ final result: passed
 
 ---
 
+# Design QA — compact search command strip
+
+## Evidence
+
+- Selected reference: `C:\Users\soere\.codex\generated_images\019f79fa-8d13-7880-8d27-c313ce871b0a\call_ThlxXrPfXZuqHSscbaDMEGzI.png`
+- Running implementation: `artifacts/search-toolbar-qa/implementation-final-pass.png`
+- Focused side-by-side comparison: `artifacts/search-toolbar-qa/comparison-final.png`
+- State verified: maximized desktop, Active view, no active field filters, Priority descending.
+
+The in-app Browser bootstrap failed with `Cannot redefine property: process`, so implementation evidence was captured directly from the running Photino window at the same desktop state instead of switching to a different browser-control surface.
+
+## Comparison
+
+| Surface | Result |
+| --- | --- |
+| Typography | Passed. Search, Filters, Sort, count, and task hierarchy use the existing application type system and closely match the selected reference. |
+| Spacing and layout | Passed. Search, Filters, and Sort share one compact row; the count sits beside the view title; idle filter-summary space is removed. |
+| Colors and surfaces | Passed. Existing teal, neutral borders, focus treatment, and selected-task styling are preserved. |
+| Icons | Passed. Existing Fluent icons are used for search, filter, and sort direction. |
+| Responsiveness | Passed. The controls remain one row at the standard desktop task-queue width and wrap only at very narrow container widths. |
+| States and interactions | Passed. Filters opens an anchored panel, its badge reports selected field filters, chips appear only when needed, and sort direction remains keyboard accessible. |
+| Accessibility | Passed. Controls retain labels, titles, keyboard focus, Ctrl+K search, Escape handling, and visible focus styling. |
+
+## Findings
+
+No P0, P1, or P2 findings remain in the implemented search/filter/sort surface.
+
+final result: passed
+
+---
+
 # Design QA — Compact task title rail, option 3
 
 ## Evidence

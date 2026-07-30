@@ -590,9 +590,9 @@ The task list also offers purpose-driven alternatives for developer and support 
 - Activity: updated and created timestamps.
 - Organize: title, task type, and lifecycle status. Lifecycle status follows the configured status order and is mainly useful in the `All` view.
 
-The control shows a concise, visible explanation of the selected sort, shows the visible result count, works after text and tag filtering, and provides a compact ascending/descending control. The selected field and direction persist separately for each task view. Lookup-based ordering follows the configured lookup sort order rather than display names, and tasks without a value remain last in either direction.
+The compact control exposes the selected sort explanation through its title and accessible description, works after text and tag filtering, and provides an icon button for ascending or descending direction. The selected field and direction persist separately for each task view. Lookup-based ordering follows the configured lookup sort order rather than display names, and tasks without a value remain last in either direction.
 
-Task browsing uses a compact responsive header. View and task search form the primary row; tag, task-type, priority, and sorting controls move to a dedicated secondary row before they become cramped. Tags remain an on-demand multi-select with OR semantics, while task type and priority are immediate single-select filters. Active filters appear as removable chips in a slim contextual row with the result count and a clear action.
+Task browsing uses a compact responsive command strip. Search, a **Filters** button, and sorting share one row and wrap only when the task queue becomes narrow. The visible result count sits beside the current view name. **Filters** opens an anchored panel for tags, task type, lifecycle status, and priority, and its badge reports the number of selected field filters. Tags remain a multi-select with OR semantics. Active field filters appear as removable chips in a slim contextual row that is absent when no field filters are selected.
 
 ## Out of scope for first version
 

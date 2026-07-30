@@ -810,17 +810,62 @@ public sealed class NewTaskDialogUiTests
             "Reopen",
             workspaceScrollPosition);
 
+        await page.SetViewportSizeAsync(1280, 800);
         Assert.Equal(
             new[] { "Any", "Active", "Completed", "Cancelled" },
             await page.Locator("#task-status-filter option").AllTextContentsAsync());
+        Assert.True(await page.Locator("#task-filter-summary").IsHiddenAsync());
+        Assert.Equal("0", await page.Locator("#task-filter-count-badge").TextContentAsync());
+        var taskSearchBox = await page.Locator(".task-search-field").BoundingBoxAsync();
+        var taskFilterMenuBox = await page.Locator(".task-filter-menu").BoundingBoxAsync();
+        var taskSortBox = await page.Locator(".task-sort-field").BoundingBoxAsync();
+        Assert.NotNull(taskSearchBox);
+        Assert.NotNull(taskFilterMenuBox);
+        Assert.NotNull(taskSortBox);
+        Assert.True(taskFilterMenuBox.Y >= taskSearchBox.Y + taskSearchBox.Height);
+        Assert.InRange(Math.Abs(taskFilterMenuBox.Y - taskSortBox.Y), 0, 1);
+        Assert.True(taskFilterMenuBox.X < taskSortBox.X);
+        await page.Locator("#task-filter-button").ClickAsync();
+        Assert.False(await page.Locator("#task-filter-popover").IsHiddenAsync());
+        await page.WaitForFunctionAsync(
+            "() => document.activeElement?.id === 'task-type-filter'");
+        Assert.Equal(
+            "task-type-filter",
+            await page.EvaluateAsync<string>("() => document.activeElement?.id"));
+        var filterPopoverBox = await page.Locator("#task-filter-popover").BoundingBoxAsync();
+        var taskSidebarBox = await page.Locator(".task-sidebar").BoundingBoxAsync();
+        Assert.NotNull(filterPopoverBox);
+        Assert.NotNull(taskSidebarBox);
+        Assert.True(filterPopoverBox.X >= taskSidebarBox.X);
+        Assert.True(
+            filterPopoverBox.X + filterPopoverBox.Width
+                <= taskSidebarBox.X + taskSidebarBox.Width);
+        Assert.True(await page.EvaluateAsync<bool>(
+            """
+            () => {
+              const popover = document.querySelector('#task-filter-popover')
+              const rect = popover?.getBoundingClientRect()
+              if (!popover || !rect) {
+                return false
+              }
+              const hit = document.elementFromPoint(rect.left + 20, rect.top + 20)
+              return hit === popover || popover.contains(hit)
+            }
+            """));
         await page.Locator("#task-status-filter").SelectOptionAsync("CANCELLED");
         await page.WaitForFunctionAsync(
             "() => document.querySelectorAll('#task-list .task-row').length > 0 && [...document.querySelectorAll('#task-list .task-row')].every(row => row.classList.contains('is-cancelled'))");
+        Assert.Equal("1", await page.Locator("#task-filter-count-badge").TextContentAsync());
+        Assert.False(await page.Locator("#task-filter-summary").IsHiddenAsync());
         Assert.Equal(
             "Status: Cancelled",
             await page.Locator("#task-filter-chips [data-filter='task-status']").TextContentAsync());
+        await page.Locator("#task-filter-button").ClickAsync();
+        Assert.True(await page.Locator("#task-filter-popover").IsHiddenAsync());
         await page.Locator("#task-filter-chips [data-filter='task-status']").ClickAsync();
         Assert.Equal(string.Empty, await page.Locator("#task-status-filter").InputValueAsync());
+        Assert.Equal("0", await page.Locator("#task-filter-count-badge").TextContentAsync());
+        Assert.True(await page.Locator("#task-filter-summary").IsHiddenAsync());
 
         Assert.Contains("task.complete", fixture.BridgeMessageTypes);
         Assert.Contains("task.reopen", fixture.BridgeMessageTypes);
@@ -932,6 +977,12 @@ public sealed class NewTaskDialogUiTests
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#task-list-title')?.textContent === 'Active'"
                 + " && !document.querySelector('#task-export-button')?.hidden");
+        await page.Locator("#task-selection-coachmark").WaitForAsync();
+        await page.Locator("#task-selection-coachmark-dismiss").ClickAsync();
+        await page.Locator("#task-selection-coachmark").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Hidden
+        });
         await page.Locator("#task-list-switcher").SelectOptionAsync("ALL");
         await page.Locator("#task-search").FillAsync("deployment");
         await page.Locator("#task-sort").SelectOptionAsync("TITLE_ASC");
@@ -941,7 +992,7 @@ public sealed class NewTaskDialogUiTests
                 + " const rows = document.querySelectorAll('#task-list .task-row-title');"
                 + " return rows.length >= 2 && rows.length < 30"
                 + " && document.querySelector('#task-sort')?.value === 'TITLE_ASC'"
-                + " && document.querySelector('#task-sort-direction')?.textContent.trim() === 'Desc';"
+                + " && document.querySelector('#task-sort-direction')?.getAttribute('aria-label') === 'Sort descending';"
                 + " }");
         var visibleTitles = await page.Locator("#task-list .task-row-title").AllTextContentsAsync();
         Assert.True(visibleTitles.Count >= 2);
@@ -1427,7 +1478,7 @@ public sealed class NewTaskDialogUiTests
         Assert.True(await page.Locator("#task-view-overflow-button").IsHiddenAsync());
         await page.Locator("#task-search").FillAsync(selectedTitle);
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('#task-result-count')?.textContent === '1 of 4 tasks'");
+            "() => document.querySelector('#task-list-header-count')?.textContent === '1 task'");
         await page.Locator("#task-select-mode-button").ClickAsync();
         await page.Locator(".task-row-select").CheckAsync();
         Assert.Equal(
@@ -1457,7 +1508,7 @@ public sealed class NewTaskDialogUiTests
 
         await page.Locator("#task-search").FillAsync(activeTitle);
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('#task-result-count')?.textContent === '1 of 4 tasks'");
+            "() => document.querySelector('#task-list-header-count')?.textContent === '1 task'");
         await page.Locator("#task-view-overflow-button").ClickAsync();
         Assert.False(await page.Locator("#task-view-move-cancelled").IsHiddenAsync());
         Assert.Contains(

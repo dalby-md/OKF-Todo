@@ -300,6 +300,68 @@ textarea.is-invalid {
   background: transparent;
 }
 
+.task-sidebar-title-line .task-count {
+  color: var(--theme-muted);
+}
+
+.task-search-icon,
+.task-filter-button > .fluent-icon {
+  color: var(--theme-muted);
+}
+
+.task-search::placeholder,
+.task-filter-popover-header span,
+.task-filter-popover-tags small {
+  color: var(--theme-muted);
+}
+
+.task-search:hover,
+.task-filter-button:hover:not(:disabled) {
+  border-color: var(--theme-border-strong);
+  color: var(--theme-text);
+  background: var(--theme-surface-hover);
+}
+
+.task-search:focus,
+.task-filter-button:focus-visible,
+.task-filter-button[aria-expanded="true"] {
+  border-color: var(--theme-accent);
+  color: var(--theme-text);
+  background: var(--theme-surface-raised);
+  box-shadow: 0 0 0 3px rgba(231, 177, 74, 0.18);
+}
+
+.task-search-field kbd,
+.task-filter-count-badge {
+  color: var(--theme-muted);
+  background: var(--theme-surface-hover);
+}
+
+.task-filter-button.has-active-filters .task-filter-count-badge {
+  color: #111;
+  background: var(--theme-accent);
+}
+
+.task-filter-popover {
+  box-shadow: 0 14px 34px rgb(0 0 0 / 32%);
+}
+
+.task-filter-popover-header strong,
+.task-filter-popover-field {
+  color: var(--theme-text);
+}
+
+.task-filter-popover-field select,
+.task-filter-popover .select2-container .select2-selection--multiple {
+  border-color: var(--theme-border-strong);
+  color: var(--theme-text);
+  background: var(--theme-surface-raised) !important;
+}
+
+.task-filter-chip {
+  color: var(--theme-text);
+}
+
 .task-row {
   border-color: var(--theme-border);
   color: var(--theme-text);

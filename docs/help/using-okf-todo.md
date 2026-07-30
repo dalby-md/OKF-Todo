@@ -122,14 +122,16 @@ Press **Ctrl+K** to move directly to task search.
 
 ### Filter
 
-Use the controls below search to narrow the current view:
+Select **Filters** beside search to open the compact filter panel:
 
-- **Tags** opens an existing-tag selector.
+- **Tags** selects one or more existing tags.
 - **Type** selects one task type.
 - **Status** selects one lifecycle status, such as Active, Completed, or Cancelled.
 - **Priority** selects one priority.
 
-When several tags are selected, a task matches if it has any selected tag. Active filters appear as removable chips. Select **Clear** to remove all current search and filter criteria.
+The number on **Filters** shows how many tag, type, status, and priority filters are selected. When several tags are selected, a task matches if it has any selected tag. Active filters appear as removable chips below the compact search row; that row stays hidden when no filters are selected. Select **Clear** to remove the current search and filter criteria.
+
+The task count beside the view name always shows the number of results after the current search and filters.
 
 To isolate cancelled tasks without adding another view, select **All statuses**, then select **Cancelled** under **Status**. Choose **All lists** first when the result should span every list.
 
@@ -137,7 +139,7 @@ Filters affect only the current on-screen result. They do not change or delete t
 
 ### Sort
 
-Each view remembers its own sort field and direction. The short explanation below the Sort control describes the selected order.
+Use the compact **Sort** control beside **Filters** to choose the field. Select its direction button to switch between ascending and descending order. Each view remembers its own sort field and direction; hover the control or use assistive technology to read the selected order's explanation.
 
 **Smart priority** is the default triage order:
 

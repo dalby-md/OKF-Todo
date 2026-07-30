@@ -940,7 +940,10 @@
       : 'Ascending'
     $('#task-sort').val(option.code)
     $('#task-sort-direction')
-      .text(direction === taskSortDirectionCodes.descending ? 'Desc' : 'Asc')
+      .html(
+        `<span class="fluent-icon" aria-hidden="true">${
+          direction === taskSortDirectionCodes.descending ? '&#xE74B;' : '&#xE74A;'
+        }</span>`)
       .attr('aria-label', `Sort ${directionLabel.toLowerCase()}`)
       .attr('title', `Sort ${directionLabel.toLowerCase()}`)
     const directionDescription = direction === taskSortDirectionCodes.descending
@@ -1008,12 +1011,14 @@
 
           <aside class="task-sidebar" aria-labelledby="task-list-title">
             <header class="sidebar-header">
-              <div>
+              <div class="task-sidebar-heading">
                 <p class="eyebrow">Task queue</p>
-                <h2 id="task-list-title">Active</h2>
+                <div class="task-sidebar-title-line">
+                  <h2 id="task-list-title">Active</h2>
+                  <span id="task-list-header-count" class="task-list-header-count" aria-live="polite">0 tasks</span>
+                </div>
               </div>
               <div class="sidebar-header-actions">
-                <span id="task-list-header-count" class="task-list-header-count" aria-live="polite">0 tasks</span>
                 <button id="task-export-button" class="secondary-button task-export-button" type="button">
                   <span class="fluent-icon" aria-hidden="true">&#xEDE1;</span>
                   <span>Export</span>
@@ -1058,6 +1063,7 @@
 
               <label class="task-search-field" for="task-search">
                 <span class="sr-only">Search tasks</span>
+                <span class="task-search-icon fluent-icon" aria-hidden="true">&#xE721;</span>
                 <input id="task-search" class="task-search" type="search" placeholder="Search tasks" autocomplete="off">
                 <kbd aria-hidden="true">Ctrl+K</kbd>
               </label>
@@ -1066,51 +1072,61 @@
             <div class="task-browse-secondary">
               <div class="task-filter-menu">
                 <button id="task-filter-button" class="secondary-button task-filter-button" type="button" aria-expanded="false" aria-controls="task-filter-popover">
-                  <span>Tags</span>
-                  <span id="task-filter-count-badge" class="task-filter-count-badge" hidden>0</span>
+                  <span class="fluent-icon" aria-hidden="true">&#xE71C;</span>
+                  <span>Filters</span>
+                  <span id="task-filter-count-badge" class="task-filter-count-badge">0</span>
                 </button>
                 <div id="task-filter-popover" class="task-filter-popover" hidden>
-                  <label for="task-tag-filter">Filter by tags</label>
-                  <select id="task-tag-filter" multiple aria-label="Filter tasks by tags"></select>
-                  <small>Matches any selected tag.</small>
+                  <div class="task-filter-popover-header">
+                    <strong>Filters</strong>
+                    <span>Narrow the current view</span>
+                  </div>
+                  <div class="task-filter-popover-grid">
+                    <label class="task-filter-popover-field" for="task-type-filter">
+                      <span>Type</span>
+                      <select id="task-type-filter" aria-label="Filter by task type">
+                        <option value="">Any</option>
+                      </select>
+                    </label>
+
+                    <label class="task-filter-popover-field" for="task-status-filter">
+                      <span>Status</span>
+                      <select id="task-status-filter" aria-label="Filter by task status">
+                        <option value="">Any</option>
+                      </select>
+                    </label>
+
+                    <label class="task-filter-popover-field" for="task-priority-filter">
+                      <span>Priority</span>
+                      <select id="task-priority-filter" aria-label="Filter by priority">
+                        <option value="">Any</option>
+                      </select>
+                    </label>
+
+                    <label class="task-filter-popover-field task-filter-popover-tags" for="task-tag-filter">
+                      <span>Tags</span>
+                      <select id="task-tag-filter" multiple aria-label="Filter tasks by tags"></select>
+                      <small>Matches any selected tag.</small>
+                    </label>
+                  </div>
                 </div>
               </div>
-
-              <label class="task-quick-filter" for="task-type-filter" title="Filter by task type">
-                <span>Type</span>
-                <select id="task-type-filter" aria-label="Filter by task type">
-                  <option value="">Any</option>
-                </select>
-              </label>
-
-              <label class="task-quick-filter" for="task-status-filter" title="Filter by task status">
-                <span>Status</span>
-                <select id="task-status-filter" aria-label="Filter by task status">
-                  <option value="">Any</option>
-                </select>
-              </label>
-
-              <label class="task-quick-filter" for="task-priority-filter" title="Filter by priority">
-                <span>Priority</span>
-                <select id="task-priority-filter" aria-label="Filter by priority">
-                  <option value="">Any</option>
-                </select>
-              </label>
 
               <div class="task-sort-field">
                 <label for="task-sort">Sort</label>
                 <select id="task-sort" aria-describedby="task-sort-description">
                   ${renderTaskSortOptions()}
                 </select>
-                <button id="task-sort-direction" class="task-sort-direction" type="button" aria-describedby="task-sort-description" aria-label="Sort ascending" title="Sort ascending">Asc</button>
+                <button id="task-sort-direction" class="task-sort-direction" type="button" aria-describedby="task-sort-description" aria-label="Sort ascending" title="Sort ascending">
+                  <span class="fluent-icon" aria-hidden="true">&#xE74A;</span>
+                </button>
               </div>
-              <span id="task-sort-description" class="task-sort-description" aria-live="polite">Overdue → urgent → active → waiting → can wait → finished; then earliest deadline. Ascending uses this order.</span>
+              <span id="task-sort-description" class="task-sort-description sr-only" aria-live="polite">Overdue → urgent → active → waiting → can wait → finished; then earliest deadline. Ascending uses this order.</span>
             </div>
           </div>
 
-          <div id="task-filter-summary" class="task-filter-summary">
+          <div id="task-filter-summary" class="task-filter-summary" hidden>
             <div id="task-filter-chips" class="task-filter-chips" aria-label="Active task filters"></div>
-            <span id="task-result-count" class="task-result-count" aria-live="polite">0 tasks</span>
             <button id="task-filter-clear" class="task-filter-clear" type="button" hidden>Clear</button>
           </div>
 
@@ -3744,6 +3760,8 @@
     if (shouldSave) {
       scheduleLayoutPreferenceSave()
     }
+
+    positionTaskFilterPopover()
   }
 
   function setTaskListHeight(height, shouldSave) {
@@ -3950,6 +3968,11 @@
   function setTaskFilterPopoverOpen(isOpen, shouldFocus) {
     const $popover = $('#task-filter-popover')
     const $button = $('#task-filter-button')
+
+    if (isOpen && !$popover.parent().is('body')) {
+      $popover.appendTo(document.body)
+    }
+
     $popover.prop('hidden', !isOpen)
     $button.attr('aria-expanded', isOpen ? 'true' : 'false')
 
@@ -3961,19 +3984,53 @@
       return
     }
 
+    positionTaskFilterPopover()
+
     if (shouldFocus) {
       window.setTimeout(function () {
-        const $filter = $('#task-tag-filter')
-        if ($filter.hasClass('select2-hidden-accessible')) {
-          $filter.select2('open')
-        } else {
-          $filter.trigger('focus')
-        }
+        $('#task-type-filter').trigger('focus')
       }, 0)
     }
   }
 
-  function renderTaskFilterSummary(countLabel) {
+  function positionTaskFilterPopover() {
+    const popover = document.querySelector('#task-filter-popover')
+    const button = document.querySelector('#task-filter-button')
+    const sidebar = document.querySelector('.task-sidebar')
+    if (!popover || !button || !sidebar || popover.hidden) {
+      return
+    }
+
+    const viewportInset = 12
+    const sidebarInset = 12
+    const buttonRect = button.getBoundingClientRect()
+    const sidebarRect = sidebar.getBoundingClientRect()
+    const availableWidth = Math.max(
+      0,
+      Math.min(sidebarRect.right, window.innerWidth - viewportInset)
+        - Math.max(sidebarRect.left, viewportInset)
+        - (sidebarInset * 2))
+    const width = Math.min(340, availableWidth)
+    const minimumLeft = Math.max(sidebarRect.left + sidebarInset, viewportInset)
+    const maximumLeft = Math.min(
+      sidebarRect.right - sidebarInset - width,
+      window.innerWidth - viewportInset - width)
+    const left = Math.max(
+      minimumLeft,
+      Math.min(buttonRect.right - width, maximumLeft))
+    const top = buttonRect.bottom + 8
+    const maximumHeight = Math.max(180, window.innerHeight - top - viewportInset)
+
+    Object.assign(popover.style, {
+      top: `${Math.round(top)}px`,
+      right: 'auto',
+      left: `${Math.round(left)}px`,
+      width: `${Math.round(width)}px`,
+      maxHeight: `${Math.round(maximumHeight)}px`
+    })
+  }
+
+  function renderTaskFilterSummary() {
     const selectedTags = getSelectedTaskTagFilterValues()
     const taskTypeCode = getTaskListFilterValue('#task-type-filter')
     const taskStatusCode = getTaskListFilterValue('#task-status-filter')
@@ -3984,6 +4041,10 @@
       || taskTypeCode.length > 0
       || taskStatusCode.length > 0
       || taskPriorityCode.length > 0
+    const activeFilterCount = selectedTags.length
+      + (taskTypeCode ? 1 : 0)
+      + (taskStatusCode ? 1 : 0)
+      + (taskPriorityCode ? 1 : 0)
 
     const chips = selectedTags.map(function (tag) {
       return `<button class="task-filter-chip" type="button" data-tag="${encodeAttribute(tag)}" aria-label="Remove tag filter: ${encodeAttribute(tag)}" title="Remove tag filter">Tag: ${encodeText(tag)}</button>`
@@ -4002,16 +4063,17 @@
     }
 
     $('#task-filter-chips').html(chips.join(''))
-    $('#task-result-count').text(countLabel)
-    $('#task-filter-clear').prop('hidden', !hasFilters)
+    $('#task-filter-summary').prop('hidden', activeFilterCount === 0)
+    $('#task-filter-clear').prop('hidden', !hasFilters || activeFilterCount === 0)
     $('#task-filter-count-badge')
-      .text(selectedTags.length)
-      .prop('hidden', selectedTags.length === 0)
-    $('#task-filter-button').attr(
-      'aria-label',
-      selectedTags.length === 0
-        ? 'Filter tasks by tags'
-        : `Filter tasks by tags, ${selectedTags.length} selected`)
+      .text(activeFilterCount)
+    $('#task-filter-button')
+      .toggleClass('has-active-filters', activeFilterCount > 0)
+      .attr(
+        'aria-label',
+        activeFilterCount === 0
+          ? 'Filter tasks'
+          : `Filter tasks, ${activeFilterCount} selected`)
   }
 
   function clearTaskFilters() {
@@ -4265,10 +4327,7 @@
       || taskTypeCode.length > 0
       || taskStatusCode.length > 0
       || taskPriorityCode.length > 0
-    const countLabel = hasFilters
-      ? `${visibleTasks.length} of ${tasks.length} ${tasks.length === 1 ? 'task' : 'tasks'}`
-      : `${visibleTasks.length} ${visibleTasks.length === 1 ? 'task' : 'tasks'}`
-    renderTaskFilterSummary(countLabel)
+    renderTaskFilterSummary()
     $('#task-view').val(currentView)
     $('#task-list-title').text(viewLabels[currentView])
     $('#task-list-header-count').text(`${visibleTasks.length} ${visibleTasks.length === 1 ? 'task' : 'tasks'}`)
@@ -6729,6 +6788,7 @@
       const isOpen = $('#task-filter-popover').prop('hidden')
       setTaskFilterPopoverOpen(isOpen, isOpen)
     })
+    $(window).on('resize', positionTaskFilterPopover)
     $('#task-filter-summary').on('click', '.task-filter-chip', function () {
       const filter = $(this).attr('data-filter')
       if (filter) {
@@ -6746,7 +6806,7 @@
     })
     $('#task-filter-clear').on('click', clearTaskFilters)
     $(document).on('click', function (event) {
-      if (!$(event.target).closest('.task-filter-menu').length) {
+      if (!$(event.target).closest('.task-filter-menu, #task-filter-popover').length) {
         setTaskFilterPopoverOpen(false, false)
       }
       if (!$(event.target).closest('#task-action-menu, .task-row-more, #task-detail-context-menu-button').length) {

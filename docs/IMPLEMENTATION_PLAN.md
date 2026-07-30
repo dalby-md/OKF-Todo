@@ -505,10 +505,10 @@ Acceptance criteria:
 - Waiting tasks remain easy to find.
 - Every view defaults to visibly explained smart priority and offers focus, activity, and organization sort modes suited to developer and support triage. The lifecycle-status option states that it follows configured status order and is mainly useful in the All view.
 - Lookup-based modes use configured sort order; time-based modes use due, waiting, created, and updated timestamps.
-- The sort control explains the selected field, reports the filtered result count, provides ascending/descending ordering, and persists both selections separately for each view.
-- View and search form the primary browse row; tags, task type, lifecycle status, priority, and sorting use a responsive secondary row before controls become cramped.
+- The compact sort control exposes the selected field explanation through its title and accessible description, provides an icon button for ascending/descending ordering, and persists both selections separately for each view.
+- Search, an anchored Filters panel, and sorting share a compact responsive command strip that wraps only when the task queue becomes narrow; the filtered result count sits beside the current view name.
 - Text search includes task tags, while explicit multi-tag filtering remains available on demand with OR semantics and removable filter chips.
-- Task type, lifecycle status, and priority provide immediate single-select filters and participate in the shared result count, clear action, and removable filter summary.
+- The Filters badge counts selected tags and exact task type, lifecycle status, and priority filters. Active field filters participate in the clear action and removable filter summary, which remains absent when no field filters are selected.
 
 ## Milestone 14 — Database backup
 
