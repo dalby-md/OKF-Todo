@@ -43,6 +43,60 @@ public sealed class NewTaskDialogUiTests
         })();
         """;
 
+    [Fact]
+    public async Task EmptyDatabase_OffersRemovableSampleDataAndPreservesFirstRunChoice()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync();
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1600, Height = 1000 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(
+            $"{fixture.BaseUrl}/index.html?v=database-first-run",
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+
+        await page.Locator("#first-run-new-task-button").WaitForAsync();
+        await page.GetByText(
+            "Sample data is easy to remove anytime from Preferences → Database.",
+            new PageGetByTextOptions { Exact = false }).WaitForAsync();
+        await page.Locator("#first-run-sample-button").ClickAsync();
+        await page.Locator("#first-run-sample-button[aria-busy='true'] .button-spinner").WaitForAsync();
+        Assert.Equal(
+            "Adding sample data...",
+            await page.Locator("#first-run-sample-button .sample-data-action-label").TextContentAsync());
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list .task-row').length === 30");
+
+        await page.Locator("#settings-button").ClickAsync();
+        await page.Locator("[data-preference-section='database']").ClickAsync();
+        Assert.Equal("Database", await page.Locator("#preferences-panel-title").TextContentAsync());
+        Assert.True(await page.Locator("#remove-sample-data-button").IsVisibleAsync());
+        Assert.False(await page.Locator("#add-sample-data-button").IsVisibleAsync());
+
+        await page.Locator("#remove-sample-data-button").ClickAsync();
+        await page.GetByText(
+            "Tasks you created yourself are not affected",
+            new PageGetByTextOptions { Exact = false }).WaitForAsync();
+        await page.Locator("#confirmation-confirm-button").ClickAsync();
+        await page.Locator("#first-run-new-task-button").WaitForAsync();
+
+        await page.Locator("#reset-empty-database-button").ClickAsync();
+        await page.Locator("#database-reset-confirmation").FillAsync("reset database");
+        Assert.False(await page.Locator("#database-reset-confirm-button").IsDisabledAsync());
+        await page.Locator("#database-reset-cancel-button").ClickAsync();
+
+        Assert.Contains("database.sample.create", fixture.BridgeMessageTypes);
+        Assert.Contains("database.sample.remove", fixture.BridgeMessageTypes);
+    }
+
     [Theory]
     [InlineData("HTML")]
     [InlineData("MARKDOWN")]
@@ -1126,6 +1180,7 @@ public sealed class NewTaskDialogUiTests
         Assert.NotNull(stackedEditor);
         Assert.True(stackedList.Y < stackedResizer.Y);
         Assert.True(stackedResizer.Y < stackedEditor.Y);
+        await page.Locator("#task-list .task-row").First.WaitForAsync();
         var firstSmallTask = await page.Locator("#task-list .task-row").First.BoundingBoxAsync();
         Assert.NotNull(firstSmallTask);
         Assert.True(firstSmallTask.Y < stackedList.Y + stackedList.Height);
@@ -1137,6 +1192,39 @@ public sealed class NewTaskDialogUiTests
         var layoutPreferencePanel = await page.Locator(".preferences-layout-control")
             .EvaluateAsync<string>("control => control.closest('[data-preference-panel]').dataset.preferencePanel");
         Assert.Equal("appearance", layoutPreferencePanel);
+        Assert.True(await page.Locator("[data-preference-select='task-filter-layout'] .preference-choice[data-value='COMPACT']")
+            .EvaluateAsync<bool>("button => button.classList.contains('is-selected')"));
+        await page.Locator("[data-preference-select='task-filter-layout'] .preference-choice[data-value='EXPANDED']").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.documentElement.classList.contains('task-filter-layout-expanded') && document.querySelector('#save-status').textContent === 'Task filter layout saved'");
+        await page.Locator("#settings-close-button").ClickAsync();
+
+        Assert.True(await page.Locator("#task-filter-button").IsHiddenAsync());
+        Assert.False(await page.Locator("#task-filter-popover").IsHiddenAsync());
+        var expandedTagFilterBox = await page.Locator(".task-filter-popover-tags").BoundingBoxAsync();
+        var expandedTypeFilterBox = await page.Locator(".task-filter-popover-field[for='task-type-filter']").BoundingBoxAsync();
+        var expandedStatusFilterBox = await page.Locator(".task-filter-popover-field[for='task-status-filter']").BoundingBoxAsync();
+        var expandedPriorityFilterBox = await page.Locator(".task-filter-popover-field[for='task-priority-filter']").BoundingBoxAsync();
+        Assert.NotNull(expandedTagFilterBox);
+        Assert.NotNull(expandedTypeFilterBox);
+        Assert.NotNull(expandedStatusFilterBox);
+        Assert.NotNull(expandedPriorityFilterBox);
+        Assert.True(expandedTagFilterBox.Y <= expandedTypeFilterBox.Y);
+        Assert.True(expandedTypeFilterBox.Y <= expandedStatusFilterBox.Y);
+        Assert.True(expandedStatusFilterBox.Y <= expandedPriorityFilterBox.Y);
+        Assert.Equal(
+            "task-filter-menu",
+            await page.Locator("#task-filter-popover").EvaluateAsync<string>(
+                "popover => popover.parentElement.className"));
+        Assert.Equal(
+            "static",
+            await page.Locator("#task-filter-popover").EvaluateAsync<string>(
+                "popover => getComputedStyle(popover).position"));
+
+        await OpenAppearancePreferencesAsync(page);
+        await page.Locator("[data-preference-select='task-filter-layout'] .preference-choice[data-value='COMPACT']").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => !document.documentElement.classList.contains('task-filter-layout-expanded') && document.querySelector('#save-status').textContent === 'Task filter layout saved'");
         await page.Locator(".preferences-layout-control .preference-choice[data-value='STACKED']").ClickAsync();
         await page.WaitForFunctionAsync(
             "() => document.documentElement.classList.contains('layout-mode-stacked') && document.querySelector('#save-status').textContent === 'Layout preference saved'");
@@ -2118,6 +2206,7 @@ public sealed class NewTaskDialogUiTests
             builder.Services.AddScoped<DatabaseBackupService>();
             builder.Services.AddScoped<TaskMarkdownExportService>();
             builder.Services.AddScoped<SampleDataSeeder>();
+            builder.Services.AddScoped<SampleDataService>();
             builder.Services.AddSingleton<ApplicationCommandService>();
             builder.Services.AddSingleton<BridgeMessageHandler>();
 

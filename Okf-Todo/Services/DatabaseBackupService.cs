@@ -25,6 +25,27 @@ public sealed class DatabaseBackupService(
             return new DatabaseBackupResult(true, null, null);
         }
 
+        return await CreateAtPathAsync(
+            selectedPath,
+            rememberDirectory: true,
+            cancellationToken);
+    }
+
+    public Task<DatabaseBackupResult> CreateSafetyBackupAsync(
+        string destinationPath,
+        CancellationToken cancellationToken)
+    {
+        return CreateAtPathAsync(
+            destinationPath,
+            rememberDirectory: false,
+            cancellationToken);
+    }
+
+    private async Task<DatabaseBackupResult> CreateAtPathAsync(
+        string selectedPath,
+        bool rememberDirectory,
+        CancellationToken cancellationToken)
+    {
         var destinationPath = Path.GetFullPath(selectedPath);
         var destinationDirectory = Path.GetDirectoryName(destinationPath)
             ?? throw new ValidationException("Backup destination is invalid.", "destinationPath");
@@ -60,15 +81,18 @@ public sealed class DatabaseBackupService(
             File.Move(temporaryPath, destinationPath, true);
             var fileSize = new FileInfo(destinationPath).Length;
 
-            try
+            if (rememberDirectory)
             {
-                await preferenceService.SaveBackupDirectoryAsync(destinationDirectory, cancellationToken);
-            }
-            catch (Exception exception)
-            {
-                logger.LogWarning(
-                    exception,
-                    "Database backup succeeded, but the backup directory preference could not be saved.");
+                try
+                {
+                    await preferenceService.SaveBackupDirectoryAsync(destinationDirectory, cancellationToken);
+                }
+                catch (Exception exception)
+                {
+                    logger.LogWarning(
+                        exception,
+                        "Database backup succeeded, but the backup directory preference could not be saved.");
+                }
             }
 
             logger.LogInformation(

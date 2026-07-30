@@ -209,6 +209,7 @@ Responsible nullable
 IsStarred
 StarredAt nullable
 DeletedAt nullable
+IsSampleData
 Deadline nullable
 CreatedAt
 UpdatedAt
@@ -231,9 +232,12 @@ Notes:
 - `Owner` and `Responsible` are optional free-text values with separate meanings.
 - `IsStarred` defaults to false. `StarredAt` is set when the star is added and cleared when it is removed.
 - `DeletedAt` implements reversible Trash. A non-null value excludes the task from every normal view and makes it read only until restored.
+- `IsSampleData` defaults to false and is set only by the built-in sample-data seeder. It is the authoritative ownership marker used by sample-data removal; the editable `sample-data` tag is not authoritative.
+- Removing sample data deletes only tasks where `IsSampleData = true`, together with their owned rows and relationships. Personal tasks remain even when they carry a `sample-data` tag.
 - Moving a task to Trash preserves lifecycle status, star state, and every task-owned row.
 - Permanent deletion is accepted only for a task already in Trash. Task-owned rows cascade; task relationships where the task is either source or target are removed explicitly.
 - Index `(DeletedAt, IsStarred)` for normal, Starred, and Trash filtering. Index `StarredAt` for focus ordering and diagnostics.
+- Index `IsSampleData` for database-status and selective sample-data cleanup.
 - `WaitingSince` is set only while the task has an active wait target.
 - The `TaskListId` foreign key uses restrictive/non-cascading delete behavior.
 - Index `TaskListId` supports concrete-list task views.

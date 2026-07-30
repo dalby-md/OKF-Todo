@@ -51,9 +51,45 @@ public sealed class SampleDataSeederTests
         Assert.Equal(12, await dbContext.TaskRelations.CountAsync());
         Assert.True(await dbContext.TaskTypes.AllAsync(type => type.Tasks.Count != 0));
         Assert.True(await dbContext.TaskTags.AnyAsync(tag => tag.Value == SampleDataSeeder.SampleTag));
+        Assert.Equal(50, await dbContext.TaskItems.CountAsync(task => task.IsSampleData));
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => seeder.SeedAsync());
         Assert.Equal(50, await dbContext.TaskItems.CountAsync());
+
+        var representativeSample = await dbContext.TaskItems.AsNoTracking().FirstAsync();
+        var personalTask = new TaskItem
+        {
+            TaskListId = representativeSample.TaskListId,
+            Title = "Personal task",
+            BodyFormatId = representativeSample.BodyFormatId,
+            TaskTypeId = representativeSample.TaskTypeId,
+            TaskStatusId = representativeSample.TaskStatusId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            IsSampleData = false
+        };
+        dbContext.TaskItems.Add(personalTask);
+        await dbContext.SaveChangesAsync();
+        var sampleTag = await dbContext.TaskTags.SingleAsync(
+            tag => tag.Value == SampleDataSeeder.SampleTag);
+        dbContext.Set<TaskTaskTag>().Add(new TaskTaskTag
+        {
+            TaskId = personalTask.Id,
+            TaskTagId = sampleTag.Id
+        });
+        await dbContext.SaveChangesAsync();
+
+        var sampleDataService = new SampleDataService(
+            dbContext,
+            seeder,
+            NullLogger<SampleDataService>.Instance);
+        var removal = await sampleDataService.RemoveAsync();
+
+        Assert.Equal(50, removal.RemovedTaskCount);
+        Assert.Equal(1, await dbContext.TaskItems.CountAsync());
+        Assert.Equal(
+            "Personal task",
+            await dbContext.TaskItems.Select(task => task.Title).SingleAsync());
     }
 
     private static Task<int> CountTasksWithStatusAsync(AppDbContext dbContext, string statusCode)

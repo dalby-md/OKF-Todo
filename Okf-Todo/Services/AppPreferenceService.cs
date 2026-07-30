@@ -13,6 +13,7 @@ public sealed class AppPreferenceService(
     private const string DefaultBodyFormatCode = "HTML";
     private const string DefaultMarkdownEditType = MarkdownEditTypes.Markdown;
     private const string DefaultLayoutMode = LayoutPreferenceModes.Auto;
+    private const string DefaultTaskFilterLayout = TaskFilterLayoutModes.Compact;
     private const string DefaultColorScheme = ColorSchemes.Light;
     private const bool DefaultShowSourceFields = false;
     private const bool DefaultShowOwner = false;
@@ -107,7 +108,8 @@ public sealed class AppPreferenceService(
             colorScheme,
             taskSortModes,
             taskSortDirections,
-            NormalizeTaskListScope(preferences.TaskListScope));
+            NormalizeTaskListScope(preferences.TaskListScope),
+            NormalizeOrDefaultTaskFilterLayout(preferences.TaskFilterLayout));
     }
 
     public async Task<LayoutPreferenceDto> SaveLayoutPreferenceAsync(
@@ -165,6 +167,9 @@ public sealed class AppPreferenceService(
         var taskListScope = request.TaskListScope is null
             ? NormalizeTaskListScope(preferences.TaskListScope)
             : NormalizeTaskListScope(request.TaskListScope);
+        var taskFilterLayout = request.TaskFilterLayout is null
+            ? NormalizeOrDefaultTaskFilterLayout(preferences.TaskFilterLayout)
+            : NormalizeTaskFilterLayout(request.TaskFilterLayout);
 
         preferences = preferences with
         {
@@ -181,15 +186,17 @@ public sealed class AppPreferenceService(
             ColorScheme = colorScheme,
             TaskSortModes = taskSortModes,
             TaskSortDirections = taskSortDirections,
-            TaskListScope = taskListScope
+            TaskListScope = taskListScope,
+            TaskFilterLayout = taskFilterLayout
         };
         await WritePreferencesAsync(preferences, cancellationToken);
 
         logger.LogInformation(
-            "Saved layout preference with task list width {TaskListWidth}, height {TaskListHeight}, mode {LayoutMode}, source fields {ShowSourceFields}, owner {ShowOwner}, responsible {ShowResponsible}, relationships {ShowRelationships}, completed editing {AllowEditingCompletedTasks}, cancelled editing {AllowEditingCancelledTasks}, task selection coach mark seen {TaskSelectionCoachmarkSeen}, color scheme {ColorScheme}, task sort modes {TaskSortModes}, task sort directions {TaskSortDirections}, and task list scope {TaskListScope}.",
+            "Saved layout preference with task list width {TaskListWidth}, height {TaskListHeight}, mode {LayoutMode}, task filter layout {TaskFilterLayout}, source fields {ShowSourceFields}, owner {ShowOwner}, responsible {ShowResponsible}, relationships {ShowRelationships}, completed editing {AllowEditingCompletedTasks}, cancelled editing {AllowEditingCancelledTasks}, task selection coach mark seen {TaskSelectionCoachmarkSeen}, color scheme {ColorScheme}, task sort modes {TaskSortModes}, task sort directions {TaskSortDirections}, and task list scope {TaskListScope}.",
             taskListWidth,
             taskListHeight,
             layoutMode,
+            taskFilterLayout,
             showSourceFields,
             showOwner,
             showResponsible,
@@ -216,7 +223,8 @@ public sealed class AppPreferenceService(
             colorScheme,
             taskSortModes,
             taskSortDirections,
-            taskListScope);
+            taskListScope,
+            taskFilterLayout);
     }
 
     public async Task<WindowPreferenceDto> GetWindowPreferenceAsync(CancellationToken cancellationToken)
@@ -469,7 +477,7 @@ public sealed class AppPreferenceService(
             null,
             DefaultWindowIsMaximized,
             DefaultColorScheme,
-            null);
+            TaskFilterLayout: DefaultTaskFilterLayout);
     }
 
     private static string? NormalizeTaskListScope(string? value)
@@ -499,6 +507,18 @@ public sealed class AppPreferenceService(
         catch (ValidationException)
         {
             return DefaultLayoutMode;
+        }
+    }
+
+    private static string NormalizeOrDefaultTaskFilterLayout(string? taskFilterLayout)
+    {
+        try
+        {
+            return NormalizeTaskFilterLayout(taskFilterLayout);
+        }
+        catch (ValidationException)
+        {
+            return DefaultTaskFilterLayout;
         }
     }
 
@@ -576,6 +596,21 @@ public sealed class AppPreferenceService(
         }
 
         throw new ValidationException("Layout mode is invalid.", "layoutMode");
+    }
+
+    private static string NormalizeTaskFilterLayout(string? taskFilterLayout)
+    {
+        var normalizedTaskFilterLayout = string.IsNullOrWhiteSpace(taskFilterLayout)
+            ? DefaultTaskFilterLayout
+            : taskFilterLayout.Trim().ToUpperInvariant();
+
+        if (normalizedTaskFilterLayout is TaskFilterLayoutModes.Compact
+            or TaskFilterLayoutModes.Expanded)
+        {
+            return normalizedTaskFilterLayout;
+        }
+
+        throw new ValidationException("Task filter layout is invalid.", "taskFilterLayout");
     }
 
     private IReadOnlyList<string> NormalizeOrDefaultTaskExportColumns(
@@ -849,6 +884,12 @@ public static class LayoutPreferenceModes
     public const string Stacked = "STACKED";
 }
 
+public static class TaskFilterLayoutModes
+{
+    public const string Compact = "COMPACT";
+    public const string Expanded = "EXPANDED";
+}
+
 public static class ColorSchemes
 {
     public const string Light = "LIGHT";
@@ -909,7 +950,8 @@ public sealed record LayoutPreferenceDto(
     string ColorScheme,
     IReadOnlyDictionary<string, string> TaskSortModes,
     IReadOnlyDictionary<string, string> TaskSortDirections,
-    string? TaskListScope);
+    string? TaskListScope,
+    string TaskFilterLayout);
 
 public sealed record LayoutPreferenceSaveRequest(
     double? TaskListWidth,
@@ -925,7 +967,8 @@ public sealed record LayoutPreferenceSaveRequest(
     string? ColorScheme = null,
     IReadOnlyDictionary<string, string>? TaskSortModes = null,
     IReadOnlyDictionary<string, string>? TaskSortDirections = null,
-    string? TaskListScope = null);
+    string? TaskListScope = null,
+    string? TaskFilterLayout = null);
 
 public sealed record WindowPreferenceDto(int? Left, int? Top, int? Width, int? Height, bool IsMaximized);
 
@@ -960,4 +1003,5 @@ internal sealed record StoredPreferences(
     IReadOnlyDictionary<string, string>? TaskSortDirections = null,
     bool? TaskSelectionCoachmarkSeen = null,
     string? TaskListScope = null,
-    IReadOnlyCollection<string>? TaskExportColumns = null);
+    IReadOnlyCollection<string>? TaskExportColumns = null,
+    string? TaskFilterLayout = null);

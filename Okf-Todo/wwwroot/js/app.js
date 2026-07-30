@@ -100,7 +100,7 @@
     appearance: 'Appearance',
     'task-details': 'Task details',
     'data-values': 'Data & values',
-    backup: 'Backup'
+    database: 'Database'
   }
   const supportedEditorImageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
   const maxEditorImageBytes = 5 * 1024 * 1024
@@ -115,6 +115,10 @@
     auto: 'AUTO',
     sideBySide: 'SIDE_BY_SIDE',
     stacked: 'STACKED'
+  }
+  const taskFilterLayoutCodes = {
+    compact: 'COMPACT',
+    expanded: 'EXPANDED'
   }
   const colorSchemeCodes = {
     light: 'LIGHT',
@@ -154,6 +158,7 @@
     taskListWidth: defaultTaskListWidth,
     taskListHeight: null,
     layoutMode: layoutModeCodes.auto,
+    taskFilterLayout: taskFilterLayoutCodes.compact,
     showSourceFields: false,
     showOwner: false,
     showResponsible: false,
@@ -185,6 +190,17 @@
   let dirtyTrackingSuppressions = 0
   let activeHelpTopic = 'using-okf-todo'
   let activePreferenceSection = 'appearance'
+  let databaseStatus = {
+    totalTaskCount: 0,
+    sampleTaskCount: 0,
+    trashTaskCount: 0,
+    attachmentCount: 0,
+    commentCount: 0,
+    checklistItemCount: 0,
+    relationshipCount: 0,
+    taskListCount: 0
+  }
+  let pendingDatabaseResetMode = null
   let taskTransitionReveal = null
   let taskTransitionRevealTimer = null
   let isTaskSelectionMode = false
@@ -228,6 +244,10 @@
   function sendBridgeMessage(type, payload) {
     const messageId = createMessageId()
     const timeoutMs = type === 'database.backup.create'
+      || type === 'database.restore.prepare'
+      || type === 'database.reset.prepare'
+      || type === 'database.sample.create'
+      || type === 'database.sample.remove'
       ? null
       : type === 'image.create' || type === 'image.get'
         ? imageBridgeTimeoutMs
@@ -1372,7 +1392,7 @@
                 <button class="preferences-nav-button is-active" type="button" data-preference-section="appearance" aria-current="page">Appearance</button>
                 <button class="preferences-nav-button" type="button" data-preference-section="task-details">Task details</button>
                 <button class="preferences-nav-button" type="button" data-preference-section="data-values">Data &amp; values</button>
-                <button class="preferences-nav-button" type="button" data-preference-section="backup">Backup</button>
+                <button class="preferences-nav-button" type="button" data-preference-section="database">Database</button>
               </nav>
 
               <div class="preferences-content" tabindex="0">
@@ -1429,6 +1449,21 @@
                       <option value="AUTO">Auto</option>
                       <option value="SIDE_BY_SIDE">Side by side</option>
                       <option value="STACKED">Stacked</option>
+                    </select>
+                  </div>
+
+                  <div class="preference-row">
+                    <div class="preference-row-copy">
+                      <strong>Task filter layout</strong>
+                      <span>Choose a compact Filters panel or keep every filter visible.</span>
+                    </div>
+                    <div class="preferences-segmented-control" data-preference-select="task-filter-layout" role="group" aria-label="Task filter layout">
+                      <button class="preference-choice" type="button" data-value="COMPACT" aria-pressed="false">Compact</button>
+                      <button class="preference-choice" type="button" data-value="EXPANDED" aria-pressed="false">Expanded</button>
+                    </div>
+                    <select id="task-filter-layout" class="sr-only preference-native-control" aria-hidden="true" tabindex="-1">
+                      <option value="COMPACT">Compact</option>
+                      <option value="EXPANDED">Expanded</option>
                     </select>
                   </div>
                 </section>
@@ -1501,9 +1536,14 @@
                   </button>
                 </section>
 
-                <section class="preferences-page preferences-backup-page" data-preference-panel="backup" aria-labelledby="preferences-backup-title" hidden>
-                  <h4 id="preferences-backup-title">Database backup</h4>
-                  <p class="preferences-page-intro">Create a portable copy of all OKF-Todo data and attachments.</p>
+                <section class="preferences-page preferences-database-page" data-preference-panel="database" aria-labelledby="preferences-database-title" hidden>
+                  <h4 id="preferences-database-title">Protect and manage your data</h4>
+                  <p class="preferences-page-intro">Back up, restore, or manage sample data stored in OKF-Todo.</p>
+
+                  <div class="preferences-subsection-heading database-subsection-heading">
+                    <h4>Backup and restore</h4>
+                    <p>A safety backup is created automatically before a restore is applied.</p>
+                  </div>
                   <button id="backup-database-button" class="preference-action-row" type="button">
                     <span class="preference-row-copy">
                       <strong>Create backup</strong>
@@ -1511,9 +1551,97 @@
                     </span>
                     <span class="preference-row-action">Back up</span>
                   </button>
+                  <button id="restore-database-button" class="preference-action-row" type="button">
+                    <span class="preference-row-copy">
+                      <strong>Restore from a file</strong>
+                      <span>Select a valid SQLite database. Its original filename does not matter and the selected file stays unchanged.</span>
+                    </span>
+                    <span class="preference-row-action">Restore</span>
+                  </button>
                   <p id="backup-database-status" class="settings-help preference-status" role="status" aria-live="polite"></p>
+
+                  <div class="preferences-subsection-heading database-subsection-heading">
+                    <h4>Sample data</h4>
+                    <p>Sample tasks are marked inside the database, so OKF-Todo can remove only those tasks later.</p>
+                  </div>
+                  <div id="database-sample-summary" class="database-summary" aria-live="polite"></div>
+                  <button id="add-sample-data-button" class="preference-action-row" type="button">
+                    <span class="preference-row-copy">
+                      <strong>Add sample data</strong>
+                      <span>Add 50 clearly marked tasks to explore. Remove them anytime; tasks you create yourself are left alone.</span>
+                    </span>
+                    <span class="preference-row-action">
+                      <span class="button-spinner" aria-hidden="true" hidden></span>
+                      <span class="sample-data-action-label">Add samples</span>
+                    </span>
+                  </button>
+                  <button id="remove-sample-data-button" class="preference-action-row" type="button" hidden>
+                    <span class="preference-row-copy">
+                      <strong>Remove sample data</strong>
+                      <span>Delete only the tasks that OKF-Todo marked as sample data, including their related content.</span>
+                    </span>
+                    <span class="preference-row-action">Remove samples</span>
+                  </button>
+                  <p id="sample-data-status" class="settings-help preference-status" role="status" aria-live="polite"></p>
+
+                  <div class="database-danger-zone">
+                    <div class="preferences-subsection-heading database-subsection-heading">
+                      <h4>Danger zone</h4>
+                      <p>Resetting permanently replaces the entire database. Every task, attachment, comment, list, preference, and history entry is removed.</p>
+                    </div>
+                    <div class="database-danger-actions">
+                      <button id="reset-empty-database-button" class="secondary-button danger-button" type="button">Reset to empty</button>
+                      <button id="reset-sample-database-button" class="secondary-button danger-button" type="button">Reset with sample data</button>
+                    </div>
+                    <p class="database-danger-note">This is not the way to remove sample tasks. Use <strong>Remove sample data</strong> above to preserve your own work.</p>
+                  </div>
                 </section>
               </div>
+            </div>
+          </section>
+        </div>
+
+        <div id="database-reset-overlay" class="modal-overlay" hidden>
+          <section class="settings-dialog database-reset-dialog" role="dialog" aria-modal="true" aria-labelledby="database-reset-title" aria-describedby="database-reset-warning">
+            <header class="settings-header">
+              <div>
+                <p class="eyebrow">Permanent database replacement</p>
+                <h2 id="database-reset-title">Reset the entire database?</h2>
+              </div>
+            </header>
+            <div class="database-reset-warning" id="database-reset-warning">
+              <strong>This cannot be undone from inside OKF-Todo.</strong>
+              <p id="database-reset-scope"></p>
+              <p>A dated safety backup will be created, but you should still make your own backup before continuing.</p>
+            </div>
+            <label class="settings-field" for="database-reset-confirmation">
+              <span>Type <strong>RESET DATABASE</strong> to confirm</span>
+              <input id="database-reset-confirmation" type="text" autocomplete="off" spellcheck="false">
+            </label>
+            <p id="database-reset-error" class="form-error" hidden></p>
+            <div class="modal-actions">
+              <button id="database-reset-cancel-button" class="secondary-button" type="button">Cancel</button>
+              <button id="database-reset-confirm-button" class="danger-confirm-button" type="button" disabled>Reset database</button>
+            </div>
+          </section>
+        </div>
+
+        <div id="database-restart-overlay" class="modal-overlay" hidden>
+          <section class="settings-dialog database-restart-dialog" role="dialog" aria-modal="true" aria-labelledby="database-restart-title">
+            <header class="settings-header">
+              <div>
+                <p class="eyebrow">Database ready</p>
+                <h2 id="database-restart-title">Restart OKF-Todo to finish</h2>
+              </div>
+            </header>
+            <p id="database-restart-message"></p>
+            <dl class="database-operation-details">
+              <div><dt>Managed database</dt><dd id="database-restart-target"></dd></div>
+              <div><dt>Safety backup</dt><dd id="database-restart-backup"></dd></div>
+            </dl>
+            <p class="database-restart-note">Close the app now. The prepared database will replace the current <strong>okf-todo.db</strong> safely at the next start.</p>
+            <div class="modal-actions">
+              <button id="database-close-application-button" type="button">Close OKF-Todo</button>
             </div>
           </section>
         </div>
@@ -2942,6 +3070,194 @@
     }
   }
 
+  function formatDatabaseCount(value, singular, plural) {
+    const count = Number(value) || 0
+    return `${count} ${count === 1 ? singular : (plural || `${singular}s`)}`
+  }
+
+  function renderDatabaseStatus() {
+    const totalTaskCount = Number(databaseStatus.totalTaskCount) || 0
+    const sampleTaskCount = Number(databaseStatus.sampleTaskCount) || 0
+    const personalTaskCount = Math.max(0, totalTaskCount - sampleTaskCount)
+    const summary = sampleTaskCount > 0
+      ? `${formatDatabaseCount(sampleTaskCount, 'sample task')} and ${formatDatabaseCount(personalTaskCount, 'personal task')}.`
+      : totalTaskCount === 0
+        ? 'Your database has no tasks. You can start clean or add sample data to explore.'
+        : `${formatDatabaseCount(totalTaskCount, 'task')}. No sample data is installed.`
+
+    $('#database-sample-summary').text(summary)
+    $('#add-sample-data-button').prop('hidden', totalTaskCount !== 0)
+    $('#remove-sample-data-button').prop('hidden', sampleTaskCount === 0)
+  }
+
+  async function loadDatabaseStatus() {
+    databaseStatus = await sendBridgeMessage('database.status.get', {})
+    renderDatabaseStatus()
+    return databaseStatus
+  }
+
+  function setSampleDataCreationBusy(isBusy) {
+    const $buttons = $('#add-sample-data-button, #first-run-sample-button')
+    $buttons
+      .prop('disabled', isBusy)
+      .attr('aria-busy', isBusy ? 'true' : null)
+    $buttons.find('.button-spinner').prop('hidden', !isBusy)
+    $('#add-sample-data-button .sample-data-action-label')
+      .text(isBusy ? 'Adding...' : 'Add samples')
+    $('#first-run-sample-button .sample-data-action-label')
+      .text(isBusy ? 'Adding sample data...' : 'Explore with sample data')
+  }
+
+  async function addSampleData() {
+    setSampleDataCreationBusy(true)
+    $('#sample-data-status').text('')
+
+    try {
+      await sendBridgeMessage('database.sample.create', {})
+      await loadDatabaseStatus()
+      await loadTaskLists()
+      lookups = await sendBridgeMessage('task.lookups.get', {})
+      renderLookups()
+      await loadTasks({ selectFirst: true })
+      $('#sample-data-status').text('Sample data added. Remove it anytime from Preferences → Database; your own tasks will be left alone.')
+      setStatus('Sample data added', 'saved')
+    } finally {
+      setSampleDataCreationBusy(false)
+    }
+  }
+
+  async function removeSampleData() {
+    const sampleTaskCount = Number(databaseStatus.sampleTaskCount) || 0
+    if (sampleTaskCount === 0) {
+      return
+    }
+
+    const confirmed = await showConfirmationDialog(
+      `Remove ${formatDatabaseCount(sampleTaskCount, 'sample task')}?`,
+      'This permanently deletes the marked sample tasks and their attachments, comments, checklists, relationships, and Timeline entries. Tasks you created yourself are not affected, even if you gave them a sample-data tag. Changes made directly to sample tasks will be lost.',
+      'Remove sample data')
+    if (!confirmed) {
+      return
+    }
+
+    const $button = $('#remove-sample-data-button')
+    const $action = $button.find('.preference-row-action')
+    $button.prop('disabled', true)
+    $action.text('Removing...')
+    $('#sample-data-status').text('')
+
+    try {
+      const result = await sendBridgeMessage('database.sample.remove', {})
+      currentTask = null
+      await loadDatabaseStatus()
+      await loadTaskLists()
+      lookups = await sendBridgeMessage('task.lookups.get', {})
+      renderLookups()
+      await loadTasks({ selectFirst: true })
+      $('#sample-data-status').text(`${formatDatabaseCount(result.removedTaskCount, 'sample task')} removed. Your personal tasks were preserved.`)
+      setStatus('Sample data removed', 'saved')
+    } finally {
+      $button.prop('disabled', false)
+      $action.text('Remove samples')
+    }
+  }
+
+  function showDatabaseRestart(result, operationLabel) {
+    const sourceName = result.sourceFileName ? ` from ${result.sourceFileName}` : ''
+    $('#database-restart-message').text(`${operationLabel}${sourceName} is prepared. The selected source file was not changed.`)
+    $('#database-restart-target').text(result.targetPath || 'okf-todo.db')
+    $('#database-restart-backup').text(result.safetyBackupPath || 'A dated safety backup')
+    $('#settings-overlay').prop('hidden', true)
+    $('#database-restart-overlay').prop('hidden', false)
+    $('#database-close-application-button').trigger('focus')
+  }
+
+  async function restoreDatabase() {
+    const $button = $('#restore-database-button')
+    const $action = $button.find('.preference-row-action')
+    $button.prop('disabled', true)
+    $action.text('Checking...')
+    $('#backup-database-status').text('')
+
+    try {
+      const result = await sendBridgeMessage('database.restore.prepare', {})
+      if (result.cancelled) {
+        $('#backup-database-status').text('Restore cancelled. No files were changed.')
+        return
+      }
+
+      showDatabaseRestart(result, 'The restored database')
+    } catch (error) {
+      $('#backup-database-status').text(getErrorMessage(error, 'Could not prepare database restore'))
+      throw error
+    } finally {
+      $button.prop('disabled', false)
+      $action.text('Restore')
+    }
+  }
+
+  function openDatabaseResetDialog(mode) {
+    pendingDatabaseResetMode = mode
+    const modeLabel = mode === 'SAMPLE'
+      ? 'The replacement database will contain the standard sample tasks.'
+      : 'The replacement database will be empty and ready for your first task.'
+    const scope = [
+      formatDatabaseCount(databaseStatus.totalTaskCount, 'task'),
+      formatDatabaseCount(databaseStatus.attachmentCount, 'attachment'),
+      formatDatabaseCount(databaseStatus.commentCount, 'comment'),
+      formatDatabaseCount(databaseStatus.checklistItemCount, 'checklist item'),
+      formatDatabaseCount(databaseStatus.relationshipCount, 'relationship')
+    ].join(', ')
+
+    $('#database-reset-scope').text(`You are about to remove ${scope}. ${modeLabel}`)
+    $('#database-reset-confirmation').val('')
+    $('#database-reset-error').prop('hidden', true).text('')
+    $('#database-reset-confirm-button').prop('disabled', true)
+    $('#database-reset-overlay').prop('hidden', false)
+    $('#database-reset-confirmation').trigger('focus')
+  }
+
+  function closeDatabaseResetDialog() {
+    pendingDatabaseResetMode = null
+    $('#database-reset-overlay').prop('hidden', true)
+    $('#database-reset-confirmation').val('')
+  }
+
+  function isDatabaseResetConfirmationValid(value) {
+    return String(value || '').trim().toUpperCase() === 'RESET DATABASE'
+  }
+
+  async function confirmDatabaseReset() {
+    const confirmation = $('#database-reset-confirmation').val()
+    if (!isDatabaseResetConfirmationValid(confirmation) || !pendingDatabaseResetMode) {
+      return
+    }
+
+    const mode = pendingDatabaseResetMode
+    const $button = $('#database-reset-confirm-button')
+    $button.prop('disabled', true).text('Preparing reset...')
+    $('#database-reset-cancel-button').prop('disabled', true)
+    $('#database-reset-error').prop('hidden', true).text('')
+
+    try {
+      const result = await sendBridgeMessage('database.reset.prepare', {
+        mode,
+        confirmation
+      })
+      closeDatabaseResetDialog()
+      showDatabaseRestart(result, mode === 'SAMPLE' ? 'The sample database' : 'The empty database')
+    } catch (error) {
+      $('#database-reset-error')
+        .text(getErrorMessage(error, 'Could not prepare database reset'))
+        .prop('hidden', false)
+      throw error
+    } finally {
+      $button.text('Reset database')
+      $('#database-reset-cancel-button').prop('disabled', false)
+      $('#database-reset-confirmation').trigger('input')
+    }
+  }
+
   function renderTagSettingsCount() {
     $('#tag-settings-count').text(tagSettings ? tagSettings.length : '')
   }
@@ -3638,6 +3954,12 @@
       : colorSchemeCodes.light
   }
 
+  function normalizeTaskFilterLayout(taskFilterLayout) {
+    return String(taskFilterLayout || '').trim().toUpperCase() === taskFilterLayoutCodes.expanded
+      ? taskFilterLayoutCodes.expanded
+      : taskFilterLayoutCodes.compact
+  }
+
   function applyColorScheme(colorScheme) {
     const normalizedColorScheme = normalizeColorScheme(colorScheme)
     const isDark = normalizedColorScheme === colorSchemeCodes.dark
@@ -3675,6 +3997,7 @@
       taskListWidth: layoutPreference.taskListWidth,
       taskListHeight: layoutPreference.taskListHeight,
       layoutMode: layoutPreference.layoutMode,
+      taskFilterLayout: layoutPreference.taskFilterLayout,
       showSourceFields: layoutPreference.showSourceFields,
       showOwner: layoutPreference.showOwner,
       showResponsible: layoutPreference.showResponsible,
@@ -3707,6 +4030,7 @@
     layoutPreference.taskListWidth = preference.taskListWidth || defaultTaskListWidth
     layoutPreference.taskListHeight = preference.taskListHeight || Math.round(window.innerHeight * 0.34)
     layoutPreference.layoutMode = normalizeLayoutMode(preference.layoutMode)
+    layoutPreference.taskFilterLayout = normalizeTaskFilterLayout(preference.taskFilterLayout)
     layoutPreference.showSourceFields = preference.showSourceFields === true
     layoutPreference.showOwner = preference.showOwner === true
     layoutPreference.showResponsible = preference.showResponsible === true
@@ -3721,6 +4045,7 @@
     taskSortDirections = normalizeTaskSortDirections(preference.taskSortDirections, preference.taskSortModes)
     layoutPreference.taskSortDirections = taskSortDirections
     applyColorScheme(preference.colorScheme)
+    applyTaskFilterLayout()
     applyStoredLayoutSplit(false)
     syncTaskSortControl()
     if (tasks.length > 0) {
@@ -3798,6 +4123,35 @@
     syncPreferenceControls()
   }
 
+  function isCompactTaskFilterLayout() {
+    return layoutPreference.taskFilterLayout === taskFilterLayoutCodes.compact
+  }
+
+  function applyTaskFilterLayout() {
+    layoutPreference.taskFilterLayout = normalizeTaskFilterLayout(layoutPreference.taskFilterLayout)
+    const isExpanded = layoutPreference.taskFilterLayout === taskFilterLayoutCodes.expanded
+    const $popover = $('#task-filter-popover')
+    const $filterMenu = $('.task-filter-menu')
+    const $tagFilter = $('#task-tag-filter')
+
+    if ($tagFilter.hasClass('select2-hidden-accessible')) {
+      $tagFilter.select2('close')
+    }
+
+    $('html').toggleClass('task-filter-layout-expanded', isExpanded)
+    $('#task-filter-layout').val(layoutPreference.taskFilterLayout)
+    $('#task-filter-button').attr('aria-expanded', 'false')
+
+    if ($popover.length && $filterMenu.length) {
+      $popover
+        .appendTo($filterMenu)
+        .prop('hidden', !isExpanded)
+        .removeAttr('style')
+    }
+
+    syncPreferenceControls()
+  }
+
   function applyTaskSectionVisibility() {
     const showOwnershipFields = layoutPreference.showOwner || layoutPreference.showResponsible
     $('.source-grid').prop('hidden', !layoutPreference.showSourceFields)
@@ -3853,6 +4207,16 @@
           ? 'Display preference saved'
           : 'Editing preference saved'
         setStatus(statusMessage, 'saved')
+      }
+    })
+  }
+
+  function switchTaskFilterLayout() {
+    layoutPreference.taskFilterLayout = normalizeTaskFilterLayout($('#task-filter-layout').val())
+    applyTaskFilterLayout()
+    saveLayoutPreference().then(function (wasSaved) {
+      if (wasSaved) {
+        setStatus('Task filter layout saved', 'saved')
       }
     })
   }
@@ -3969,6 +4333,15 @@
     const $popover = $('#task-filter-popover')
     const $button = $('#task-filter-button')
 
+    if (!isCompactTaskFilterLayout()) {
+      $popover
+        .appendTo($('.task-filter-menu'))
+        .prop('hidden', false)
+        .removeAttr('style')
+      $button.attr('aria-expanded', 'false')
+      return
+    }
+
     if (isOpen && !$popover.parent().is('body')) {
       $popover.appendTo(document.body)
     }
@@ -3997,7 +4370,7 @@
     const popover = document.querySelector('#task-filter-popover')
     const button = document.querySelector('#task-filter-button')
     const sidebar = document.querySelector('.task-sidebar')
-    if (!popover || !button || !sidebar || popover.hidden) {
+    if (!isCompactTaskFilterLayout() || !popover || !button || !sidebar || popover.hidden) {
       return
     }
 
@@ -4343,6 +4716,29 @@
     }
 
     if (visibleTasks.length === 0) {
+      const isFirstRunEmptyState = !hasFilters
+        && currentView === 'active'
+        && (Number(databaseStatus.totalTaskCount) || 0) === 0
+      if (isFirstRunEmptyState) {
+        $('#task-list').html(`
+          <div class="empty-list first-run-empty-state">
+            <span class="first-run-kicker">Start your way</span>
+            <strong>No tasks yet</strong>
+            <span>Create your first task, or explore OKF-Todo with 50 clearly marked sample tasks.</span>
+            <div class="first-run-actions">
+              <button id="first-run-new-task-button" type="button">Create first task</button>
+              <button id="first-run-sample-button" class="secondary-button" type="button">
+                <span class="button-spinner" aria-hidden="true" hidden></span>
+                <span class="sample-data-action-label">Explore with sample data</span>
+              </button>
+            </div>
+            <small>Sample data is easy to remove anytime from Preferences → Database. Tasks you create yourself are left alone.</small>
+          </div>
+        `)
+        syncTaskSelectionUi()
+        return
+      }
+
       const title = hasFilters ? 'No matching tasks' : `No ${viewLabels[currentView].toLowerCase()} tasks`
       const detail = hasFilters ? 'Adjust the search or filters' : 'Create a task or switch view'
 
@@ -5778,6 +6174,9 @@
       view: currentView,
       taskListId: getEffectiveTaskListId()
     })
+    if (currentView === 'active' && tasks.length === 0) {
+      await loadDatabaseStatus()
+    }
     renderTaskList()
 
     if (keepSelection && currentTask && currentTask.id) {
@@ -6089,6 +6488,7 @@
     syncPreferenceChoiceGroup('editor-mode')
     syncPreferenceChoiceGroup('color-scheme')
     syncPreferenceChoiceGroup('layout-mode')
+    syncPreferenceChoiceGroup('task-filter-layout')
   }
 
   function setActivePreferenceSection(section) {
@@ -6806,7 +7206,8 @@
     })
     $('#task-filter-clear').on('click', clearTaskFilters)
     $(document).on('click', function (event) {
-      if (!$(event.target).closest('.task-filter-menu, #task-filter-popover').length) {
+      if (isCompactTaskFilterLayout()
+          && !$(event.target).closest('.task-filter-menu, #task-filter-popover').length) {
         setTaskFilterPopoverOpen(false, false)
       }
       if (!$(event.target).closest('#task-action-menu, .task-row-more, #task-detail-context-menu-button').length) {
@@ -6817,7 +7218,9 @@
       }
     })
     $(document).on('keydown', function (event) {
-      if (event.key === 'Escape' && !$('#task-filter-popover').prop('hidden')) {
+      if (isCompactTaskFilterLayout()
+          && event.key === 'Escape'
+          && !$('#task-filter-popover').prop('hidden')) {
         event.preventDefault()
         setTaskFilterPopoverOpen(false, false)
         $('#task-filter-button').trigger('focus')
@@ -6964,12 +7367,64 @@
     })
     $('#editor-height-resizer').on('keydown', resizeEditorFromKeyboard)
     $('#layout-mode').on('change', switchLayoutMode)
+    $('#task-filter-layout').on('change', switchTaskFilterLayout)
     $('#color-scheme').on('change', switchColorScheme)
     $('#show-source-fields, #show-owner, #show-responsible, #show-relationships, #allow-editing-completed-tasks, #allow-editing-cancelled-tasks')
       .on('change', saveTaskDetailPreference)
     $('#backup-database-button').on('click', function () {
       backupDatabase().catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not back up database'), 'error')
+      })
+    })
+    $('#restore-database-button').on('click', function () {
+      restoreDatabase().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not restore database'), 'error')
+      })
+    })
+    $('#add-sample-data-button').on('click', function () {
+      addSampleData().catch(function (error) {
+        $('#sample-data-status').text(getErrorMessage(error, 'Could not add sample data'))
+        setStatus(getErrorMessage(error, 'Could not add sample data'), 'error')
+      })
+    })
+    $('#remove-sample-data-button').on('click', function () {
+      removeSampleData().catch(function (error) {
+        $('#sample-data-status').text(getErrorMessage(error, 'Could not remove sample data'))
+        setStatus(getErrorMessage(error, 'Could not remove sample data'), 'error')
+      })
+    })
+    $('#reset-empty-database-button').on('click', function () {
+      openDatabaseResetDialog('EMPTY')
+    })
+    $('#reset-sample-database-button').on('click', function () {
+      openDatabaseResetDialog('SAMPLE')
+    })
+    $('#database-reset-cancel-button').on('click', closeDatabaseResetDialog)
+    $('#database-reset-confirmation').on('input', function () {
+      $('#database-reset-confirm-button').prop(
+        'disabled',
+        !isDatabaseResetConfirmationValid($(this).val()))
+    })
+    $('#database-reset-confirm-button').on('click', function () {
+      confirmDatabaseReset().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not reset database'), 'error')
+      })
+    })
+    $('#database-close-application-button').on('click', function () {
+      $(this).prop('disabled', true).text('Closing...')
+      sendBridgeMessage('application.close', {}).catch(function (error) {
+        $('#database-close-application-button').prop('disabled', false).text('Close OKF-Todo')
+        setStatus(getErrorMessage(error, 'Could not close OKF-Todo'), 'error')
+      })
+    })
+    $('#task-list').on('click', '#first-run-new-task-button', function () {
+      openNewTaskDialog().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not prepare a task list'), 'error')
+      })
+    })
+    $('#task-list').on('click', '#first-run-sample-button', function () {
+      addSampleData().catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not add sample data'), 'error')
       })
     })
     $('#save-button').on('click', function () {
@@ -7024,6 +7479,7 @@
       lookups = await sendBridgeMessage('task.lookups.get', {})
       renderLookups()
       await loadEditorPreference()
+      await loadDatabaseStatus()
       await loadTasks({ selectFirst: true })
       scheduleEditorPreload()
     } catch (error) {

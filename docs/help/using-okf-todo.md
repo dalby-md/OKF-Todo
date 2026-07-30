@@ -122,14 +122,18 @@ Press **Ctrl+K** to move directly to task search.
 
 ### Filter
 
-Select **Filters** beside search to open the compact filter panel:
+The default **Compact** layout places these controls in **Filters** beside search:
 
 - **Tags** selects one or more existing tags.
 - **Type** selects one task type.
 - **Status** selects one lifecycle status, such as Active, Completed, or Cancelled.
 - **Priority** selects one priority.
 
-The number on **Filters** shows how many tag, type, status, and priority filters are selected. When several tags are selected, a task matches if it has any selected tag. Active filters appear as removable chips below the compact search row; that row stays hidden when no filters are selected. Select **Clear** to remove the current search and filter criteria.
+Select **Filters** to open the panel. Its number shows how many tag, type, status, and priority filters are selected.
+
+To keep all four controls visible, open **Setup → Appearance → Task filter layout** and select **Expanded**. Expanded uses the same filter values and behavior, arranged inline below search. Switching layouts does not clear the current filters.
+
+When several tags are selected, a task matches if it has any selected tag. Active filters appear as removable chips below the search and filter controls; that row stays hidden when no filters are selected. Select **Clear** to remove the current search and filter criteria.
 
 The task count beside the view name always shows the number of results after the current search and filters.
 
@@ -139,7 +143,7 @@ Filters affect only the current on-screen result. They do not change or delete t
 
 ### Sort
 
-Use the compact **Sort** control beside **Filters** to choose the field. Select its direction button to switch between ascending and descending order. Each view remembers its own sort field and direction; hover the control or use assistive technology to read the selected order's explanation.
+Use **Sort** to choose the field. Select its direction button to switch between ascending and descending order. Each view remembers its own sort field and direction; hover the control or use assistive technology to read the selected order's explanation.
 
 **Smart priority** is the default triage order:
 
@@ -254,7 +258,7 @@ If the open task has unsaved changes, OKF-Todo asks you to save them as part of 
 
 The table includes only the columns you selected. It does not include the task body, attachment contents, comments, relationships, or Timeline.
 
-Treat the Markdown file as a readable snapshot for communication and analysis. It is not a backup and cannot restore your tasks. Use **Setup → Backup** when you need a complete portable copy of the database.
+Treat the Markdown file as a readable snapshot for communication and analysis. It is not a backup and cannot restore your tasks. Use **Setup → Database** when you need a complete portable copy of the database.
 
 ## Complete, cancel, reopen, and delete safely
 
@@ -291,18 +295,24 @@ Open **Setup** to adjust OKF-Todo:
 | Page | What you can change |
 | --- | --- |
 | **General** | Default HTML or Markdown editor mode. |
-| **Appearance** | Light or dark color scheme and Auto, Side by side, or Stacked task layout. |
+| **Appearance** | Light or dark color scheme; Auto, Side by side, or Stacked task layout; and Compact or Expanded task filter layout. |
 | **Task details** | Visibility of source, owner, responsible, and relationship sections; editability of completed and cancelled tasks. |
 | **Data & values** | Task types, priorities, statuses, and tag administration. |
-| **Backup** | Create a validated portable copy of the database. |
+| **Database** | Back up or restore the database, add or remove sample data, or deliberately reset all data. |
 
 Preference changes apply immediately and persist between application restarts.
 
 The **Auto** layout adapts to the available window size. Use **Side by side** when you want the task queue and details visible together on a large screen. Use **Stacked** when you prefer the queue above the selected task.
 
-## Back up your work
+Use the **Compact** task filter layout when you want more room for the task list. Use **Expanded** when you want Tags, Type, Status, and Priority to remain visible without opening **Filters**.
 
-Open **Setup → Backup** and select **Create backup**. Choose a destination in the Windows save dialog.
+## Manage the database
+
+Open **Setup → Database** to protect or replace the local database and to manage sample data.
+
+### Back up your work
+
+Select **Create backup**, then choose a destination in the Windows save dialog.
 
 The backup contains the complete SQLite database, including:
 
@@ -315,11 +325,46 @@ The backup contains the complete SQLite database, including:
 - comments; and
 - automatic history.
 
-The application validates the backup before replacing the selected destination. It remembers the directory from the last successful backup.
-
-Application preferences are stored separately and are not part of the database backup. To restore in this version, close OKF-Todo and replace the active database with the backup copy.
+The application validates the backup before replacing the selected destination. It remembers the directory from the last successful backup. Database-backed preferences are included.
 
 Create a backup before large reorganizations, bulk automation, or direct database work.
+
+### Restore from a database file
+
+Select **Restore from a file** and choose a valid OKF-Todo SQLite database. The selected file can have any name. OKF-Todo:
+
+- leaves your selected file unchanged;
+- validates and updates a private staged copy;
+- creates a dated safety backup of the current database; and
+- installs the staged copy as the standard managed `okf-todo.db` when the application next starts.
+
+When preparation succeeds, OKF-Todo shows the managed database and safety-backup paths and asks you to close the application. Start it again to use the restored database. If validation fails or you cancel the file dialog, the active database is not replaced.
+
+### Start with or remove sample data
+
+When the database has no tasks, the Active task list offers **Create first task** and **Explore with sample data**. Sample data adds 50 clearly marked tasks that demonstrate lists, priorities, waiting work, checklists, attachments, relationships, comments, completed work, and cancelled work.
+
+While the sample tasks are being created, the selected action is disabled and shows a spinner with **Adding sample data...** until the task list is ready.
+
+Sample data is easy to remove:
+
+1. Open **Setup → Database**.
+2. Select **Remove sample data**.
+3. Review the confirmation and select **Remove sample data** again.
+
+OKF-Todo removes only tasks that it marked internally as sample data, together with their related attachments, comments, checklists, relationships, and Timeline entries. Tasks you create yourself are preserved, even if you manually give one the `sample-data` tag. Changes made directly to a sample task are removed with that task.
+
+Sample data can be added only when the database has no tasks. If you want examples in a database that already contains work, create a backup first and use a separate database rather than resetting your current work.
+
+### Reset the entire database
+
+The **Danger zone** contains **Reset to empty** and **Reset with sample data**.
+
+> **Warning:** Reset replaces the complete database. Every task, list, attachment, embedded image, comment, checklist item, relationship, tag, lookup value, Timeline entry, Trash item, and database-backed preference is removed. This is not the normal way to remove sample tasks.
+
+Use **Remove sample data** when you only want to remove the examples and preserve your own work.
+
+A full reset displays the current data counts, requires you to type `RESET DATABASE` (uppercase or lowercase is accepted), and creates a dated safety backup before it prepares the replacement database. You must close and start OKF-Todo again to finish. Do not continue unless you intend to replace all current data.
 
 ## Solve common problems
 

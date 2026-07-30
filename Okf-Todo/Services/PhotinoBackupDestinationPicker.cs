@@ -21,9 +21,17 @@ public interface ITaskMarkdownExportDestinationPicker
         CancellationToken cancellationToken);
 }
 
+public interface IDatabaseRestoreSourcePicker
+{
+    Task<string?> PickAsync(
+        string? initialDirectory,
+        CancellationToken cancellationToken);
+}
+
 public sealed class PhotinoFileSavePicker :
     IBackupDestinationPicker,
-    ITaskMarkdownExportDestinationPicker
+    ITaskMarkdownExportDestinationPicker,
+    IDatabaseRestoreSourcePicker
 {
     private PhotinoWindow? window;
 
@@ -60,6 +68,35 @@ public sealed class PhotinoFileSavePicker :
             extensions: ["md"],
             defaultExtension: "md",
             cancellationToken);
+    }
+
+    async Task<string?> IDatabaseRestoreSourcePicker.PickAsync(
+        string? initialDirectory,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var activeWindow = window
+            ?? throw new InvalidOperationException("The native file dialog is not ready.");
+        var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        var defaultDirectory = !string.IsNullOrWhiteSpace(initialDirectory)
+            && Directory.Exists(initialDirectory)
+                ? initialDirectory
+                : documentsPath;
+        var selectedPath = OperatingSystem.IsWindows()
+            ? await ShowWindowsOpenFileAsync(
+                activeWindow.WindowHandle,
+                "Restore OKF-Todo database",
+                defaultDirectory)
+            : (await activeWindow.ShowOpenFileAsync(
+                "Restore OKF-Todo database",
+                defaultDirectory,
+                false,
+                [("SQLite database", ["db"])]))
+                .FirstOrDefault();
+
+        cancellationToken.ThrowIfCancellationRequested();
+        return string.IsNullOrWhiteSpace(selectedPath) ? null : selectedPath;
     }
 
     private async Task<string?> PickAsync(
@@ -122,6 +159,34 @@ public sealed class PhotinoFileSavePicker :
                     filterLabel,
                     extensions,
                     defaultExtension));
+            }
+            catch (Exception exception)
+            {
+                completion.SetException(exception);
+            }
+        });
+
+        dialogThread.SetApartmentState(ApartmentState.STA);
+        dialogThread.Start();
+        return completion.Task;
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static Task<string?> ShowWindowsOpenFileAsync(
+        IntPtr ownerHandle,
+        string title,
+        string initialDirectory)
+    {
+        var completion = new TaskCompletionSource<string?>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var dialogThread = new Thread(() =>
+        {
+            try
+            {
+                completion.SetResult(ShowWindowsOpenFile(
+                    ownerHandle,
+                    title,
+                    initialDirectory));
             }
             catch (Exception exception)
             {
@@ -198,11 +263,66 @@ public sealed class PhotinoFileSavePicker :
         }
     }
 
+    [SupportedOSPlatform("windows")]
+    private static string? ShowWindowsOpenFile(
+        IntPtr ownerHandle,
+        string title,
+        string initialDirectory)
+    {
+        const int fileBufferCharacters = 32768;
+        var fileBuffer = Marshal.AllocHGlobal(fileBufferCharacters * sizeof(char));
+        var filterBuffer = Marshal.StringToHGlobalUni(
+            "SQLite database (*.db)\0*.db\0All files (*.*)\0*.*\0\0");
+
+        try
+        {
+            Marshal.WriteInt16(fileBuffer, 0);
+            var dialog = new OpenFileName
+            {
+                StructSize = Marshal.SizeOf<OpenFileName>(),
+                OwnerHandle = ownerHandle,
+                Filter = filterBuffer,
+                FilterIndex = 1,
+                File = fileBuffer,
+                MaxFile = fileBufferCharacters,
+                InitialDirectory = initialDirectory,
+                Title = title,
+                Flags = OpenFileNameFlags.FileMustExist
+                    | OpenFileNameFlags.PathMustExist
+                    | OpenFileNameFlags.NoChangeDirectory
+                    | OpenFileNameFlags.Explorer
+                    | OpenFileNameFlags.EnableSizing,
+                DefaultExtension = "db"
+            };
+
+            if (GetOpenFileName(ref dialog))
+            {
+                return Marshal.PtrToStringUni(fileBuffer);
+            }
+
+            var error = CommDlgExtendedError();
+            if (error == 0)
+            {
+                return null;
+            }
+
+            throw new Win32Exception(
+                unchecked((int)error),
+                $"The native open-file dialog failed with error 0x{error:X}.");
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(filterBuffer);
+            Marshal.FreeHGlobal(fileBuffer);
+        }
+    }
+
     [Flags]
     private enum OpenFileNameFlags : uint
     {
         OverwritePrompt = 0x00000002,
         NoChangeDirectory = 0x00000008,
+        FileMustExist = 0x00001000,
         PathMustExist = 0x00000800,
         Explorer = 0x00080000,
         EnableSizing = 0x00800000
@@ -239,6 +359,10 @@ public sealed class PhotinoFileSavePicker :
     [DllImport("comdlg32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetSaveFileName([In, Out] ref OpenFileName dialog);
+
+    [DllImport("comdlg32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetOpenFileName([In, Out] ref OpenFileName dialog);
 
     [DllImport("comdlg32.dll")]
     private static extern uint CommDlgExtendedError();

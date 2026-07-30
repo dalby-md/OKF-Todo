@@ -430,13 +430,33 @@ A soft size limit should be considered, for example 25–50 MB per attachment.
 
 The initial UI supports adding, downloading, and removing attachments. Attachments are limited to 25 MB and appear above the task timeline.
 
-## Database backup
+## Database management
 
-User preferences provide a database backup command. The user selects the destination with the native save-file dialog. Backup uses SQLite's online backup API, validates the generated database, and replaces the selected destination only after validation succeeds.
+User preferences provide a **Database** page for backup, restore, sample data, and an explicitly separated danger zone.
 
-After a successful backup, the selected directory is remembered and used as the starting directory for the next backup. Cancelling or failing a backup does not change this preference.
+Backup uses the native save-file dialog and SQLite's online backup API. The generated database is validated before it replaces the selected destination. The directory from the last successful backup is remembered; cancelling or failing does not change that preference.
 
-The backup contains the complete SQLite database, including tasks, body images, attachments, lookups, tags, relationships, comments, checklists, and history. Application preferences stored outside SQLite are not included. Restore is manual in the first version: close the application and replace the active database with a backup copy.
+Restore uses the native open-file dialog. A selected SQLite database may have any filename: OKF-Todo validates and migrates a private staged copy, leaves the selected source unchanged, creates a dated safety backup, and installs the staged copy as the managed `okf-todo.db` on the next application start. The UI requires the application to close after preparation so later edits cannot be lost.
+
+The Database danger zone can replace the complete database with either a fresh empty database or a fresh database containing sample data. It must:
+
+- state that every task, list, attachment, comment, checklist, relationship, preference, and history entry will be removed;
+- explain that **Remove sample data** is the safe action when the user only wants to remove samples;
+- require the typed confirmation `RESET DATABASE`, matched case-insensitively after trimming;
+- create a dated safety backup before replacement; and
+- finish through the same restart boundary as restore.
+
+The backup contains the complete SQLite database, including tasks, body images, attachments, lookups, tags, relationships, comments, checklists, history, and database-backed preferences.
+
+## First-run and sample data
+
+When the database contains no tasks, the Active task list offers two equal, non-blocking choices: create the first task or add the standard 50-task sample set. The sample option must emphasize that it is easy to remove later from **Preferences → Database** and that tasks created by the user are preserved.
+
+While sample tasks are being generated, both sample-data entry points are disabled and show a spinner plus an explicit adding label until the refreshed task list is ready.
+
+Each generated sample task is labelled internally with `TaskItem.IsSampleData = true`. This database marker is authoritative; the visible `sample-data` tag remains ordinary editable tag text. **Remove sample data** deletes only internally marked sample tasks and their owned content and relationships. A personal task is never removed merely because it has a `sample-data` tag.
+
+Sample data can be added through the UI only when the database has no tasks. A downloadable or URL-restored sample database is not used: the built-in seeder keeps sample generation aligned with the current migration and application version.
 
 ## Tags
 
@@ -539,7 +559,7 @@ Add a settings/admin area for editable lookup values:
 - Statuses
 - Priorities
 
-The Preferences dialog uses isolated pages for General, Appearance, Task details, Data & values, and Backup. Selecting a navigation item shows only that page's settings. Preference changes apply immediately. Appearance contains the color scheme and task layout controls. Task details contains visibility controls for optional task-detail fields and sections plus independent editability switches for completed and cancelled tasks. Data & values contains lookup and tag management; database backup is available only on the dedicated Backup page.
+The Preferences dialog uses isolated pages for General, Appearance, Task details, Data & values, and Backup. Selecting a navigation item shows only that page's settings. Preference changes apply immediately. Appearance contains the color scheme, task layout, and task filter layout controls. The task filter layout defaults to Compact and can switch between the anchored Filters panel and an Expanded presentation that keeps tags, type, status, and priority visible inline. Task details contains visibility controls for optional task-detail fields and sections plus independent editability switches for completed and cancelled tasks. Data & values contains lookup and tag management; database backup is available only on the dedicated Backup page.
 
 Task sources, relationship types, body formats, and log types are system-managed in the first version and are not editable in the preferences UI.
 

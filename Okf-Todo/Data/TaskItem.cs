@@ -60,6 +60,8 @@ public sealed class TaskItem
 
     public DateTime? DeletedAt { get; set; }
 
+    public bool IsSampleData { get; set; }
+
     public List<TaskWaitingFor> WaitingTargets { get; set; } = [];
 
     public List<TaskComment> Comments { get; set; } = [];

@@ -45,6 +45,8 @@ APPLICATION_SEMANTICS = {
         "Missing list assignment resolves in this order: explicit list, contextual task list, the list named `Default list`, first manually ordered list, then creation of `Default list` when no lists exist.",
         "`Owner` is optional free text identifying the person or team accountable for the task.",
         "`Responsible` is optional free text identifying the person currently expected to perform or coordinate the work.",
+        "`IsSampleData` is an internal ownership marker set by the built-in sample-data seeder; it is authoritative for selective sample removal, while the editable `sample-data` tag is not.",
+        "Removing sample data deletes only tasks where `IsSampleData = 1`, their owned rows, and relationships involving those tasks; personal tasks remain.",
         "The overview text search includes both values even when their independently controlled task-detail fields are hidden.",
     ],
 }
@@ -248,7 +250,9 @@ Lifecycle transitions and append-oriented history behavior are service-level rul
 """)
     write(root / "references" / "schema-lifecycle.md", frontmatter("Database Schema Lifecycle", "Database Schema Lifecycle", reference_entries[2][2], "Okf-Todo/Program.cs", args.timestamp) + """# Database Schema Lifecycle
 
-The application calls EF Core `Database.Migrate()` at startup before seeding or normal data access. EF Core creates a missing database and applies every migration not recorded in `__EFMigrationsHistory`.
+At startup, the application first applies any validated restore or reset operation prepared during the previous session. It then calls EF Core `Database.Migrate()` before seeding or normal data access. EF Core creates a missing database and applies every migration not recorded in `__EFMigrationsHistory`.
+
+Restore and reset never overwrite an open database. They validate and migrate a private staging database, create a dated safety backup, record a pending operation, and require the desktop application to close. The next startup atomically installs the staged file as the managed `okf-todo.db` before opening EF Core connections.
 
 Normal desktop startup uses the personal database resolved by `DatabasePathProvider`. The [Task Application Command Interface](application-command-interface.md) may instead receive an absolute database file through `--okf-database-path`. This override is restricted to `--okf-command`; the selected database follows the same migration-before-seeding startup sequence as the personal database.
 

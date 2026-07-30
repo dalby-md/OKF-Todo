@@ -34,6 +34,18 @@ public sealed class ApplicationCommandService(IServiceProvider services)
                 .SaveLayoutPreferenceAsync(GetPayload<LayoutPreferenceSaveRequest>(command), cancellationToken),
             "database.backup.create" => await scopedServices.GetRequiredService<DatabaseBackupService>()
                 .CreateAsync(cancellationToken),
+            "database.status.get" => await scopedServices.GetRequiredService<SampleDataService>()
+                .GetStatusAsync(cancellationToken),
+            "database.sample.create" => await scopedServices.GetRequiredService<SampleDataService>()
+                .CreateAsync(cancellationToken),
+            "database.sample.remove" => await scopedServices.GetRequiredService<SampleDataService>()
+                .RemoveAsync(cancellationToken),
+            "database.restore.prepare" => await scopedServices.GetRequiredService<DatabaseMaintenanceService>()
+                .PrepareRestoreAsync(cancellationToken),
+            "database.reset.prepare" => await scopedServices.GetRequiredService<DatabaseMaintenanceService>()
+                .PrepareResetAsync(GetPayload<DatabaseResetRequest>(command), cancellationToken),
+            "application.close" => scopedServices.GetRequiredService<ApplicationLifetimeService>()
+                .RequestClose(),
             "task.export.markdown" => await scopedServices.GetRequiredService<TaskMarkdownExportService>()
                 .ExportAsync(GetPayload<TaskMarkdownExportRequest>(command), cancellationToken),
             "task.export.columns.get" => await scopedServices.GetRequiredService<AppPreferenceService>()

@@ -39,6 +39,7 @@ namespace Photino.Okf_Todo
             using var services = CreateServices(isOkfCommandMode, databasePath);
             var startupLogger = services.GetRequiredService<ILogger<Program>>();
             startupLogger.LogInformation("Starting OKF-Todo from {BaseDirectory}", AppContext.BaseDirectory);
+            PendingDatabaseOperationApplier.Apply(databasePath, startupLogger);
 
             using (var scope = services.CreateScope())
             {
@@ -130,6 +131,7 @@ namespace Photino.Okf_Todo
             }
 
             services.GetRequiredService<PhotinoFileSavePicker>().Attach(window);
+            services.GetRequiredService<ApplicationLifetimeService>().Attach(window);
 
             ApplyStartupWindowPlacement(window, windowPreference);
             window.WindowClosing += (_, _) =>
@@ -387,8 +389,11 @@ namespace Photino.Okf_Todo
             services.AddSingleton<PhotinoFileSavePicker>();
             services.AddSingleton<IBackupDestinationPicker>(serviceProvider =>
                 serviceProvider.GetRequiredService<PhotinoFileSavePicker>());
+            services.AddSingleton<IDatabaseRestoreSourcePicker>(serviceProvider =>
+                serviceProvider.GetRequiredService<PhotinoFileSavePicker>());
             services.AddSingleton<ITaskMarkdownExportDestinationPicker>(serviceProvider =>
                 serviceProvider.GetRequiredService<PhotinoFileSavePicker>());
+            services.AddSingleton<ApplicationLifetimeService>();
             services.AddScoped<LookupSeedService>();
             services.AddScoped<TaskLifecycleService>();
             services.AddScoped<TaskListService>();
@@ -400,8 +405,10 @@ namespace Photino.Okf_Todo
             services.AddScoped<IssueService>();
             services.AddScoped<ImageService>();
             services.AddScoped<DatabaseBackupService>();
+            services.AddScoped<DatabaseMaintenanceService>();
             services.AddScoped<TaskMarkdownExportService>();
             services.AddScoped<SampleDataSeeder>();
+            services.AddScoped<SampleDataService>();
             services.AddSingleton<ApplicationCommandService>();
             services.AddSingleton<BridgeMessageHandler>();
             services.AddSingleton<OkfCommandRunner>();

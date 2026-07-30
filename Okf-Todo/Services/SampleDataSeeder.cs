@@ -183,6 +183,11 @@ public sealed class SampleDataSeeder(
                     relation.Type), cancellationToken);
             }
 
+            await dbContext.TaskItems
+                .Where(task => taskIds.Contains(task.Id))
+                .ExecuteUpdateAsync(
+                    updates => updates.SetProperty(task => task.IsSampleData, true),
+                    cancellationToken);
             await ApplyDemonstrationTimestampsAsync(taskIds, DateTime.UtcNow, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 

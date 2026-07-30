@@ -506,20 +506,26 @@ Acceptance criteria:
 - Every view defaults to visibly explained smart priority and offers focus, activity, and organization sort modes suited to developer and support triage. The lifecycle-status option states that it follows configured status order and is mainly useful in the All view.
 - Lookup-based modes use configured sort order; time-based modes use due, waiting, created, and updated timestamps.
 - The compact sort control exposes the selected field explanation through its title and accessible description, provides an icon button for ascending/descending ordering, and persists both selections separately for each view.
-- Search, an anchored Filters panel, and sorting share a compact responsive command strip that wraps only when the task queue becomes narrow; the filtered result count sits beside the current view name.
+- Search, filtering, and sorting share a responsive command area; the filtered result count sits beside the current view name. The persisted Task filter layout preference defaults to Compact, which uses an anchored Filters panel and wraps the command strip only when the task queue becomes narrow. Expanded keeps tags, type, status, and priority visible inline in the original two-column filter layout.
 - Text search includes task tags, while explicit multi-tag filtering remains available on demand with OR semantics and removable filter chips.
 - The Filters badge counts selected tags and exact task type, lifecycle status, and priority filters. Active field filters participate in the clear action and removable filter summary, which remains absent when no field filters are selected.
 
-## Milestone 14 — Database backup
+## Milestone 14 — Database management
 
 Status: implemented.
 
 Scope:
 
-- Add a dedicated Backup page under user preferences with the database backup command.
+- Add a dedicated Database page under user preferences while preserving database backup.
 - Select the destination with the native save-file dialog.
 - Use SQLite's online backup API.
 - Validate the temporary backup before replacing the selected destination.
+- Restore a selected valid SQLite database from any source filename without changing that source.
+- Stage, migrate, and validate restore/reset databases before replacing the managed `okf-todo.db` at next startup.
+- Create a dated safety backup before restore or reset.
+- Require the `RESET DATABASE` typed confirmation before a complete database reset, accepting uppercase or lowercase.
+- Offer built-in sample data when the database has no tasks and make selective removal easy.
+- Mark seeded tasks with an internal `IsSampleData` database field so removal never relies on editable tags.
 
 Acceptance criteria:
 
@@ -529,6 +535,12 @@ Acceptance criteria:
 - A failed backup does not replace an existing valid backup.
 - Success and failure are reported in the application status.
 - The directory from the last successful backup is used as the next dialog's starting directory.
+- A restore source remains unchanged, regardless of its filename.
+- Restore and reset cannot silently replace an open database; the prepared operation is applied at the next start.
+- Reset warnings enumerate the affected data and require `RESET DATABASE`.
+- The first-run Active view offers both **Create first task** and **Explore with sample data**.
+- Sample-data creation disables both entry points and shows a spinner with an explicit adding label until refresh completes.
+- Sample removal deletes internally marked sample tasks and related content while preserving every personal task.
 
 ## Recommended first real Codex task
 

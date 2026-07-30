@@ -6,7 +6,7 @@ resource: Okf-Todo/Data/AppDbContext.cs
 tags:
   - sqlite
   - todo
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-30T00:00:00Z
 ---
 
 
@@ -43,6 +43,7 @@ Stores the primary task records and lifecycle state.
 | `Title` | `TEXT` | No | `-` | value |
 | `UpdatedAt` | `TEXT` | No | `-` | value |
 | `WaitingSince` | `TEXT` | Yes | `-` | value |
+| `IsSampleData` | `INTEGER` | No | `0` | value |
 
 ## Relationships
 
@@ -57,6 +58,7 @@ Stores the primary task records and lifecycle state.
 
 - `IX_TaskItems_BodyFormatId` on `BodyFormatId`: non-unique.
 - `IX_TaskItems_DeletedAt_IsStarred` on `DeletedAt`, `IsStarred`: non-unique.
+- `IX_TaskItems_IsSampleData` on `IsSampleData`: non-unique.
 - `IX_TaskItems_StarredAt` on `StarredAt`: non-unique.
 - `IX_TaskItems_TaskListId` on `TaskListId`: non-unique.
 - `IX_TaskItems_TaskPriorityId` on `TaskPriorityId`: non-unique.
@@ -75,6 +77,8 @@ Structural facts are generated from the inspected SQLite database. Application b
 - Missing list assignment resolves in this order: explicit list, contextual task list, the list named `Default list`, first manually ordered list, then creation of `Default list` when no lists exist.
 - `Owner` is optional free text identifying the person or team accountable for the task.
 - `Responsible` is optional free text identifying the person currently expected to perform or coordinate the work.
+- `IsSampleData` is an internal ownership marker set by the built-in sample-data seeder; it is authoritative for selective sample removal, while the editable `sample-data` tag is not.
+- Removing sample data deletes only tasks where `IsSampleData = 1`, their owned rows, and relationships involving those tasks; personal tasks remain.
 - The overview text search includes both values even when their independently controlled task-detail fields are hidden.
 
 ## Sources

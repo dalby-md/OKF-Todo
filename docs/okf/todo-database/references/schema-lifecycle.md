@@ -6,12 +6,14 @@ resource: Okf-Todo/Program.cs
 tags:
   - sqlite
   - todo
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-30T00:00:00Z
 ---
 
 # Database Schema Lifecycle
 
-The application calls EF Core `Database.Migrate()` at startup before seeding or normal data access. EF Core creates a missing database and applies every migration not recorded in `__EFMigrationsHistory`.
+At startup, the application first applies any validated restore or reset operation prepared during the previous session. It then calls EF Core `Database.Migrate()` before seeding or normal data access. EF Core creates a missing database and applies every migration not recorded in `__EFMigrationsHistory`.
+
+Restore and reset never overwrite an open database. They validate and migrate a private staging database, create a dated safety backup, record a pending operation, and require the desktop application to close. The next startup atomically installs the staged file as the managed `okf-todo.db` before opening EF Core connections.
 
 Normal desktop startup uses the personal database resolved by `DatabasePathProvider`. The [Task Application Command Interface](application-command-interface.md) may instead receive an absolute database file through `--okf-database-path`. This override is restricted to `--okf-command`; the selected database follows the same migration-before-seeding startup sequence as the personal database.
 
