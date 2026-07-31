@@ -143,7 +143,7 @@ The current MCP tools do not complete or cancel tasks and do not add comments, c
 - Ask the harness to show proposed task values before using a write tool.
 - Approve creation and updates explicitly.
 - Ask it to read a changed task back afterward.
-- Back up the database from **Setup → Data** before a large batch of automated changes.
+- Back up the database from **Settings → Data & maintenance** before a large batch of automated changes.
 - For an update, require a read-first, preserve-all-fields workflow.
 
 ## Privacy and trust

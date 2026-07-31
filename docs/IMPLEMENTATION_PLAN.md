@@ -517,7 +517,7 @@ Status: implemented.
 
 Scope:
 
-- Add a dedicated Database page under user preferences while preserving database backup.
+- Add a dedicated **Data & maintenance** page under Preferences while preserving database backup.
 - Select the destination with the native save-file dialog.
 - Use SQLite's online backup API.
 - Validate the temporary backup before replacing the selected destination.

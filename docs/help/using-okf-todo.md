@@ -145,7 +145,7 @@ The default **Compact** layout places these controls in **Filters** beside searc
 
 Select **Filters** to open the panel. Its number shows how many tag, type, status, and priority filters are selected.
 
-To keep all four controls visible, open **Setup → Appearance → Task filter layout** and select **Expanded**. Expanded uses the same filter values and behavior, arranged inline below search. Switching layouts does not clear the current filters.
+To keep all four controls visible, open **Settings → Appearance → Task filter layout** and select **Expanded**. Expanded uses the same filter values and behavior, arranged inline below search. Switching layouts does not clear the current filters.
 
 When several tags are selected, a task matches if it has any selected tag. Active filters appear as removable chips below the search and filter controls; that row stays hidden when no filters are selected. Select **Clear** to remove the current search and filter criteria.
 
@@ -194,23 +194,23 @@ These optional free-text fields have different meanings:
 - **Owner** is the person or team accountable for the outcome.
 - **Responsible** is the person currently expected to perform or coordinate the work.
 
-They are hidden independently by default. Enable either field under **Setup → Task details**. Enabled fields appear with the other task details above the body. Search matches both fields even when they are hidden.
+They are hidden independently by default. Enable either field under **Settings → Task details**. Enabled fields appear with the other task details above the body. Search matches both fields even when they are hidden.
 
 ### Source fields
 
-Enable **Show source fields** under **Setup → Task details** when you want to record where work came from, such as ServiceDesk, email, deployment, or monitoring. The enabled fields appear above the body. Source, source reference, and source URL are descriptive information; OKF-Todo does not open or synchronize external systems automatically.
+Enable **Show source fields** under **Settings → Task details** when you want to record where work came from, such as ServiceDesk, email, deployment, or monitoring. The enabled fields appear above the body. Source, source reference, and source URL are descriptive information; OKF-Todo does not open or synchronize external systems automatically.
 
 ### Body editor
 
 Use the body for context that does not fit in fields: the problem statement, evidence, links, diagnostic notes, decisions, draft replies, or next steps.
 
-OKF-Todo supports HTML and Markdown editing. Choose your preferred default under **Setup → General → Editor mode**. The mode selector below the editor lets you work with the active task in Markdown or WYSIWYG form.
+OKF-Todo supports HTML and Markdown editing. Choose your preferred default under **Settings → General → Editor mode**. The mode selector below the editor lets you work with the active task in Markdown or WYSIWYG form.
 
 Drag the horizontal resize bar below the editor to change its height. The minimum is 200 pixels, and OKF-Todo remembers the chosen height.
 
 ### Relationships
 
-Enable **Show relationships** under **Setup → Task details** to connect tasks that block, depend on, duplicate, follow, or otherwise relate to each other.
+Enable **Show relationships** under **Settings → Task details** to connect tasks that block, depend on, duplicate, follow, or otherwise relate to each other.
 
 Following a relationship opens the related task. If it belongs to another list, OKF-Todo changes the concrete list scope as needed. **All lists** remains global.
 
@@ -272,7 +272,7 @@ If the open task has unsaved changes, OKF-Todo asks you to save them as part of 
 
 The table includes only the columns you selected. It does not include the task body, attachment contents, comments, relationships, or Timeline.
 
-Treat the Markdown file as a readable snapshot for communication and analysis. It is not a backup and cannot restore your tasks. Use **Setup → Database** when you need a complete portable copy of the database.
+Treat the Markdown file as a readable snapshot for communication and analysis. It is not a backup and cannot restore your tasks. Use **Settings → Data & maintenance** when you need a complete portable copy of the database.
 
 ## Complete, cancel, reopen, and delete safely
 
@@ -284,7 +284,7 @@ Completed and cancelled tasks are read only by default. Their details are shown 
 
 Select **Reopen to edit** to return a finished task to Active and restore the normal fields and HTML or Markdown editor.
 
-If your workflow requires direct editing of finished work, enable **Allow editing completed tasks** or **Allow editing cancelled tasks** independently under **Setup → Task details**.
+If your workflow requires direct editing of finished work, enable **Allow editing completed tasks** or **Allow editing cancelled tasks** independently under **Settings → Task details**.
 
 ### Move to Trash
 
@@ -304,7 +304,7 @@ Use permanent deletion only when you are certain the information is no longer ne
 
 ## Personalize the application
 
-Open **Setup** to adjust OKF-Todo:
+Open **Settings** to adjust and maintain OKF-Todo:
 
 | Page | What you can change |
 | --- | --- |
@@ -312,7 +312,7 @@ Open **Setup** to adjust OKF-Todo:
 | **Appearance** | Light or dark color scheme; Auto, Side by side, or Stacked task layout; and Compact or Expanded task filter layout. |
 | **Task details** | Visibility of source, owner, responsible, and relationship sections; editability of completed and cancelled tasks. |
 | **Data & values** | Task types, priorities, statuses, and tag administration. |
-| **Database** | Back up or restore the database, add or remove sample data, or deliberately reset all data. |
+| **Data & maintenance** | Back up or restore the database, add or remove sample data, or deliberately reset all data. |
 
 Preference changes apply immediately and persist between application restarts.
 
@@ -320,9 +320,9 @@ The **Auto** layout adapts to the available window size. Use **Side by side** wh
 
 Use the **Compact** task filter layout when you want more room for the task list. Use **Expanded** when you want Tags, Type, Status, and Priority to remain visible without opening **Filters**.
 
-## Manage the database
+## Protect and maintain your data
 
-Open **Setup → Database** to protect or replace the local database and to manage sample data.
+Open **Settings → Data & maintenance** to protect or replace the local database and to manage sample data.
 
 ### Back up your work
 
@@ -362,7 +362,7 @@ While the sample tasks are being created, the selected action is disabled and sh
 
 Sample data is easy to remove:
 
-1. Open **Setup → Database**.
+1. Open **Settings → Data & maintenance**.
 2. Select **Remove sample data**.
 3. Review the confirmation and select **Remove sample data** again.
 
@@ -385,9 +385,9 @@ A full reset displays the current data counts, requires you to type `RESET DATAB
 | What you see | What to check |
 | --- | --- |
 | A task seems to be missing | Check the selected list, view, search text, tag/type/priority filters, and collapsed Finished group. Try **All lists → All statuses** with filters cleared. |
-| A completed or cancelled task cannot be edited | Select **Reopen to edit**, or change the applicable setting under **Setup → Task details**. |
+| A completed or cancelled task cannot be edited | Select **Reopen to edit**, or change the applicable setting under **Settings → Task details**. |
 | A task in Trash cannot be edited or starred | Restore it first. Trash tasks are deliberately read only. |
-| A field or section is missing | Check **Setup → Task details** for Source, Owner, Responsible, and Relationships visibility. |
+| A field or section is missing | Check **Settings → Task details** for Source, Owner, Responsible, and Relationships visibility. |
 | Search returns no tasks | Remove filter chips or select **Clear**. Remember that list scope and view still apply. |
 | The wrong tasks moved in a bulk action | Selection includes only the tasks visibly rendered when selection mode is active. Use the immediate **Undo** when available. |
 | A task changed lists unexpectedly | Read its Timeline for the recorded list move, then use the List field or row menu to move it back. |

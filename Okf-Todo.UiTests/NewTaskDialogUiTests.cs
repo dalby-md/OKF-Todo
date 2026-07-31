@@ -66,7 +66,7 @@ public sealed class NewTaskDialogUiTests
 
         await page.Locator("#first-run-new-task-button").WaitForAsync();
         await page.GetByText(
-            "Sample data is easy to remove anytime from Preferences → Database.",
+            "Sample data is easy to remove anytime from Settings → Data & maintenance.",
             new PageGetByTextOptions { Exact = false }).WaitForAsync();
         await page.Locator("#first-run-sample-button").ClickAsync();
         await page.Locator("#first-run-sample-button[aria-busy='true'] .button-spinner").WaitForAsync();
@@ -75,9 +75,18 @@ public sealed class NewTaskDialogUiTests
             await page.Locator("#first-run-sample-button .sample-data-action-label").TextContentAsync());
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list .task-row').length === 30");
 
+        Assert.Equal("Settings", await page.Locator("#settings-button").GetAttributeAsync("aria-label"));
+        Assert.Equal("Settings", await page.Locator("#settings-button").GetAttributeAsync("title"));
+        await page.Locator("#settings-button").GetByText("Settings", new LocatorGetByTextOptions
+        {
+            Exact = true
+        }).WaitForAsync();
         await page.Locator("#settings-button").ClickAsync();
+        Assert.Equal(
+            "Data & maintenance",
+            await page.Locator("[data-preference-section='database']").TextContentAsync());
         await page.Locator("[data-preference-section='database']").ClickAsync();
-        Assert.Equal("Database", await page.Locator("#preferences-panel-title").TextContentAsync());
+        Assert.Equal("Data & maintenance", await page.Locator("#preferences-panel-title").TextContentAsync());
         Assert.True(await page.Locator("#remove-sample-data-button").IsVisibleAsync());
         Assert.False(await page.Locator("#add-sample-data-button").IsVisibleAsync());
 

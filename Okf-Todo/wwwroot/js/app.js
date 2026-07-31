@@ -100,7 +100,7 @@
     appearance: 'Appearance',
     'task-details': 'Task details',
     'data-values': 'Data & values',
-    database: 'Database'
+    database: 'Data & maintenance'
   }
   const supportedEditorImageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
   const maxEditorImageBytes = 5 * 1024 * 1024
@@ -1005,9 +1005,9 @@
               <span class="fluent-icon" aria-hidden="true">&#xE897;</span>
               <span>Help</span>
             </button>
-            <button id="settings-button" class="icon-button setup-button" type="button" aria-label="Setup" title="Setup">
+            <button id="settings-button" class="icon-button setup-button" type="button" aria-label="Settings" title="Settings">
               <span class="fluent-icon" aria-hidden="true">&#xE713;</span>
-              <span>Setup</span>
+              <span>Settings</span>
             </button>
             <span class="app-action-divider" aria-hidden="true"></span>
             <button id="new-task-button" type="button" aria-keyshortcuts="F2" title="New task (F2)">
@@ -1394,7 +1394,7 @@
                 <button class="preferences-nav-button is-active" type="button" data-preference-section="appearance" aria-current="page">Appearance</button>
                 <button class="preferences-nav-button" type="button" data-preference-section="task-details">Task details</button>
                 <button class="preferences-nav-button" type="button" data-preference-section="data-values">Data &amp; values</button>
-                <button class="preferences-nav-button" type="button" data-preference-section="database">Database</button>
+                <button class="preferences-nav-button" type="button" data-preference-section="database">Data &amp; maintenance</button>
               </nav>
 
               <div class="preferences-content" tabindex="0">
@@ -3121,7 +3121,7 @@
       lookups = await sendBridgeMessage('task.lookups.get', {})
       renderLookups()
       await loadTasks({ selectFirst: true })
-      $('#sample-data-status').text('Sample data added. Remove it anytime from Preferences → Database; your own tasks will be left alone.')
+      $('#sample-data-status').text('Sample data added. Remove it anytime from Settings → Data & maintenance; your own tasks will be left alone.')
       setStatus('Sample data added', 'saved')
     } finally {
       setSampleDataCreationBusy(false)
@@ -4734,7 +4734,7 @@
                 <span class="sample-data-action-label">Explore with sample data</span>
               </button>
             </div>
-            <small>Sample data is easy to remove anytime from Preferences → Database. Tasks you create yourself are left alone.</small>
+            <small>Sample data is easy to remove anytime from Settings → Data &amp; maintenance. Tasks you create yourself are left alone.</small>
           </div>
         `)
         syncTaskSelectionUi()

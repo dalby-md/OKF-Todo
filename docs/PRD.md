@@ -432,13 +432,13 @@ The initial UI supports adding, downloading, and removing attachments. Attachmen
 
 ## Database management
 
-User preferences provide a **Database** page for backup, restore, sample data, and an explicitly separated danger zone.
+Preferences provide a **Data & maintenance** page for backup, restore, sample data, and an explicitly separated danger zone.
 
 Backup uses the native save-file dialog and SQLite's online backup API. The generated database is validated before it replaces the selected destination. The directory from the last successful backup is remembered; cancelling or failing does not change that preference.
 
 Restore uses the native open-file dialog. A selected SQLite database may have any filename: OKF-Todo validates and migrates a private staged copy, leaves the selected source unchanged, creates a dated safety backup, and installs the staged copy as the managed `okf-todo.db` on the next application start. The UI requires the application to close after preparation so later edits cannot be lost.
 
-The Database danger zone can replace the complete database with either a fresh empty database or a fresh database containing sample data. It must:
+The Data & maintenance danger zone can replace the complete database with either a fresh empty database or a fresh database containing sample data. It must:
 
 - state that every task, list, attachment, comment, checklist, relationship, preference, and history entry will be removed;
 - explain that **Remove sample data** is the safe action when the user only wants to remove samples;
@@ -450,7 +450,7 @@ The backup contains the complete SQLite database, including tasks, body images, 
 
 ## First-run and sample data
 
-When the database contains no tasks, the Active task list offers two equal, non-blocking choices: create the first task or add the standard 50-task sample set. The sample option must emphasize that it is easy to remove later from **Preferences → Database** and that tasks created by the user are preserved.
+When the database contains no tasks, the Active task list offers two equal, non-blocking choices: create the first task or add the standard 50-task sample set. The sample option must emphasize that it is easy to remove later from **Settings → Data & maintenance** and that tasks created by the user are preserved.
 
 While sample tasks are being generated, both sample-data entry points are disabled and show a spinner plus an explicit adding label until the refreshed task list is ready.
 
@@ -559,7 +559,7 @@ Add a settings/admin area for editable lookup values:
 - Statuses
 - Priorities
 
-The Preferences dialog uses isolated pages for General, Appearance, Task details, Data & values, and Backup. Selecting a navigation item shows only that page's settings. Preference changes apply immediately. Appearance contains the color scheme, task layout, and task filter layout controls. The task filter layout defaults to Compact and can switch between the anchored Filters panel and an Expanded presentation that keeps tags, type, status, and priority visible inline. Task details contains visibility controls for optional task-detail fields and sections plus independent editability switches for completed and cancelled tasks. Data & values contains lookup and tag management; database backup is available only on the dedicated Backup page.
+The **Settings** button opens a Preferences dialog with isolated pages for General, Appearance, Task details, Data & values, and Data & maintenance. Selecting a navigation item shows only that page's settings. Preference changes apply immediately. Appearance contains the color scheme, task layout, and task filter layout controls. The task filter layout defaults to Compact and can switch between the anchored Filters panel and an Expanded presentation that keeps tags, type, status, and priority visible inline. Task details contains visibility controls for optional task-detail fields and sections plus independent editability switches for completed and cancelled tasks. Data & values contains lookup and tag management; backup, restore, sample data, and reset are available only on Data & maintenance.
 
 Task sources, relationship types, body formats, and log types are system-managed in the first version and are not editable in the preferences UI.
 
