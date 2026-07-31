@@ -6,9 +6,17 @@
   let activeMode = 'html'
   let activeInitialization = 0
   let activeColorScheme = 'LIGHT'
+  let activeBaseFontSize = 16
   let pickImage = null
   let handleShortcut = null
   const loadedAssets = new Map()
+
+  function normalizeBaseFontSize(fontSize) {
+    const numericFontSize = Number(fontSize)
+    return Number.isFinite(numericFontSize) && numericFontSize > 0
+      ? numericFontSize
+      : 16
+  }
 
   function ensureStyle(href) {
     if (document.querySelector(`link[href="${href}"]`)) {
@@ -271,6 +279,7 @@
   function createTinyMceAdapter(options) {
     let editor = null
     let readOnly = false
+    let baseFontSize = normalizeBaseFontSize(options.baseFontSize || activeBaseFontSize)
     const selector = options.selector || defaultSelector
     const elementId = getElementId(selector)
     const host = getHost(options)
@@ -295,6 +304,15 @@
       const isDark = String(colorScheme || '').toUpperCase() === 'DARK'
       body.style.setProperty('color', isDark ? '#e7e5e4' : '#202124')
       body.style.setProperty('background-color', isDark ? '#101112' : '#ffffff')
+    }
+
+    function applyBaseFontSize(fontSize) {
+      baseFontSize = normalizeBaseFontSize(fontSize)
+      if (!editor || typeof editor.getBody !== 'function') {
+        return
+      }
+
+      editor.getBody().style.setProperty('font-size', `${baseFontSize}px`)
     }
 
     function applyReadOnlyDomState() {
@@ -361,6 +379,7 @@
             editor = tinyEditor
             tinyEditor.on('init', function () {
               applyColorScheme(activeColorScheme)
+              applyBaseFontSize(baseFontSize)
               applyReadOnlyState()
             })
             tinyEditor.on('change keyup undo redo setcontent', notifyChanged)
@@ -374,6 +393,7 @@
         }
 
         applyColorScheme(activeColorScheme)
+        applyBaseFontSize(baseFontSize)
         applyReadOnlyState()
 
         const loading = host.querySelector('.editor-loading')
@@ -435,6 +455,10 @@
         applyColorScheme(colorScheme)
       },
 
+      setBaseFontSize: function (fontSize) {
+        applyBaseFontSize(fontSize)
+      },
+
       focus: function () {
         editor.focus()
       },
@@ -489,6 +513,7 @@
     let editor = null
     let readOnly = false
     let suppressChangeUntil = 0
+    let baseFontSize = normalizeBaseFontSize(options.baseFontSize || activeBaseFontSize)
     const host = getHost(options)
     const initialMarkdownEditType = String(options.markdownEditType || '').toLowerCase() === 'wysiwyg'
       ? 'wysiwyg'
@@ -535,6 +560,24 @@
       if (root) {
         root.setAttribute('contenteditable', String(!readOnly))
         root.setAttribute('aria-readonly', String(readOnly))
+      }
+    }
+
+    function applyBaseFontSize(fontSize) {
+      baseFontSize = normalizeBaseFontSize(fontSize)
+      host.style.setProperty('--editor-base-font-size', `${baseFontSize}px`)
+
+      host.querySelectorAll('.CodeMirror, .tui-editor-contents').forEach(function (element) {
+        element.style.setProperty('font-size', `${baseFontSize}px`)
+      })
+
+      if (!editor || typeof editor.getCodeMirror !== 'function') {
+        return
+      }
+
+      const codeMirror = editor.getCodeMirror()
+      if (codeMirror && typeof codeMirror.refresh === 'function') {
+        codeMirror.refresh()
       }
     }
 
@@ -733,7 +776,10 @@
           suppressModeSwitchChanges()
           const markdownEditType = mode === 'wysiwyg' ? 'WYSIWYG' : 'MARKDOWN'
           notifyMarkdownEditTypeChanged(markdownEditType)
-          window.requestAnimationFrame(applyReadOnlyState)
+          window.requestAnimationFrame(function () {
+            applyReadOnlyState()
+            applyBaseFontSize(baseFontSize)
+          })
         })
 
         editor.on('change', function () {
@@ -744,6 +790,7 @@
           notifyChanged()
         })
         bindToolbar()
+        applyBaseFontSize(baseFontSize)
         applyReadOnlyState()
       },
 
@@ -805,6 +852,10 @@
         // TOAST UI is styled by the application theme stylesheet.
       },
 
+      setBaseFontSize: function (fontSize) {
+        applyBaseFontSize(fontSize)
+      },
+
       focus: function () {
         editor.focus()
       },
@@ -864,6 +915,7 @@
       activeColorScheme = String(editorOptions.colorScheme || activeColorScheme).toUpperCase() === 'DARK'
         ? 'DARK'
         : 'LIGHT'
+      activeBaseFontSize = normalizeBaseFontSize(editorOptions.baseFontSize || activeBaseFontSize)
       pickImage = editorOptions.onPickImage || null
       handleShortcut = editorOptions.onShortcut || null
 
@@ -941,6 +993,13 @@
       activeColorScheme = String(colorScheme || '').toUpperCase() === 'DARK' ? 'DARK' : 'LIGHT'
       if (activeAdapter && typeof activeAdapter.setColorScheme === 'function') {
         activeAdapter.setColorScheme(activeColorScheme)
+      }
+    },
+
+    setBaseFontSize: function (fontSize) {
+      activeBaseFontSize = normalizeBaseFontSize(fontSize)
+      if (activeAdapter && typeof activeAdapter.setBaseFontSize === 'function') {
+        activeAdapter.setBaseFontSize(activeBaseFontSize)
       }
     },
 

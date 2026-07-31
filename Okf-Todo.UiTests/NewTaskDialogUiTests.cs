@@ -196,30 +196,35 @@ public sealed class NewTaskDialogUiTests
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
         Assert.False(await page.EvaluateAsync<bool>("() => window.__firstRunModalWasVisible"));
+        var htmlEditorBody = page.FrameLocator("#editor-host .tox-edit-area iframe").Locator("body");
+        await htmlEditorBody.WaitForAsync();
 
         Assert.Equal(
             "16px",
             await page.EvaluateAsync<string>("() => getComputedStyle(document.documentElement).fontSize"));
+        Assert.Equal("16px", await htmlEditorBody.EvaluateAsync<string>("body => getComputedStyle(body).fontSize"));
 
         await OpenAppearancePreferencesAsync(page);
         Assert.Equal(5, await page.Locator("[data-preference-select='font-size'] .preference-choice").CountAsync());
         Assert.True(await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='STANDARD']")
             .EvaluateAsync<bool>("button => button.classList.contains('is-selected')"));
 
-        await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='SMALLEST']").ClickAsync();
-        await page.WaitForFunctionAsync(
-            "() => getComputedStyle(document.documentElement).fontSize === '12px' && document.querySelector('#save-status').textContent === 'Font size saved'");
+        async Task SelectFontSizeAsync(string code, string pixels)
+        {
+            await page.Locator("#save-status").EvaluateAsync("element => { element.textContent = 'Waiting for font size save' }");
+            await page.Locator($"[data-preference-select='font-size'] .preference-choice[data-value='{code}']").ClickAsync();
+            await page.WaitForFunctionAsync(
+                "pixels => getComputedStyle(document.documentElement).fontSize === pixels && document.querySelector('#save-status').textContent === 'Font size saved'",
+                pixels);
+        }
 
-        await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='SMALL']").ClickAsync();
-        await page.WaitForFunctionAsync(
-            "() => getComputedStyle(document.documentElement).fontSize === '14px' && document.querySelector('#save-status').textContent === 'Font size saved'");
+        await SelectFontSizeAsync("SMALLEST", "12px");
+        Assert.Equal("12px", await htmlEditorBody.EvaluateAsync<string>("body => getComputedStyle(body).fontSize"));
 
-        await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='LARGE']").ClickAsync();
-        await page.WaitForFunctionAsync(
-            "() => getComputedStyle(document.documentElement).fontSize === '18px' && document.querySelector('#save-status').textContent === 'Font size saved'");
-        await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='LARGEST']").ClickAsync();
-        await page.WaitForFunctionAsync(
-            "() => getComputedStyle(document.documentElement).fontSize === '20px' && document.querySelector('#save-status').textContent === 'Font size saved'");
+        await SelectFontSizeAsync("SMALL", "14px");
+        await SelectFontSizeAsync("LARGE", "18px");
+        await SelectFontSizeAsync("LARGEST", "20px");
+        Assert.Equal("20px", await htmlEditorBody.EvaluateAsync<string>("body => getComputedStyle(body).fontSize"));
         await page.Locator("#settings-close-button").ClickAsync();
 
         await page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
@@ -227,10 +232,64 @@ public sealed class NewTaskDialogUiTests
         Assert.Equal(
             "20px",
             await page.EvaluateAsync<string>("() => getComputedStyle(document.documentElement).fontSize"));
+        htmlEditorBody = page.FrameLocator("#editor-host .tox-edit-area iframe").Locator("body");
+        await htmlEditorBody.WaitForAsync();
+        Assert.Equal("20px", await htmlEditorBody.EvaluateAsync<string>("body => getComputedStyle(body).fontSize"));
         await OpenAppearancePreferencesAsync(page);
         Assert.True(await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='LARGEST']")
             .EvaluateAsync<bool>("button => button.classList.contains('is-selected')"));
         Assert.Contains("layout.preference.save", fixture.BridgeMessageTypes);
+    }
+
+    [Fact]
+    public async Task AppearanceFontSize_AlsoControlsMarkdownEditorBaseText()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync();
+        await fixture.SendBridgeAsync("editor.preference.save", new
+        {
+            bodyFormatCode = "MARKDOWN",
+            markdownEditType = "MARKDOWN"
+        });
+        await fixture.SendBridgeAsync("task.create", new
+        {
+            title = "Markdown editor font size test",
+            taskTypeCode = "NOTE",
+            body = "Plain Markdown body",
+            bodyFormatCode = "MARKDOWN",
+            taskPriorityCode = "NORMAL"
+        });
+
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1487, Height = 1058 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(
+            $"{fixture.BaseUrl}/index.html?v=markdown-editor-font-size",
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+
+        var codeMirror = page.Locator("#editor-host .CodeMirror").First;
+        await codeMirror.WaitForAsync();
+        Assert.Equal("16px", await codeMirror.EvaluateAsync<string>("editor => getComputedStyle(editor).fontSize"));
+
+        await OpenAppearancePreferencesAsync(page);
+        await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='LARGEST']").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => getComputedStyle(document.querySelector('#editor-host .CodeMirror')).fontSize === '20px'");
+        await page.Locator("#settings-close-button").ClickAsync();
+
+        await page.Locator("#editor-host .te-switch-button.wysiwyg").ClickAsync();
+        var wysiwygBody = page.Locator("#editor-host .te-ww-container .tui-editor-contents");
+        await wysiwygBody.WaitForAsync();
+        Assert.Equal("20px", await wysiwygBody.EvaluateAsync<string>("editor => getComputedStyle(editor).fontSize"));
     }
 
     [Theory]

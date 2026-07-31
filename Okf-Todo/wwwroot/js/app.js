@@ -129,6 +129,13 @@
     large: 'LARGE',
     largest: 'LARGEST'
   }
+  const fontSizePixelsByCode = {
+    SMALLEST: 12,
+    SMALL: 14,
+    STANDARD: 16,
+    LARGE: 18,
+    LARGEST: 20
+  }
   const colorSchemeStorageKey = 'okf-todo-color-scheme'
   const allTaskListsScope = 'ALL'
   const helpTopics = {
@@ -4088,6 +4095,10 @@
     return fontSizeCodes.standard
   }
 
+  function getFontSizePixels(fontSize) {
+    return fontSizePixelsByCode[normalizeFontSize(fontSize)]
+  }
+
   function normalizeTaskFilterLayout(taskFilterLayout) {
     return String(taskFilterLayout || '').trim().toUpperCase() === taskFilterLayoutCodes.expanded
       ? taskFilterLayoutCodes.expanded
@@ -4261,16 +4272,13 @@
 
   function applyFontSize(fontSize) {
     const normalizedFontSize = normalizeFontSize(fontSize)
-    const fontSizePixels = {
-      [fontSizeCodes.smallest]: 12,
-      [fontSizeCodes.small]: 14,
-      [fontSizeCodes.standard]: 16,
-      [fontSizeCodes.large]: 18,
-      [fontSizeCodes.largest]: 20
-    }[normalizedFontSize]
+    const fontSizePixels = getFontSizePixels(normalizedFontSize)
 
     layoutPreference.fontSize = normalizedFontSize
     document.documentElement.style.setProperty('--app-font-size', `${fontSizePixels}px`)
+    if (window.Editor && typeof window.Editor.setBaseFontSize === 'function') {
+      window.Editor.setBaseFontSize(fontSizePixels)
+    }
     $('#font-size').val(normalizedFontSize)
     syncPreferenceControls()
     positionTaskFilterPopover()
@@ -5627,10 +5635,11 @@
       minHeight: preferredEditorHeight,
       markdownEditType: preferredMarkdownEditType,
       colorScheme: layoutPreference.colorScheme,
+      baseFontSize: getFontSizePixels(layoutPreference.fontSize),
       initialContent: initialContent || '',
       initialHtml: initialHtml || '',
       contentStyle:
-        'body { color: #202124; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.55; }',
+        `body { color: #202124; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: ${getFontSizePixels(layoutPreference.fontSize)}px; line-height: 1.55; }`,
       onPickImage: pickEditorImage,
       onMarkdownEditTypeChanged: handleMarkdownEditTypeChanged,
       onShortcut: handleApplicationShortcut
