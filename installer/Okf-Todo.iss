@@ -30,20 +30,9 @@ WizardStyle=modern
 AppMutex=OkfTodoSingleInstance
 CloseApplications=yes
 RestartApplications=no
-UsePreviousSetupType=yes
-AlwaysShowComponentsList=yes
-
-[Types]
-Name: "full"; Description: "Full installation"
-Name: "custom"; Description: "Custom installation"; Flags: iscustom
-
-[Components]
-Name: "core"; Description: "OKF-Todo GUI and OKF layer"; Types: full custom; Flags: fixed
-Name: "mcp"; Description: "Install MCP server"; Types: full
 
 [Files]
 Source: "..\artifacts\installer\staging\core\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\artifacts\installer\staging\mcp\*"; DestDir: "{app}\mcp"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: mcp
 Source: "..\artifacts\installer\staging\okf\*"; DestDir: "{app}\okf"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\artifacts\installer\staging\integration\README.md"; DestDir: "{app}\integration"; Flags: ignoreversion
 
@@ -80,12 +69,13 @@ var
   ExecutablePath: String;
 begin
   ForceDirectories(ExpandConstant('{app}\integration'));
-  ExecutablePath := JsonEscapePath(ExpandConstant('{app}\mcp\Okf-Todo.Mcp.exe'));
+  ExecutablePath := JsonEscapePath(ExpandConstant('{app}\Okf-Todo.exe'));
   Config :=
     '{' + #13#10 +
     '  "mcpServers": {' + #13#10 +
     '    "okf-todo": {' + #13#10 +
-    '      "command": "' + ExecutablePath + '"' + #13#10 +
+    '      "command": "' + ExecutablePath + '",' + #13#10 +
+    '      "args": ["--mcp"]' + #13#10 +
     '    }' + #13#10 +
     '  }' + #13#10 +
     '}' + #13#10;
@@ -99,10 +89,5 @@ begin
     RemovePreviouslyInstalledMcpFiles;
 
   if CurStep = ssPostInstall then
-  begin
-    if WizardIsComponentSelected('mcp') then
-      WriteMcpConfig
-    else
-      DeleteFile(ExpandConstant('{app}\integration\mcp-config.json'));
-  end;
+    WriteMcpConfig;
 end;
