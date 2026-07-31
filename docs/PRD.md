@@ -234,9 +234,9 @@ Deletion uses a reversible Trash workflow:
 
 The same action system supports individual and bulk work. Individual actions live on each task row. The application header contains only application-level and lifecycle actions; it does not duplicate Star or Trash controls for the selected task. Compact and stacked task-details layouts provide a contextual menu with Star/Unstar and the applicable Trash actions because the selected row may be outside the visible area. The task-queue header exposes bulk work as a clearly outlined **Select tasks** action beside a readable task count, with a one-time dismissible coach mark that is remembered in user preferences. Entering selection mode changes the header to the selected count and **Done selecting**, and exposes **Select all** plus the applicable Star, Unstar, **Move all selected to Trash**, Restore, and **Delete all selected permanently** actions. Selection operates only on tasks currently rendered by the active view and filters and uses a bottom action bar on smaller screens. Complete-view actions use a labeled **More** menu only when an action is currently available; unavailable Select and More controls are hidden instead of appearing disabled.
 
-## Markdown task export
+## Task inventory export and HTML clipboard
 
-The task-queue header provides a visible **Export** action for creating a portable Markdown work inventory. The export contains exactly the current results: the selected concrete list or synthetic **All lists** scope, active lifecycle view, search text, tag, type, status, and priority filters, in the current sort field and direction. The dialog previews the resulting count before continuing.
+The task-queue header provides a visible **Export** action for creating a portable Markdown work inventory or copying a formatted HTML table. Both actions contain exactly the current results: the selected concrete list or synthetic **All lists** scope, active lifecycle view, search text, tag, type, status, and priority filters, in the current sort field and direction. The dialog previews the resulting count before continuing.
 
 Collapsed groups are presentation only and do not remove matching tasks from the export. In particular, completed and cancelled tasks in the Starred view remain included when its Finished group is collapsed.
 
@@ -246,7 +246,9 @@ The export dialog provides a column picker limited to the existing task-inventor
 
 Multiline text and Markdown table delimiters are escaped so the generated table remains valid. Bodies, comments, Timeline entries, relationships, and attachment content are not included; this is an operational work inventory, not an archival export.
 
-If the selected task has unsaved changes, the export flow requires those changes to be saved first. The user chooses the destination through the native save-file dialog. Files use UTF-8 without a byte-order mark, are written through a temporary file before replacement, receive a useful timestamped `.md` default name, and start in the directory of the last successful task export. Cancelling or failing an export does not change that preference.
+If the selected task has unsaved changes, either share action requires those changes to be saved first. **Export Markdown** uses the native save-file dialog. Files use UTF-8 without a byte-order mark, are written through a temporary file before replacement, receive a useful timestamped `.md` default name, and start in the directory of the last successful task export. Cancelling or failing an export does not change that preference.
+
+**Copy as HTML** writes both `text/html` and a `text/plain` Markdown fallback to the system clipboard. The HTML uses encoded cell content and a compact table with inline styles so it pastes usefully into common rich-text destinations. It does not open a file dialog, create a file, or change the remembered Markdown export directory. If HTML clipboard support is unavailable, the dialog reports the failure and remains open.
 
 Trash is never included in Markdown task export, and the Export action is not available in the Trash view. A database backup remains the only supported complete portable copy of task bodies, attachments, relationships, comments, checklists, history, and trashed tasks.
 

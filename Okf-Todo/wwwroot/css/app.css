@@ -5424,7 +5424,8 @@ body.is-resizing-editor * {
   background: #fafcfc;
 }
 
-.task-export-actions #task-export-confirm-button {
+.task-export-actions #task-export-confirm-button,
+.task-export-actions #task-export-copy-html-button {
   display: inline-flex;
   align-items: center;
   gap: 8px;

@@ -21,7 +21,7 @@ public sealed class TaskMarkdownExportServiceTests
                 CancellationToken.None);
             var exportedTask = await database.Tasks.CreateAsync(
                 CreateRequest(
-                    "Investigate | [mail]\nthread",
+                    "Investigate | [mail]\nthread <script>",
                     defaultList.Id,
                     priorityCode: "URGENT",
                     sourceCode: "EMAIL",
@@ -86,7 +86,7 @@ public sealed class TaskMarkdownExportServiceTests
             Assert.DoesNotContain("| Type |", markdown);
             Assert.DoesNotContain("| Priority |", markdown);
             Assert.DoesNotContain("| ID | Title | List |", markdown);
-            Assert.Contains($"| #{exportedTask.Id} | Investigate \\| \\[mail\\]<br>thread |", markdown);
+            Assert.Contains($"| #{exportedTask.Id} | Investigate \\| \\[mail\\]<br>thread &lt;script&gt; |", markdown);
             Assert.Contains("Platform \\| team", markdown);
             Assert.Contains("Ada \\*Lovelace\\*", markdown);
             Assert.Contains("Email: CASE\\_42", markdown);
@@ -106,6 +106,39 @@ public sealed class TaskMarkdownExportServiceTests
                 && bytes[0] == 0xEF
                 && bytes[1] == 0xBB
                 && bytes[2] == 0xBF);
+
+            var clipboard = await service.CreateHtmlClipboardAsync(
+                new TaskMarkdownExportRequest(
+                    [secondTask.Id, exportedTask.Id],
+                    defaultList.Id,
+                    "All",
+                    "Title, descending",
+                    [
+                        TaskMarkdownExportColumns.Id,
+                        TaskMarkdownExportColumns.Title,
+                        TaskMarkdownExportColumns.Status,
+                        TaskMarkdownExportColumns.Owner,
+                        TaskMarkdownExportColumns.Responsible,
+                        TaskMarkdownExportColumns.Source,
+                        TaskMarkdownExportColumns.Tags
+                    ]),
+                CancellationToken.None);
+
+            Assert.Equal(2, clipboard.TaskCount);
+            Assert.Equal("Default list", clipboard.ScopeName);
+            Assert.Contains("<table", clipboard.Html);
+            Assert.Contains(">Title</th>", clipboard.Html);
+            Assert.Contains("Investigate | [mail]<br>thread &lt;script&gt;", clipboard.Html);
+            Assert.DoesNotContain("<script>", clipboard.Html);
+            Assert.Contains("Platform | team", clipboard.Html);
+            Assert.Contains("Ada *Lovelace*", clipboard.Html);
+            Assert.Contains("Email: CASE_42", clipboard.Html);
+            Assert.DoesNotContain("Different list task", clipboard.Html);
+            Assert.DoesNotContain("Trashed task", clipboard.Html);
+            Assert.True(
+                clipboard.Html.IndexOf("Second task", StringComparison.Ordinal)
+                < clipboard.Html.IndexOf("Investigate", StringComparison.Ordinal));
+            Assert.Contains("| ID | Title | Status |", clipboard.PlainText);
         }
         finally
         {

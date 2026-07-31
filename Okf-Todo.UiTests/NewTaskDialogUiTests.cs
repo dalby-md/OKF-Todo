@@ -43,6 +43,33 @@ public sealed class NewTaskDialogUiTests
         })();
         """;
 
+    private const string ClipboardAdapterScript = """
+        (() => {
+          window.__clipboardWrite = null
+          class TestClipboardItem {
+            constructor(items) {
+              this.items = items
+            }
+          }
+          Object.defineProperty(window, 'ClipboardItem', {
+            configurable: true,
+            value: TestClipboardItem
+          })
+          Object.defineProperty(navigator, 'clipboard', {
+            configurable: true,
+            value: {
+              async write(items) {
+                const item = items[0]
+                window.__clipboardWrite = {
+                  html: await item.items['text/html'].text(),
+                  plainText: await item.items['text/plain'].text()
+                }
+              }
+            }
+          })
+        })()
+        """;
+
     [Fact]
     public async Task EmptyDatabase_OffersRemovableSampleDataAndPreservesFirstRunChoice()
     {
@@ -1176,6 +1203,7 @@ public sealed class NewTaskDialogUiTests
             ViewportSize = new ViewportSize { Width = 1487, Height = 1058 }
         });
         await context.AddInitScriptAsync(BridgeAdapterScript);
+        await context.AddInitScriptAsync(ClipboardAdapterScript);
 
         var page = await context.NewPageAsync();
         await page.GotoAsync(
@@ -1261,7 +1289,23 @@ public sealed class NewTaskDialogUiTests
         Assert.Equal(
             2,
             await page.Locator("#task-export-column-options input:checked").CountAsync());
-        await page.Locator("#task-export-cancel-button").ClickAsync();
+        await page.Locator("#task-export-copy-html-button").ClickAsync();
+        await page.Locator("#task-export-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Hidden
+        });
+        using var clipboard = JsonDocument.Parse(await page.EvaluateAsync<string>(
+            "() => JSON.stringify(window.__clipboardWrite)"));
+        var clipboardHtml = clipboard.RootElement.GetProperty("html").GetString() ?? string.Empty;
+        var clipboardPlainText = clipboard.RootElement.GetProperty("plainText").GetString() ?? string.Empty;
+        Assert.Contains("<table", clipboardHtml);
+        Assert.Contains("<th", clipboardHtml);
+        Assert.Contains("Verify deployment variable replacement", clipboardHtml);
+        Assert.DoesNotContain("Prepare Power Platform release notes", clipboardHtml);
+        Assert.Contains("| Title | Status |", clipboardPlainText);
+        Assert.Contains("task.export.html", fixture.BridgeMessageTypes);
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#save-status')?.textContent.includes('as HTML')");
     }
 
     [Fact]

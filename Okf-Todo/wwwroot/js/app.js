@@ -1897,7 +1897,7 @@
                 <span class="task-export-heading-icon fluent-icon" aria-hidden="true">&#xEDE1;</span>
                 <div>
                   <p class="eyebrow">Share a task overview</p>
-                  <h2 id="task-export-title">Export Markdown table</h2>
+                  <h2 id="task-export-title">Share task table</h2>
                 </div>
               </div>
               <button id="task-export-close-button" class="secondary-button task-export-close-button" type="button" aria-label="Close export" title="Close">
@@ -1906,7 +1906,7 @@
             </header>
 
             <p id="task-export-intro" class="task-export-intro">
-              Export the tasks in the current view with the current search, filters, and sort order.
+              Export a Markdown file or copy a formatted HTML table using the current search, filters, and sort order.
             </p>
 
             <fieldset class="task-export-options">
@@ -1948,6 +1948,10 @@
             <p id="task-export-error" class="form-error" hidden></p>
             <div class="modal-actions task-export-actions">
               <button id="task-export-cancel-button" class="secondary-button" type="button">Cancel</button>
+              <button id="task-export-copy-html-button" class="secondary-button" type="button">
+                <span class="fluent-icon" aria-hidden="true">&#xE8C8;</span>
+                <span>Copy as HTML</span>
+              </button>
               <button id="task-export-confirm-button" type="button">
                 <span class="fluent-icon" aria-hidden="true">&#xEDE1;</span>
                 <span>Export Markdown</span>
@@ -2524,14 +2528,25 @@
     return taskList ? taskList.name : 'Current list'
   }
 
-  function setTaskExportBusy(isBusy) {
+  function setTaskExportBusy(isBusy, busyAction) {
     $('#task-export-close-button, #task-export-cancel-button').prop('disabled', isBusy)
+    const isUnavailable = isBusy
+      || taskExportTaskIds.length === 0
+      || getApplicableTaskExportColumns().length === 0
     $('#task-export-confirm-button')
       .prop(
         'disabled',
-        isBusy || taskExportTaskIds.length === 0 || getApplicableTaskExportColumns().length === 0)
+        isUnavailable)
       .find('span:last')
-      .text(isBusy ? 'Exporting…' : (hasUnsavedChanges() ? 'Save and export' : 'Export Markdown'))
+      .text(isBusy && busyAction === 'export'
+        ? 'Exporting…'
+        : (hasUnsavedChanges() ? 'Save and export' : 'Export Markdown'))
+    $('#task-export-copy-html-button')
+      .prop('disabled', isUnavailable)
+      .find('span:last')
+      .text(isBusy && busyAction === 'copy'
+        ? 'Copying…'
+        : (hasUnsavedChanges() ? 'Save and copy' : 'Copy as HTML'))
   }
 
   function getTaskExportSortDescription() {
@@ -2641,48 +2656,62 @@
     $('#task-export-error').text('').prop('hidden', true)
   }
 
+  async function prepareTaskExportAction() {
+    if (taskExportTaskIds.length === 0 || getApplicableTaskExportColumns().length === 0) {
+      return false
+    }
+
+    $('#task-export-error').text('').prop('hidden', true)
+    if (hasUnsavedChanges()) {
+      const saved = await saveTask()
+      if (!saved) {
+        return false
+      }
+
+      $('#task-export-unsaved-warning').prop('hidden', true)
+    }
+
+    taskExportTaskListId = activeTaskListId
+    renderTaskExportPreview()
+    if (taskExportTaskIds.length === 0) {
+      $('#task-export-error')
+        .text('There are no tasks in the current results.')
+        .prop('hidden', false)
+      return false
+    }
+    if (getApplicableTaskExportColumns().length === 0) {
+      $('#task-export-error')
+        .text('Select at least one column available in this list scope.')
+        .prop('hidden', false)
+      return false
+    }
+
+    await taskExportColumnSavePromise
+    return true
+  }
+
+  function getTaskExportRequest() {
+    return {
+      taskIds: taskExportTaskIds,
+      taskListId: taskExportTaskListId,
+      viewName: viewLabels[currentView],
+      sortDescription: getTaskExportSortDescription(),
+      columns: taskExportSelectedColumns
+    }
+  }
+
   async function exportTasksToMarkdown() {
     if (taskExportTaskIds.length === 0 || getApplicableTaskExportColumns().length === 0) {
       return
     }
 
-    setTaskExportBusy(true)
-    $('#task-export-error').text('').prop('hidden', true)
+    setTaskExportBusy(true, 'export')
 
     try {
-      if (hasUnsavedChanges()) {
-        const saved = await saveTask()
-        if (!saved) {
-          return
-        }
+      if (!await prepareTaskExportAction()) return
+      setTaskExportBusy(true, 'export')
 
-        $('#task-export-unsaved-warning').prop('hidden', true)
-      }
-
-      taskExportTaskListId = activeTaskListId
-      renderTaskExportPreview()
-      if (taskExportTaskIds.length === 0) {
-        $('#task-export-error')
-          .text('There are no tasks in the current results.')
-          .prop('hidden', false)
-        return
-      }
-      if (getApplicableTaskExportColumns().length === 0) {
-        $('#task-export-error')
-          .text('Select at least one column available in this list scope.')
-          .prop('hidden', false)
-        return
-      }
-      await taskExportColumnSavePromise
-      setTaskExportBusy(true)
-
-      const result = await sendBridgeMessage('task.export.markdown', {
-        taskIds: taskExportTaskIds,
-        taskListId: taskExportTaskListId,
-        viewName: viewLabels[currentView],
-        sortDescription: getTaskExportSortDescription(),
-        columns: taskExportSelectedColumns
-      })
+      const result = await sendBridgeMessage('task.export.markdown', getTaskExportRequest())
       if (result.cancelled) {
         setStatus('Export cancelled', 'ready')
         return
@@ -2694,6 +2723,46 @@
         'saved')
     } catch (error) {
       const message = getErrorMessage(error, 'Could not export tasks')
+      $('#task-export-error').text(message).prop('hidden', false)
+      setStatus(message, 'error')
+    } finally {
+      setTaskExportBusy(false)
+    }
+  }
+
+  async function writeHtmlToClipboard(html, plainText) {
+    if (!navigator.clipboard
+        || typeof navigator.clipboard.write !== 'function'
+        || typeof window.ClipboardItem !== 'function') {
+      throw new Error('HTML clipboard access is unavailable in this WebView.')
+    }
+
+    await navigator.clipboard.write([
+      new window.ClipboardItem({
+        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([plainText], { type: 'text/plain' })
+      })
+    ])
+  }
+
+  async function copyTasksAsHtml() {
+    if (taskExportTaskIds.length === 0 || getApplicableTaskExportColumns().length === 0) {
+      return
+    }
+
+    setTaskExportBusy(true, 'copy')
+    try {
+      if (!await prepareTaskExportAction()) return
+      setTaskExportBusy(true, 'copy')
+
+      const result = await sendBridgeMessage('task.export.html', getTaskExportRequest())
+      await writeHtmlToClipboard(result.html, result.plainText)
+      closeTaskExportDialog()
+      setStatus(
+        `Copied ${result.taskCount} ${result.taskCount === 1 ? 'task' : 'tasks'} as HTML`,
+        'saved')
+    } catch (error) {
+      const message = getErrorMessage(error, 'Could not copy tasks as HTML')
       $('#task-export-error').text(message).prop('hidden', false)
       setStatus(message, 'error')
     } finally {
@@ -6900,6 +6969,13 @@
     $('#task-export-confirm-button').on('click', function () {
       exportTasksToMarkdown().catch(function (error) {
         const message = getErrorMessage(error, 'Could not export tasks')
+        $('#task-export-error').text(message).prop('hidden', false)
+        setStatus(message, 'error')
+      })
+    })
+    $('#task-export-copy-html-button').on('click', function () {
+      copyTasksAsHtml().catch(function (error) {
+        const message = getErrorMessage(error, 'Could not copy tasks as HTML')
         $('#task-export-error').text(message).prop('hidden', false)
         setStatus(message, 'error')
       })

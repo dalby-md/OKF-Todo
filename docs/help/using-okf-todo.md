@@ -256,9 +256,9 @@ Selection applies only to tasks currently shown by the active list, view, search
 
 Select **Done selecting** when finished.
 
-## Export a Markdown work inventory
+## Export or copy a work inventory
 
-Select **Export** beside the task count when you need a task overview for a handover, incident review, planning note, customer-status preparation, or another document that accepts Markdown.
+Select **Export** beside the task count when you need a task overview for a handover, incident review, planning note, customer-status preparation, or another document.
 
 The export contains exactly the tasks in the current results: the selected list or **All lists**, the current lifecycle view, search text, tag, type, status, and priority filters, in the current sort order. The dialog shows the scope, ordering, and resulting task count before you continue.
 
@@ -268,7 +268,9 @@ When **All lists** is selected, the export includes a List column so readers can
 
 Use **Columns** to choose any combination of ID, Title, List, Type, Status, Priority, Deadline, Waiting for, Owner, Responsible, Source, Tags, Checklist, and Updated. Select at least one column available in the current list scope. **List** applies only when **All lists** is selected, but your List choice is retained when you return to a concrete list. OKF-Todo saves the last valid selection in your user preferences and restores it the next time you open Export.
 
-If the open task has unsaved changes, OKF-Todo asks you to save them as part of the export flow. After saving, choose the `.md` destination in the Windows save dialog. The application remembers the directory used by the last successful task export.
+Choose **Export Markdown** to create a `.md` file. If the open task has unsaved changes, OKF-Todo saves them first. Then choose the destination in the Windows save dialog. The application remembers the directory used by the last successful task export.
+
+Choose **Copy as HTML** to place the same selected tasks and columns on the clipboard as a formatted table. OKF-Todo also places a plain-text Markdown fallback on the clipboard. Paste into an application that accepts rich text, such as Outlook, Word, Teams, or a rich-text editor, to retain the HTML table. Copying does not open a file dialog or create a file.
 
 The table includes only the columns you selected. It does not include the task body, attachment contents, comments, relationships, or Timeline.
 

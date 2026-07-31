@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -16,31 +17,13 @@ public sealed class TaskMarkdownExportService(
         TaskMarkdownExportRequest request,
         CancellationToken cancellationToken)
     {
-        var scope = await ResolveScopeAsync(request.TaskListId, cancellationToken);
-        var taskIds = NormalizeTaskIds(request.TaskIds);
-        var rows = await LoadRowsAsync(taskIds, scope.TaskListId, cancellationToken);
-        if (rows.Count == 0)
-        {
-            throw new ValidationException(
-                "There are no tasks in the current results.",
-                "taskIds");
-        }
-
-        var exportedAt = DateTime.UtcNow;
-        var viewName = NormalizeDisplayValue(request.ViewName, "Current view", 80);
-        var sortDescription = NormalizeDisplayValue(
-            request.SortDescription,
-            "Current view order",
-            160);
-        var selectedColumns = TaskMarkdownExportColumns.Normalize(request.Columns)
-            .Where(column => column != TaskMarkdownExportColumns.List || scope.IncludeListColumn)
-            .ToList();
-        if (selectedColumns.Count == 0)
-        {
-            throw new ValidationException(
-                "Select at least one column available in the current list scope.",
-                "columns");
-        }
+        var content = await PrepareExportAsync(request, cancellationToken);
+        var scope = content.Scope;
+        var rows = content.Rows;
+        var exportedAt = content.ExportedAt;
+        var viewName = content.ViewName;
+        var sortDescription = content.SortDescription;
+        var selectedColumns = content.SelectedColumns;
         var suggestedFileName = BuildSuggestedFileName(scope.Name, exportedAt);
         var initialDirectory = await preferenceService.GetTaskExportDirectoryAsync(cancellationToken);
         var selectedPath = await destinationPicker.PickAsync(
@@ -128,6 +111,72 @@ public sealed class TaskMarkdownExportService(
                 File.Delete(temporaryPath);
             }
         }
+    }
+
+    public async Task<TaskHtmlClipboardResult> CreateHtmlClipboardAsync(
+        TaskMarkdownExportRequest request,
+        CancellationToken cancellationToken)
+    {
+        var content = await PrepareExportAsync(request, cancellationToken);
+        var plainText = RenderMarkdown(
+            content.Scope,
+            content.ViewName,
+            content.SortDescription,
+            content.SelectedColumns,
+            content.Rows,
+            content.ExportedAt);
+        var html = RenderHtml(
+            content.Scope,
+            content.ViewName,
+            content.SortDescription,
+            content.SelectedColumns,
+            content.Rows,
+            content.ExportedAt);
+
+        logger.LogInformation(
+            "Prepared {TaskCount} tasks from {ExportScope} as HTML clipboard content.",
+            content.Rows.Count,
+            content.Scope.Name);
+
+        return new TaskHtmlClipboardResult(
+            html,
+            plainText,
+            content.Rows.Count,
+            TaskMarkdownExportKinds.CurrentResults,
+            content.Scope.Name);
+    }
+
+    private async Task<PreparedTaskExport> PrepareExportAsync(
+        TaskMarkdownExportRequest request,
+        CancellationToken cancellationToken)
+    {
+        var scope = await ResolveScopeAsync(request.TaskListId, cancellationToken);
+        var taskIds = NormalizeTaskIds(request.TaskIds);
+        var rows = await LoadRowsAsync(taskIds, scope.TaskListId, cancellationToken);
+        if (rows.Count == 0)
+        {
+            throw new ValidationException(
+                "There are no tasks in the current results.",
+                "taskIds");
+        }
+
+        var selectedColumns = TaskMarkdownExportColumns.Normalize(request.Columns)
+            .Where(column => column != TaskMarkdownExportColumns.List || scope.IncludeListColumn)
+            .ToList();
+        if (selectedColumns.Count == 0)
+        {
+            throw new ValidationException(
+                "Select at least one column available in the current list scope.",
+                "columns");
+        }
+
+        return new PreparedTaskExport(
+            scope,
+            NormalizeDisplayValue(request.ViewName, "Current view", 80),
+            NormalizeDisplayValue(request.SortDescription, "Current view order", 160),
+            selectedColumns,
+            rows,
+            DateTime.UtcNow);
     }
 
     private async Task<TaskExportScope> ResolveScopeAsync(
@@ -240,6 +289,71 @@ public sealed class TaskMarkdownExportService(
         }
 
         return builder.ToString();
+    }
+
+    private static string RenderHtml(
+        TaskExportScope scope,
+        string viewName,
+        string sortDescription,
+        IReadOnlyList<string> selectedColumns,
+        IReadOnlyList<TaskMarkdownExportRow> rows,
+        DateTime exportedAt)
+    {
+        var scopeDescription = $"{viewName} results in {scope.Name}";
+        var builder = new StringBuilder();
+        builder.Append("<div>");
+        builder.Append("<h1>OKF-Todo task export</h1>");
+        builder.Append("<ul>");
+        AppendHtmlMetadata(builder, "Scope", scopeDescription);
+        AppendHtmlMetadata(builder, "Exported", $"{exportedAt:yyyy-MM-dd HH:mm} UTC");
+        AppendHtmlMetadata(builder, "Tasks", rows.Count.ToString(CultureInfo.InvariantCulture));
+        AppendHtmlMetadata(builder, "Ordering", sortDescription);
+        builder.Append("</ul>");
+        builder.Append("<table style=\"border-collapse:collapse\"><thead><tr>");
+        foreach (var column in selectedColumns)
+        {
+            builder.Append("<th style=\"border:1px solid #9ca3af;padding:6px 8px;text-align:left;background:#f3f4f6\">");
+            builder.Append(WebUtility.HtmlEncode(GetColumnHeader(column)));
+            builder.Append("</th>");
+        }
+        builder.Append("</tr></thead><tbody>");
+
+        foreach (var row in rows)
+        {
+            builder.Append("<tr>");
+            foreach (var column in selectedColumns)
+            {
+                builder.Append("<td style=\"border:1px solid #d1d5db;padding:6px 8px;vertical-align:top\">");
+                builder.Append(EncodeHtmlCell(GetColumnValue(column, row)));
+                builder.Append("</td>");
+            }
+            builder.Append("</tr>");
+        }
+
+        builder.Append("</tbody></table></div>");
+        return builder.ToString();
+    }
+
+    private static void AppendHtmlMetadata(StringBuilder builder, string label, string value)
+    {
+        builder.Append("<li><strong>");
+        builder.Append(WebUtility.HtmlEncode(label));
+        builder.Append(":</strong> ");
+        builder.Append(WebUtility.HtmlEncode(value));
+        builder.Append("</li>");
+    }
+
+    private static string EncodeHtmlCell(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return WebUtility.HtmlEncode(value.Trim())
+            .Replace("\r\n", "<br>", StringComparison.Ordinal)
+            .Replace("\n", "<br>", StringComparison.Ordinal)
+            .Replace("\r", "<br>", StringComparison.Ordinal);
     }
 
     private static string GetColumnHeader(string column)
@@ -489,7 +603,22 @@ public sealed record TaskMarkdownExportResult(
     string ExportKind,
     string ScopeName);
 
+public sealed record TaskHtmlClipboardResult(
+    string Html,
+    string PlainText,
+    int TaskCount,
+    string ExportKind,
+    string ScopeName);
+
 internal sealed record TaskExportScope(int? TaskListId, string Name, bool IncludeListColumn);
+
+internal sealed record PreparedTaskExport(
+    TaskExportScope Scope,
+    string ViewName,
+    string SortDescription,
+    IReadOnlyList<string> SelectedColumns,
+    IReadOnlyList<TaskMarkdownExportRow> Rows,
+    DateTime ExportedAt);
 
 internal sealed record TaskMarkdownExportRow(
     int Id,

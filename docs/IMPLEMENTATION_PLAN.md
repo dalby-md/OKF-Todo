@@ -663,7 +663,7 @@ Acceptance criteria:
 - The same list-resolution precedence is used and documented across application commands, MCP, and OKF/SQLite writes.
 - Focused service, migration, MCP, installed-contract, and Playwright coverage exercise creation, resolution, scoping, list management, moves, Undo, and responsive behavior.
 
-## Milestone 18 — Markdown task export
+## Milestone 18 — Task inventory export and HTML clipboard
 
 Status: implemented.
 
@@ -674,6 +674,7 @@ Scope:
 - Keep collapsed groups presentation-only, so matching finished Starred tasks remain included, and exclude Trash entirely.
 - Provide a picker for the existing operational columns and persist the selected column set in the current user's application preferences.
 - Generate a compact operational Markdown table with the selected IDs, planning fields, ownership, source, tags, checklist progress, and updated timestamps.
+- Generate an encoded, compact HTML version of the same table and copy it with a plain-text Markdown fallback through the WebView clipboard API.
 - Use the native save-file dialog, remember the last successful export directory, and write UTF-8 files atomically.
 - Require the current task's unsaved edits to be saved before exporting.
 
@@ -686,4 +687,5 @@ Acceptance criteria:
 - The export dialog restores the current user's last valid column selection, requires at least one applicable column, and applies List only to global exports.
 - Markdown-reserved characters and multiline values cannot break the generated table.
 - Cancelling the native picker creates no file; a successful export is valid UTF-8 without a byte-order mark.
+- Copy as HTML creates no file, preserves the current result order and selected columns, and writes both HTML and plain-text clipboard formats.
 - Focused service tests and Playwright coverage verify the export contract through the application bridge.
