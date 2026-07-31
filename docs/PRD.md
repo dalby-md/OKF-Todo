@@ -573,15 +573,16 @@ Suggested first views:
 Active tasks
 Ready tasks
 Starred tasks
-Urgent active tasks
+Attention tasks
 Waiting tasks
-Overdue tasks
 Completed tasks
 All tasks
 Trash
 ```
 
 `Active tasks` is the complete unfinished-work umbrella and includes tasks that are waiting. `Ready tasks` contains active tasks with no unresolved wait target. `Waiting tasks` contains active tasks with an unresolved wait target. Ready and Waiting are therefore complementary operational queues within Active.
+
+`Attention tasks` combines active tasks that have urgent priority or a deadline before the current local date. It uses OR semantics, shows each task once, and groups the result as Urgent and overdue, Overdue, then Urgent. The view navigation provides popup help explaining the inclusion and grouping rules.
 
 Cancelled tasks appear only in `All tasks`, where their titles use red struck-through text and all pills are gray. They do not appear in `Completed tasks`.
 

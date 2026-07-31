@@ -6,9 +6,8 @@
     active: 'Active',
     ready: 'Ready',
     starred: 'Starred',
-    urgent: 'Urgent',
+    attention: 'Attention',
     waiting: 'Waiting',
-    overdue: 'Overdue',
     completed: 'Completed',
     all: 'All statuses',
     trash: 'Trash'
@@ -17,9 +16,8 @@
     active: 'All active tasks, including tasks that are waiting',
     ready: 'Active tasks that are not waiting',
     starred: 'Tasks you marked for focus',
-    urgent: 'Active tasks with urgent priority',
+    attention: 'Active tasks that are urgent or overdue, grouped by why they need attention. Overdue means before today; due today is not overdue.',
     waiting: 'Active tasks waiting for a person, response, or other event',
-    overdue: 'Active tasks with a deadline before today',
     completed: 'Tasks that have been completed',
     all: 'Active, completed, and cancelled tasks',
     trash: 'Deleted tasks that can be restored or removed permanently'
@@ -872,9 +870,8 @@
       active: '&#xE80F;',
       ready: '&#xE768;',
       starred: '&#xE734;',
-      urgent: '&#xE814;',
+      attention: '&#xE814;',
       waiting: '&#xE823;',
-      overdue: '&#xE787;',
       completed: '&#xE73E;',
       all: '&#xEA37;',
       trash: '&#xE74D;'
@@ -1043,6 +1040,7 @@
                 <p class="eyebrow">Task queue</p>
                 <div class="task-sidebar-title-line">
                   <h2 id="task-list-title">Active</h2>
+                  <span id="task-list-view-help" class="task-list-view-help fluent-icon" tabindex="0" role="img" aria-label="About the Attention view" title="${viewDescriptions.attention}" hidden>&#xE946;</span>
                   <span id="task-list-header-count" class="task-list-header-count" aria-live="polite">0 tasks</span>
                 </div>
               </div>
@@ -4725,6 +4723,46 @@
     return task.taskStatusCode === 'COMPLETED' || task.taskStatusCode === 'CANCELLED'
   }
 
+  function isTaskUrgent(task) {
+    return task && task.taskStatusCode === 'ACTIVE' && task.taskPriorityCode === 'URGENT'
+  }
+
+  function renderAttentionTaskGroup(label, groupedTasks) {
+    if (groupedTasks.length === 0) {
+      return ''
+    }
+
+    return `
+      <section class="task-list-attention-group" aria-label="${encodeAttribute(label)}">
+        <h3 class="task-list-group-heading">
+          <span>${encodeText(label)}</span>
+          <span class="task-list-group-count">${groupedTasks.length}</span>
+        </h3>
+        <div class="task-list-group">
+          ${groupedTasks.map(renderTaskRowShell).join('')}
+        </div>
+      </section>
+    `
+  }
+
+  function renderAttentionTaskGroups(visibleTasks) {
+    const urgentAndOverdue = visibleTasks.filter(function (task) {
+      return isTaskUrgent(task) && isTaskOverdue(task)
+    })
+    const overdue = visibleTasks.filter(function (task) {
+      return isTaskOverdue(task) && !isTaskUrgent(task)
+    })
+    const urgent = visibleTasks.filter(function (task) {
+      return isTaskUrgent(task) && !isTaskOverdue(task)
+    })
+
+    return [
+      renderAttentionTaskGroup('Urgent and overdue', urgentAndOverdue),
+      renderAttentionTaskGroup('Overdue', overdue),
+      renderAttentionTaskGroup('Urgent', urgent)
+    ].join('')
+  }
+
   function getNavigableTasks() {
     const visibleTasks = getVisibleTasks()
     if (currentView === 'starred' && !starredFinishedExpanded) {
@@ -4832,6 +4870,7 @@
     renderTaskFilterSummary()
     $('#task-view').val(currentView)
     $('#task-list-title').text(viewLabels[currentView])
+    $('#task-list-view-help').prop('hidden', currentView !== 'attention')
     $('#task-list-header-count').text(`${visibleTasks.length} ${visibleTasks.length === 1 ? 'task' : 'tasks'}`)
     $('#task-export-button').prop('hidden', currentView === 'trash')
     const $activeViewButton = $('.task-view-rail-button')
@@ -4881,7 +4920,9 @@
       return
     }
 
-    if (currentView === 'starred') {
+    if (currentView === 'attention') {
+      $('#task-list').html(renderAttentionTaskGroups(visibleTasks))
+    } else if (currentView === 'starred') {
       const activeStarredTasks = visibleTasks.filter(function (task) { return !isFinishedTask(task) })
       const finishedStarredTasks = visibleTasks.filter(isFinishedTask)
       const finishedMarkup = finishedStarredTasks.length === 0

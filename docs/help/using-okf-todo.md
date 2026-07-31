@@ -102,14 +102,15 @@ Hover over a view in the navigation rail to see a one-line description of the wo
 | **Active** | See all current unfinished work, including tasks that are waiting. |
 | **Ready** | See active tasks that have no unresolved waiting target and can be worked on now. |
 | **Starred** | Return to tasks you deliberately marked for focus. Finished starred tasks remain available in a collapsed Finished group. |
-| **Urgent** | Review active work with urgent priority. |
+| **Attention** | Review active tasks that are urgent or overdue. Each task appears once, grouped as Urgent and overdue, Overdue, then Urgent. Hover over its navigation entry or the information icon beside its heading for an explanation. |
 | **Waiting** | See tasks that depend on a person, team, case, response, or other external event. |
-| **Overdue** | Find active tasks whose deadline is before today. A task due today is not overdue. |
 | **Completed** | Review completed work. |
 | **All statuses** | See active, completed, and cancelled work together. |
 | **Trash** | Restore tasks or permanently remove them. |
 
 **Ready** and **Waiting** divide active work by whether it has an unresolved waiting target. Use **Ready** as the focused queue for work you can advance now, and return to **Active** when you need the complete unfinished picture.
+
+**Attention** uses an OR rule: a task belongs there when it has Urgent priority, when its deadline is overdue, or both. Overdue means before today; a task due today is not overdue. A task that is both urgent and overdue appears only in the first group, never twice.
 
 When you add a waiting target while working in **Ready**, saving moves the task to **Waiting** and keeps it selected. Clearing the waiting target from **Waiting** moves it back to **Ready** in the same way.
 

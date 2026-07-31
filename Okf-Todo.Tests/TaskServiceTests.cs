@@ -266,6 +266,11 @@ public sealed class TaskServiceTests
         {
             TaskPriorityCode = TaskPriorityCodes.Urgent
         }, CancellationToken.None);
+        var urgentAndOverdue = await database.Tasks.CreateAsync(CreateRequest("Urgent and overdue") with
+        {
+            TaskPriorityCode = TaskPriorityCodes.Urgent,
+            Deadline = today.AddDays(-2)
+        }, CancellationToken.None);
         var active = await database.Tasks.CreateAsync(CreateRequest("Active"), CancellationToken.None);
         var waiting = await database.Tasks.CreateAsync(CreateRequest("Waiting"), CancellationToken.None);
         await database.Tasks.AddWaitingForAsync(
@@ -280,29 +285,34 @@ public sealed class TaskServiceTests
 
         var activeTasks = await database.Tasks.ListAsync(new TaskListRequest("active"), CancellationToken.None);
         Assert.Equal(
-            [overdue.Id, urgent.Id, active.Id, waiting.Id, canWait.Id],
+            [urgentAndOverdue.Id, overdue.Id, urgent.Id, active.Id, waiting.Id, canWait.Id],
             activeTasks.Select(task => task.Id));
 
         var readyTasks = await database.Tasks.ListAsync(new TaskListRequest("ready"), CancellationToken.None);
         Assert.Equal(
-            [overdue.Id, urgent.Id, active.Id, canWait.Id],
+            [urgentAndOverdue.Id, overdue.Id, urgent.Id, active.Id, canWait.Id],
             readyTasks.Select(task => task.Id));
 
+        var attentionTasks = await database.Tasks.ListAsync(new TaskListRequest("attention"), CancellationToken.None);
+        Assert.Equal(
+            [urgentAndOverdue.Id, overdue.Id, urgent.Id],
+            attentionTasks.Select(task => task.Id));
+
         var urgentTasks = await database.Tasks.ListAsync(new TaskListRequest("urgent"), CancellationToken.None);
-        Assert.Equal([urgent.Id], urgentTasks.Select(task => task.Id));
+        Assert.Equal([urgentAndOverdue.Id, urgent.Id], urgentTasks.Select(task => task.Id));
 
         var waitingTasks = await database.Tasks.ListAsync(new TaskListRequest("waiting"), CancellationToken.None);
         Assert.Equal([waiting.Id], waitingTasks.Select(task => task.Id));
 
         var overdueTasks = await database.Tasks.ListAsync(new TaskListRequest("overdue"), CancellationToken.None);
-        Assert.Equal([overdue.Id], overdueTasks.Select(task => task.Id));
+        Assert.Equal([urgentAndOverdue.Id, overdue.Id], overdueTasks.Select(task => task.Id));
 
         var completedTasks = await database.Tasks.ListAsync(new TaskListRequest("completed"), CancellationToken.None);
         Assert.Equal([completed.Id], completedTasks.Select(task => task.Id));
 
         var allTasks = await database.Tasks.ListAsync(new TaskListRequest("all"), CancellationToken.None);
         Assert.Equal(
-            [overdue.Id, urgent.Id, active.Id, waiting.Id, canWait.Id, completed.Id],
+            [urgentAndOverdue.Id, overdue.Id, urgent.Id, active.Id, waiting.Id, canWait.Id, completed.Id],
             allTasks.Select(task => task.Id));
     }
 

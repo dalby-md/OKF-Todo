@@ -428,7 +428,7 @@ public sealed class BridgeTaskMessageTests
     }
 
     [Fact]
-    public async Task Bridge_ListsUrgentWaitingAndOverdueViews()
+    public async Task Bridge_ListsAttentionUrgentWaitingAndOverdueViews()
     {
         await using var fixture = await BridgeFixture.CreateAsync();
 
@@ -469,6 +469,11 @@ public sealed class BridgeTaskMessageTests
             sourceUrl = (string?)null,
             deadline = DateTime.UtcNow.Date.AddDays(-1)
         });
+
+        var attentionList = await fixture.SendAsync("task.list", new { view = "attention" });
+        Assert.Equal(
+            [overdue.GetProperty("id").GetInt32(), urgent.GetProperty("id").GetInt32()],
+            attentionList.EnumerateArray().Select(item => item.GetProperty("id").GetInt32()));
 
         var urgentList = await fixture.SendAsync("task.list", new { view = "urgent" });
         Assert.Equal(urgent.GetProperty("id").GetInt32(), Assert.Single(urgentList.EnumerateArray()).GetProperty("id").GetInt32());
