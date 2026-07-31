@@ -159,6 +159,14 @@ public sealed class NewTaskDialogUiTests
     public async Task AppearanceFontSize_DefaultsToStandardAndPersistsAllSupportedScales()
     {
         await using var fixture = await UiAppFixture.CreateAsync();
+        await fixture.SendBridgeAsync("task.create", new
+        {
+            title = "Font size preference test",
+            taskTypeCode = "NOTE",
+            body = "",
+            bodyFormatCode = "HTML",
+            taskPriorityCode = "NORMAL"
+        });
         using var playwright = await Playwright.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
@@ -170,20 +178,37 @@ public sealed class NewTaskDialogUiTests
             ViewportSize = new ViewportSize { Width = 1487, Height = 1058 }
         });
         await context.AddInitScriptAsync(BridgeAdapterScript);
+        await context.AddInitScriptAsync("""
+            (() => {
+              window.__firstRunModalWasVisible = false
+              new MutationObserver(() => {
+                const overlay = document.querySelector('#first-run-overlay')
+                if (overlay && !overlay.hidden) {
+                  window.__firstRunModalWasVisible = true
+                }
+              }).observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] })
+            })()
+            """);
 
         var page = await context.NewPageAsync();
         await page.GotoAsync(
             $"{fixture.BaseUrl}/index.html?v=appearance-font-size",
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        Assert.False(await page.EvaluateAsync<bool>("() => window.__firstRunModalWasVisible"));
 
         Assert.Equal(
             "16px",
             await page.EvaluateAsync<string>("() => getComputedStyle(document.documentElement).fontSize"));
 
         await OpenAppearancePreferencesAsync(page);
+        Assert.Equal(5, await page.Locator("[data-preference-select='font-size'] .preference-choice").CountAsync());
         Assert.True(await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='STANDARD']")
             .EvaluateAsync<bool>("button => button.classList.contains('is-selected')"));
+
+        await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='SMALLEST']").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => getComputedStyle(document.documentElement).fontSize === '12px' && document.querySelector('#save-status').textContent === 'Font size saved'");
 
         await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='SMALL']").ClickAsync();
         await page.WaitForFunctionAsync(
@@ -192,15 +217,18 @@ public sealed class NewTaskDialogUiTests
         await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='LARGE']").ClickAsync();
         await page.WaitForFunctionAsync(
             "() => getComputedStyle(document.documentElement).fontSize === '18px' && document.querySelector('#save-status').textContent === 'Font size saved'");
+        await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='LARGEST']").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => getComputedStyle(document.documentElement).fontSize === '20px' && document.querySelector('#save-status').textContent === 'Font size saved'");
         await page.Locator("#settings-close-button").ClickAsync();
 
         await page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
         Assert.Equal(
-            "18px",
+            "20px",
             await page.EvaluateAsync<string>("() => getComputedStyle(document.documentElement).fontSize"));
         await OpenAppearancePreferencesAsync(page);
-        Assert.True(await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='LARGE']")
+        Assert.True(await page.Locator("[data-preference-select='font-size'] .preference-choice[data-value='LARGEST']")
             .EvaluateAsync<bool>("button => button.classList.contains('is-selected')"));
         Assert.Contains("layout.preference.save", fixture.BridgeMessageTypes);
     }

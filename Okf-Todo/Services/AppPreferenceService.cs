@@ -669,9 +669,11 @@ public sealed class AppPreferenceService(
             ? DefaultFontSize
             : fontSize.Trim().ToUpperInvariant();
 
-        if (normalizedFontSize is FontSizeModes.Small
+        if (normalizedFontSize is FontSizeModes.Smallest
+            or FontSizeModes.Small
             or FontSizeModes.Standard
-            or FontSizeModes.Large)
+            or FontSizeModes.Large
+            or FontSizeModes.Largest)
         {
             return normalizedFontSize;
         }
@@ -936,9 +938,11 @@ public static class ColorSchemes
 
 public static class FontSizeModes
 {
+    public const string Smallest = "SMALLEST";
     public const string Small = "SMALL";
     public const string Standard = "STANDARD";
     public const string Large = "LARGE";
+    public const string Largest = "LARGEST";
 }
 
 public static class TaskListSortModes

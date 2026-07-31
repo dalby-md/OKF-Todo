@@ -511,7 +511,7 @@ Acceptance criteria:
 - Text search includes task tags, while explicit multi-tag filtering remains available on demand with OR semantics and removable filter chips.
 - The Filters badge counts selected tags and exact task type, lifecycle status, and priority filters. Active field filters participate in the clear action and removable filter summary, which remains absent when no field filters are selected.
 - Function-key shortcuts provide editor-safe access to Help (**F1**), New task (**F2**), Search (**F3**), context-aware Save buttons (**F8**), and Complete (**F9**); **Ctrl+K** remains available to the body editors.
-- Appearance offers persistent Small (14px), Standard (16px), and Large (18px) interface font sizes; Standard is the default.
+- Appearance offers persistent Smallest (12px), Small (14px), Standard (16px), Large (18px), and Largest (20px) interface font sizes; Standard is the default.
 
 ## Milestone 14 — Database management
 

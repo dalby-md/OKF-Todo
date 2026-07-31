@@ -658,7 +658,7 @@ public sealed class BridgeTaskMessageTests
             allowEditingCompletedTasks = true,
             allowEditingCancelledTasks = false,
             taskSelectionCoachmarkSeen = true,
-            fontSize = "LARGE",
+            fontSize = "LARGEST",
             colorScheme = "DARK",
             taskSortModes = new Dictionary<string, string>
             {
@@ -675,7 +675,7 @@ public sealed class BridgeTaskMessageTests
         Assert.Equal(275, saved.GetProperty("taskListHeight").GetDouble());
         Assert.Equal("STACKED", saved.GetProperty("layoutMode").GetString());
         Assert.Equal("EXPANDED", saved.GetProperty("taskFilterLayout").GetString());
-        Assert.Equal("LARGE", saved.GetProperty("fontSize").GetString());
+        Assert.Equal("LARGEST", saved.GetProperty("fontSize").GetString());
         Assert.True(saved.GetProperty("showSourceFields").GetBoolean());
         Assert.True(saved.GetProperty("showOwner").GetBoolean());
         Assert.False(saved.GetProperty("showResponsible").GetBoolean());
@@ -695,7 +695,7 @@ public sealed class BridgeTaskMessageTests
         Assert.Equal(275, loaded.GetProperty("taskListHeight").GetDouble());
         Assert.Equal("STACKED", loaded.GetProperty("layoutMode").GetString());
         Assert.Equal("EXPANDED", loaded.GetProperty("taskFilterLayout").GetString());
-        Assert.Equal("LARGE", loaded.GetProperty("fontSize").GetString());
+        Assert.Equal("LARGEST", loaded.GetProperty("fontSize").GetString());
         Assert.True(loaded.GetProperty("showSourceFields").GetBoolean());
         Assert.True(loaded.GetProperty("showOwner").GetBoolean());
         Assert.False(loaded.GetProperty("showResponsible").GetBoolean());

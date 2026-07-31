@@ -123,9 +123,11 @@
     dark: 'DARK'
   }
   const fontSizeCodes = {
+    smallest: 'SMALLEST',
     small: 'SMALL',
     standard: 'STANDARD',
-    large: 'LARGE'
+    large: 'LARGE',
+    largest: 'LARGEST'
   }
   const colorSchemeStorageKey = 'okf-todo-color-scheme'
   const allTaskListsScope = 'ALL'
@@ -204,6 +206,7 @@
     relationshipCount: 0,
     taskListCount: 0
   }
+  let hasLoadedDatabaseStatus = false
   let pendingDatabaseResetMode = null
   let taskTransitionReveal = null
   let taskTransitionRevealTimer = null
@@ -1470,15 +1473,19 @@
                       <strong>Font size</strong>
                       <span>Adjust text throughout the OKF-Todo interface.</span>
                     </div>
-                    <div class="preferences-segmented-control" data-preference-select="font-size" role="group" aria-label="Font size">
+                    <div class="preferences-segmented-control preferences-font-size-control" data-preference-select="font-size" role="group" aria-label="Font size">
+                      <button class="preference-choice" type="button" data-value="SMALLEST" aria-pressed="false">Smallest</button>
                       <button class="preference-choice" type="button" data-value="SMALL" aria-pressed="false">Small</button>
                       <button class="preference-choice" type="button" data-value="STANDARD" aria-pressed="false">Standard</button>
                       <button class="preference-choice" type="button" data-value="LARGE" aria-pressed="false">Large</button>
+                      <button class="preference-choice" type="button" data-value="LARGEST" aria-pressed="false">Largest</button>
                     </div>
                     <select id="font-size" class="sr-only preference-native-control" aria-hidden="true" tabindex="-1">
+                      <option value="SMALLEST">Smallest</option>
                       <option value="SMALL">Small</option>
                       <option value="STANDARD">Standard</option>
                       <option value="LARGE">Large</option>
+                      <option value="LARGEST">Largest</option>
                     </select>
                   </div>
 
@@ -3208,6 +3215,7 @@
 
   async function loadDatabaseStatus() {
     databaseStatus = await sendBridgeMessage('database.status.get', {})
+    hasLoadedDatabaseStatus = true
     renderDatabaseStatus()
     return databaseStatus
   }
@@ -4073,7 +4081,7 @@
 
   function normalizeFontSize(fontSize) {
     const normalizedFontSize = String(fontSize || '').trim().toUpperCase()
-    if (normalizedFontSize === fontSizeCodes.small || normalizedFontSize === fontSizeCodes.large) {
+    if (Object.values(fontSizeCodes).includes(normalizedFontSize)) {
       return normalizedFontSize
     }
 
@@ -4253,11 +4261,13 @@
 
   function applyFontSize(fontSize) {
     const normalizedFontSize = normalizeFontSize(fontSize)
-    const fontSizePixels = normalizedFontSize === fontSizeCodes.large
-      ? 18
-      : normalizedFontSize === fontSizeCodes.small
-        ? 14
-        : 16
+    const fontSizePixels = {
+      [fontSizeCodes.smallest]: 12,
+      [fontSizeCodes.small]: 14,
+      [fontSizeCodes.standard]: 16,
+      [fontSizeCodes.large]: 18,
+      [fontSizeCodes.largest]: 20
+    }[normalizedFontSize]
 
     layoutPreference.fontSize = normalizedFontSize
     document.documentElement.style.setProperty('--app-font-size', `${fontSizePixels}px`)
@@ -4898,7 +4908,8 @@
     $('#task-list-view-help').prop('hidden', currentView !== 'attention')
     $('#task-list-header-count').text(`${visibleTasks.length} ${visibleTasks.length === 1 ? 'task' : 'tasks'}`)
     $('#task-export-button').prop('hidden', currentView === 'trash')
-    const isFirstRun = (Number(databaseStatus.totalTaskCount) || 0) === 0
+    const isFirstRun = hasLoadedDatabaseStatus
+      && (Number(databaseStatus.totalTaskCount) || 0) === 0
     setFirstRunModalOpen(isFirstRun)
     const $activeViewButton = $('.task-view-rail-button')
       .removeClass('is-active is-transition-destination')

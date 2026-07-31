@@ -2309,6 +2309,15 @@ body.is-resizing-editor * {
   grid-auto-columns: minmax(92px, auto);
 }
 
+.preferences-font-size-control {
+  grid-auto-columns: minmax(72px, auto);
+}
+
+.preferences-font-size-control .preference-choice,
+.preferences-font-size-control .preference-choice:hover:not(:disabled) {
+  padding-inline: 10px;
+}
+
 .preferences-segmented-control .preference-choice,
 .preferences-segmented-control .preference-choice:hover:not(:disabled) {
   min-height: 36px;
