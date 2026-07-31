@@ -1355,6 +1355,27 @@
           </section>
         </div>
 
+        <div id="first-run-overlay" class="modal-overlay first-run-overlay" hidden>
+          <section
+            class="settings-dialog first-run-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="first-run-title"
+            aria-describedby="first-run-description first-run-removal-note">
+            <p class="first-run-kicker">Start your way</p>
+            <h2 id="first-run-title">No tasks yet</h2>
+            <p id="first-run-description">Create your first task, or explore OKF-Todo with 50 clearly marked sample tasks.</p>
+            <div class="first-run-actions">
+              <button id="first-run-new-task-button" type="button">Create first task</button>
+              <button id="first-run-sample-button" class="secondary-button" type="button">
+                <span class="button-spinner" aria-hidden="true" hidden></span>
+                <span class="sample-data-action-label">Explore with sample data</span>
+              </button>
+            </div>
+            <p id="first-run-removal-note" class="first-run-removal-note">Sample data is easy to remove anytime from Settings → Data &amp; maintenance. Tasks you create yourself are left alone.</p>
+          </section>
+        </div>
+
         <div id="help-overlay" class="modal-overlay" hidden>
           <section class="settings-dialog help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title">
             <header class="settings-header help-header">
@@ -3193,6 +3214,7 @@
 
   function setSampleDataCreationBusy(isBusy) {
     const $buttons = $('#add-sample-data-button, #first-run-sample-button')
+    $('#first-run-new-task-button').prop('disabled', isBusy)
     $buttons
       .prop('disabled', isBusy)
       .attr('aria-busy', isBusy ? 'true' : null)
@@ -4876,6 +4898,8 @@
     $('#task-list-view-help').prop('hidden', currentView !== 'attention')
     $('#task-list-header-count').text(`${visibleTasks.length} ${visibleTasks.length === 1 ? 'task' : 'tasks'}`)
     $('#task-export-button').prop('hidden', currentView === 'trash')
+    const isFirstRun = (Number(databaseStatus.totalTaskCount) || 0) === 0
+    setFirstRunModalOpen(isFirstRun)
     const $activeViewButton = $('.task-view-rail-button')
       .removeClass('is-active is-transition-destination')
       .attr('aria-current', null)
@@ -4889,23 +4913,9 @@
     if (visibleTasks.length === 0) {
       const isFirstRunEmptyState = !hasFilters
         && currentView === 'active'
-        && (Number(databaseStatus.totalTaskCount) || 0) === 0
+        && isFirstRun
       if (isFirstRunEmptyState) {
-        $('#task-list').html(`
-          <div class="empty-list first-run-empty-state">
-            <span class="first-run-kicker">Start your way</span>
-            <strong>No tasks yet</strong>
-            <span>Create your first task, or explore OKF-Todo with 50 clearly marked sample tasks.</span>
-            <div class="first-run-actions">
-              <button id="first-run-new-task-button" type="button">Create first task</button>
-              <button id="first-run-sample-button" class="secondary-button" type="button">
-                <span class="button-spinner" aria-hidden="true" hidden></span>
-                <span class="sample-data-action-label">Explore with sample data</span>
-              </button>
-            </div>
-            <small>Sample data is easy to remove anytime from Settings → Data &amp; maintenance. Tasks you create yourself are left alone.</small>
-          </div>
-        `)
+        $('#task-list').empty()
         syncTaskSelectionUi()
         return
       }
@@ -6741,8 +6751,12 @@
     }, 0)
   }
 
-  function closeNewTaskDialog() {
+  function closeNewTaskDialog(restoreFirstRunModal = true) {
     $('#new-task-overlay').prop('hidden', true)
+    if (restoreFirstRunModal && (Number(databaseStatus.totalTaskCount) || 0) === 0) {
+      setFirstRunModalOpen(true)
+      return
+    }
     $('#new-task-button').trigger('focus')
   }
 
@@ -6779,7 +6793,7 @@
       const savedTask = await sendBridgeMessage('task.get', { id: taskId })
       requireSavedTaskId(savedTask)
       await renderTaskEditor(savedTask)
-      closeNewTaskDialog()
+      closeNewTaskDialog(false)
       window.Editor.focus()
       selectViewForTask(savedTask)
       await loadTaskLists({ keepCurrentScope: true })
@@ -6804,6 +6818,26 @@
     return $('.modal-overlay').filter(function () {
       return !$(this).prop('hidden')
     }).length > 0
+  }
+
+  function setFirstRunModalOpen(isOpen) {
+    const $overlay = $('#first-run-overlay')
+    if (!$overlay.length) {
+      return
+    }
+
+    const wasHidden = $overlay.prop('hidden')
+    $overlay.prop('hidden', !isOpen)
+    $('.app-shell').children().not('#first-run-overlay')
+      .prop('inert', isOpen)
+      .attr('aria-hidden', isOpen ? 'true' : null)
+    $('body').toggleClass('has-blocking-modal', isOpen)
+
+    if (isOpen && wasHidden) {
+      window.setTimeout(function () {
+        $('#first-run-new-task-button').trigger('focus')
+      }, 0)
+    }
   }
 
   function triggerShortcutButton(selector) {
@@ -7198,7 +7232,7 @@
     $('#confirmation-overlay').on('click', function (event) {
       if (event.target === this) resolveConfirmationDialog(false)
     })
-    $('#new-task-cancel-button').on('click', closeNewTaskDialog)
+    $('#new-task-cancel-button').on('click', function () { closeNewTaskDialog() })
     $('#new-task-save-button').on('click', function () {
       createTaskFromDialog().catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not create task'), 'error')
@@ -7673,12 +7707,14 @@
         setStatus(getErrorMessage(error, 'Could not close OKF-Todo'), 'error')
       })
     })
-    $('#task-list').on('click', '#first-run-new-task-button', function () {
+    $('#first-run-new-task-button').on('click', function () {
+      setFirstRunModalOpen(false)
       openNewTaskDialog().catch(function (error) {
+        setFirstRunModalOpen(true)
         setStatus(getErrorMessage(error, 'Could not prepare a task list'), 'error')
       })
     })
-    $('#task-list').on('click', '#first-run-sample-button', function () {
+    $('#first-run-sample-button').on('click', function () {
       addSampleData().catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not add sample data'), 'error')
       })

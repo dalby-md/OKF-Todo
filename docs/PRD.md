@@ -458,7 +458,9 @@ While sample tasks are being generated, both sample-data entry points are disabl
 
 Each generated sample task is labelled internally with `TaskItem.IsSampleData = true`. This database marker is authoritative; the visible `sample-data` tag remains ordinary editable tag text. **Remove sample data** deletes only internally marked sample tasks and their owned content and relationships. A personal task is never removed merely because it has a `sample-data` tag.
 
-Sample data can be added through the UI only when the database has no tasks. A downloadable or URL-restored sample database is not used: the built-in seeder keeps sample generation aligned with the current migration and application version.
+The 50-task sample set is curated rather than uniformly dense. Ten worked cases tell coherent support and development stories through task-specific bodies, checklists, small valid attachments, comments, relationships, and automatic Timeline history. Other tasks provide moderate or simple examples so the queue still resembles normal use. The set covers partially and fully completed checklists, a reopened checklist item, attachment addition and removal, waiting added and cleared, priority and deadline changes, and a completed task that is reopened and completed again. Generated files are sanitized, deterministic, harmless, and collectively remain small enough for fast first-run creation.
+
+Sample data can be added through the UI only when the database has no tasks. With an empty database, a centered blocking first-run dialog keeps the workspace unavailable until the user chooses **Create first task** or **Explore with sample data**. A downloadable or URL-restored sample database is not used: the built-in seeder keeps sample generation aligned with the current migration and application version.
 
 ## Tags
 

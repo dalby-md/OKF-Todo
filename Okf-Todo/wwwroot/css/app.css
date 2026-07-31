@@ -73,6 +73,10 @@ textarea {
   background: #ffffff;
 }
 
+body.has-blocking-modal {
+  overflow: hidden;
+}
+
 select {
   padding-right: 32px;
 }
@@ -2597,24 +2601,34 @@ body.is-resizing-editor * {
   font-size: 0.78rem;
 }
 
-.first-run-empty-state {
-  gap: 10px;
-  padding: 22px 18px;
-  border-style: solid;
-  border-color: #cfe0dd;
-  background: linear-gradient(145deg, #f7fbfa 0%, #eef6f4 100%);
+.first-run-overlay {
+  z-index: 150;
+  background: rgb(15 23 42 / 56%);
 }
 
-.first-run-empty-state strong {
-  font-size: 1rem;
+.first-run-dialog {
+  gap: 14px;
+  width: min(520px, 100%);
+  padding: 28px;
+  border-top: 4px solid #167c74;
+  border-radius: 10px;
 }
 
-.first-run-empty-state > span,
-.first-run-empty-state small {
-  line-height: 1.45;
+.first-run-dialog h2,
+.first-run-dialog p {
+  margin: 0;
 }
 
-.first-run-empty-state .first-run-kicker {
+.first-run-dialog h2 {
+  font-size: 1.45rem;
+}
+
+.first-run-dialog #first-run-description {
+  color: #3f4f5a;
+  line-height: 1.55;
+}
+
+.first-run-dialog .first-run-kicker {
   color: #1f6f68;
   font-size: 0.7rem;
   font-weight: 700;
@@ -2622,9 +2636,21 @@ body.is-resizing-editor * {
   text-transform: uppercase;
 }
 
-.first-run-empty-state small {
+.first-run-removal-note {
   color: #536b68;
   font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 520px) {
+  .first-run-dialog {
+    padding: 22px 18px;
+  }
+
+  .first-run-dialog .first-run-actions,
+  .first-run-dialog .first-run-actions > button {
+    width: 100%;
+  }
 }
 
 .lookup-edit-preview {

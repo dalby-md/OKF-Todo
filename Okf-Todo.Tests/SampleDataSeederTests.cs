@@ -45,13 +45,72 @@ public sealed class SampleDataSeederTests
         Assert.Equal(12, await CountTasksWithStatusAsync(dbContext, TaskStatusCodes.Completed));
         Assert.Equal(8, await CountTasksWithStatusAsync(dbContext, TaskStatusCodes.Cancelled));
         Assert.Equal(6, await dbContext.TaskWaitingFors.CountAsync(waitingFor => waitingFor.ResolvedAt == null));
-        Assert.Equal(14, await dbContext.TaskItems.CountAsync(task => task.ChecklistItems.Count != 0));
-        Assert.Equal(8, await dbContext.TaskAttachments.CountAsync());
+        Assert.Equal(23, await dbContext.TaskItems.CountAsync(task => task.ChecklistItems.Count != 0));
+        Assert.Equal(117, await dbContext.TaskChecklistItems.CountAsync());
+        Assert.Equal(29, await dbContext.TaskAttachments.CountAsync());
+        Assert.Equal(40, await dbContext.TaskComments.CountAsync());
         Assert.Equal(5, await dbContext.Images.CountAsync(image => image.TaskId != null));
         Assert.Equal(12, await dbContext.TaskRelations.CountAsync());
+        Assert.Equal(393, await dbContext.TaskLogEntries.CountAsync());
         Assert.True(await dbContext.TaskTypes.AllAsync(type => type.Tasks.Count != 0));
         Assert.True(await dbContext.TaskTags.AnyAsync(tag => tag.Value == SampleDataSeeder.SampleTag));
         Assert.Equal(50, await dbContext.TaskItems.CountAsync(task => task.IsSampleData));
+        Assert.True(await dbContext.TaskAttachments.AllAsync(attachment =>
+            attachment.FileSize > 0
+            && attachment.ContentBlob.Length == attachment.FileSize
+            && attachment.Sha256Hash != null
+            && attachment.Sha256Hash.Length == 64));
+        Assert.True(await dbContext.TaskAttachments.SumAsync(attachment => attachment.FileSize) < 1024 * 1024);
+
+        var deploymentCase = await dbContext.TaskItems
+            .AsNoTracking()
+            .Include(task => task.ChecklistItems)
+            .Include(task => task.Attachments)
+            .Include(task => task.Comments)
+            .Include(task => task.LogEntries)
+                .ThenInclude(log => log.TaskLogType)
+            .SingleAsync(task => task.Title == "Fix failed production deployment");
+        Assert.Equal(7, deploymentCase.ChecklistItems.Count);
+        Assert.Equal(4, deploymentCase.ChecklistItems.Count(item => item.IsCompleted));
+        Assert.Equal(
+            ["deployment-error.log", "rollback-plan.md", "variable-diff.json"],
+            deploymentCase.Attachments.Select(attachment => attachment.FileName).Order());
+        Assert.Equal(4, deploymentCase.Comments.Count);
+        Assert.Contains(deploymentCase.LogEntries, log =>
+            log.TaskLogType!.Code == "ATTACHMENT_REMOVED"
+            && log.Message.Contains("preliminary-diagnosis.txt", StringComparison.Ordinal));
+        Assert.Contains(deploymentCase.LogEntries, log =>
+            log.TaskLogType!.Code == TaskLogTypeCodes.PriorityChanged);
+        Assert.Contains(deploymentCase.LogEntries, log =>
+            log.TaskLogType!.Code == TaskLogTypeCodes.WaitingForCleared);
+
+        var orderingCase = await dbContext.TaskItems
+            .AsNoTracking()
+            .Include(task => task.ChecklistItems)
+            .Include(task => task.LogEntries)
+                .ThenInclude(log => log.TaskLogType)
+            .SingleAsync(task => task.Title == "Fix incorrect overdue task sorting");
+        Assert.Equal(7, orderingCase.ChecklistItems.Count);
+        Assert.Equal(2, orderingCase.ChecklistItems.Count(item => item.IsCompleted));
+        Assert.Contains(orderingCase.LogEntries, log =>
+            log.TaskLogType!.Code == "CHECKLIST_ITEM_REOPENED"
+            && log.Message.Contains("local-date conversion", StringComparison.Ordinal));
+
+        var rootCauseCase = await dbContext.TaskItems
+            .AsNoTracking()
+            .Include(task => task.LogEntries)
+                .ThenInclude(log => log.TaskLogType)
+            .SingleAsync(task => task.Title == "Complete ServiceDesk root cause summary");
+        Assert.Equal(2, rootCauseCase.LogEntries.Count(log =>
+            log.TaskLogType!.Code == TaskLogTypeCodes.TaskCompleted));
+        Assert.Single(rootCauseCase.LogEntries, log =>
+            log.TaskLogType!.Code == TaskLogTypeCodes.TaskReopened);
+
+        var orderedLogTimes = deploymentCase.LogEntries
+            .OrderBy(log => log.Id)
+            .Select(log => log.CreatedAt)
+            .ToList();
+        Assert.Equal(orderedLogTimes.Order(), orderedLogTimes);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => seeder.SeedAsync());
         Assert.Equal(50, await dbContext.TaskItems.CountAsync());
@@ -90,6 +149,12 @@ public sealed class SampleDataSeederTests
         Assert.Equal(
             "Personal task",
             await dbContext.TaskItems.Select(task => task.Title).SingleAsync());
+        Assert.Equal(0, await dbContext.TaskChecklistItems.CountAsync());
+        Assert.Equal(0, await dbContext.TaskAttachments.CountAsync());
+        Assert.Equal(0, await dbContext.TaskComments.CountAsync());
+        Assert.Equal(0, await dbContext.TaskLogEntries.CountAsync());
+        Assert.Equal(0, await dbContext.TaskRelations.CountAsync());
+        Assert.Equal(0, await dbContext.Images.CountAsync());
     }
 
     private static Task<int> CountTasksWithStatusAsync(AppDbContext dbContext, string statusCode)

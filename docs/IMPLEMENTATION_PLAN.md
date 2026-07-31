@@ -541,8 +541,10 @@ Acceptance criteria:
 - A restore source remains unchanged, regardless of its filename.
 - Restore and reset cannot silently replace an open database; the prepared operation is applied at the next start.
 - Reset warnings enumerate the affected data and require `RESET DATABASE`.
-- The first-run Active view offers both **Create first task** and **Explore with sample data**.
+- With an empty database, a centered blocking first-run dialog keeps the workspace unavailable until the user chooses **Create first task** or **Explore with sample data**.
 - Sample-data creation disables both entry points and shows a spinner with an explicit adding label until refresh completes.
+- The 50-task set contains ten coherent worked cases plus moderate and simple tasks. It demonstrates task-specific partial and completed checklists, varied valid attachments, comments, relationships, and authentic service-generated Timeline history without making every task artificially dense.
+- Sample attachments are deterministic, sanitized, harmless, stored as SQLite BLOBs, and collectively small. Worked histories include attachment removal, checklist reopening, waiting resolution, field changes, and task reopen/completion behavior.
 - Sample removal deletes internally marked sample tasks and related content while preserving every personal task.
 
 ## Recommended first real Codex task
@@ -577,7 +579,7 @@ With the app closed, create the representative 50-task sample set with:
 dotnet run --project .\Okf-Todo\Okf-Todo.csproj -- --seed-sample-tasks
 ```
 
-The command appends data without changing existing tasks, wraps the operation in one transaction, tags every generated task with `sample-data`, and refuses to run again while tasks using that tag exist. It exits after seeding without opening the Photino window.
+The command appends the curated dataset without changing existing tasks, wraps the operation in one transaction, tags every generated task with `sample-data`, and refuses to run again while tasks using that tag exist. It exits after seeding without opening the Photino window. Ten worked cases provide the richest histories; the remaining tasks preserve realistic breadth and queue density.
 
 ## Milestone 15 — Installed MCP and OKF contract tests
 

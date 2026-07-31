@@ -807,13 +807,20 @@ html.task-filter-layout-expanded .task-filter-popover {
   color: var(--theme-text);
 }
 
-.first-run-empty-state {
-  border-color: #4d4430;
-  background: linear-gradient(145deg, #24221c 0%, #1c1c1a 100%);
+.first-run-overlay {
+  background: rgb(0 0 0 / 78%);
 }
 
-.first-run-empty-state .first-run-kicker,
-.first-run-empty-state small {
+.first-run-dialog {
+  border-top-color: var(--theme-accent);
+}
+
+.first-run-dialog #first-run-description {
+  color: var(--theme-text);
+}
+
+.first-run-dialog .first-run-kicker,
+.first-run-removal-note {
   color: var(--theme-accent);
 }
 

@@ -92,6 +92,16 @@ public sealed class NewTaskDialogUiTests
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
 
         await page.Locator("#first-run-new-task-button").WaitForAsync();
+        var firstRunOverlay = page.Locator("#first-run-overlay");
+        var firstRunDialog = firstRunOverlay.GetByRole(AriaRole.Dialog);
+        Assert.Equal("true", await firstRunDialog.GetAttributeAsync("aria-modal"));
+        Assert.True(await page.Locator(".app-shell > :not(#first-run-overlay)").EvaluateAllAsync<bool>(
+            "elements => elements.every(element => element.inert)"));
+        await page.WaitForFunctionAsync("() => document.activeElement?.id === 'first-run-new-task-button'");
+        var dialogBounds = await firstRunDialog.BoundingBoxAsync();
+        Assert.NotNull(dialogBounds);
+        Assert.InRange(Math.Abs((dialogBounds.X + (dialogBounds.Width / 2)) - 800), 0, 2);
+        Assert.InRange(Math.Abs((dialogBounds.Y + (dialogBounds.Height / 2)) - 500), 0, 2);
         await page.GetByText(
             "Sample data is easy to remove anytime from Settings → Data & maintenance.",
             new PageGetByTextOptions { Exact = false }).WaitForAsync();
@@ -100,7 +110,11 @@ public sealed class NewTaskDialogUiTests
         Assert.Equal(
             "Adding sample data...",
             await page.Locator("#first-run-sample-button .sample-data-action-label").TextContentAsync());
+        Assert.True(await page.Locator("#first-run-new-task-button").IsDisabledAsync());
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list .task-row').length === 30");
+        Assert.True(await firstRunOverlay.IsHiddenAsync());
+        Assert.True(await page.Locator(".app-shell > :not(#first-run-overlay)").EvaluateAllAsync<bool>(
+            "elements => elements.every(element => !element.inert)"));
 
         Assert.Equal("Settings", await page.Locator("#settings-button").GetAttributeAsync("aria-label"));
         Assert.Equal("Settings", await page.Locator("#settings-button").GetAttributeAsync("title"));
@@ -117,17 +131,25 @@ public sealed class NewTaskDialogUiTests
         Assert.True(await page.Locator("#remove-sample-data-button").IsVisibleAsync());
         Assert.False(await page.Locator("#add-sample-data-button").IsVisibleAsync());
 
+        await page.Locator("#reset-empty-database-button").ClickAsync();
+        await page.Locator("#database-reset-confirmation").FillAsync("reset database");
+        Assert.False(await page.Locator("#database-reset-confirm-button").IsDisabledAsync());
+        await page.Locator("#database-reset-cancel-button").ClickAsync();
+
         await page.Locator("#remove-sample-data-button").ClickAsync();
         await page.GetByText(
             "Tasks you created yourself are not affected",
             new PageGetByTextOptions { Exact = false }).WaitForAsync();
         await page.Locator("#confirmation-confirm-button").ClickAsync();
         await page.Locator("#first-run-new-task-button").WaitForAsync();
+        Assert.True(await page.Locator(".app-shell > :not(#first-run-overlay)").EvaluateAllAsync<bool>(
+            "elements => elements.every(element => element.inert)"));
 
-        await page.Locator("#reset-empty-database-button").ClickAsync();
-        await page.Locator("#database-reset-confirmation").FillAsync("reset database");
-        Assert.False(await page.Locator("#database-reset-confirm-button").IsDisabledAsync());
-        await page.Locator("#database-reset-cancel-button").ClickAsync();
+        await page.Locator("#first-run-new-task-button").ClickAsync();
+        await page.Locator("#new-task-overlay").WaitForAsync();
+        Assert.True(await firstRunOverlay.IsHiddenAsync());
+        await page.Locator("#new-task-cancel-button").ClickAsync();
+        await firstRunOverlay.WaitForAsync();
 
         Assert.Contains("database.sample.create", fixture.BridgeMessageTypes);
         Assert.Contains("database.sample.remove", fixture.BridgeMessageTypes);
