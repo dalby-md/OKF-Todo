@@ -37,7 +37,7 @@
     {
       label: 'Focus',
       options: [
-        { code: 'ATTENTION', label: 'Smart priority', description: 'Overdue → urgent → active → waiting → can wait → finished; then earliest deadline.' },
+        { code: 'ATTENTION', label: 'Triage order', description: 'Shows work in this order: overdue, urgent, ready active work, waiting, can wait, then finished. Within each group, earlier deadlines come first.' },
         { code: 'PRIORITY', label: 'Priority', description: 'Your configured priority order, then due date.' },
         { code: 'DUE_DATE', label: 'Due date', description: 'Earliest deadlines first; undated work stays visible.' },
         { code: 'WAITING_LONGEST', label: 'Waiting since', description: 'Sort by how long the task has been waiting.' }
@@ -55,7 +55,7 @@
       options: [
         { code: 'TITLE_ASC', label: 'Title', description: 'Sort tasks alphabetically.' },
         { code: 'TASK_TYPE', label: 'Task type', description: 'Group errors, investigations, requests, and notes.' },
-        { code: 'STATUS', label: 'Lifecycle status', description: 'Uses the configured status order (Active → Completed → Cancelled by default); mainly useful in All tasks.' }
+        { code: 'STATUS', label: 'Status order', description: 'Groups tasks by their configured status order—Active, Completed, then Cancelled by default. Mainly useful in All statuses.' }
       ]
     }
   ]
@@ -974,7 +974,9 @@
       : 'Ascending uses this order.'
     const description = `${option.description} ${directionDescription}`
     $('#task-sort-description').text(description)
-    $('.task-sort-field').attr('title', description)
+    $('#task-sort-help')
+      .attr('title', description)
+      .attr('aria-label', `${option.label}: ${description}`)
   }
 
   function renderShell() {
@@ -1140,6 +1142,7 @@
 
               <div class="task-sort-field">
                 <label for="task-sort">Sort</label>
+                <span id="task-sort-help" class="task-sort-help fluent-icon" tabindex="0" role="img" aria-label="About the selected sort order" title="Shows work in this order: overdue, urgent, ready active work, waiting, can wait, then finished. Within each group, earlier deadlines come first. Ascending uses this order.">&#xE946;</span>
                 <select id="task-sort" aria-describedby="task-sort-description">
                   ${renderTaskSortOptions()}
                 </select>
@@ -1147,7 +1150,7 @@
                   <span class="fluent-icon" aria-hidden="true">&#xE74A;</span>
                 </button>
               </div>
-              <span id="task-sort-description" class="task-sort-description sr-only" aria-live="polite">Overdue → urgent → active → waiting → can wait → finished; then earliest deadline. Ascending uses this order.</span>
+              <span id="task-sort-description" class="task-sort-description sr-only" aria-live="polite">Shows work in this order: overdue, urgent, ready active work, waiting, can wait, then finished. Within each group, earlier deadlines come first. Ascending uses this order.</span>
             </div>
           </div>
 

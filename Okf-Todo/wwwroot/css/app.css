@@ -6571,6 +6571,26 @@ body.is-resizing-editor * {
   pointer-events: none;
 }
 
+.task-sort-help {
+  position: absolute;
+  z-index: 2;
+  top: 4px;
+  left: 35px;
+  display: grid;
+  place-items: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  color: #687983;
+  font-size: 0.58rem;
+  cursor: help;
+}
+
+.task-sort-help:focus-visible {
+  outline: 2px solid var(--accent-teal);
+  outline-offset: 2px;
+}
+
 .task-sort-field select {
   grid-column: 1;
   width: 100%;
@@ -6726,6 +6746,7 @@ html.task-filter-layout-expanded .task-filter-popover-grid {
     "tags type"
     "status priority";
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: 8px;
 }
 

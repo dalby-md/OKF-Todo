@@ -1332,6 +1332,12 @@ public sealed class NewTaskDialogUiTests
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
         await page.Locator("#task-list .task-row").First.ClickAsync();
         await page.Locator(".tox-tinymce").WaitForAsync();
+        Assert.Equal("Triage order", await page.Locator("#task-sort option[value='ATTENTION']").TextContentAsync());
+        Assert.Equal("Status order", await page.Locator("#task-sort option[value='STATUS']").TextContentAsync());
+        Assert.Contains("overdue, urgent, ready active work", await page.Locator("#task-sort-help").GetAttributeAsync("title"));
+        await page.Locator("#task-sort").SelectOptionAsync("STATUS");
+        Assert.Contains("Mainly useful in All statuses", await page.Locator("#task-sort-help").GetAttributeAsync("title"));
+        await page.Locator("#task-sort").SelectOptionAsync("ATTENTION");
 
         var largeRail = await page.Locator(".task-view-rail").BoundingBoxAsync();
         var largeList = await page.Locator(".task-sidebar").BoundingBoxAsync();
@@ -1351,9 +1357,9 @@ public sealed class NewTaskDialogUiTests
             semanticIconColors.Distinct(StringComparer.Ordinal).Count() >= 5,
             "Expected the task views to retain distinct semantic icon colors.");
         await AssertNoHorizontalPageOverflowAsync(page);
-        await page.Locator(".task-view-rail-button[data-task-view='urgent']").ClickAsync();
+        await page.Locator(".task-view-rail-button[data-task-view='attention']").ClickAsync();
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('#task-list-title').textContent === 'Urgent' && document.querySelector('#task-view').value === 'urgent'");
+            "() => document.querySelector('#task-list-title').textContent === 'Attention' && document.querySelector('#task-view').value === 'attention'");
         await page.Locator(".task-view-rail-button[data-task-view='active']").ClickAsync();
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#task-list-title').textContent === 'Active' && document.querySelector('#task-view').value === 'active'");
@@ -1404,13 +1410,18 @@ public sealed class NewTaskDialogUiTests
         var expandedTypeFilterBox = await page.Locator(".task-filter-popover-field[for='task-type-filter']").BoundingBoxAsync();
         var expandedStatusFilterBox = await page.Locator(".task-filter-popover-field[for='task-status-filter']").BoundingBoxAsync();
         var expandedPriorityFilterBox = await page.Locator(".task-filter-popover-field[for='task-priority-filter']").BoundingBoxAsync();
+        var expandedTypeSelectBox = await page.Locator("#task-type-filter").BoundingBoxAsync();
+        var expandedStatusSelectBox = await page.Locator("#task-status-filter").BoundingBoxAsync();
         Assert.NotNull(expandedTagFilterBox);
         Assert.NotNull(expandedTypeFilterBox);
         Assert.NotNull(expandedStatusFilterBox);
         Assert.NotNull(expandedPriorityFilterBox);
+        Assert.NotNull(expandedTypeSelectBox);
+        Assert.NotNull(expandedStatusSelectBox);
         Assert.True(expandedTagFilterBox.Y <= expandedTypeFilterBox.Y);
         Assert.True(expandedTypeFilterBox.Y <= expandedStatusFilterBox.Y);
         Assert.True(expandedStatusFilterBox.Y <= expandedPriorityFilterBox.Y);
+        Assert.InRange(Math.Abs(expandedTypeSelectBox.Height - expandedStatusSelectBox.Height), 0, 1);
         Assert.Equal(
             "task-filter-menu",
             await page.Locator("#task-filter-popover").EvaluateAsync<string>(

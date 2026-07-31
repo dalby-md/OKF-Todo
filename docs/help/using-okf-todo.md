@@ -158,9 +158,9 @@ Filters affect only the current on-screen result. They do not change or delete t
 
 ### Sort
 
-Use **Sort** to choose the field. Select its direction button to switch between ascending and descending order. Each view remembers its own sort field and direction; hover the control or use assistive technology to read the selected order's explanation.
+Use **Sort** to choose the order. Select its direction button to switch between ascending and descending order. Each view remembers its own sort choice and direction. Hover over or focus the information icon beside **Sort** to read an explanation that follows the selected order and direction.
 
-**Smart priority** is the default triage order:
+**Triage order** is the default:
 
 1. overdue work;
 2. urgent active work;
@@ -169,9 +169,11 @@ Use **Sort** to choose the field. Select its direction button to switch between 
 5. work that can wait; and
 6. completed or cancelled work.
 
-Within those groups, earlier deadlines rise first. Other sort choices help you focus by configured priority, due date, or waiting time; review activity by updated or created time; or organize by title, task type, or lifecycle status.
+Within those groups, earlier deadlines rise first. Other sort choices help you focus by configured priority, due date, or waiting time; review activity by updated or created time; or organize by title, task type, or **Status order**.
 
-Use **Asc** or **Desc** to reverse the selected order. For Smart priority, ascending uses the triage order shown above.
+**Status order** groups tasks by the status order configured under **Settings → Data & values**: Active, Completed, then Cancelled by default. It is mainly useful in **All statuses**, because most other views already contain only one status.
+
+Use **Asc** or **Desc** to reverse the selected order. For Triage order, ascending uses the sequence shown above.
 
 ## Add the right amount of task detail
 

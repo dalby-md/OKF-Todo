@@ -592,7 +592,7 @@ An active task whose deadline is before the current local date uses a red deadli
 
 ## Task-list sorting
 
-Every view defaults to smart priority. The UI explains that this is a triage order rather than a database priority field:
+Every view defaults to **Triage order**. The UI explains that this is a work-triage sequence rather than a database priority field:
 
 ```text
 1. Overdue tasks
@@ -603,7 +603,7 @@ Every view defaults to smart priority. The UI explains that this is a triage ord
 6. Completed and cancelled work
 ```
 
-Within each group, tasks with the earliest deadline come first, undated tasks remain visible, and the most recently updated task breaks remaining ties. Descending order reverses the smart triage order.
+Within each group, tasks with the earliest deadline come first, undated tasks remain visible, and the most recently updated task breaks remaining ties. Descending order reverses the complete triage sequence.
 
 Waiting tasks should not disappear. They should be easy to review.
 
@@ -611,9 +611,9 @@ The task list also offers purpose-driven alternatives for developer and support 
 
 - Focus: configured priority, due date, and waiting since.
 - Activity: updated and created timestamps.
-- Organize: title, task type, and lifecycle status. Lifecycle status follows the configured status order and is mainly useful in the `All` view.
+- Organize: title, task type, and **Status order**. Status order follows the configured lifecycle-status order and is mainly useful in the `All statuses` view.
 
-The compact control exposes the selected sort explanation through its title and accessible description, works after text and tag filtering, and provides an icon button for ascending or descending direction. The selected field and direction persist separately for each task view. Lookup-based ordering follows the configured lookup sort order rather than display names, and tasks without a value remain last in either direction.
+The compact control exposes the selected sort explanation through a visible, focusable information icon and accessible description. The popup text follows both the selected order and Asc/Desc direction. The control works after text and tag filtering and provides an icon button for ascending or descending direction. The selected field and direction persist separately for each task view. Lookup-based ordering follows the configured lookup sort order rather than display names, and tasks without a value remain last in either direction.
 
 Task browsing uses a compact responsive command strip. Search, a **Filters** button, and sorting share one row and wrap only when the task queue becomes narrow. The visible result count sits beside the current view name. **Filters** opens an anchored panel for tags, task type, lifecycle status, and priority, and its badge reports the number of selected field filters. Tags remain a multi-select with OR semantics. Active field filters appear as removable chips in a slim contextual row that is absent when no field filters are selected.
 

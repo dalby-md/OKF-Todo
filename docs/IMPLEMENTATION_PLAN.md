@@ -504,7 +504,7 @@ Acceptance criteria:
 - Cancelled tasks appear in All, not Completed, and use red struck-through titles with gray pills in the list.
 - Active overdue deadlines use a red pill with white text; deadlines due today are not overdue.
 - Waiting tasks remain easy to find.
-- Every view defaults to visibly explained smart priority and offers focus, activity, and organization sort modes suited to developer and support triage. The lifecycle-status option states that it follows configured status order and is mainly useful in the All view.
+- Every view defaults to visibly explained **Triage order** and offers focus, activity, and organization sort modes suited to developer and support triage. **Status order** states that it follows configured lifecycle-status order and is mainly useful in the All statuses view.
 - Lookup-based modes use configured sort order; time-based modes use due, waiting, created, and updated timestamps.
 - The compact sort control exposes the selected field explanation through its title and accessible description, provides an icon button for ascending/descending ordering, and persists both selections separately for each view.
 - Search, filtering, and sorting share a responsive command area; the filtered result count sits beside the current view name. The persisted Task filter layout preference defaults to Compact, which uses an anchored Filters panel and wraps the command strip only when the task queue becomes narrow. Expanded keeps tags, type, status, and priority visible inline in the original two-column filter layout.
