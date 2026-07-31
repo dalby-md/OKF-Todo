@@ -1,21 +1,25 @@
-/* Dark engineering theme: near-black surfaces with amber interaction accents. */
+/* Graphite Workbench: layered charcoal surfaces with teal interaction accents. */
 :root {
   color-scheme: dark;
-  color: #e7e5e4;
-  background: #080909;
-  --theme-bg: #080909;
-  --theme-surface: #101112;
-  --theme-surface-raised: #171819;
-  --theme-surface-hover: #1d1f21;
-  --theme-border: #2d2f32;
-  --theme-border-strong: #45484c;
-  --theme-text: #e7e5e4;
-  --theme-muted: #969696;
-  --theme-accent: #ffbd3e;
-  --theme-accent-hover: #ffca62;
-  --theme-accent-soft: #2a2315;
-  --theme-danger: #ef5b4c;
-  --theme-danger-soft: #2b1716;
+  color: #edf3f6;
+  background: #0b1117;
+  --theme-bg: #0b1117;
+  --theme-nav: #0d151d;
+  --theme-surface: #111922;
+  --theme-surface-raised: #16212b;
+  --theme-surface-hover: #1b2833;
+  --theme-border: #25333f;
+  --theme-border-strong: #3a4a57;
+  --theme-text: #edf3f6;
+  --theme-muted: #93a3ae;
+  --theme-accent: #28b8aa;
+  --theme-accent-hover: #3bcabc;
+  --theme-accent-soft: #123a38;
+  --theme-warning: #e2a12a;
+  --theme-warning-soft: #342816;
+  --theme-success: #45b97c;
+  --theme-danger: #ef675e;
+  --theme-danger-soft: #351c1d;
 }
 
 body,
@@ -1443,4 +1447,735 @@ html.task-filter-layout-expanded .task-filter-popover {
 .task-export-actions {
   border-color: #40464a;
   background: #202326;
+}
+
+/* Graphite Workbench final layer
+   This intentionally comes last so the current light-theme component refinements
+   inherit a single, coherent dark visual system. */
+:root {
+  --surface-canvas: #0b1117;
+  --surface-panel: #111922;
+  --surface-subtle: #16212b;
+  --line-subtle: #25333f;
+  --text-strong: #edf3f6;
+  --text-muted: #93a3ae;
+  --accent-teal: #28b8aa;
+  --accent-teal-soft: #123a38;
+  scrollbar-color: #425361 #111922;
+}
+
+body,
+.app-shell,
+.workspace-shell {
+  background: var(--theme-bg);
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  accent-color: var(--theme-accent);
+}
+
+* {
+  scrollbar-color: #425361 #111922;
+}
+
+*::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #111922;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 3px solid #111922;
+  border-radius: 999px;
+  background: #425361;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #526675;
+}
+
+.app-topbar {
+  border-bottom-color: #25333f;
+  background: rgb(13 21 29 / 98%);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 20%);
+}
+
+.app-brand-mark {
+  color: #061816;
+  background: var(--theme-accent);
+  box-shadow: 0 8px 20px rgb(40 184 170 / 18%);
+}
+
+.app-brand h1 {
+  color: var(--theme-text);
+}
+
+.app-brand div > span {
+  color: var(--theme-muted);
+}
+
+.task-list-switcher-group {
+  border-color: #2b4750;
+  background: #14232b;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+}
+
+.task-list-switcher-group:focus-within {
+  border-color: #398c85;
+  background: #172830;
+  box-shadow:
+    0 0 0 3px rgb(40 184 170 / 13%),
+    0 8px 24px rgb(0 0 0 / 22%);
+}
+
+.task-list-switcher-field,
+.task-list-switcher-label {
+  color: var(--theme-muted);
+}
+
+.task-list-switcher-icon {
+  color: #83b8b2;
+}
+
+.task-list-switcher-field select,
+.task-list-switcher-field select:focus {
+  color: var(--theme-text);
+  background: transparent;
+}
+
+.task-list-switcher-divider,
+.app-action-divider {
+  background: #2b3944;
+}
+
+button {
+  border-color: #344450;
+  color: var(--theme-text);
+  background: #1a2630;
+  box-shadow: none;
+}
+
+button:hover:not(:disabled) {
+  border-color: #465a68;
+  color: #ffffff;
+  background: #22313c;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid rgb(40 184 170 / 24%);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  border-color: #26323c;
+  color: #667681;
+  background: #141d24;
+}
+
+.app-topbar #new-task-button,
+.app-topbar #save-button,
+.dialog-actions button:not(.secondary-button):not(.danger-button),
+button[data-save-shortcut] {
+  border-color: #31c2b4;
+  color: #061816;
+  background: var(--theme-accent);
+  box-shadow: 0 6px 16px rgb(40 184 170 / 17%);
+}
+
+.app-topbar #new-task-button:hover:not(:disabled),
+.app-topbar #save-button:hover:not(:disabled),
+.dialog-actions button:not(.secondary-button):not(.danger-button):hover:not(:disabled),
+button[data-save-shortcut]:hover:not(:disabled) {
+  border-color: #4bd4c7;
+  color: #031311;
+  background: var(--theme-accent-hover);
+}
+
+.app-topbar #new-task-button:disabled,
+.app-topbar #save-button:disabled,
+button[data-save-shortcut]:disabled {
+  border-color: #26323c;
+  color: #667681;
+  background: #141d24;
+  box-shadow: none;
+}
+
+.secondary-button,
+.icon-button,
+.app-topbar .app-actions .setup-button,
+.manage-task-lists-button,
+.app-topbar #complete-button {
+  border-color: #344450;
+  color: #c8d3d9;
+  background: #17222b;
+  box-shadow: none;
+}
+
+.secondary-button:hover:not(:disabled),
+.icon-button:hover:not(:disabled),
+.app-topbar .app-actions .setup-button:hover:not(:disabled),
+.manage-task-lists-button:hover:not(:disabled),
+.app-topbar #complete-button:hover:not(:disabled) {
+  border-color: #45606a;
+  color: #ffffff;
+  background: #20303a;
+}
+
+.app-topbar #cancel-button,
+.danger-button {
+  border-color: #5a3435;
+  color: #f3a19b;
+  background: #251b1e;
+}
+
+.app-topbar #cancel-button:hover:not(:disabled),
+.danger-button:hover:not(:disabled) {
+  border-color: #8a4544;
+  color: #ffd0cc;
+  background: #382024;
+}
+
+.save-status,
+.app-topbar .save-status {
+  border-color: #2e4a46;
+  color: #9ddbd4;
+  background: #142d2b;
+}
+
+.save-status.is-dirty,
+.app-topbar .save-status.is-dirty {
+  border-color: #66522b;
+  color: #f0c971;
+  background: #302817;
+}
+
+.save-status.is-error,
+.app-topbar .save-status.is-error {
+  border-color: #713d3d;
+  color: #ffaaa3;
+  background: #331e20;
+}
+
+.task-view-rail {
+  border-right-color: #25333f;
+  background: var(--theme-nav);
+  box-shadow: inset -1px 0 rgb(255 255 255 / 2%);
+}
+
+.task-view-rail-heading {
+  color: #738590;
+}
+
+.task-view-rail-button {
+  --view-color: #8d9da7;
+  --view-soft: #17222b;
+  border-color: transparent;
+  color: #aab6bd;
+  background: transparent;
+}
+
+.task-view-rail-button .fluent-icon {
+  color: color-mix(in srgb, var(--view-color) 82%, #a7b5bd);
+  background: color-mix(in srgb, var(--view-color) 13%, #131d25);
+}
+
+.task-view-rail-button:hover:not(:disabled) {
+  border-color: #2b3c48;
+  color: #e6eef2;
+  background: #16212a;
+}
+
+.task-view-rail-button.is-active,
+.task-view-rail-button.is-active:hover:not(:disabled) {
+  border-color: #276c67;
+  color: #dff8f4;
+  background: #143b39;
+  box-shadow: inset 3px 0 #31c2b4, 0 8px 18px rgb(0 0 0 / 16%);
+}
+
+.task-view-rail-button.is-active .fluent-icon {
+  color: #8ee0d7;
+  background: #20504c;
+}
+
+.task-sidebar {
+  border-right-color: #2a3944;
+  background: #111922;
+  box-shadow: 8px 0 28px rgb(0 0 0 / 11%);
+}
+
+.task-sidebar .sidebar-header h2,
+.task-row-title {
+  color: var(--theme-text);
+}
+
+.task-list-header-count,
+.task-filter-count-badge,
+.task-list-pill,
+.task-sort-help,
+.task-list-view-help {
+  color: #a3b2ba;
+  background: #1c2a34;
+}
+
+.task-search,
+.task-view-field select,
+.task-quick-filter,
+.task-sort-field,
+.task-filter-button,
+.task-filter-popover,
+.task-view-overflow-menu,
+.task-action-menu {
+  border-color: #32434f;
+  color: var(--theme-text);
+  background: #141e27;
+}
+
+.task-search:focus,
+.task-view-field select:focus-visible,
+.task-quick-filter:focus-within,
+.task-sort-field:focus-within,
+.task-filter-button:focus-visible {
+  border-color: var(--theme-accent);
+  outline-color: rgb(40 184 170 / 20%);
+}
+
+.task-search-icon,
+.task-search-field kbd,
+.task-sort-field > label,
+.task-filter-popover-header span,
+.task-filter-popover-field small {
+  color: var(--theme-muted);
+}
+
+.task-row {
+  border-bottom-color: #26343f;
+  background: transparent;
+}
+
+.task-row:hover:not(:disabled) {
+  background: #16212a;
+}
+
+.task-row.is-selected,
+.task-row.is-selected:hover,
+.task-row.is-selected:hover:not(:disabled),
+.task-row.is-waiting.is-selected,
+.task-row.is-waiting.is-selected:hover,
+.task-row.is-waiting.is-selected:hover:not(:disabled) {
+  background: #143632;
+  box-shadow: inset 0 0 0 1px rgb(40 184 170 / 10%);
+}
+
+.task-row.is-selected::before,
+.task-row.is-waiting.is-selected::before {
+  background: #43cbbf;
+}
+
+.task-row.is-waiting,
+.task-row.is-waiting:hover:not(:disabled) {
+  background: transparent;
+}
+
+.task-row.is-waiting:hover:not(:disabled) {
+  background: #1d211d;
+}
+
+.task-row.is-waiting::before {
+  background: var(--theme-warning);
+}
+
+.task-row-star,
+.task-row-more,
+.task-row-number {
+  color: #7f909a;
+}
+
+.task-row-star:hover:not(:disabled),
+.task-row-more:hover:not(:disabled) {
+  color: var(--theme-accent);
+  background: #1c2b34;
+}
+
+.layout-resizer {
+  border-color: #283843;
+  background: #1a252e;
+}
+
+.layout-resizer:hover,
+.layout-resizer:focus-visible,
+.layout-resizer.is-dragging {
+  background: #2b5e5b;
+}
+
+.task-editor-panel {
+  color: var(--theme-text);
+  background: #0e161e;
+}
+
+.editor-header {
+  border-bottom-color: #263640;
+}
+
+.editor-header h2 {
+  color: #8798a3;
+}
+
+.editor-header .eyebrow {
+  color: #9de3dc;
+  background: #173a37;
+}
+
+.editor-header .eyebrow.is-waiting-context {
+  color: #f0c871;
+  background: #342916;
+}
+
+.task-title-rail {
+  border-left-color: #45c9bd;
+  background: #14242a;
+  box-shadow: inset 0 0 0 1px rgb(61 99 108 / 18%);
+}
+
+.task-title-rail:focus-within {
+  background: #172c31;
+  box-shadow:
+    inset 0 0 0 1px rgb(69 201 189 / 30%),
+    0 0 0 3px rgb(40 184 170 / 10%);
+}
+
+.task-title-rail .title-input,
+.task-title-rail .title-input:disabled,
+.task-form.is-task-read-only .task-title-rail .title-input:disabled {
+  color: #f3f7f9;
+}
+
+.field-block > span,
+.field-label,
+.mode-field > span,
+.settings-field > span {
+  color: #d6e0e5;
+}
+
+input,
+select,
+textarea,
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+  border-color: #3b4b57;
+  color: var(--theme-text);
+  background: #111922;
+}
+
+select,
+select option,
+select optgroup {
+  color-scheme: dark;
+  color: var(--theme-text);
+  background: #111922;
+}
+
+select option:checked {
+  color: #eafffc;
+  background: #1d514c;
+  box-shadow: 0 0 0 100vmax #1d514c inset;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #74858f;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--theme-accent);
+  outline-color: rgb(40 184 170 / 18%);
+}
+
+.task-form.is-task-read-only input:disabled,
+.task-form.is-task-read-only select:disabled,
+.task-form.is-task-read-only textarea:disabled,
+.task-form input:disabled,
+.task-form select:disabled,
+.task-form textarea:disabled {
+  border-color: #32434f;
+  color: #9cabb4;
+  background: #121c24;
+  opacity: 1;
+}
+
+.task-form.is-task-read-only input:disabled::placeholder,
+.task-form.is-task-read-only textarea:disabled::placeholder {
+  color: #667883;
+}
+
+.task-form.is-task-read-only .task-title-rail .title-input:disabled {
+  border-color: transparent;
+  color: #f3f7f9;
+  background: transparent;
+}
+
+.select2-dropdown {
+  border-color: #465864;
+  color: var(--theme-text);
+  background: #151f28;
+  box-shadow: 0 18px 42px rgb(0 0 0 / 42%);
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected],
+.select2-container--default .select2-results__option[aria-selected="true"] {
+  color: #eafffc;
+  background: #1d514c;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+  border-color: #39615d;
+  color: #c8f0eb;
+  background: #183b39;
+}
+
+.task-row:focus-visible,
+.task-row.is-selected:focus-visible {
+  outline: 2px solid #55d1c5;
+  outline-offset: -3px;
+  box-shadow:
+    inset 0 0 0 1px rgb(40 184 170 / 18%),
+    0 0 0 3px rgb(40 184 170 / 10%);
+}
+
+.editor-host,
+.tox.tox-tinymce,
+.toastui-editor-defaultUI {
+  border-color: #354651 !important;
+  background: #111922 !important;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 28%),
+    0 16px 38px rgb(0 0 0 / 20%);
+}
+
+.tox .tox-editor-header,
+.tox .tox-toolbar,
+.tox .tox-toolbar__overflow,
+.tox .tox-toolbar__primary,
+.toastui-editor-toolbar,
+.toastui-editor-md-tab-container,
+.toastui-editor-mode-switch {
+  border-color: #2e3e49 !important;
+  background: #151f28 !important;
+  box-shadow: none !important;
+}
+
+.tox .tox-tbtn,
+.tox .tox-tbtn svg,
+.toastui-editor-toolbar-icons {
+  color: #cbd5da !important;
+  fill: #cbd5da !important;
+}
+
+.tox .tox-tbtn:hover,
+.tox .tox-tbtn--enabled,
+.toastui-editor-toolbar-icons:hover {
+  background: #22333d !important;
+}
+
+.toastui-editor-md-container,
+.toastui-editor-ww-container,
+.toastui-editor-contents,
+.toastui-editor-md-preview,
+.toastui-editor-md-splitter {
+  border-color: #2e3e49 !important;
+  color: var(--theme-text) !important;
+  background: #111922 !important;
+}
+
+.toastui-editor-md-container .CodeMirror,
+.toastui-editor-md-container .CodeMirror-gutters {
+  color: var(--theme-text) !important;
+  background: #111922 !important;
+}
+
+.toastui-editor-contents blockquote,
+.toastui-editor-contents table th,
+.toastui-editor-contents table td {
+  border-color: #3a4b56 !important;
+}
+
+.modal-backdrop,
+.dialog-backdrop {
+  background: rgb(3 8 12 / 72%);
+  backdrop-filter: blur(3px);
+}
+
+.settings-dialog,
+.help-dialog,
+.confirmation-dialog,
+.new-task-dialog,
+.task-lists-dialog,
+.task-export-dialog,
+.first-run-dialog,
+.database-reset-dialog,
+.lookup-edit-dialog,
+.tag-edit-dialog,
+.unsaved-dialog {
+  border-color: #3a4b57;
+  color: var(--theme-text);
+  background: #131d25;
+  box-shadow: 0 28px 80px rgb(0 0 0 / 55%);
+}
+
+.settings-dialog-header,
+.settings-dialog-footer,
+.help-dialog-header,
+.help-dialog-footer,
+.dialog-actions,
+.task-lists-dialog-header,
+.task-lists-dialog-footer,
+.task-export-header,
+.task-export-actions {
+  border-color: #2d3c47;
+  background: #16212a;
+}
+
+.settings-nav,
+.task-list-manager-pane,
+.help-navigation {
+  border-color: #2d3c47;
+  background: #101820;
+}
+
+.settings-nav-button,
+.help-navigation button,
+.lookup-group-button,
+.preference-action-row {
+  color: #b9c5cb;
+  background: transparent;
+}
+
+.settings-nav-button:hover:not(:disabled),
+.help-navigation button:hover:not(:disabled),
+.lookup-group-button:hover:not(:disabled),
+.preference-action-row:hover:not(:disabled) {
+  color: #eef8f6;
+  background: #1a2932;
+}
+
+.settings-nav-button.is-active,
+.help-navigation button.is-active,
+.lookup-group-button.is-active {
+  border-color: #2f8079;
+  color: #d9f8f4;
+  background: #173a38;
+  box-shadow: inset 3px 0 #42c8bc;
+}
+
+.task-export-button:hover:not(:disabled),
+.task-export-button:focus-visible,
+.task-export-close-button:hover:not(:disabled),
+.task-export-close-button:focus-visible,
+.task-action-menu-item:hover:not(:disabled),
+.task-action-menu-item:focus-visible {
+  border-color: #3b7772;
+  color: #9fe8e0;
+  background: #1c3135;
+  box-shadow: 0 0 0 3px rgb(40 184 170 / 12%);
+}
+
+.task-export-header {
+  background:
+    radial-gradient(circle at 4% 0%, rgb(40 184 170 / 13%), transparent 36%),
+    #16212a;
+}
+
+.task-export-heading-icon,
+.task-export-option:has(input:checked) .task-export-option-icon {
+  color: #061816;
+  background: var(--theme-accent);
+}
+
+.task-export-option:has(input:checked) {
+  border-color: #32867f;
+  background: #183633;
+  box-shadow: 0 0 0 3px rgb(40 184 170 / 11%);
+}
+
+.task-export-option input {
+  accent-color: var(--theme-accent);
+}
+
+.task-export-unsaved-warning {
+  color: #f0cc7d;
+  background: var(--theme-warning-soft);
+}
+
+@media (max-width: 900px) {
+  .app-topbar,
+  .task-view-rail,
+  .task-sidebar,
+  .task-editor-panel {
+    background: var(--theme-bg);
+  }
+
+  .task-sidebar {
+    background: var(--theme-surface);
+  }
+}
+
+/* WebView2 keeps native disabled form surfaces light unless their paint is
+   overridden explicitly. Keep the read-only task details within the graphite
+   system while retaining their disabled semantics. */
+#task-list-owner:disabled,
+#task-type:disabled,
+#task-priority:disabled,
+#task-deadline:disabled,
+#waiting-text:disabled {
+  border-color: #32434f !important;
+  color: #9cabb4 !important;
+  background-color: #121c24 !important;
+  background-image: none !important;
+  -webkit-text-fill-color: #9cabb4;
+  opacity: 1;
+}
+
+.task-form .field-block > select,
+.task-form input[type="date"],
+.task-form .waiting-field > input {
+  appearance: none;
+  -webkit-appearance: none;
+  border-color: #3b4b57 !important;
+  color: var(--theme-text) !important;
+  background-color: #111922 !important;
+  background-image: none !important;
+  -webkit-text-fill-color: currentColor;
+}
+
+.task-form .field-block:has(> select) {
+  position: relative;
+}
+
+.task-form .field-block:has(> select)::after {
+  position: absolute;
+  right: 14px;
+  bottom: 13px;
+  color: #8fa1ab;
+  content: "\E70D";
+  font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+  font-size: 0.78rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.task-form .field-block:has(> select:focus)::after {
+  color: var(--theme-accent);
 }

@@ -314,7 +314,7 @@ Open **Settings** to adjust and maintain OKF-Todo:
 | Page | What you can change |
 | --- | --- |
 | **General** | Default HTML or Markdown editor mode. |
-| **Appearance** | Light or dark color scheme; Small, Standard, or Large interface font size; Auto, Side by side, or Stacked task layout; and Compact or Expanded task filter layout. |
+| **Appearance** | Light or layered graphite dark color scheme; Smallest, Small, Standard, Large, or Largest interface font size; Auto, Side by side, or Stacked task layout; and Compact or Expanded task filter layout. In dark mode, teal identifies primary interaction, while amber is reserved for waiting and warning states. |
 | **Task details** | Visibility of source, owner, responsible, and relationship sections; editability of completed and cancelled tasks. |
 | **Data & values** | Task types, priorities, statuses, and tag administration. |
 | **Data & maintenance** | Back up or restore the database, add or remove sample data, or deliberately reset all data. |

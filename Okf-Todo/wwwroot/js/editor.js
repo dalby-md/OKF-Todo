@@ -302,8 +302,8 @@
 
       const body = editor.getBody()
       const isDark = String(colorScheme || '').toUpperCase() === 'DARK'
-      body.style.setProperty('color', isDark ? '#e7e5e4' : '#202124')
-      body.style.setProperty('background-color', isDark ? '#101112' : '#ffffff')
+      body.style.setProperty('color', isDark ? '#edf3f6' : '#202124')
+      body.style.setProperty('background-color', isDark ? '#111922' : '#ffffff')
     }
 
     function applyBaseFontSize(fontSize) {
