@@ -706,6 +706,10 @@ h2 {
   flex-wrap: wrap;
 }
 
+.save-shortcut-tooltip {
+  display: inline-flex;
+}
+
 .save-status {
   min-height: 24px;
   padding: 3px 8px;
@@ -3228,6 +3232,14 @@ body.is-resizing-editor * {
 
   .app-topbar .app-actions button {
     flex: 1 0 auto;
+  }
+
+  .app-topbar .app-actions .save-shortcut-tooltip {
+    flex: 1 0 auto;
+  }
+
+  .app-topbar .app-actions .save-shortcut-tooltip > button {
+    width: 100%;
   }
 
   .app-topbar .setup-button > span:last-child {

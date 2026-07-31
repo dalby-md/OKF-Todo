@@ -7,6 +7,7 @@
   let activeInitialization = 0
   let activeColorScheme = 'LIGHT'
   let pickImage = null
+  let handleShortcut = null
   const loadedAssets = new Map()
 
   function ensureStyle(href) {
@@ -84,6 +85,12 @@
     }
 
     return activeAdapter
+  }
+
+  function notifyShortcut(event) {
+    if (typeof handleShortcut === 'function') {
+      handleShortcut(event)
+    }
   }
 
   async function renderMarkdown(markdown) {
@@ -357,6 +364,7 @@
               applyReadOnlyState()
             })
             tinyEditor.on('change keyup undo redo setcontent', notifyChanged)
+            tinyEditor.on('keydown', notifyShortcut)
           }
         })
 
@@ -703,6 +711,7 @@
 
         host.addEventListener('pointerdown', handleModeSwitchIntent, true)
         host.addEventListener('keydown', handleModeSwitchIntent, true)
+        host.addEventListener('keydown', notifyShortcut, true)
 
         if (options.initialHtml) {
           editor.setHtml(options.initialHtml, false)
@@ -835,6 +844,7 @@
         if (editor) {
           host.removeEventListener('pointerdown', handleModeSwitchIntent, true)
           host.removeEventListener('keydown', handleModeSwitchIntent, true)
+          host.removeEventListener('keydown', notifyShortcut, true)
           if (typeof editor.destroy === 'function') {
             editor.destroy()
           } else if (typeof editor.remove === 'function') {
@@ -855,6 +865,7 @@
         ? 'DARK'
         : 'LIGHT'
       pickImage = editorOptions.onPickImage || null
+      handleShortcut = editorOptions.onShortcut || null
 
       const initializationId = ++activeInitialization
       destroyActiveAdapter()

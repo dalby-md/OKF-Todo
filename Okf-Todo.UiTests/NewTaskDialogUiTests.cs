@@ -100,6 +100,102 @@ public sealed class NewTaskDialogUiTests
     [Theory]
     [InlineData("HTML")]
     [InlineData("MARKDOWN")]
+    public async Task FunctionKeys_WorkFromMainPageAndBodyEditor(string bodyFormatCode)
+    {
+        await using var fixture = await UiAppFixture.CreateAsync();
+        await fixture.SendBridgeAsync("editor.preference.save", new
+        {
+            bodyFormatCode,
+            markdownEditType = "MARKDOWN",
+            editorHeight = 360
+        });
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1600, Height = 1000 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(
+            $"{fixture.BaseUrl}/index.html?v=function-key-shortcuts-{bodyFormatCode.ToLowerInvariant()}",
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+
+        Assert.Equal("F1", await page.Locator("#help-button").GetAttributeAsync("aria-keyshortcuts"));
+        Assert.Equal("F2", await page.Locator("#new-task-button").GetAttributeAsync("aria-keyshortcuts"));
+        Assert.Equal("F3", await page.Locator("#task-search").GetAttributeAsync("aria-keyshortcuts"));
+        Assert.Equal("F8", await page.Locator("#save-button").GetAttributeAsync("aria-keyshortcuts"));
+        Assert.Equal("Save task (F8)", await page.Locator("#save-button").GetAttributeAsync("aria-label"));
+        Assert.Equal("Save task (F8)", await page.Locator("#save-shortcut-tooltip").GetAttributeAsync("title"));
+        Assert.Equal("F9", await page.Locator("#complete-button").GetAttributeAsync("aria-keyshortcuts"));
+        Assert.Equal("F3", await page.Locator(".task-search-field kbd").TextContentAsync());
+        Assert.Equal(
+            6,
+            await page.Locator("[data-save-shortcut][aria-keyshortcuts='F8']").CountAsync());
+
+        await page.Keyboard.PressAsync("F2");
+        await page.Locator("#new-task-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Visible
+        });
+        var taskTitle = $"Function keys from {bodyFormatCode}";
+        await page.Locator("#new-task-title-input").FillAsync(taskTitle);
+        await page.Keyboard.PressAsync("F8");
+        await page.Locator("#new-task-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Hidden
+        });
+        await page.EvaluateAsync("() => window.Editor.focus()");
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#editor-host')?.contains(document.activeElement)");
+        await page.Keyboard.PressAsync("F3");
+        await page.WaitForFunctionAsync("() => document.activeElement?.id === 'task-search'");
+
+        await page.EvaluateAsync("() => window.Editor.focus()");
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#editor-host')?.contains(document.activeElement)");
+        await page.Keyboard.PressAsync("F1");
+        await page.Locator("#help-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Visible
+        });
+        await page.Locator("#help-close-button").ClickAsync();
+
+        await page.EvaluateAsync("() => window.Editor.focus()");
+        await page.Keyboard.PressAsync("F2");
+        await page.Locator("#new-task-overlay").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Visible
+        });
+        await page.Locator("#new-task-cancel-button").ClickAsync();
+
+        var updatedTitle = $"{taskTitle} saved by F8";
+        await page.Locator("#task-title").FillAsync(updatedTitle);
+        await page.EvaluateAsync("() => window.Editor.focus()");
+        await page.Keyboard.PressAsync("F8");
+        await page.WaitForFunctionAsync("() => document.querySelector('#save-status')?.textContent === 'Saved'");
+        Assert.Contains("task.update", fixture.BridgeMessageTypes);
+
+        await page.EvaluateAsync("() => window.Editor.focus()");
+        await page.Keyboard.PressAsync("F9");
+        await page.WaitForFunctionAsync(
+            """
+            () => document.querySelector('#task-read-only-title')?.textContent === 'Completed task — read only'
+              && document.querySelector('#task-read-only-notice')?.hidden === false
+              && document.querySelector('#complete-button')?.textContent === 'Reopen'
+            """);
+        Assert.Contains("task.complete", fixture.BridgeMessageTypes);
+    }
+
+    [Theory]
+    [InlineData("HTML")]
+    [InlineData("MARKDOWN")]
     public async Task SaveNewTask_WithoutMainSave_PersistsTaskEnablesControlsAndFocusesEditor(
         string bodyFormatCode)
     {

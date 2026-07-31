@@ -1001,7 +1001,7 @@
           </div>
           <div class="app-actions" aria-label="Task actions">
             <span id="save-status" class="save-status is-ready" role="status">Ready</span>
-            <button id="help-button" class="icon-button setup-button" type="button" aria-label="Help" title="Help">
+            <button id="help-button" class="icon-button setup-button" type="button" aria-label="Help" aria-keyshortcuts="F1" title="Help (F1)">
               <span class="fluent-icon" aria-hidden="true">&#xE897;</span>
               <span>Help</span>
             </button>
@@ -1010,13 +1010,15 @@
               <span>Setup</span>
             </button>
             <span class="app-action-divider" aria-hidden="true"></span>
-            <button id="new-task-button" type="button">
+            <button id="new-task-button" type="button" aria-keyshortcuts="F2" title="New task (F2)">
               <span class="fluent-icon" aria-hidden="true">&#xE710;</span>
               <span>New task</span>
             </button>
-            <button id="complete-button" class="secondary-button" type="button" disabled>Complete</button>
+            <button id="complete-button" class="secondary-button" type="button" aria-keyshortcuts="F9" title="Complete task (F9)" disabled>Complete</button>
             <button id="cancel-button" class="secondary-button danger-button" type="button" disabled>Cancel</button>
-            <button id="save-button" type="button" disabled>Save</button>
+            <span id="save-shortcut-tooltip" class="save-shortcut-tooltip" title="Save task (F8)">
+              <button id="save-button" type="button" data-save-shortcut aria-label="Save task (F8)" aria-keyshortcuts="F8" disabled>Save</button>
+            </span>
           </div>
         </header>
 
@@ -1084,8 +1086,8 @@
               <label class="task-search-field" for="task-search">
                 <span class="sr-only">Search tasks</span>
                 <span class="task-search-icon fluent-icon" aria-hidden="true">&#xE721;</span>
-                <input id="task-search" class="task-search" type="search" placeholder="Search tasks" autocomplete="off">
-                <kbd aria-hidden="true">Ctrl+K</kbd>
+                <input id="task-search" class="task-search" type="search" placeholder="Search tasks" autocomplete="off" aria-keyshortcuts="F3">
+                <kbd aria-hidden="true">F3</kbd>
               </label>
             </div>
 
@@ -1708,7 +1710,7 @@
             <div class="modal-actions">
               <button id="lookup-edit-delete-button" class="secondary-button danger-button lookup-delete-button" type="button" hidden>Delete</button>
               <button id="lookup-edit-cancel-button" class="secondary-button" type="button">Cancel</button>
-              <button id="lookup-edit-save-button" type="button">Save</button>
+              <button id="lookup-edit-save-button" type="button" data-save-shortcut aria-keyshortcuts="F8" title="Save (F8)">Save</button>
             </div>
           </section>
         </div>
@@ -1753,7 +1755,7 @@
               <button id="tag-edit-delete-button" class="secondary-button danger-button tag-delete-button" type="button" hidden>Delete</button>
               <button id="tag-edit-cancel-button" class="secondary-button" type="button">Cancel</button>
               <button id="tag-edit-merge-button" class="secondary-button" type="button">Merge and delete</button>
-              <button id="tag-edit-save-button" type="button">Save</button>
+              <button id="tag-edit-save-button" type="button" data-save-shortcut aria-keyshortcuts="F8" title="Save (F8)">Save</button>
             </div>
           </section>
         </div>
@@ -1803,7 +1805,7 @@
                   <p id="task-list-detail-count" class="task-list-detail-count"></p>
                   <div class="task-list-detail-actions">
                     <button id="task-list-detail-cancel" class="secondary-button" type="button" hidden>Cancel</button>
-                    <button id="task-list-detail-save" type="submit">Save changes</button>
+                    <button id="task-list-detail-save" type="submit" data-save-shortcut aria-keyshortcuts="F8" title="Save changes (F8)">Save changes</button>
                   </div>
                 </form>
 
@@ -1950,7 +1952,7 @@
 
             <div class="modal-actions">
               <button id="new-task-cancel-button" class="secondary-button" type="button">Cancel</button>
-              <button id="new-task-save-button" type="button">Save</button>
+              <button id="new-task-save-button" type="button" data-save-shortcut aria-keyshortcuts="F8" title="Save (F8)">Save</button>
             </div>
           </section>
         </div>
@@ -1966,7 +1968,7 @@
             <div class="modal-actions">
               <button id="unsaved-cancel-button" class="secondary-button" type="button">Cancel</button>
               <button id="unsaved-discard-button" class="secondary-button danger-button" type="button">Discard</button>
-              <button id="unsaved-save-button" type="button">Save</button>
+              <button id="unsaved-save-button" type="button" data-save-shortcut aria-keyshortcuts="F8" title="Save (F8)">Save</button>
             </div>
           </section>
         </div>
@@ -5438,7 +5440,8 @@
       contentStyle:
         'body { color: #202124; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.55; }',
       onPickImage: pickEditorImage,
-      onMarkdownEditTypeChanged: handleMarkdownEditTypeChanged
+      onMarkdownEditTypeChanged: handleMarkdownEditTypeChanged,
+      onShortcut: handleApplicationShortcut
     })
 
     if (typeof window.Editor.setHeight === 'function') {
@@ -6625,6 +6628,84 @@
     }
   }
 
+  function isApplicationModalOpen() {
+    return $('.modal-overlay').filter(function () {
+      return !$(this).prop('hidden')
+    }).length > 0
+  }
+
+  function triggerShortcutButton(selector) {
+    const $button = $(selector)
+    if (!$button.length || $button.prop('disabled') || $button.prop('hidden')) {
+      return
+    }
+
+    $button.trigger('click')
+  }
+
+  function triggerSaveShortcut() {
+    const $openModal = $('.modal-overlay').filter(function () {
+      return !$(this).prop('hidden')
+    }).last()
+    const $scope = $openModal.length ? $openModal : $(document)
+    const $button = $scope.find('[data-save-shortcut]').filter(function () {
+      return $(this).is(':visible') && !$(this).prop('disabled')
+    }).last()
+
+    if ($button.length) {
+      $button.trigger('click')
+    }
+  }
+
+  function handleApplicationShortcut(event) {
+    if (!event || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+      return false
+    }
+
+    const key = String(event.key || '').toUpperCase()
+    const supportedKeys = new Set(['F1', 'F2', 'F3', 'F8', 'F9'])
+    if (!supportedKeys.has(key)) {
+      return false
+    }
+
+    event.preventDefault()
+    if (typeof event.stopImmediatePropagation === 'function') {
+      event.stopImmediatePropagation()
+    } else if (typeof event.stopPropagation === 'function') {
+      event.stopPropagation()
+    }
+
+    if (event.repeat) {
+      return true
+    }
+
+    if (key === 'F8') {
+      triggerSaveShortcut()
+      return true
+    }
+
+    if (isApplicationModalOpen()) {
+      return true
+    }
+
+    switch (key) {
+      case 'F1':
+        triggerShortcutButton('#help-button')
+        break
+      case 'F2':
+        triggerShortcutButton('#new-task-button')
+        break
+      case 'F3':
+        $('#task-search').trigger('focus').trigger('select')
+        break
+      case 'F9':
+        triggerShortcutButton('#complete-button')
+        break
+    }
+
+    return true
+  }
+
   function bindEvents() {
     $('#task-list-switcher').on('change', function () {
       const requestedScope = $(this).val().toString()
@@ -7246,12 +7327,7 @@
         return
       }
 
-      if ((event.ctrlKey || event.metaKey)
-        && event.key.toLowerCase() === 'k'
-        && !$(event.target).closest('.task-editor-panel, .modal-overlay').length) {
-        event.preventDefault()
-        $('#task-search').trigger('focus').trigger('select')
-      }
+      handleApplicationShortcut(event)
     })
     $('#task-sort').on('change', function () {
       taskSortModes[currentView] = getTaskSortOption($(this).val().toString()).code

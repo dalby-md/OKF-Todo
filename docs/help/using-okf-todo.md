@@ -4,6 +4,20 @@ OKF-Todo is a local task application for keeping development, support, investiga
 
 This guide follows the way you normally work: choose where the task belongs, capture it quickly, add useful detail, find it again, and move it safely through completion or cancellation.
 
+## Hotkey map
+
+The primary workspace actions use function keys so they remain available without conflicting with editor shortcuts:
+
+| Key | Available from | Action |
+| --- | --- | --- |
+| **F1** | Main workspace and body editors | Open Help. |
+| **F2** | Main workspace and body editors | Open the New task dialog. |
+| **F3** | Main workspace and body editors | Focus and select task search. |
+| **F8** | Everywhere a Save action is available | Activate the visible enabled **Save** or **Save changes** button. This includes the current task, New task, unsaved-changes confirmation, lookup editor, tag editor, and task-list details. |
+| **F9** | Main workspace and body editors | Complete the current task when **Complete** is available. |
+
+Except for **F8 Save**, function-key shortcuts do not run while an application dialog is open. Holding a key down does not repeat an action. **Ctrl+K** remains available to the editors and is not an OKF-Todo shortcut.
+
 ## Start with one task
 
 1. Choose a list in the **List** switcher at the top of the window.
@@ -118,7 +132,7 @@ Use **Search tasks** to match:
 
 When **All lists** is selected, search also matches list names.
 
-Press **Ctrl+K** to move directly to task search.
+Press **F3** to move directly to task search, including while the HTML or Markdown editor has focus.
 
 ### Filter
 

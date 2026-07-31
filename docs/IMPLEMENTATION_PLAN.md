@@ -509,6 +509,7 @@ Acceptance criteria:
 - Search, filtering, and sorting share a responsive command area; the filtered result count sits beside the current view name. The persisted Task filter layout preference defaults to Compact, which uses an anchored Filters panel and wraps the command strip only when the task queue becomes narrow. Expanded keeps tags, type, status, and priority visible inline in the original two-column filter layout.
 - Text search includes task tags, while explicit multi-tag filtering remains available on demand with OR semantics and removable filter chips.
 - The Filters badge counts selected tags and exact task type, lifecycle status, and priority filters. Active field filters participate in the clear action and removable filter summary, which remains absent when no field filters are selected.
+- Function-key shortcuts provide editor-safe access to Help (**F1**), New task (**F2**), Search (**F3**), context-aware Save buttons (**F8**), and Complete (**F9**); **Ctrl+K** remains available to the body editors.
 
 ## Milestone 14 — Database management
 

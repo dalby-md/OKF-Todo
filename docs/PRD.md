@@ -614,6 +614,8 @@ The compact control exposes the selected sort explanation through its title and 
 
 Task browsing uses a compact responsive command strip. Search, a **Filters** button, and sorting share one row and wrap only when the task queue becomes narrow. The visible result count sits beside the current view name. **Filters** opens an anchored panel for tags, task type, lifecycle status, and priority, and its badge reports the number of selected field filters. Tags remain a multi-select with OR semantics. Active field filters appear as removable chips in a slim contextual row that is absent when no field filters are selected.
 
+Primary workspace actions use function keys that remain available from the main page and while either the HTML or Markdown body editor has focus: **F1** opens Help, **F2** opens New task, **F3** focuses task search, **F8** activates the visible enabled Save action, and **F9** completes the current task. F8 applies to the main task Save button and Save or Save changes buttons in dialogs. Disabled actions do nothing. Other shortcuts are suppressed while an application dialog is open, and all shortcuts ignore held-key repeat events. **Ctrl+K** is reserved for editor behavior and is not an application shortcut.
+
 ## Out of scope for first version
 
 - Multi-user support.
