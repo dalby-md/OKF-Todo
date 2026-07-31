@@ -4,7 +4,7 @@ using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using Photino.Okf_Todo.Services;
 
-namespace OkfTodo.Mcp;
+namespace Photino.Okf_Todo.Mcp;
 
 [McpServerToolType]
 public static class TaskTools

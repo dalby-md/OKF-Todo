@@ -28,8 +28,6 @@ Application logs are written to standard error and the JSON response is written 
 
 ## MCP server
 
-When the optional MCP component is installed, `mcp-config.json` in this directory contains a ready-to-copy MCP client configuration using the absolute installed path of `..\mcp\Okf-Todo.Mcp.exe`. The server is a stdio process started on demand by the MCP client; it is not a Windows service.
-
-To install or remove the MCP component later, run the same OKF-Todo installer again and change the **Install MCP server** selection.
+`mcp-config.json` in this directory contains a ready-to-copy MCP client configuration using `..\Okf-Todo.exe --mcp`. The MCP server is a headless stdio mode started on demand by the MCP client; it does not open the desktop window and is not a Windows service.
 
 Open **Help** in the desktop application for step-by-step OKF and MCP setup, usage, safety, and troubleshooting guidance.

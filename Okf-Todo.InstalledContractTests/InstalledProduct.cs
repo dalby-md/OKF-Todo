@@ -8,14 +8,12 @@ internal sealed class InstalledProduct
     {
         RootPath = rootPath;
         ApplicationPath = Path.Combine(rootPath, "Okf-Todo.exe");
-        McpServerPath = Path.Combine(rootPath, "mcp", "Okf-Todo.Mcp.exe");
         OkfRootPath = Path.Combine(rootPath, "okf", "todo-database");
         OkfEntryPath = Path.Combine(OkfRootPath, "index.md");
     }
 
     public string RootPath { get; }
     public string ApplicationPath { get; }
-    public string McpServerPath { get; }
     public string OkfRootPath { get; }
     public string OkfEntryPath { get; }
 
@@ -30,8 +28,7 @@ internal sealed class InstalledProduct
             : configuredPath;
 
         var product = new InstalledProduct(Path.GetFullPath(rootPath));
-        product.RequireFile(product.ApplicationPath, "installed OKF command adapter");
-        product.RequireFile(product.McpServerPath, "installed MCP server");
+        product.RequireFile(product.ApplicationPath, "installed desktop, OKF command, and MCP executable");
         product.RequireFile(product.OkfEntryPath, "installed OKF entry point");
         return product;
     }
@@ -43,7 +40,7 @@ internal sealed class InstalledProduct
         if (!File.Exists(path))
         {
             throw new FileNotFoundException(
-                $"The {description} was not found at '{path}'. Install OKF-Todo with the MCP component, " +
+                $"The {description} was not found at '{path}'. Install OKF-Todo, " +
                 $"or set {InstallDirectoryVariable} to the installation directory.",
                 path);
         }

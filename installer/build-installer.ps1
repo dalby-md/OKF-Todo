@@ -26,10 +26,8 @@ $artifactRoot = Join-Path $repoRoot 'artifacts\installer'
 $buildRoot = Join-Path $artifactRoot 'build'
 $publishRoot = Join-Path $artifactRoot 'publish'
 $guiPublish = Join-Path $publishRoot 'gui'
-$mcpPublish = Join-Path $publishRoot 'mcp'
 $stagingRoot = Join-Path $artifactRoot 'staging'
 $coreStaging = Join-Path $stagingRoot 'core'
-$mcpStaging = Join-Path $stagingRoot 'mcp'
 $okfStaging = Join-Path $stagingRoot 'okf\todo-database'
 $integrationStaging = Join-Path $stagingRoot 'integration'
 
@@ -145,28 +143,11 @@ try {
     Reset-Directory -Path $artifactRoot
     New-Item -ItemType Directory -Path $publishRoot -Force | Out-Null
 
-    Write-Host "Publishing OKF-Todo GUI for $RuntimeIdentifier..."
+    Write-Host "Publishing unified OKF-Todo application for $RuntimeIdentifier..."
     Invoke-Publish -Project (Join-Path $repoRoot 'Okf-Todo\Okf-Todo.csproj') -Output $guiPublish
-
-    Write-Host "Publishing OKF-Todo MCP server for $RuntimeIdentifier..."
-    Invoke-Publish -Project (Join-Path $repoRoot 'Okf-Todo.Mcp\Okf-Todo.Mcp.csproj') -Output $mcpPublish
 
     Reset-Directory -Path $stagingRoot
     Copy-DirectoryContents -Source $guiPublish -Destination $coreStaging
-    New-Item -ItemType Directory -Path $mcpStaging -Force | Out-Null
-
-    # Keep the MCP runtime isolated. The MCP SDK currently resolves newer
-    # Microsoft.Extensions/System.* assemblies than the Photino GUI, so merging
-    # both self-contained publishes into one directory is not safe.
-    Copy-DirectoryContents -Source $mcpPublish -Destination $mcpStaging
-
-    # The MCP project references the GUI project for shared application services,
-    # which causes the static frontend to be copied into its publish output. The
-    # stdio server does not serve these assets.
-    $mcpWebRoot = Join-Path $mcpStaging 'wwwroot'
-    if (Test-Path -LiteralPath $mcpWebRoot) {
-        Remove-Item -LiteralPath $mcpWebRoot -Recurse -Force
-    }
 
     Copy-DirectoryContents `
         -Source (Join-Path $repoRoot 'docs\okf\todo-database') `
@@ -182,23 +163,16 @@ try {
     Assert-FileExists -Path (Join-Path $coreStaging 'wwwroot\index.html')
     Assert-FileExists -Path (Join-Path $coreStaging 'wwwroot\help\okf-layer.md')
     Assert-FileExists -Path (Join-Path $coreStaging 'wwwroot\help\mcp-server.md')
-    Assert-FileExists -Path (Join-Path $mcpStaging 'Okf-Todo.Mcp.exe')
-    Assert-FileExists -Path (Join-Path $mcpStaging 'lookup-seed.json')
     Assert-FileExists -Path (Join-Path $okfStaging 'index.md')
-
-    if (Test-Path -LiteralPath (Join-Path $mcpStaging 'wwwroot')) {
-        throw 'MCP staging unexpectedly contains wwwroot after frontend pruning.'
-    }
 
     if (Get-ChildItem -LiteralPath (Join-Path $coreStaging 'wwwroot\help') -Filter '*.html' -File) {
         throw 'GUI staging unexpectedly contains authored HTML Help. Markdown files are the canonical Help source.'
     }
 
     Invoke-SignFile -Path (Join-Path $coreStaging 'Okf-Todo.exe')
-    Invoke-SignFile -Path (Join-Path $mcpStaging 'Okf-Todo.Mcp.exe')
 
     Write-Host "Staging ready at $stagingRoot"
-    Write-Host 'The optional MCP component has an isolated self-contained runtime.'
+    Write-Host 'The core executable provides desktop, OKF command, and MCP modes.'
 
     if ($SkipInstallerCompile) {
         Write-Host 'Skipping Inno Setup compilation as requested.'

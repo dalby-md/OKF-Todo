@@ -1,12 +1,12 @@
 # Use the MCP Server with Codex or Claude Code
 
-The optional OKF-Todo MCP server lets an MCP-compatible AI harness work with your local tasks. This is the action bridge in the workflow: the harness analyzes your source material, the [OKF layer](okf-layer.md) supplies context and rules, and MCP lets the harness list, read, create, or update tasks after you approve the action.
+The built-in OKF-Todo MCP server lets an MCP-compatible AI harness work with your local tasks. This is the action bridge in the workflow: the harness analyzes your source material, the [OKF layer](okf-layer.md) supplies context and rules, and MCP lets the harness list, read, create, or update tasks after you approve the action.
 
 The MCP server does not read email or contact customers. Paste or attach the relevant material to your chosen harness, ask it to prepare artifacts, review the result, and then decide what should be saved in OKF-Todo.
 
 ## Connect it once
 
-1. Install OKF-Todo and leave **Install MCP server** selected. It is selected by default.
+1. Install OKF-Todo. The desktop application and MCP server are provided by the same executable.
 2. Open this generated configuration file:
 
    ```text
@@ -24,7 +24,7 @@ The MCP server does not read email or contact customers. Paste or attach the rel
 
 The generated file contains the correct absolute path for your installation. MCP clients use different configuration locations and may wrap the server entry differently, so follow the client documentation for where to insert it.
 
-If the `mcp` folder or generated configuration is missing, run the installer again and select **Install MCP server**.
+If the generated configuration is missing, run the installer again to recreate it.
 
 ## Recommended workflow: draft, review, save, verify
 
@@ -157,8 +157,8 @@ Your AI harness and selected model may process pasted email, task content, or to
 | Symptom | What to check |
 | --- | --- |
 | The harness cannot see OKF-Todo | Confirm that its MCP configuration contains the generated `okf-todo` entry, then restart or reload the harness. |
-| The executable is missing | Run the installer again with **Install MCP server** selected. |
-| The MCP executable opens and closes | This is normal when launched directly. The harness starts and communicates with it. |
+| The executable is missing | Run the OKF-Todo installer again. |
+| `Okf-Todo.exe --mcp` opens and closes | This is normal when launched directly. The harness starts and communicates with this headless mode. |
 | Tasks created through MCP are missing in the desktop app | Check for a custom database-path argument. MCP and the GUI must point to the same database. |
 | An update removed information | Restore from a backup if necessary, then repeat with an explicit read-first and preserve-all-fields instruction. |
 | A type, priority, or source is rejected | Ask the harness to use values available in the current OKF-Todo database rather than guessing a code. |
@@ -171,7 +171,8 @@ The generated configuration has this general shape:
 {
   "mcpServers": {
     "okf-todo": {
-      "command": "C:\\Users\\<you>\\AppData\\Local\\Programs\\Okf-Todo\\mcp\\Okf-Todo.Mcp.exe"
+      "command": "C:\\Users\\<you>\\AppData\\Local\\Programs\\Okf-Todo\\Okf-Todo.exe",
+      "args": ["--mcp"]
     }
   }
 }

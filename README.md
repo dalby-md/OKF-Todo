@@ -122,10 +122,10 @@ On later releases, pending EF Core migrations are applied automatically before t
 
 ### Connect an MCP client
 
-Build the MCP server in the repository root:
+Build the OKF-Todo executable in the repository root:
 
 ```powershell
-dotnet build .\Okf-Todo.Mcp\Okf-Todo.Mcp.csproj -c Release
+dotnet build .\Okf-Todo\Okf-Todo.csproj -c Release
 ```
 
 Then configure an MCP client to start the built stdio server. For example:
@@ -136,7 +136,8 @@ Then configure an MCP client to start the built stdio server. For example:
     "okf-todo": {
       "command": "dotnet",
       "args": [
-        "C:\\git\\Okf-Todo\\Okf-Todo.Mcp\\bin\\Release\\net8.0\\Okf-Todo.Mcp.dll"
+        "C:\\git\\Okf-Todo\\Okf-Todo\\bin\\Release\\net8.0\\Okf-Todo.dll",
+        "--mcp"
       ]
     }
   }
@@ -160,7 +161,7 @@ Adjust the absolute DLL path for your checkout. By default, the server uses the 
 For development or isolated tests, start the server with a different database:
 
 ```powershell
-dotnet run --project .\Okf-Todo.Mcp\Okf-Todo.Mcp.csproj -- --database-path C:\temp\okf-todo-mcp.db
+dotnet run --project .\Okf-Todo\Okf-Todo.csproj -- --mcp --database-path C:\temp\okf-todo-mcp.db
 ```
 
 The MCP protocol uses standard output. Server and framework logs are written to standard error so they do not corrupt the protocol stream.
@@ -224,7 +225,7 @@ Product and architecture documentation is available in [`docs`](docs/).
 
 ### Build the Windows installer
 
-The Windows installer is a self-contained `win-x64` Inno Setup package. It always installs the GUI and OKF context graph. **Install MCP server** is presented as an installer component and is selected by default.
+The Windows installer is a self-contained `win-x64` Inno Setup package. It installs the unified desktop/command/MCP executable and the OKF context graph.
 
 Install Inno Setup 7 (or compatible Inno Setup 6), then run from the repository root:
 
@@ -250,7 +251,7 @@ To publish, merge, and validate the staging payload without compiling the setup 
 .\installer\build-installer.ps1 -Version 0.1.0 -SkipInstallerCompile
 ```
 
-The mandatory payload is staged under `artifacts\installer\staging\core`; the optional MCP server and its isolated runtime are staged under `artifacts\installer\staging\mcp`; and the installed OKF bundle is staged under `artifacts\installer\staging\okf`.
+The desktop application, OKF command adapter, and MCP server are provided by the single payload staged under `artifacts\installer\staging\core`; the installed OKF bundle is staged under `artifacts\installer\staging\okf`.
 
 For a signed production build, provide the Windows SDK `signtool.exe`, certificate thumbprint, and optional RFC 3161 timestamp URL:
 
@@ -260,7 +261,7 @@ For a signed production build, provide the Windows SDK `signtool.exe`, certifica
   -CertificateThumbprint '<certificate-thumbprint>'
 ```
 
-The build signs the GUI executable and MCP executable before packaging, then signs the resulting setup executable. Ordinary development builds remain unsigned.
+The build signs the unified OKF-Todo executable before packaging, then signs the resulting setup executable. Ordinary development builds remain unsigned.
 
 To build and publish the next alpha release in one operation, install and authenticate the GitHub CLI, then run:
 

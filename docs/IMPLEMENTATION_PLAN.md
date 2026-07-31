@@ -589,9 +589,9 @@ Scope:
 
 - Add a separate Windows xUnit project with no project references to application code.
 - Resolve an installed OKF-Todo directory from `OKF_TODO_INSTALL_DIR`, falling back to `%LOCALAPPDATA%\Programs\Okf-Todo`.
-- Require the MCP installer component.
-- Exercise the installed MCP executable over stdio using the official .NET MCP client.
-- Exercise the installed GUI executable's OKF command adapter over stdio as documented by the installed OKF bundle.
+- Require the unified installed executable's MCP mode.
+- Exercise the installed `Okf-Todo.exe --mcp` mode over stdio using the official .NET MCP client.
+- Exercise the installed executable's OKF command adapter over stdio as documented by the installed OKF bundle.
 - Implement add, read, list, and change-task business cases through both MCP and OKF command paths.
 - Add clearly separated OKF-guided direct SQLite capability tests for task and attachment insertion and task updates.
 - Validate the installed OKF bundle and compare its documented database contract with isolated SQLite databases created through both paths.

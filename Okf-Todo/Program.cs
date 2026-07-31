@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Photino.Okf_Todo.Bridge;
 using Photino.Okf_Todo.Data;
+using Photino.Okf_Todo.Mcp;
 using Photino.Okf_Todo.Services;
 using System.Drawing;
 
@@ -27,14 +28,33 @@ namespace Photino.Okf_Todo
                 argument,
                 "--okf-command",
                 StringComparison.OrdinalIgnoreCase));
-            using var singleInstanceMutex = CreateSingleInstanceMutex(isOkfCommandMode, out var isFirstInstance);
+            var isMcpMode = args.Any(argument => string.Equals(
+                argument,
+                "--mcp",
+                StringComparison.OrdinalIgnoreCase));
+            if (isOkfCommandMode && isMcpMode)
+            {
+                throw new ArgumentException("--okf-command and --mcp cannot be used together.");
+            }
+
+            using var singleInstanceMutex = CreateSingleInstanceMutex(
+                isOkfCommandMode || isMcpMode,
+                out var isFirstInstance);
             if (!isFirstInstance)
             {
                 return;
             }
 
             Directory.SetCurrentDirectory(AppContext.BaseDirectory);
-            var databasePath = ResolveDatabasePath(args, isOkfCommandMode);
+            var databasePath = isMcpMode
+                ? ResolveMcpDatabasePath(args)
+                : ResolveDatabasePath(args, isOkfCommandMode);
+
+            if (isMcpMode)
+            {
+                McpServerRunner.RunAsync(databasePath).GetAwaiter().GetResult();
+                return;
+            }
 
             using var services = CreateServices(isOkfCommandMode, databasePath);
             var startupLogger = services.GetRequiredService<ILogger<Program>>();
@@ -183,6 +203,38 @@ namespace Photino.Okf_Todo
             if (string.IsNullOrWhiteSpace(databasePath) || !Path.IsPathFullyQualified(databasePath))
             {
                 throw new ArgumentException($"{optionName} requires an absolute file path.");
+            }
+
+            var fullPath = Path.GetFullPath(databasePath);
+            var directory = Path.GetDirectoryName(fullPath)
+                ?? throw new ArgumentException($"{optionName} requires a file path with a parent directory.");
+            Directory.CreateDirectory(directory);
+            return fullPath;
+        }
+
+        private static string ResolveMcpDatabasePath(string[] args)
+        {
+            const string optionName = "--database-path";
+            var optionIndexes = args
+                .Select((argument, index) => new { Argument = argument, Index = index })
+                .Where(item => string.Equals(item.Argument, optionName, StringComparison.OrdinalIgnoreCase))
+                .Select(item => item.Index)
+                .ToList();
+
+            if (optionIndexes.Count == 0)
+            {
+                return DatabasePathProvider.GetDatabasePath();
+            }
+
+            if (optionIndexes.Count != 1 || optionIndexes[0] + 1 >= args.Length)
+            {
+                throw new ArgumentException($"{optionName} requires exactly one file path.");
+            }
+
+            var databasePath = args[optionIndexes[0] + 1];
+            if (string.IsNullOrWhiteSpace(databasePath))
+            {
+                throw new ArgumentException($"{optionName} requires a file path.");
             }
 
             var fullPath = Path.GetFullPath(databasePath);

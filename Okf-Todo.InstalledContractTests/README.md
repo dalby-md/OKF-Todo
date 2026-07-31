@@ -5,7 +5,7 @@
 These Windows-only black-box tests exercise only an installed OKF-Todo product:
 
 - `Okf-Todo.exe --okf-command`
-- `mcp\Okf-Todo.Mcp.exe`
+- `Okf-Todo.exe --mcp`
 - `okf\todo-database\index.md` and its installed context files
 - disposable SQLite databases created under the test runner's temporary directory
 
@@ -32,7 +32,7 @@ set OKF_TODO_INSTALL_DIR=C:\Path\To\Installed\Okf-Todo
 dotnet test .\Okf-Todo.InstalledContractTests\Okf-Todo.InstalledContractTests.csproj -c Release
 ```
 
-The MCP installer component is mandatory. Missing installed files fail environment validation rather than skipping tests.
+The unified installed executable and OKF bundle are mandatory. Missing installed files fail environment validation rather than skipping tests.
 
 See [Installed contract test user stories](../docs/testing/installed-contract-test-user-stories.md) for the business scenarios covered by the suite.
 

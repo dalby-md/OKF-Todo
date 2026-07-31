@@ -2,7 +2,7 @@
 
 ## Installed Contract Test
 
-An automated black-box test whose product inputs are limited to files placed by the Windows installer. For OKF-Todo, it uses the installed OKF bundle, installed GUI command adapter, installed MCP executable, and temporary SQLite databases created through those executables.
+An automated black-box test whose product inputs are limited to files placed by the Windows installer. For OKF-Todo, it uses the installed OKF bundle, the installed executable's OKF command and MCP modes, and temporary SQLite databases created through those modes.
 
 ## Installation Root
 

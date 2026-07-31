@@ -24,7 +24,7 @@ public sealed class McpServerProcessTests
                 "..",
                 "..",
                 "..",
-                "Okf-Todo.Mcp",
+                "Okf-Todo",
                 "bin",
 #if DEBUG
                 "Debug",
@@ -32,12 +32,12 @@ public sealed class McpServerProcessTests
                 "Release",
 #endif
                 "net8.0",
-                "Okf-Todo.Mcp.dll"));
-            Assert.True(File.Exists(serverPath), $"MCP server assembly was not found at {serverPath}.");
+                "Okf-Todo.exe"));
+            Assert.True(File.Exists(serverPath), $"Unified OKF-Todo executable was not found at {serverPath}.");
 
             var startInfo = new ProcessStartInfo
             {
-                FileName = "dotnet",
+                FileName = serverPath,
                 WorkingDirectory = AppContext.BaseDirectory,
                 UseShellExecute = false,
                 CreateNoWindow = true,
@@ -45,7 +45,7 @@ public sealed class McpServerProcessTests
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             };
-            startInfo.ArgumentList.Add(serverPath);
+            startInfo.ArgumentList.Add("--mcp");
             startInfo.ArgumentList.Add("--database-path");
             startInfo.ArgumentList.Add(databasePath);
 

@@ -21,9 +21,9 @@ internal sealed class McpClientHarness : IAsyncDisposable
         var transport = new StdioClientTransport(new StdioClientTransportOptions
         {
             Name = "OKF-Todo installed contract tests",
-            Command = product.McpServerPath,
-            Arguments = ["--database-path", databasePath],
-            WorkingDirectory = Path.GetDirectoryName(product.McpServerPath),
+            Command = product.ApplicationPath,
+            Arguments = ["--mcp", "--database-path", databasePath],
+            WorkingDirectory = product.RootPath,
             ShutdownTimeout = TimeSpan.FromSeconds(10)
         });
 

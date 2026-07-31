@@ -15,8 +15,8 @@ dotnet test .\Okf-Todo.slnx
 The disabled solution contains:
 
 - `Okf-Todo`
-- `Okf-Todo.Mcp`
 - `Okf-Todo.Tests`
+- `Okf-Todo.UiTests`
 
 ## Run once without enabling it
 
@@ -32,7 +32,7 @@ The default installation directory is:
 %LOCALAPPDATA%\Programs\Okf-Todo
 ```
 
-The MCP installer component must be installed. Missing installed executables or OKF files cause the tests to fail rather than skip.
+The unified installed executable and OKF files must be present. Missing installed files cause the tests to fail rather than skip.
 
 ## Enable in the main solution
 
@@ -70,6 +70,6 @@ dotnet sln .\Okf-Todo.slnx list
 
 ## Why it is disabled by default
 
-The suite tests an installation rather than the source tree. Its result depends on which installer version is currently installed, whether the MCP component was selected, and whether the installed OKF documentation matches the installed executables. Including it in every solution test run would therefore make ordinary development builds fail because of external machine state rather than a source-code defect.
+The suite tests an installation rather than the source tree. Its result depends on which installer version is currently installed and whether the installed OKF documentation matches the installed executable. Including it in every solution test run would therefore make ordinary development builds fail because of external machine state rather than a source-code defect.
 
 Run the project explicitly after installing or upgrading OKF-Todo, when validating an installer, or when verifying the compatibility of the installed MCP and OKF contracts.
