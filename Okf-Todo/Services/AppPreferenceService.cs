@@ -15,6 +15,7 @@ public sealed class AppPreferenceService(
     private const string DefaultLayoutMode = LayoutPreferenceModes.Auto;
     private const string DefaultTaskFilterLayout = TaskFilterLayoutModes.Compact;
     private const string DefaultColorScheme = ColorSchemes.Light;
+    private const string DefaultFontSize = FontSizeModes.Standard;
     private const bool DefaultShowSourceFields = false;
     private const bool DefaultShowOwner = false;
     private const bool DefaultShowResponsible = false;
@@ -91,6 +92,7 @@ public sealed class AppPreferenceService(
         var preferences = await ReadPreferencesAsync(cancellationToken);
         var layoutMode = NormalizeOrDefaultLayoutMode(preferences.LayoutMode);
         var colorScheme = NormalizeOrDefaultColorScheme(preferences.ColorScheme);
+        var fontSize = NormalizeOrDefaultFontSize(preferences.FontSize);
         var taskSortModes = NormalizeStoredTaskSortModes(preferences.TaskSortModes);
         var taskSortDirections = NormalizeStoredTaskSortDirections(preferences.TaskSortDirections, taskSortModes);
 
@@ -109,7 +111,8 @@ public sealed class AppPreferenceService(
             taskSortModes,
             taskSortDirections,
             NormalizeTaskListScope(preferences.TaskListScope),
-            NormalizeOrDefaultTaskFilterLayout(preferences.TaskFilterLayout));
+            NormalizeOrDefaultTaskFilterLayout(preferences.TaskFilterLayout),
+            fontSize);
     }
 
     public async Task<LayoutPreferenceDto> SaveLayoutPreferenceAsync(
@@ -158,6 +161,9 @@ public sealed class AppPreferenceService(
         var colorScheme = request.ColorScheme is null
             ? NormalizeOrDefaultColorScheme(preferences.ColorScheme)
             : NormalizeColorScheme(request.ColorScheme);
+        var fontSize = request.FontSize is null
+            ? NormalizeOrDefaultFontSize(preferences.FontSize)
+            : NormalizeFontSize(request.FontSize);
         var taskSortModes = MergeTaskSortModes(
             NormalizeStoredTaskSortModes(preferences.TaskSortModes),
             request.TaskSortModes);
@@ -187,16 +193,18 @@ public sealed class AppPreferenceService(
             TaskSortModes = taskSortModes,
             TaskSortDirections = taskSortDirections,
             TaskListScope = taskListScope,
-            TaskFilterLayout = taskFilterLayout
+            TaskFilterLayout = taskFilterLayout,
+            FontSize = fontSize
         };
         await WritePreferencesAsync(preferences, cancellationToken);
 
         logger.LogInformation(
-            "Saved layout preference with task list width {TaskListWidth}, height {TaskListHeight}, mode {LayoutMode}, task filter layout {TaskFilterLayout}, source fields {ShowSourceFields}, owner {ShowOwner}, responsible {ShowResponsible}, relationships {ShowRelationships}, completed editing {AllowEditingCompletedTasks}, cancelled editing {AllowEditingCancelledTasks}, task selection coach mark seen {TaskSelectionCoachmarkSeen}, color scheme {ColorScheme}, task sort modes {TaskSortModes}, task sort directions {TaskSortDirections}, and task list scope {TaskListScope}.",
+            "Saved layout preference with task list width {TaskListWidth}, height {TaskListHeight}, mode {LayoutMode}, task filter layout {TaskFilterLayout}, font size {FontSize}, source fields {ShowSourceFields}, owner {ShowOwner}, responsible {ShowResponsible}, relationships {ShowRelationships}, completed editing {AllowEditingCompletedTasks}, cancelled editing {AllowEditingCancelledTasks}, task selection coach mark seen {TaskSelectionCoachmarkSeen}, color scheme {ColorScheme}, task sort modes {TaskSortModes}, task sort directions {TaskSortDirections}, and task list scope {TaskListScope}.",
             taskListWidth,
             taskListHeight,
             layoutMode,
             taskFilterLayout,
+            fontSize,
             showSourceFields,
             showOwner,
             showResponsible,
@@ -224,7 +232,8 @@ public sealed class AppPreferenceService(
             taskSortModes,
             taskSortDirections,
             taskListScope,
-            taskFilterLayout);
+            taskFilterLayout,
+            fontSize);
     }
 
     public async Task<WindowPreferenceDto> GetWindowPreferenceAsync(CancellationToken cancellationToken)
@@ -477,7 +486,8 @@ public sealed class AppPreferenceService(
             null,
             DefaultWindowIsMaximized,
             DefaultColorScheme,
-            TaskFilterLayout: DefaultTaskFilterLayout);
+            TaskFilterLayout: DefaultTaskFilterLayout,
+            FontSize: DefaultFontSize);
     }
 
     private static string? NormalizeTaskListScope(string? value)
@@ -531,6 +541,18 @@ public sealed class AppPreferenceService(
         catch (ValidationException)
         {
             return DefaultColorScheme;
+        }
+    }
+
+    private static string NormalizeOrDefaultFontSize(string? fontSize)
+    {
+        try
+        {
+            return NormalizeFontSize(fontSize);
+        }
+        catch (ValidationException)
+        {
+            return DefaultFontSize;
         }
     }
 
@@ -639,6 +661,22 @@ public sealed class AppPreferenceService(
         }
 
         throw new ValidationException("Color scheme is invalid.", "colorScheme");
+    }
+
+    private static string NormalizeFontSize(string? fontSize)
+    {
+        var normalizedFontSize = string.IsNullOrWhiteSpace(fontSize)
+            ? DefaultFontSize
+            : fontSize.Trim().ToUpperInvariant();
+
+        if (normalizedFontSize is FontSizeModes.Small
+            or FontSizeModes.Standard
+            or FontSizeModes.Large)
+        {
+            return normalizedFontSize;
+        }
+
+        throw new ValidationException("Font size preference is invalid.", "fontSize");
     }
 
     private static IReadOnlyDictionary<string, string> NormalizeStoredTaskSortModes(
@@ -896,6 +934,13 @@ public static class ColorSchemes
     public const string Dark = "DARK";
 }
 
+public static class FontSizeModes
+{
+    public const string Small = "SMALL";
+    public const string Standard = "STANDARD";
+    public const string Large = "LARGE";
+}
+
 public static class TaskListSortModes
 {
     public const string Attention = "ATTENTION";
@@ -951,7 +996,8 @@ public sealed record LayoutPreferenceDto(
     IReadOnlyDictionary<string, string> TaskSortModes,
     IReadOnlyDictionary<string, string> TaskSortDirections,
     string? TaskListScope,
-    string TaskFilterLayout);
+    string TaskFilterLayout,
+    string FontSize);
 
 public sealed record LayoutPreferenceSaveRequest(
     double? TaskListWidth,
@@ -968,7 +1014,8 @@ public sealed record LayoutPreferenceSaveRequest(
     IReadOnlyDictionary<string, string>? TaskSortModes = null,
     IReadOnlyDictionary<string, string>? TaskSortDirections = null,
     string? TaskListScope = null,
-    string? TaskFilterLayout = null);
+    string? TaskFilterLayout = null,
+    string? FontSize = null);
 
 public sealed record WindowPreferenceDto(int? Left, int? Top, int? Width, int? Height, bool IsMaximized);
 
@@ -1004,4 +1051,5 @@ internal sealed record StoredPreferences(
     bool? TaskSelectionCoachmarkSeen = null,
     string? TaskListScope = null,
     IReadOnlyCollection<string>? TaskExportColumns = null,
-    string? TaskFilterLayout = null);
+    string? TaskFilterLayout = null,
+    string? FontSize = null);

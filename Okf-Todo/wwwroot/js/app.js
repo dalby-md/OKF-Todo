@@ -124,6 +124,11 @@
     light: 'LIGHT',
     dark: 'DARK'
   }
+  const fontSizeCodes = {
+    small: 'SMALL',
+    standard: 'STANDARD',
+    large: 'LARGE'
+  }
   const colorSchemeStorageKey = 'okf-todo-color-scheme'
   const allTaskListsScope = 'ALL'
   const helpTopics = {
@@ -169,6 +174,7 @@
     taskListScope: null,
     taskSortModes: taskSortModes,
     taskSortDirections: taskSortDirections,
+    fontSize: fontSizeCodes.standard,
     colorScheme: document.documentElement.classList.contains('theme-dark')
       ? colorSchemeCodes.dark
       : colorSchemeCodes.light
@@ -1434,6 +1440,23 @@
                     <select id="color-scheme" class="sr-only preference-native-control" aria-hidden="true" tabindex="-1">
                       <option value="LIGHT">Light</option>
                       <option value="DARK">Dark</option>
+                    </select>
+                  </div>
+
+                  <div class="preference-row">
+                    <div class="preference-row-copy">
+                      <strong>Font size</strong>
+                      <span>Adjust text throughout the OKF-Todo interface.</span>
+                    </div>
+                    <div class="preferences-segmented-control" data-preference-select="font-size" role="group" aria-label="Font size">
+                      <button class="preference-choice" type="button" data-value="SMALL" aria-pressed="false">Small</button>
+                      <button class="preference-choice" type="button" data-value="STANDARD" aria-pressed="false">Standard</button>
+                      <button class="preference-choice" type="button" data-value="LARGE" aria-pressed="false">Large</button>
+                    </div>
+                    <select id="font-size" class="sr-only preference-native-control" aria-hidden="true" tabindex="-1">
+                      <option value="SMALL">Small</option>
+                      <option value="STANDARD">Standard</option>
+                      <option value="LARGE">Large</option>
                     </select>
                   </div>
 
@@ -3956,6 +3979,15 @@
       : colorSchemeCodes.light
   }
 
+  function normalizeFontSize(fontSize) {
+    const normalizedFontSize = String(fontSize || '').trim().toUpperCase()
+    if (normalizedFontSize === fontSizeCodes.small || normalizedFontSize === fontSizeCodes.large) {
+      return normalizedFontSize
+    }
+
+    return fontSizeCodes.standard
+  }
+
   function normalizeTaskFilterLayout(taskFilterLayout) {
     return String(taskFilterLayout || '').trim().toUpperCase() === taskFilterLayoutCodes.expanded
       ? taskFilterLayoutCodes.expanded
@@ -4007,6 +4039,7 @@
       allowEditingCompletedTasks: layoutPreference.allowEditingCompletedTasks,
       allowEditingCancelledTasks: layoutPreference.allowEditingCancelledTasks,
       taskSelectionCoachmarkSeen: layoutPreference.taskSelectionCoachmarkSeen,
+      fontSize: layoutPreference.fontSize,
       colorScheme: layoutPreference.colorScheme,
       taskSortModes: taskSortModes,
       taskSortDirections: taskSortDirections,
@@ -4046,6 +4079,7 @@
     layoutPreference.taskSortModes = taskSortModes
     taskSortDirections = normalizeTaskSortDirections(preference.taskSortDirections, preference.taskSortModes)
     layoutPreference.taskSortDirections = taskSortDirections
+    applyFontSize(preference.fontSize)
     applyColorScheme(preference.colorScheme)
     applyTaskFilterLayout()
     applyStoredLayoutSplit(false)
@@ -4123,6 +4157,21 @@
       .toggleClass('layout-mode-stacked', layoutPreference.layoutMode === layoutModeCodes.stacked)
     $('#layout-mode').val(layoutPreference.layoutMode)
     syncPreferenceControls()
+  }
+
+  function applyFontSize(fontSize) {
+    const normalizedFontSize = normalizeFontSize(fontSize)
+    const fontSizePixels = normalizedFontSize === fontSizeCodes.large
+      ? 18
+      : normalizedFontSize === fontSizeCodes.small
+        ? 14
+        : 16
+
+    layoutPreference.fontSize = normalizedFontSize
+    document.documentElement.style.setProperty('--app-font-size', `${fontSizePixels}px`)
+    $('#font-size').val(normalizedFontSize)
+    syncPreferenceControls()
+    positionTaskFilterPopover()
   }
 
   function isCompactTaskFilterLayout() {
@@ -4311,6 +4360,15 @@
   function getSelectedTaskTagFilters() {
     return getSelectedTaskTagFilterValues().map(function (tag) {
       return String(tag).toLocaleLowerCase()
+    })
+  }
+
+  function switchFontSize() {
+    applyFontSize($('#font-size').val())
+    saveLayoutPreference().then(function (wasSaved) {
+      if (wasSaved) {
+        setStatus('Font size saved', 'saved')
+      }
     })
   }
 
@@ -6490,6 +6548,7 @@
   function syncPreferenceControls() {
     syncPreferenceChoiceGroup('editor-mode')
     syncPreferenceChoiceGroup('color-scheme')
+    syncPreferenceChoiceGroup('font-size')
     syncPreferenceChoiceGroup('layout-mode')
     syncPreferenceChoiceGroup('task-filter-layout')
   }
@@ -7445,6 +7504,7 @@
     $('#layout-mode').on('change', switchLayoutMode)
     $('#task-filter-layout').on('change', switchTaskFilterLayout)
     $('#color-scheme').on('change', switchColorScheme)
+    $('#font-size').on('change', switchFontSize)
     $('#show-source-fields, #show-owner, #show-responsible, #show-relationships, #allow-editing-completed-tasks, #allow-editing-cancelled-tasks')
       .on('change', saveTaskDetailPreference)
     $('#backup-database-button').on('click', function () {

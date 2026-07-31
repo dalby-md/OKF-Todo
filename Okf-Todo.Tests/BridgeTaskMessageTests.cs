@@ -621,6 +621,7 @@ public sealed class BridgeTaskMessageTests
         Assert.Equal(JsonValueKind.Null, initial.GetProperty("taskListHeight").ValueKind);
         Assert.Equal("AUTO", initial.GetProperty("layoutMode").GetString());
         Assert.Equal("COMPACT", initial.GetProperty("taskFilterLayout").GetString());
+        Assert.Equal("STANDARD", initial.GetProperty("fontSize").GetString());
         Assert.False(initial.GetProperty("showSourceFields").GetBoolean());
         Assert.False(initial.GetProperty("showOwner").GetBoolean());
         Assert.False(initial.GetProperty("showResponsible").GetBoolean());
@@ -652,6 +653,7 @@ public sealed class BridgeTaskMessageTests
             allowEditingCompletedTasks = true,
             allowEditingCancelledTasks = false,
             taskSelectionCoachmarkSeen = true,
+            fontSize = "LARGE",
             colorScheme = "DARK",
             taskSortModes = new Dictionary<string, string>
             {
@@ -668,6 +670,7 @@ public sealed class BridgeTaskMessageTests
         Assert.Equal(275, saved.GetProperty("taskListHeight").GetDouble());
         Assert.Equal("STACKED", saved.GetProperty("layoutMode").GetString());
         Assert.Equal("EXPANDED", saved.GetProperty("taskFilterLayout").GetString());
+        Assert.Equal("LARGE", saved.GetProperty("fontSize").GetString());
         Assert.True(saved.GetProperty("showSourceFields").GetBoolean());
         Assert.True(saved.GetProperty("showOwner").GetBoolean());
         Assert.False(saved.GetProperty("showResponsible").GetBoolean());
@@ -687,6 +690,7 @@ public sealed class BridgeTaskMessageTests
         Assert.Equal(275, loaded.GetProperty("taskListHeight").GetDouble());
         Assert.Equal("STACKED", loaded.GetProperty("layoutMode").GetString());
         Assert.Equal("EXPANDED", loaded.GetProperty("taskFilterLayout").GetString());
+        Assert.Equal("LARGE", loaded.GetProperty("fontSize").GetString());
         Assert.True(loaded.GetProperty("showSourceFields").GetBoolean());
         Assert.True(loaded.GetProperty("showOwner").GetBoolean());
         Assert.False(loaded.GetProperty("showResponsible").GetBoolean());
@@ -811,6 +815,21 @@ public sealed class BridgeTaskMessageTests
         Assert.False(response.RootElement.GetProperty("ok").GetBoolean());
         Assert.Equal("ValidationFailed", response.RootElement.GetProperty("error").GetProperty("code").GetString());
         Assert.Equal("colorScheme", response.RootElement.GetProperty("error").GetProperty("details").GetProperty("field").GetString());
+    }
+
+    [Fact]
+    public async Task Bridge_RejectsInvalidFontSizePreference()
+    {
+        await using var fixture = await BridgeFixture.CreateAsync();
+
+        using var response = await fixture.SendRawAsync("layout.preference.save", new
+        {
+            fontSize = "HUGE"
+        });
+
+        Assert.False(response.RootElement.GetProperty("ok").GetBoolean());
+        Assert.Equal("ValidationFailed", response.RootElement.GetProperty("error").GetProperty("code").GetString());
+        Assert.Equal("fontSize", response.RootElement.GetProperty("error").GetProperty("details").GetProperty("field").GetString());
     }
 
     [Fact]

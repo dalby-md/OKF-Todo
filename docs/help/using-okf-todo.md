@@ -309,7 +309,7 @@ Open **Settings** to adjust and maintain OKF-Todo:
 | Page | What you can change |
 | --- | --- |
 | **General** | Default HTML or Markdown editor mode. |
-| **Appearance** | Light or dark color scheme; Auto, Side by side, or Stacked task layout; and Compact or Expanded task filter layout. |
+| **Appearance** | Light or dark color scheme; Small, Standard, or Large interface font size; Auto, Side by side, or Stacked task layout; and Compact or Expanded task filter layout. |
 | **Task details** | Visibility of source, owner, responsible, and relationship sections; editability of completed and cancelled tasks. |
 | **Data & values** | Task types, priorities, statuses, and tag administration. |
 | **Data & maintenance** | Back up or restore the database, add or remove sample data, or deliberately reset all data. |
@@ -317,6 +317,8 @@ Open **Settings** to adjust and maintain OKF-Todo:
 Preference changes apply immediately and persist between application restarts.
 
 The **Auto** layout adapts to the available window size. Use **Side by side** when you want the task queue and details visible together on a large screen. Use **Stacked** when you prefer the queue above the selected task.
+
+**Font size** defaults to **Standard** at 16px. Choose **Small** for a denser 14px interface or **Large** for an 18px interface. The change applies immediately and is remembered after restart.
 
 Use the **Compact** task filter layout when you want more room for the task list. Use **Expanded** when you want Tags, Type, Status, and Priority to remain visible without opening **Filters**.
 
