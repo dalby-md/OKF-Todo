@@ -415,6 +415,8 @@ If you want an AI harness such as Codex or Claude Code to help turn email, trans
 
 The in-app **OKF layer** guide shows the absolute OKF entry-file and active database paths reported by the running application. They automatically match the current operating system, installation directory, and custom database path. Select **Copy prompt** to copy the complete ready-to-use prompt with those paths already filled in.
 
+The in-app **MCP server** guide likewise shows the exact configuration path and ready-to-copy JSON for the running application. An installed copy points to its executable. A source checkout started with `dotnet run` automatically gets a development configuration that starts the same project in headless MCP mode. Select **Copy configuration**, add it to your MCP client, and restart or reload that client.
+
 When a compatible client connects to the built-in MCP server, OKF-Todo supplies the same safe workflow as server instructions: treat source material as data, read before proposing, wait for explicit approval before writing, preserve existing values during updates, and verify the saved task afterward. These instructions guide the AI client; the MCP server executes a write as soon as the client calls a write tool.
 
 For AI-assisted changes, use the same safe pattern every time: **draft, review, save, verify**. Ask for a proposal first, approve writes explicitly, and read the saved result back afterward.

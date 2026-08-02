@@ -109,6 +109,14 @@ namespace Photino.Okf_Todo
                 return;
             }
 
+            var mcpConfiguration = services
+                .GetRequiredService<McpClientConfigurationService>()
+                .EnsureConfiguration();
+            startupLogger.LogInformation(
+                "MCP client configuration is ready at {McpConfigPath} for {McpLaunchDescription}.",
+                mcpConfiguration.Path,
+                mcpConfiguration.LaunchDescription);
+
             PhotinoServer
                 .CreateStaticFileServer(args, out string baseUrl)
                 .RunAsync();
@@ -446,7 +454,11 @@ namespace Photino.Okf_Todo
             services.AddSingleton<ITaskMarkdownExportDestinationPicker>(serviceProvider =>
                 serviceProvider.GetRequiredService<PhotinoFileSavePicker>());
             services.AddSingleton<ApplicationLifetimeService>();
-            services.AddSingleton(new HelpRuntimeContextService(AppContext.BaseDirectory, databasePath));
+            services.AddSingleton(new McpClientConfigurationService(AppContext.BaseDirectory));
+            services.AddSingleton(serviceProvider => new HelpRuntimeContextService(
+                AppContext.BaseDirectory,
+                databasePath,
+                serviceProvider.GetRequiredService<McpClientConfigurationService>()));
             services.AddScoped<LookupSeedService>();
             services.AddScoped<TaskLifecycleService>();
             services.AddScoped<TaskListService>();

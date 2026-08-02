@@ -17,11 +17,20 @@ public sealed class HelpRuntimeContextServiceTests : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(okfEntryPath)!);
         File.WriteAllText(okfEntryPath, "# OKF");
 
-        var result = new HelpRuntimeContextService(applicationDirectory, databasePath).GetContext();
+        var mcpConfigurationService = new McpClientConfigurationService(applicationDirectory);
+        var result = new HelpRuntimeContextService(
+            applicationDirectory,
+            databasePath,
+            mcpConfigurationService).GetContext();
 
         Assert.Equal(Path.GetFullPath(okfEntryPath), result.OkfEntryPath);
         Assert.Equal(Path.GetFullPath(databasePath), result.DatabasePath);
         Assert.False(string.IsNullOrWhiteSpace(result.OperatingSystem));
+        Assert.Equal(
+            Path.Combine(applicationDirectory, "integration", "mcp-config.json"),
+            result.McpConfigPath);
+        Assert.Contains("mcpServers", result.McpConfigJson);
+        Assert.Contains("framework-dependent application", result.McpLaunchDescription);
     }
 
     [Fact]

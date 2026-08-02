@@ -60,6 +60,13 @@ correct across operating systems, custom installer directories, source builds,
 and custom database paths. Its ready-to-use harness prompt has a one-click copy
 action.
 
+Desktop startup also makes an MCP client configuration available for the
+current launch mode. Installed copies preserve the Inno Setup configuration;
+source checkouts generate an absolute `dotnet run --no-build` command for the
+current build configuration; and framework-dependent output points to the
+application DLL. The in-app MCP guide resolves the exact configuration path,
+launch description, and JSON at runtime and provides a one-click copy action.
+
 ## Milestone 2 — Data foundation
 
 Scope:

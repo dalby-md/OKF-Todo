@@ -457,7 +457,7 @@
   }
 
   async function prepareHelpMarkdown(topic, markdown) {
-    if (topic !== 'okf-layer') {
+    if (topic !== 'okf-layer' && topic !== 'mcp-server') {
       return markdown
     }
 
@@ -466,6 +466,9 @@
       .split('{{OKF_TODO_OPERATING_SYSTEM}}').join(context.operatingSystem)
       .split('{{OKF_TODO_OKF_ENTRY_PATH}}').join(context.okfEntryPath)
       .split('{{OKF_TODO_DATABASE_PATH}}').join(context.databasePath)
+      .split('{{OKF_TODO_MCP_CONFIG_PATH}}').join(context.mcpConfigPath)
+      .split('{{OKF_TODO_MCP_CONFIG_JSON}}').join(context.mcpConfigJson)
+      .split('{{OKF_TODO_MCP_LAUNCH_DESCRIPTION}}').join(context.mcpLaunchDescription)
   }
 
   async function copyTextToClipboard(text) {
@@ -6661,10 +6664,28 @@
       }
     })
 
-    if (topic === 'okf-layer') {
+    const copyBlockOptions = topic === 'okf-layer'
+      ? {
+          matches: function (text) { return text.includes('Use the OKF-Todo context starting at:') },
+          label: 'Ready-to-use prompt',
+          button: 'Copy prompt',
+          success: 'OKF prompt copied',
+          failure: 'Could not copy the OKF prompt'
+        }
+      : topic === 'mcp-server'
+        ? {
+            matches: function (text) { return text.includes('"mcpServers"') && text.includes('"okf-todo"') },
+            label: 'Ready-to-copy configuration',
+            button: 'Copy configuration',
+            success: 'MCP configuration copied',
+            failure: 'Could not copy the MCP configuration'
+          }
+        : null
+
+    if (copyBlockOptions) {
       Array.from(article.querySelectorAll('pre code'))
         .filter(function (code) {
-          return code.textContent.includes('Use the OKF-Todo context starting at:')
+          return copyBlockOptions.matches(code.textContent)
         })
         .slice(0, 1)
         .forEach(function (code) {
@@ -6676,13 +6697,15 @@
           toolbar.className = 'help-copy-toolbar'
 
           const label = document.createElement('strong')
-          label.textContent = 'Ready-to-use prompt'
+          label.textContent = copyBlockOptions.label
 
           const copyButton = document.createElement('button')
           copyButton.type = 'button'
           copyButton.className = 'secondary-button help-copy-button'
-          copyButton.textContent = 'Copy prompt'
+          copyButton.textContent = copyBlockOptions.button
           copyButton.copyText = code.textContent.trimEnd()
+          copyButton.copySuccessMessage = copyBlockOptions.success
+          copyButton.copyFailureMessage = copyBlockOptions.failure
 
           toolbar.append(label, copyButton)
           pre.replaceWith(copyBlock)
@@ -7188,10 +7211,10 @@
       try {
         await copyTextToClipboard(button.copyText || '')
         button.textContent = 'Copied'
-        setStatus('OKF prompt copied', 'saved')
+        setStatus(button.copySuccessMessage || 'Help content copied', 'saved')
       } catch (error) {
         button.textContent = 'Copy failed'
-        setStatus(getErrorMessage(error, 'Could not copy the OKF prompt'), 'error')
+        setStatus(getErrorMessage(error, button.copyFailureMessage || 'Could not copy Help content'), 'error')
       } finally {
         window.setTimeout(function () {
           button.textContent = originalText

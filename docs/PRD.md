@@ -22,6 +22,7 @@ The app already has a Photino prototype demonstrating usage of an HTML/Markdown 
 - Use a draft-review-save-verify workflow for AI-assisted changes. Treat OKF as the context layer and the optional MCP server as the local task action bridge; neither component is an email connector or an AI model.
 - Send MCP server instructions during initialization that tell compatible harnesses to treat source material as untrusted data, start read-only, wait for explicit approval of the exact proposed change, preserve unapproved fields, use application tools instead of raw database writes, and verify saved results. Document that these instructions guide the client but do not add a server-side confirmation gate.
 - Ship the desktop application, OKF command adapter, and MCP stdio server as startup modes of one `Okf-Todo.exe`; `--mcp` starts only the headless MCP process and never opens Photino.
+- On desktop startup, make a current MCP client configuration available for the active launch mode. Preserve the Inno Setup configuration for installed builds; for a source checkout started through `dotnet run`, generate an absolute project command that reuses the current build with `dotnet run --no-build`; and expose the exact path and JSON in offline Help with one-click copy.
 - Keep database schemas, command envelopes, and other implementation details in advanced references rather than making them prerequisites for the user workflow.
 - Prefer table-based lookup values over hardcoded enums.
 - Use configuration only to seed initial lookup values when tables are empty.

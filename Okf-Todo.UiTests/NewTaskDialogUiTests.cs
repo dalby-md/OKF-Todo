@@ -664,10 +664,29 @@ public sealed class NewTaskDialogUiTests
         Assert.Equal("Copied", await copyPromptButton.TextContentAsync());
 
         await page.Locator("[data-help-topic='mcp-server']").ClickAsync();
-        await page.Locator("#help-content h1").WaitForAsync();
+        await page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions
+        {
+            Name = "Use the MCP Server with Codex or Claude Code",
+            Exact = true
+        }).WaitForAsync();
         Assert.Equal(
             "Use the MCP Server with Codex or Claude Code",
             await page.Locator("#help-content h1").TextContentAsync());
+
+        var mcpCodeBlocks = await page.Locator("#help-content pre code").AllTextContentsAsync();
+        Assert.True(
+            mcpCodeBlocks.Any(text => text.Contains("mcpServers", StringComparison.Ordinal)),
+            $"Rendered MCP code blocks: {string.Join(" | ", mcpCodeBlocks)}");
+        var mcpConfiguration = page.Locator(".help-copy-block pre");
+        await mcpConfiguration.WaitForAsync();
+        var mcpConfigurationText = await mcpConfiguration.TextContentAsync();
+        Assert.Contains("mcpServers", mcpConfigurationText);
+        Assert.Contains("okf-todo", mcpConfigurationText);
+        Assert.DoesNotContain("{{OKF_TODO_", mcpConfigurationText);
+        var copyConfigurationButton = page.Locator(".help-copy-button");
+        Assert.Equal("Copy configuration", await copyConfigurationButton.TextContentAsync());
+        await copyConfigurationButton.ClickAsync();
+        Assert.Equal("Copied", await copyConfigurationButton.TextContentAsync());
 
         await page.Locator("[data-help-topic='using-okf-todo']").ClickAsync();
         await page.Locator("#help-content h1").WaitForAsync();
@@ -2574,7 +2593,11 @@ public sealed class NewTaskDialogUiTests
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite(DatabasePathProvider.CreateConnectionString(databasePath, pooling: false)));
             builder.Services.AddSingleton<HtmlSanitizerService>();
-            builder.Services.AddSingleton(new HelpRuntimeContextService(workspaceRoot, databasePath));
+            builder.Services.AddSingleton(new McpClientConfigurationService(testDirectory));
+            builder.Services.AddSingleton(serviceProvider => new HelpRuntimeContextService(
+                workspaceRoot,
+                databasePath,
+                serviceProvider.GetRequiredService<McpClientConfigurationService>()));
             builder.Services.AddSingleton<IAppPreferencePathProvider>(
                 new TestPreferencePathProvider(Path.Combine(testDirectory, "app-preferences.json")));
             builder.Services.AddSingleton<IBackupDestinationPicker, CancelledBackupDestinationPicker>();

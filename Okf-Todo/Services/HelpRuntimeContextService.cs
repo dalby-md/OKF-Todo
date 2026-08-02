@@ -4,19 +4,28 @@ public sealed class HelpRuntimeContextService
 {
     private readonly string _applicationBaseDirectory;
     private readonly string _databasePath;
+    private readonly McpClientConfigurationService _mcpConfigurationService;
 
-    public HelpRuntimeContextService(string applicationBaseDirectory, string databasePath)
+    public HelpRuntimeContextService(
+        string applicationBaseDirectory,
+        string databasePath,
+        McpClientConfigurationService mcpConfigurationService)
     {
         _applicationBaseDirectory = Path.GetFullPath(applicationBaseDirectory);
         _databasePath = Path.GetFullPath(databasePath);
+        _mcpConfigurationService = mcpConfigurationService;
     }
 
     public HelpRuntimeContext GetContext()
     {
+        var mcpConfiguration = _mcpConfigurationService.EnsureConfiguration();
         return new HelpRuntimeContext(
             GetOperatingSystemName(),
             ResolveOkfEntryPath(_applicationBaseDirectory),
-            _databasePath);
+            _databasePath,
+            mcpConfiguration.Path,
+            mcpConfiguration.Json.TrimEnd(),
+            mcpConfiguration.LaunchDescription);
     }
 
     internal static string ResolveOkfEntryPath(string applicationBaseDirectory)
@@ -76,4 +85,7 @@ public sealed class HelpRuntimeContextService
 public sealed record HelpRuntimeContext(
     string OperatingSystem,
     string OkfEntryPath,
-    string DatabasePath);
+    string DatabasePath,
+    string McpConfigPath,
+    string McpConfigJson,
+    string McpLaunchDescription);

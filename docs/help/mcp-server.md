@@ -10,14 +10,19 @@ The instructions guide the harness; they are not an interactive confirmation enf
 
 ## Connect it once
 
-1. Install OKF-Todo. The desktop application and MCP server are provided by the same executable.
-2. Open this generated configuration file:
+1. Start the OKF-Todo desktop application once. Startup makes the MCP configuration for this copy of OKF-Todo available.
+2. Open this generated configuration file for the current {{OKF_TODO_MCP_LAUNCH_DESCRIPTION}}:
 
    ```text
-   %LOCALAPPDATA%\Programs\Okf-Todo\integration\mcp-config.json
+   {{OKF_TODO_MCP_CONFIG_PATH}}
    ```
 
-3. Copy its `okf-todo` server entry into the MCP configuration used by Codex, Claude Code, or another compatible harness.
+3. Copy this ready-to-use configuration into the MCP configuration used by Codex, Claude Code, or another compatible harness. In the in-app Help, select **Copy configuration**.
+
+```json
+{{OKF_TODO_MCP_CONFIG_JSON}}
+```
+
 4. Restart or reload the harness.
 5. Verify the connection with a read-only request:
 
@@ -26,9 +31,13 @@ The instructions guide the harness; they are not an interactive confirmation enf
    Do not create or update anything.
    ```
 
-The generated file contains the correct absolute path for your installation. MCP clients use different configuration locations and may wrap the server entry differently, so follow the client documentation for where to insert it.
+The generated file matches the current launch mode:
 
-If the generated configuration is missing, run the installer again to recreate it.
+- An Inno Setup installation keeps the installer's configuration, which points to the installed `Okf-Todo.exe`.
+- A source checkout started with `dotnet run` gets a development configuration that starts MCP with `dotnet run --no-build`, the current build configuration, and the absolute project path. Reusing the existing build avoids trying to replace the desktop executable while it is open.
+- A framework-dependent published application points to its `Okf-Todo.dll` through `dotnet`.
+
+MCP clients use different configuration locations and may wrap the server entry differently, so follow the client documentation for where to insert it. If the generated file is missing, restart the desktop application to recreate it.
 
 ## Recommended workflow: draft, review, save, verify
 
@@ -163,28 +172,16 @@ Your AI harness and selected model may process pasted email, task content, or to
 | Symptom | What to check |
 | --- | --- |
 | The harness cannot see OKF-Todo | Confirm that its MCP configuration contains the generated `okf-todo` entry, then restart or reload the harness. |
-| The executable is missing | Run the OKF-Todo installer again. |
+| The configured command or project is missing | Start the desktop application again from its current installation or source checkout, then copy the refreshed configuration. |
 | `Okf-Todo.exe --mcp` opens and closes | This is normal when launched directly. The harness starts and communicates with this headless mode. |
+| A source-checkout command reports that it cannot find a build | Run `dotnet run --project .\Okf-Todo\Okf-Todo.csproj` once, then reopen Help and copy the refreshed configuration. |
 | Tasks created through MCP are missing in the desktop app | Check for a custom database-path argument. MCP and the GUI must point to the same database. |
 | An update removed information | Restore from a backup if necessary, then repeat with an explicit read-first and preserve-all-fields instruction. |
 | A type, priority, or source is rejected | Ask the harness to use values available in the current OKF-Todo database rather than guessing a code. |
 
 ## Advanced setup and automation
 
-The generated configuration has this general shape:
-
-```json
-{
-  "mcpServers": {
-    "okf-todo": {
-      "command": "C:\\Users\\<you>\\AppData\\Local\\Programs\\Okf-Todo\\Okf-Todo.exe",
-      "args": ["--mcp"]
-    }
-  }
-}
-```
-
-For source builds, custom database paths, the full command surface, and implementation details, see:
+The generated configuration above is the source of truth for this running copy of OKF-Todo. For custom database paths, the full command surface, and implementation details, see:
 
 - [Repository build and MCP configuration](../../README.md)
 - [OKF user guide](okf-layer.md)
