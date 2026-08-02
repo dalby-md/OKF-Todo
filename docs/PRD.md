@@ -33,6 +33,7 @@ The app already has a Photino prototype demonstrating usage of an HTML/Markdown 
 - The task editor decides whether the body is Markdown or HTML; the user should not have to care. User preference should be persisted
 - Permanent delete actions require confirmation in an application HTML dialog; do not use the browser-native confirmation dialog.
 - Use the original light desktop color scheme by default. User preferences can switch to a layered graphite dark scheme with off-white text, warm gold-orange interaction accents, subdued blue-grey borders, deeper amber reserved for waiting and warning states, red for destructive and overdue states, and green for completion. The selected scheme persists across application restarts and lookup-defined badge colors remain authoritative for task classifications.
+- Render locally generated Help Markdown with the selected application color scheme. Dark Help must override the late-loaded Markdown viewer palette for readable text, headings, lists, links, tables, inline code, and code blocks.
 
 ## Target platform
 

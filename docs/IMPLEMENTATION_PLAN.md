@@ -518,6 +518,7 @@ Acceptance criteria:
 - The Filters badge counts selected tags and exact task type, lifecycle status, and priority filters. Active field filters participate in the clear action and removable filter summary, which remains absent when no field filters are selected.
 - Function-key shortcuts provide editor-safe access to Help (**F1**), New task (**F2**), Search (**F3**), context-aware Save buttons (**F8**), and Complete (**F9**); **Ctrl+K** remains available to the body editors.
 - Appearance offers persistent Smallest (12px), Small (14px), Standard (16px), Large (18px), and Largest (20px) font sizes; Standard is the default, and the selected size controls both the application interface and the inherited base text in the HTML and Markdown body editors.
+- In-app Help follows the selected color scheme; dark mode explicitly overrides the Markdown viewer's late-loaded foreground, border, inline-code, table, and code-block colors.
 
 ## Milestone 14 — Database management
 

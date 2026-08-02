@@ -321,6 +321,8 @@ Open **Settings** to adjust and maintain OKF-Todo:
 
 Preference changes apply immediately and persist between application restarts.
 
+The selected color scheme also applies to the complete in-app **Help** content, including headings, paragraphs, lists, links, tables, inline code, and copyable code blocks.
+
 The **Auto** layout adapts to the available window size. Use **Side by side** when you want the task queue and details visible together on a large screen. Use **Stacked** when you prefer the queue above the selected task.
 
 **Font size** defaults to **Standard** at 16px. Choose **Smallest** (12px) or **Small** (14px) for a denser interface, or **Large** (18px) or **Largest** (20px) for easier reading. The change applies immediately to the interface and the base text in both body editors, and it is remembered after restart. Explicit font sizes already contained in rich HTML remain unchanged.

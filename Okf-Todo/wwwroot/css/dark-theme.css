@@ -928,6 +928,119 @@ html.task-filter-layout-expanded .task-filter-popover {
   color: var(--theme-muted);
 }
 
+/* Toast UI's viewer stylesheet is loaded on demand after the theme stylesheet. */
+:root.theme-dark .help-content,
+:root.theme-dark .help-document .tui-editor-contents,
+:root.theme-dark .help-document .toastui-editor-contents {
+  color: var(--theme-text) !important;
+  background: var(--theme-surface-raised) !important;
+}
+
+:root.theme-dark .help-document .tui-editor-contents p,
+:root.theme-dark .help-document .tui-editor-contents h1,
+:root.theme-dark .help-document .tui-editor-contents h2,
+:root.theme-dark .help-document .tui-editor-contents h3,
+:root.theme-dark .help-document .tui-editor-contents h4,
+:root.theme-dark .help-document .tui-editor-contents h5,
+:root.theme-dark .help-document .tui-editor-contents h6,
+:root.theme-dark .help-document .tui-editor-contents ul,
+:root.theme-dark .help-document .tui-editor-contents ol,
+:root.theme-dark .help-document .tui-editor-contents menu,
+:root.theme-dark .help-document .tui-editor-contents dir,
+:root.theme-dark .help-document .tui-editor-contents li,
+:root.theme-dark .help-document .tui-editor-contents table,
+:root.theme-dark .help-document .tui-editor-contents td,
+:root.theme-dark .help-document .toastui-editor-contents p,
+:root.theme-dark .help-document .toastui-editor-contents h1,
+:root.theme-dark .help-document .toastui-editor-contents h2,
+:root.theme-dark .help-document .toastui-editor-contents h3,
+:root.theme-dark .help-document .toastui-editor-contents h4,
+:root.theme-dark .help-document .toastui-editor-contents h5,
+:root.theme-dark .help-document .toastui-editor-contents h6,
+:root.theme-dark .help-document .toastui-editor-contents ul,
+:root.theme-dark .help-document .toastui-editor-contents ol,
+:root.theme-dark .help-document .toastui-editor-contents li,
+:root.theme-dark .help-document .toastui-editor-contents table,
+:root.theme-dark .help-document .toastui-editor-contents td {
+  color: var(--theme-text) !important;
+}
+
+:root.theme-dark .help-document .tui-editor-contents h1,
+:root.theme-dark .help-document .tui-editor-contents h2,
+:root.theme-dark .help-document .toastui-editor-contents h1,
+:root.theme-dark .help-document .toastui-editor-contents h2,
+:root.theme-dark .help-document .tui-editor-contents hr,
+:root.theme-dark .help-document .toastui-editor-contents hr {
+  border-color: var(--theme-border-strong) !important;
+}
+
+:root.theme-dark .help-document .tui-editor-contents a,
+:root.theme-dark .help-document .toastui-editor-contents a {
+  color: var(--theme-accent) !important;
+}
+
+:root.theme-dark .help-document .tui-editor-contents a:hover,
+:root.theme-dark .help-document .toastui-editor-contents a:hover {
+  color: var(--theme-accent-hover) !important;
+}
+
+:root.theme-dark .help-document .tui-editor-contents code,
+:root.theme-dark .help-document .toastui-editor-contents code {
+  color: #f2c675 !important;
+  background: #332817 !important;
+}
+
+:root.theme-dark .help-document .tui-editor-contents pre,
+:root.theme-dark .help-document .toastui-editor-contents pre {
+  border: 1px solid var(--theme-border-strong) !important;
+  color: var(--theme-text) !important;
+  background: #0d151d !important;
+}
+
+:root.theme-dark .help-document .tui-editor-contents pre code,
+:root.theme-dark .help-document .toastui-editor-contents pre code {
+  color: var(--theme-text) !important;
+  background: transparent !important;
+}
+
+:root.theme-dark .help-document .tui-editor-contents blockquote,
+:root.theme-dark .help-document .tui-editor-contents blockquote p,
+:root.theme-dark .help-document .tui-editor-contents blockquote ul,
+:root.theme-dark .help-document .tui-editor-contents blockquote ol,
+:root.theme-dark .help-document .toastui-editor-contents blockquote,
+:root.theme-dark .help-document .toastui-editor-contents blockquote p,
+:root.theme-dark .help-document .toastui-editor-contents blockquote ul,
+:root.theme-dark .help-document .toastui-editor-contents blockquote ol {
+  border-left-color: var(--theme-accent) !important;
+  color: var(--theme-text) !important;
+  background: var(--theme-accent-soft) !important;
+}
+
+:root.theme-dark .help-document .tui-editor-contents table,
+:root.theme-dark .help-document .tui-editor-contents th,
+:root.theme-dark .help-document .tui-editor-contents td,
+:root.theme-dark .help-document .toastui-editor-contents table,
+:root.theme-dark .help-document .toastui-editor-contents th,
+:root.theme-dark .help-document .toastui-editor-contents td {
+  border-color: var(--theme-border-strong) !important;
+}
+
+:root.theme-dark .help-document .tui-editor-contents th,
+:root.theme-dark .help-document .toastui-editor-contents th {
+  color: var(--theme-text) !important;
+  background: var(--theme-surface-hover) !important;
+}
+
+:root.theme-dark .help-document .tui-editor-contents ol > li::before,
+:root.theme-dark .help-document .toastui-editor-contents ol > li::before {
+  color: var(--theme-muted) !important;
+}
+
+:root.theme-dark .help-document .tui-editor-contents ul > li::before,
+:root.theme-dark .help-document .toastui-editor-contents ul > li::before {
+  background: var(--theme-accent) !important;
+}
+
 .lookup-list-row,
 .tag-list-row {
   border-color: var(--theme-border);

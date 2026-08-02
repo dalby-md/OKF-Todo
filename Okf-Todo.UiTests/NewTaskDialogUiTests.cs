@@ -677,6 +677,59 @@ public sealed class NewTaskDialogUiTests
     }
 
     [Fact]
+    public async Task Help_DarkModeKeepsMarkdownTextAndCodeReadable()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1400, Height = 900 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(
+            $"{fixture.BaseUrl}/index.html?v=dark-help",
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        await page.EvaluateAsync(
+            """
+            () => {
+              document.documentElement.classList.add('theme-dark')
+              document.documentElement.style.colorScheme = 'dark'
+              document.getElementById('dark-theme-stylesheet').disabled = false
+            }
+            """);
+
+        await page.Locator("#help-button").ClickAsync();
+        await page.Locator("[data-help-topic='mcp-server']").ClickAsync();
+        var paragraph = page.Locator("#help-content .tui-editor-contents p").First;
+        var heading = page.Locator("#help-content .tui-editor-contents h1");
+        var codeBlock = page.Locator("#help-content .tui-editor-contents pre").First;
+        await paragraph.WaitForAsync();
+
+        Assert.Equal(
+            "rgb(237, 243, 246)",
+            await paragraph.EvaluateAsync<string>("element => getComputedStyle(element).color"));
+        Assert.Equal(
+            "rgb(237, 243, 246)",
+            await heading.EvaluateAsync<string>("element => getComputedStyle(element).color"));
+        Assert.Equal(
+            "rgb(13, 21, 29)",
+            await codeBlock.EvaluateAsync<string>("element => getComputedStyle(element).backgroundColor"));
+        Assert.Equal(
+            "rgb(237, 243, 246)",
+            await codeBlock.EvaluateAsync<string>("element => getComputedStyle(element).color"));
+        await AssertNoHorizontalPageOverflowAsync(page);
+        await CaptureViewportAsync(page, "help-dark-mode.png");
+    }
+
+    [Fact]
     public async Task SaveNewTask_RevealsSelectedTaskInsideQueueAndKeepsEditorFocused()
     {
         await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
