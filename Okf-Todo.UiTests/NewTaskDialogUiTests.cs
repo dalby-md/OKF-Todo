@@ -608,7 +608,7 @@ public sealed class NewTaskDialogUiTests
     [Fact]
     public async Task Help_DefaultsToDesktopGuideAndLoadsAllCanonicalTopics()
     {
-        await using var fixture = await UiAppFixture.CreateAsync();
+        await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
         using var playwright = await Playwright.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
@@ -650,6 +650,18 @@ public sealed class NewTaskDialogUiTests
         Assert.Equal(
             "Use the OKF Layer with an AI Assistant",
             await page.Locator("#help-content h1").TextContentAsync());
+        var okfPrompt = page.Locator(".help-copy-block pre");
+        await okfPrompt.WaitForAsync();
+        var okfPromptText = await okfPrompt.TextContentAsync();
+        Assert.Contains(
+            Path.Combine("docs", "okf", "todo-database", "index.md"),
+            okfPromptText);
+        Assert.Contains(fixture.DatabasePath, okfPromptText);
+        Assert.DoesNotContain("{{OKF_TODO_", okfPromptText);
+        var copyPromptButton = page.Locator(".help-copy-button");
+        Assert.Equal("Copy prompt", await copyPromptButton.TextContentAsync());
+        await copyPromptButton.ClickAsync();
+        Assert.Equal("Copied", await copyPromptButton.TextContentAsync());
 
         await page.Locator("[data-help-topic='mcp-server']").ClickAsync();
         await page.Locator("#help-content h1").WaitForAsync();
@@ -2468,6 +2480,8 @@ public sealed class NewTaskDialogUiTests
 
         public string BaseUrl { get; }
 
+        public string DatabasePath => databasePath;
+
         public IReadOnlyCollection<string> BridgeMessageTypes => bridgeMessageTypes.ToArray();
 
         public async Task SendBridgeAsync(string type, object payload)
@@ -2507,6 +2521,7 @@ public sealed class NewTaskDialogUiTests
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite(DatabasePathProvider.CreateConnectionString(databasePath, pooling: false)));
             builder.Services.AddSingleton<HtmlSanitizerService>();
+            builder.Services.AddSingleton(new HelpRuntimeContextService(workspaceRoot, databasePath));
             builder.Services.AddSingleton<IAppPreferencePathProvider>(
                 new TestPreferencePathProvider(Path.Combine(testDirectory, "app-preferences.json")));
             builder.Services.AddSingleton<IBackupDestinationPicker, CancelledBackupDestinationPicker>();

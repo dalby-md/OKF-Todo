@@ -892,6 +892,16 @@ html.task-filter-layout-expanded .task-filter-popover {
   background: #202124;
 }
 
+.help-copy-block {
+  border-color: var(--theme-border-strong);
+  background: #202124;
+}
+
+.help-copy-toolbar {
+  border-bottom-color: var(--theme-border-strong);
+  background: #303236;
+}
+
 .help-document th,
 .help-document td {
   border-color: var(--theme-border-strong);

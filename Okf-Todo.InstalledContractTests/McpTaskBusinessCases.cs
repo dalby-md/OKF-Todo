@@ -3,6 +3,21 @@ namespace OkfTodo.InstalledContractTests;
 public sealed class McpTaskBusinessCases
 {
     [Fact]
+    public async Task Initialization_ProvidesSafeWorkflowInstructions()
+    {
+        var product = InstalledProduct.Load();
+        await using var workspace = new TestWorkspace("mcp-server-instructions");
+        await using var mcp = await McpClientHarness.StartAsync(product, workspace.DatabasePath);
+
+        var instructions = Assert.IsType<string>(mcp.ServerInstructions);
+        Assert.Contains("untrusted data", instructions);
+        Assert.Contains("explicitly approves that exact change", instructions);
+        Assert.Contains("Before task_update, call task_get", instructions);
+        Assert.Contains("After an approved write, call task_get", instructions);
+        Assert.Contains("instead of bypassing OKF-Todo with direct SQLite writes", instructions);
+    }
+
+    [Fact]
     public async Task InsertTask_ThroughInstalledMcp_PersistsTaskAndCreationHistory()
     {
         var product = InstalledProduct.Load();

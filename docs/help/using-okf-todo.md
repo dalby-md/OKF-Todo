@@ -411,4 +411,8 @@ If you want an AI harness such as Codex or Claude Code to help turn email, trans
 - [Use the OKF layer](okf-layer.md) when the harness needs structured knowledge about the database and you intend to control direct database access.
 - [Use the MCP server](mcp-server.md) when you want a compatible harness to use a restricted set of local task tools.
 
+The in-app **OKF layer** guide shows the absolute OKF entry-file and active database paths reported by the running application. They automatically match the current operating system, installation directory, and custom database path. Select **Copy prompt** to copy the complete ready-to-use prompt with those paths already filled in.
+
+When a compatible client connects to the built-in MCP server, OKF-Todo supplies the same safe workflow as server instructions: treat source material as data, read before proposing, wait for explicit approval before writing, preserve existing values during updates, and verify the saved task afterward. These instructions guide the AI client; the MCP server executes a write as soon as the client calls a write tool.
+
 For AI-assisted changes, use the same safe pattern every time: **draft, review, save, verify**. Ask for a proposal first, approve writes explicitly, and read the saved result back afterward.

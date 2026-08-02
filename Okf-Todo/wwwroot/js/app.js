@@ -230,6 +230,7 @@
   let trashUndoTimer = null
   const selectedTaskIds = new Set()
   const helpDocumentCache = new Map()
+  let helpRuntimeContextPromise = null
 
   function createMessageId() {
     if (window.crypto && window.crypto.randomUUID) {
@@ -441,6 +442,53 @@
 
   function getErrorMessage(error, fallback) {
     return error && error.message ? error.message : fallback
+  }
+
+  function getHelpRuntimeContext() {
+    if (!helpRuntimeContextPromise) {
+      helpRuntimeContextPromise = sendBridgeMessage('help.runtimeContext.get', {})
+        .catch(function (error) {
+          helpRuntimeContextPromise = null
+          throw error
+        })
+    }
+
+    return helpRuntimeContextPromise
+  }
+
+  async function prepareHelpMarkdown(topic, markdown) {
+    if (topic !== 'okf-layer') {
+      return markdown
+    }
+
+    const context = await getHelpRuntimeContext()
+    return markdown
+      .split('{{OKF_TODO_OPERATING_SYSTEM}}').join(context.operatingSystem)
+      .split('{{OKF_TODO_OKF_ENTRY_PATH}}').join(context.okfEntryPath)
+      .split('{{OKF_TODO_DATABASE_PATH}}').join(context.databasePath)
+  }
+
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      await navigator.clipboard.writeText(text)
+      return
+    }
+
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    textArea.setAttribute('readonly', '')
+    textArea.style.position = 'fixed'
+    textArea.style.opacity = '0'
+    document.body.appendChild(textArea)
+    textArea.select()
+
+    try {
+      if (!document.execCommand('copy')) {
+        throw new Error('The clipboard rejected the copy operation.')
+      }
+    } finally {
+      textArea.remove()
+    }
   }
 
   function getViewForTask(task) {
@@ -6613,6 +6661,35 @@
       }
     })
 
+    if (topic === 'okf-layer') {
+      Array.from(article.querySelectorAll('pre code'))
+        .filter(function (code) {
+          return code.textContent.includes('Use the OKF-Todo context starting at:')
+        })
+        .slice(0, 1)
+        .forEach(function (code) {
+          const pre = code.parentElement
+          const copyBlock = document.createElement('div')
+          copyBlock.className = 'help-copy-block'
+
+          const toolbar = document.createElement('div')
+          toolbar.className = 'help-copy-toolbar'
+
+          const label = document.createElement('strong')
+          label.textContent = 'Ready-to-use prompt'
+
+          const copyButton = document.createElement('button')
+          copyButton.type = 'button'
+          copyButton.className = 'secondary-button help-copy-button'
+          copyButton.textContent = 'Copy prompt'
+          copyButton.copyText = code.textContent.trimEnd()
+
+          toolbar.append(label, copyButton)
+          pre.replaceWith(copyBlock)
+          copyBlock.append(toolbar, pre)
+        })
+    }
+
     $('#help-content').empty().append(article).scrollTop(0)
   }
 
@@ -6644,7 +6721,8 @@
       }
 
       const markdown = await response.text()
-      const html = await window.Editor.renderMarkdown(markdown)
+      const preparedMarkdown = await prepareHelpMarkdown(topic, markdown)
+      const html = await window.Editor.renderMarkdown(preparedMarkdown)
       helpDocumentCache.set(topic, html)
       renderHelpDocument(topic, html)
     } catch (error) {
@@ -7101,6 +7179,25 @@
     })
     $('#help-content').on('click', '.help-retry-button', function () {
       loadHelpTopic($(this).attr('data-help-retry'), true)
+    })
+    $('#help-content').on('click', '.help-copy-button', async function () {
+      const button = this
+      const originalText = button.textContent
+      button.disabled = true
+
+      try {
+        await copyTextToClipboard(button.copyText || '')
+        button.textContent = 'Copied'
+        setStatus('OKF prompt copied', 'saved')
+      } catch (error) {
+        button.textContent = 'Copy failed'
+        setStatus(getErrorMessage(error, 'Could not copy the OKF prompt'), 'error')
+      } finally {
+        window.setTimeout(function () {
+          button.textContent = originalText
+          button.disabled = false
+        }, 1500)
+      }
     })
     $('#help-content').on('click', 'a[data-help-topic-link]', function (event) {
       event.preventDefault()

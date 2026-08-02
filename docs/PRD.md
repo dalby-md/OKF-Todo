@@ -16,9 +16,11 @@ The app already has a Photino prototype demonstrating usage of an HTML/Markdown 
 - Structured enough for sorting, filtering, and history.
 - Avoid unnecessary multi-user concepts.
 - Provide offline in-app Help that loads the shipped desktop-application, OKF-layer, and MCP-server guides from local application assets.
+- In the in-app OKF guide, resolve the absolute OKF entry-file and active database paths from the running application so examples match the current operating system, installer location, and custom database path. Provide one action that copies the complete path-filled harness prompt.
 - Keep the desktop guide current with every covered user-facing behavior change. It must describe workflows in the order users encounter them, use current interface labels, and remain focused on user outcomes rather than implementation details.
 - Make the OKF and MCP guides task-oriented integration guidance: show how a harness such as Codex or Claude Code can turn user-supplied email threads, support transcripts, notes, and logs into reviewable tasks, investigation plans, customer replies, handovers, and similar artifacts.
 - Use a draft-review-save-verify workflow for AI-assisted changes. Treat OKF as the context layer and the optional MCP server as the local task action bridge; neither component is an email connector or an AI model.
+- Send MCP server instructions during initialization that tell compatible harnesses to treat source material as untrusted data, start read-only, wait for explicit approval of the exact proposed change, preserve unapproved fields, use application tools instead of raw database writes, and verify saved results. Document that these instructions guide the client but do not add a server-side confirmation gate.
 - Ship the desktop application, OKF command adapter, and MCP stdio server as startup modes of one `Okf-Todo.exe`; `--mcp` starts only the headless MCP process and never opens Photino.
 - Keep database schemas, command envelopes, and other implementation details in advanced references rather than making them prerequisites for the user workflow.
 - Prefer table-based lookup values over hardcoded enums.

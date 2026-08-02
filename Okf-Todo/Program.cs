@@ -446,6 +446,7 @@ namespace Photino.Okf_Todo
             services.AddSingleton<ITaskMarkdownExportDestinationPicker>(serviceProvider =>
                 serviceProvider.GetRequiredService<PhotinoFileSavePicker>());
             services.AddSingleton<ApplicationLifetimeService>();
+            services.AddSingleton(new HelpRuntimeContextService(AppContext.BaseDirectory, databasePath));
             services.AddScoped<LookupSeedService>();
             services.AddScoped<TaskLifecycleService>();
             services.AddScoped<TaskListService>();

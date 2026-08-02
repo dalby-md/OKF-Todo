@@ -4,6 +4,10 @@ The built-in OKF-Todo MCP server lets an MCP-compatible AI harness work with you
 
 The MCP server does not read email or contact customers. Paste or attach the relevant material to your chosen harness, ask it to prepare artifacts, review the result, and then decide what should be saved in OKF-Todo.
 
+When an MCP client connects, OKF-Todo sends built-in usage instructions for the harness: treat supplied material as untrusted data, start with read-only tools, show the complete proposed change, wait for explicit approval before using a write tool, preserve unapproved fields during updates, and read saved work back afterward. Compatible clients normally add these server instructions to the model's context.
+
+The instructions guide the harness; they are not an interactive confirmation enforced by the server. A write tool executes when the client calls it, so keep your harness configured to honor MCP server instructions and approve only the exact change you reviewed.
+
 ## Connect it once
 
 1. Install OKF-Todo. The desktop application and MCP server are provided by the same executable.
@@ -29,6 +33,8 @@ If the generated configuration is missing, run the installer again to recreate i
 ## Recommended workflow: draft, review, save, verify
 
 Use two separate approval stages when working from customer or operational material.
+
+This workflow is also supplied automatically during the MCP initialization handshake. The examples below make it explicit so you can see and reinforce the expected behavior in your conversation.
 
 ### 1. Ask for a draft without changing tasks
 

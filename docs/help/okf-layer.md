@@ -2,44 +2,26 @@
 
 ## Start here: point your harness to both OKF and the database
 
-**To use the OKF layer with your tasks, give your AI harness access to both the OKF entry file and the OKF-Todo SQLite database.**
+**To use the OKF layer with your tasks, give your AI harness access to both the OKF entry file and the OKF-Todo SQLite database.** In OKF-Todo's in-app Help, the paths below come from the running application. They are absolute paths for this computer, operating system, installation location, and active database—including a custom database path when one was supplied at startup.
 
-With the default Windows installation, use:
-
-```text
-OKF entry file:
-%LOCALAPPDATA%\Programs\Okf-Todo\okf\todo-database\index.md
-
-Task database:
-%LOCALAPPDATA%\Okf-Todo\okf-todo.db
-```
-
-If you selected another installation directory, the OKF entry file is:
-
-```text
-<OKF-Todo installation directory>\okf\todo-database\index.md
-```
-
-The database remains in `%LOCALAPPDATA%\Okf-Todo\okf-todo.db` unless OKF-Todo was started with a custom database path.
-
-From a source checkout, use:
+Current paths for {{OKF_TODO_OPERATING_SYSTEM}}:
 
 ```text
 OKF entry file:
-docs/okf/todo-database/index.md
+{{OKF_TODO_OKF_ENTRY_PATH}}
 
 Task database:
-%LOCALAPPDATA%\Okf-Todo\okf-todo.db
+{{OKF_TODO_DATABASE_PATH}}
 ```
 
-Depending on the harness, open the installed `okf` directory and the database directory as a workspace, add them to the current workspace, or provide both absolute paths when file access is requested. Then use this prompt:
+Depending on the harness, open the shown OKF directory and database directory as a workspace, add them to the current workspace, or provide both paths when file access is requested. The prompt below is already filled in. Select **Copy prompt**, then paste it into your harness:
 
 ```text
 Use the OKF-Todo context starting at:
-<absolute path to okf/todo-database/index.md>
+{{OKF_TODO_OKF_ENTRY_PATH}}
 
 Use this OKF-Todo SQLite database:
-<absolute path to okf-todo.db>
+{{OKF_TODO_DATABASE_PATH}}
 
 Read the OKF entry point and only the linked context needed for this task.
 Inspect the current database values before proposing a change. Treat my source

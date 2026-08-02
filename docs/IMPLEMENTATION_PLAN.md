@@ -54,6 +54,12 @@ Changes to OKF or MCP behavior must update their respective guides. A build must
 verify that each changed canonical file exactly matches the corresponding
 `wwwroot/help` output file.
 
+The in-app OKF guide resolves the running application's absolute OKF entry-file
+and active database paths before rendering. This keeps installed examples
+correct across operating systems, custom installer directories, source builds,
+and custom database paths. Its ready-to-use harness prompt has a one-click copy
+action.
+
 ## Milestone 2 — Data foundation
 
 Scope:
@@ -590,6 +596,7 @@ Scope:
 - Add a separate Windows xUnit project with no project references to application code.
 - Resolve an installed OKF-Todo directory from `OKF_TODO_INSTALL_DIR`, falling back to `%LOCALAPPDATA%\Programs\Okf-Todo`.
 - Require the unified installed executable's MCP mode.
+- Verify that MCP initialization publishes the read-approve-write-verify server instructions and clearly identifies source material as untrusted data.
 - Exercise the installed `Okf-Todo.exe --mcp` mode over stdio using the official .NET MCP client.
 - Exercise the installed executable's OKF command adapter over stdio as documented by the installed OKF bundle.
 - Implement add, read, list, and change-task business cases through both MCP and OKF command paths.
@@ -607,6 +614,7 @@ Acceptance criteria:
 - The supported OKF/SQLite path uses the installed command adapter for mutations.
 - Separate direct SQLite capability tests use only installed OKF table knowledge and a disposable database, and prove that raw writes bypass automatic history.
 - Equivalent MCP and OKF operations produce equivalent persisted task state and history behavior.
+- A real installed stdio client receives the MCP safety instructions during initialization, including explicit write approval, read-before-update, and read-back verification guidance.
 - The installed OKF structure and documented SQLite schema are validated against observable database metadata.
 
 See `docs/adr-0003-installed-contract-tests.md` for the complete boundary and tooling decision.

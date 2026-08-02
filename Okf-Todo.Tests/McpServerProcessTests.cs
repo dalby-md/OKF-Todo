@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
+using Photino.Okf_Todo.Mcp;
 
 namespace Okf_Todo.Tests;
 
@@ -67,6 +68,9 @@ public sealed class McpServerProcessTests
             });
             using var initialize = await ReadResponseAsync(process, 1);
             Assert.Equal("2.0", initialize.RootElement.GetProperty("jsonrpc").GetString());
+            Assert.Equal(
+                McpServerRunner.ServerInstructions,
+                initialize.RootElement.GetProperty("result").GetProperty("instructions").GetString());
 
             await SendAsync(process, new
             {

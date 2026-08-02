@@ -13,6 +13,8 @@ internal sealed class McpClientHarness : IAsyncDisposable
         this.client = client;
     }
 
+    public string? ServerInstructions => client.ServerInstructions;
+
     public static async Task<McpClientHarness> StartAsync(
         InstalledProduct product,
         string databasePath,
