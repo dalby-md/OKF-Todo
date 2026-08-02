@@ -102,15 +102,59 @@ public sealed class NewTaskDialogUiTests
         Assert.NotNull(dialogBounds);
         Assert.InRange(Math.Abs((dialogBounds.X + (dialogBounds.Width / 2)) - 800), 0, 2);
         Assert.InRange(Math.Abs((dialogBounds.Y + (dialogBounds.Height / 2)) - 500), 0, 2);
+        Assert.InRange(dialogBounds.Width, 630, 680);
+        Assert.Equal(2, await firstRunDialog.Locator(".first-run-choice").CountAsync());
+        Assert.True(await firstRunDialog.Locator(".first-run-choice-primary").IsVisibleAsync());
+        Assert.True(await firstRunDialog.Locator(".first-run-choice-sample").IsVisibleAsync());
+        Assert.True(await firstRunDialog.Locator(".first-run-footer").IsVisibleAsync());
         await page.GetByText(
             "Sample data is easy to remove anytime from Settings → Data & maintenance.",
             new PageGetByTextOptions { Exact = false }).WaitForAsync();
+        await page.GetByText(
+            "Help contains detailed guides for the OKF data layer and MCP server with Codex or Claude Code.",
+            new PageGetByTextOptions { Exact = true }).WaitForAsync();
+        Assert.Contains(
+            "first-run-help-note",
+            await firstRunDialog.GetAttributeAsync("aria-describedby"));
+        await CaptureViewportAsync(page, "first-run-option-2-light.png");
+        await page.EvaluateAsync(
+            """
+            () => {
+              document.documentElement.classList.add('theme-dark')
+              document.documentElement.style.colorScheme = 'dark'
+              document.getElementById('dark-theme-stylesheet').disabled = false
+            }
+            """);
+        await page.WaitForFunctionAsync(
+            """
+            () => getComputedStyle(document.querySelector('.first-run-dialog')).backgroundColor === 'rgb(19, 29, 37)'
+              && getComputedStyle(document.querySelector('.first-run-choice-primary')).backgroundColor === 'rgb(18, 44, 43)'
+              && getComputedStyle(document.querySelector('.first-run-choice-sample')).backgroundColor === 'rgb(43, 36, 25)'
+            """);
+        Assert.Equal(
+            "rgb(18, 44, 43)",
+            await page.Locator(".first-run-choice-primary").EvaluateAsync<string>(
+                "element => getComputedStyle(element).backgroundColor"));
+        Assert.Equal(
+            "rgb(43, 36, 25)",
+            await page.Locator(".first-run-choice-sample").EvaluateAsync<string>(
+                "element => getComputedStyle(element).backgroundColor"));
+        await CaptureViewportAsync(page, "first-run-option-2-dark.png");
+        await page.EvaluateAsync(
+            """
+            () => {
+              document.documentElement.classList.remove('theme-dark')
+              document.documentElement.style.colorScheme = 'light'
+              document.getElementById('dark-theme-stylesheet').disabled = true
+            }
+            """);
         await page.Locator("#first-run-sample-button").ClickAsync();
         await page.Locator("#first-run-sample-button[aria-busy='true'] .button-spinner").WaitForAsync();
         Assert.Equal(
             "Adding sample data...",
             await page.Locator("#first-run-sample-button .sample-data-action-label").TextContentAsync());
         Assert.True(await page.Locator("#first-run-new-task-button").IsDisabledAsync());
+        Assert.True(await page.Locator("#first-run-skip-button").IsDisabledAsync());
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list .task-row').length === 30");
         Assert.True(await firstRunOverlay.IsHiddenAsync());
         Assert.True(await page.Locator(".app-shell > :not(#first-run-overlay)").EvaluateAllAsync<bool>(
@@ -150,6 +194,14 @@ public sealed class NewTaskDialogUiTests
         Assert.True(await firstRunOverlay.IsHiddenAsync());
         await page.Locator("#new-task-cancel-button").ClickAsync();
         await firstRunOverlay.WaitForAsync();
+        await page.Locator("#first-run-skip-button").ClickAsync();
+        Assert.True(await firstRunOverlay.IsHiddenAsync());
+        Assert.True(await page.Locator(".app-shell > :not(#first-run-overlay)").EvaluateAllAsync<bool>(
+            "elements => elements.every(element => !element.inert)"));
+        await page.Locator("#settings-close-button").ClickAsync();
+        await page.Locator("#new-task-button").ClickAsync();
+        await page.Locator("#new-task-cancel-button").ClickAsync();
+        Assert.True(await firstRunOverlay.IsHiddenAsync());
 
         Assert.Contains("database.sample.create", fixture.BridgeMessageTypes);
         Assert.Contains("database.sample.remove", fixture.BridgeMessageTypes);

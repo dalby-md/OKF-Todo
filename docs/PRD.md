@@ -457,7 +457,9 @@ The backup contains the complete SQLite database, including tasks, body images, 
 
 ## First-run and sample data
 
-When the database contains no tasks, the Active task list offers two equal, non-blocking choices: create the first task or add the standard 50-task sample set. The sample option must emphasize that it is easy to remove later from **Settings → Data & maintenance** and that tasks created by the user are preserved.
+When the database contains no tasks, the first-run experience offers three choices: create the first task, add the standard 50-task sample set, or skip the prompt. Skip closes the dialog without changing the database and suppresses it for the remainder of the current application session; an empty database is offered the dialog again on the next start. The sample option must emphasize that it is easy to remove later from **Settings → Data & maintenance** and that tasks created by the user are preserved. The dialog also tells users that detailed Help guides for using the OKF data layer and MCP server with Codex or Claude Code are available after they begin.
+
+The first-run dialog uses a guided decision-sheet layout: a concise welcome heading, two full-width explanatory choice rows, the sample-removal reassurance inside the sample choice, and a quiet Help-and-Skip footer. The clean-start choice uses the primary teal treatment, while sample exploration uses the warm gold treatment without implying danger.
 
 While sample tasks are being generated, both sample-data entry points are disabled and show a spinner plus an explicit adding label until the refreshed task list is ready.
 
@@ -465,7 +467,7 @@ Each generated sample task is labelled internally with `TaskItem.IsSampleData = 
 
 The 50-task sample set is curated rather than uniformly dense. Ten worked cases tell coherent support and development stories through task-specific bodies, checklists, small valid attachments, comments, relationships, and automatic Timeline history. Other tasks provide moderate or simple examples so the queue still resembles normal use. The set covers partially and fully completed checklists, a reopened checklist item, attachment addition and removal, waiting added and cleared, priority and deadline changes, and a completed task that is reopened and completed again. Generated files are sanitized, deterministic, harmless, and collectively remain small enough for fast first-run creation.
 
-Sample data can be added through the UI only when the database has no tasks. With an empty database, a centered blocking first-run dialog keeps the workspace unavailable until the user chooses **Create first task** or **Explore with sample data**. A downloadable or URL-restored sample database is not used: the built-in seeder keeps sample generation aligned with the current migration and application version.
+Sample data can be added through the UI only when the database has no tasks. With an empty database, a centered blocking first-run dialog keeps the workspace unavailable until the user chooses **Create first task**, **Explore with sample data**, or **Skip**. A downloadable or URL-restored sample database is not used: the built-in seeder keeps sample generation aligned with the current migration and application version.
 
 ## Tags
 

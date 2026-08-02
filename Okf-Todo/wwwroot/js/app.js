@@ -214,6 +214,7 @@
     taskListCount: 0
   }
   let hasLoadedDatabaseStatus = false
+  let hasSkippedFirstRunPrompt = false
   let pendingDatabaseResetMode = null
   let taskTransitionReveal = null
   let taskTransitionRevealTimer = null
@@ -1422,18 +1423,39 @@
             role="dialog"
             aria-modal="true"
             aria-labelledby="first-run-title"
-            aria-describedby="first-run-description first-run-removal-note">
-            <p class="first-run-kicker">Start your way</p>
-            <h2 id="first-run-title">No tasks yet</h2>
-            <p id="first-run-description">Create your first task, or explore OKF-Todo with 50 clearly marked sample tasks.</p>
+            aria-describedby="first-run-description first-run-removal-note first-run-help-note">
+            <header class="first-run-heading">
+              <p class="first-run-kicker">Start your way</p>
+              <h2 id="first-run-title">No tasks yet</h2>
+              <p id="first-run-description">Create your first task, or explore OKF-Todo with 50 clearly marked sample tasks.</p>
+            </header>
             <div class="first-run-actions">
-              <button id="first-run-new-task-button" type="button">Create first task</button>
-              <button id="first-run-sample-button" class="secondary-button" type="button">
-                <span class="button-spinner" aria-hidden="true" hidden></span>
-                <span class="sample-data-action-label">Explore with sample data</span>
+              <button id="first-run-new-task-button" class="first-run-choice first-run-choice-primary" type="button">
+                <span class="first-run-choice-copy">
+                  <strong>Create first task</strong>
+                  <span>Start with a clean slate and add your first task.</span>
+                </span>
+                <span class="first-run-choice-arrow fluent-icon" aria-hidden="true">&#xE76C;</span>
+              </button>
+              <button id="first-run-sample-button" class="first-run-choice first-run-choice-sample" type="button">
+                <span class="first-run-choice-copy">
+                  <strong class="sample-data-action-label">Explore with sample data</strong>
+                  <span>Load 50 sample tasks to explore OKF-Todo features.</span>
+                  <span id="first-run-removal-note" class="first-run-removal-note">Sample data is easy to remove anytime from Settings → Data &amp; maintenance.<br>Tasks you create yourself are left alone.</span>
+                </span>
+                <span class="first-run-choice-status" aria-hidden="true">
+                  <span class="button-spinner" hidden></span>
+                  <span class="first-run-choice-arrow fluent-icon">&#xE76C;</span>
+                </span>
               </button>
             </div>
-            <p id="first-run-removal-note" class="first-run-removal-note">Sample data is easy to remove anytime from Settings → Data &amp; maintenance. Tasks you create yourself are left alone.</p>
+            <footer class="first-run-footer">
+              <p id="first-run-help-note" class="first-run-help-note">
+                <span class="first-run-help-icon fluent-icon" aria-hidden="true">&#xE897;</span>
+                <span><strong>Help</strong> contains detailed guides for the OKF data layer and MCP server with Codex or Claude Code.</span>
+              </p>
+              <button id="first-run-skip-button" class="first-run-skip-action" type="button">Skip</button>
+            </footer>
           </section>
         </div>
 
@@ -3280,7 +3302,7 @@
 
   function setSampleDataCreationBusy(isBusy) {
     const $buttons = $('#add-sample-data-button, #first-run-sample-button')
-    $('#first-run-new-task-button').prop('disabled', isBusy)
+    $('#first-run-new-task-button, #first-run-skip-button').prop('disabled', isBusy)
     $buttons
       .prop('disabled', isBusy)
       .attr('aria-busy', isBusy ? 'true' : null)
@@ -4969,6 +4991,7 @@
     $('#task-export-button').prop('hidden', currentView === 'trash')
     const isFirstRun = hasLoadedDatabaseStatus
       && (Number(databaseStatus.totalTaskCount) || 0) === 0
+      && !hasSkippedFirstRunPrompt
     setFirstRunModalOpen(isFirstRun)
     const $activeViewButton = $('.task-view-rail-button')
       .removeClass('is-active is-transition-destination')
@@ -6874,7 +6897,9 @@
 
   function closeNewTaskDialog(restoreFirstRunModal = true) {
     $('#new-task-overlay').prop('hidden', true)
-    if (restoreFirstRunModal && (Number(databaseStatus.totalTaskCount) || 0) === 0) {
+    if (restoreFirstRunModal
+      && !hasSkippedFirstRunPrompt
+      && (Number(databaseStatus.totalTaskCount) || 0) === 0) {
       setFirstRunModalOpen(true)
       return
     }
@@ -7858,6 +7883,10 @@
       addSampleData().catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not add sample data'), 'error')
       })
+    })
+    $('#first-run-skip-button').on('click', function () {
+      hasSkippedFirstRunPrompt = true
+      setFirstRunModalOpen(false)
     })
     $('#save-button').on('click', function () {
       saveTask().catch(function (error) {

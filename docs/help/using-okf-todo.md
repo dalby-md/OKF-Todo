@@ -365,7 +365,7 @@ When preparation succeeds, OKF-Todo shows the managed database and safety-backup
 
 ### Start with or remove sample data
 
-When the database has no tasks, a centered first-run dialog asks you to choose **Create first task** or **Explore with sample data**. The rest of OKF-Todo remains unavailable until you choose how to begin. Sample data adds 50 clearly marked tasks that demonstrate priorities, waiting work, checklists, attachments, relationships, comments, Timeline history, completed work, and cancelled work.
+When the database has no tasks, a centered first-run dialog offers **Create first task**, **Explore with sample data**, or **Skip**. The rest of OKF-Todo remains unavailable until you choose one of these actions. **Skip** closes the dialog without changing the database; if the database is still empty, the dialog is offered again the next time OKF-Todo starts. The dialog also points you to the detailed **Help** guides for using the OKF data layer and MCP server with Codex or Claude Code after you begin. Sample data adds 50 clearly marked tasks that demonstrate priorities, waiting work, checklists, attachments, relationships, comments, Timeline history, completed work, and cancelled work.
 
 Ten tasks are detailed worked cases covering incidents, deployments, security, database recovery, diagnostics, and performance investigations. Open them to see task-specific multi-step checklists, small downloadable evidence files, realistic progress comments, and automatic history such as priority or deadline changes, waiting being cleared, checklist items being reopened, attachments being removed, and completed work being reopened. Other sample tasks are intentionally simpler so the task queue still resembles everyday use.
 

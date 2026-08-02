@@ -555,7 +555,8 @@ Acceptance criteria:
 - A restore source remains unchanged, regardless of its filename.
 - Restore and reset cannot silently replace an open database; the prepared operation is applied at the next start.
 - Reset warnings enumerate the affected data and require `RESET DATABASE`.
-- With an empty database, a centered blocking first-run dialog keeps the workspace unavailable until the user chooses **Create first task** or **Explore with sample data**.
+- With an empty database, a centered blocking first-run dialog keeps the workspace unavailable until the user chooses **Create first task**, **Explore with sample data**, or **Skip**, and points to the detailed Help guides for using the OKF data layer and MCP server after the user begins. Skip changes no data, suppresses the prompt for the current session, and allows it to return on the next empty-database start.
+- Present the three first-run actions as a polished guided decision sheet: explanatory clean-start and sample-data choice rows, sample-removal reassurance grouped with the sample choice, and a separated Help-and-Skip footer. Preserve the same hierarchy and affordances in light and dark modes.
 - Sample-data creation disables both entry points and shows a spinner with an explicit adding label until refresh completes.
 - The 50-task set contains ten coherent worked cases plus moderate and simple tasks. It demonstrates task-specific partial and completed checklists, varied valid attachments, comments, relationships, and authentic service-generated Timeline history without making every task artificially dense.
 - Sample attachments are deterministic, sanitized, harmless, stored as SQLite BLOBs, and collectively small. Worked histories include attachment removal, checklist reopening, waiting resolution, field changes, and task reopen/completion behavior.

@@ -2531,20 +2531,13 @@ body.is-resizing-editor * {
   gap: 8px;
 }
 
-.preference-row-action,
-#first-run-sample-button {
+.preference-row-action {
   align-items: center;
 }
 
 .preference-row-action {
   display: inline-flex;
   gap: 7px;
-}
-
-#first-run-sample-button {
-  display: inline-flex;
-  justify-content: center;
-  gap: 8px;
 }
 
 .button-spinner {
@@ -2647,15 +2640,18 @@ body.is-resizing-editor * {
 
 .first-run-overlay {
   z-index: 150;
-  background: rgb(15 23 42 / 56%);
+  background: rgb(15 23 42 / 68%);
 }
 
 .first-run-dialog {
-  gap: 14px;
-  width: min(520px, 100%);
-  padding: 28px;
-  border-top: 4px solid #167c74;
-  border-radius: 10px;
+  gap: 28px;
+  width: min(680px, 100%);
+  max-height: calc(100vh - 40px);
+  padding: 42px;
+  overflow-y: auto;
+  border: 1px solid #d5dfe1;
+  border-radius: 14px;
+  box-shadow: 0 28px 80px rgb(15 23 42 / 34%), 0 8px 24px rgb(15 23 42 / 14%);
 }
 
 .first-run-dialog h2,
@@ -2663,37 +2659,179 @@ body.is-resizing-editor * {
   margin: 0;
 }
 
+.first-run-heading {
+  display: grid;
+  gap: 10px;
+}
+
 .first-run-dialog h2 {
-  font-size: 1.45rem;
+  color: #14212a;
+  font-size: 1.8rem;
+  font-weight: 720;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
 }
 
 .first-run-dialog #first-run-description {
-  color: #3f4f5a;
-  line-height: 1.55;
+  color: #52616b;
+  font-size: 0.92rem;
+  line-height: 1.6;
 }
 
 .first-run-dialog .first-run-kicker {
-  color: #1f6f68;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  color: #176e67;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.first-run-removal-note {
-  color: #536b68;
-  font-size: 0.72rem;
+.first-run-actions {
+  display: grid;
+  gap: 16px;
+}
+
+.first-run-choice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  min-height: 100px;
+  padding: 22px 24px 22px 28px;
+  border: 1px solid;
+  border-left-width: 5px;
+  border-radius: 12px;
+  text-align: left;
+  box-shadow: 0 7px 18px rgb(15 23 42 / 6%);
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.first-run-choice:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgb(15 23 42 / 11%);
+}
+
+.first-run-choice:focus-visible,
+.first-run-skip-action:focus-visible {
+  outline: 3px solid rgb(31 111 104 / 22%);
+  outline-offset: 3px;
+}
+
+.first-run-choice-primary,
+.first-run-choice-primary:hover:not(:disabled) {
+  border-color: #b9d9d5;
+  border-left-color: #16877d;
+  color: #145f59;
+  background: #f1f9f8;
+}
+
+.first-run-choice-sample,
+.first-run-choice-sample:hover:not(:disabled) {
+  border-color: #ecd9b5;
+  border-left-color: #c78a18;
+  color: #7a5210;
+  background: #fffaf1;
+}
+
+.first-run-choice-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.first-run-choice-copy strong {
+  font-size: 1.22rem;
+  font-weight: 720;
+  letter-spacing: -0.012em;
+  line-height: 1.25;
+}
+
+.first-run-choice-copy > span:not(.first-run-removal-note) {
+  color: #3f4f59;
+  font-size: 0.85rem;
+  font-weight: 450;
   line-height: 1.5;
 }
 
-@media (max-width: 520px) {
+.first-run-choice-status {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+}
+
+.first-run-choice-arrow {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.first-run-choice[aria-busy="true"] .first-run-choice-arrow {
+  display: none;
+}
+
+.first-run-removal-note {
+  margin-top: 9px !important;
+  color: #6a5a3d;
+  font-size: 0.76rem;
+  font-weight: 450;
+  line-height: 1.55;
+}
+
+.first-run-footer {
+  display: grid;
+  gap: 20px;
+  padding-top: 24px;
+  border-top: 1px solid #dce3e5;
+}
+
+.first-run-help-note {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  color: #53616b;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.first-run-help-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #8ba9a7;
+  border-radius: 50%;
+  color: #176e67;
+  font-size: 1rem;
+}
+
+.first-run-help-note strong {
+  color: #176e67;
+}
+
+.first-run-skip-action,
+.first-run-skip-action:hover:not(:disabled) {
+  justify-self: center;
+  min-height: 34px;
+  padding: 0 18px;
+  color: #176e67;
+  background: transparent;
+  font-weight: 650;
+}
+
+@media (max-width: 720px) {
   .first-run-dialog {
-    padding: 22px 18px;
+    gap: 22px;
+    padding: 28px 22px;
   }
 
-  .first-run-dialog .first-run-actions,
-  .first-run-dialog .first-run-actions > button {
-    width: 100%;
+  .first-run-choice {
+    gap: 14px;
+    min-height: 92px;
+    padding: 18px 18px 18px 20px;
+  }
+
+  .first-run-choice-copy strong {
+    font-size: 1.08rem;
   }
 }
 
