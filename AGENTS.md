@@ -97,6 +97,16 @@ Use `TaskItem` as the C# entity name instead of `Task` to avoid confusion with `
 - Regenerate and validate the OKF bundle under `docs/okf/todo-database` in the same change.
 - Do not treat a successful application build as proof that the OKF bundle is current.
 
+## MCP Feature Parity — Hard Rule
+
+Treat MCP as a broad secondary or primary way to use OKF-Todo. Every new or changed application feature must include an explicit MCP applicability decision in the same change.
+
+- When the capability makes sense in a headless task workflow, expose it through MCP in the same change. Reuse the application service and command validation layer; add accurate read-only, destructive, idempotent, and open-world annotations; update the real stdio MCP contract tests; and update `docs/help/mcp-server.md` plus the normal in-program Help output.
+- Provide the discovery and read operations an MCP client needs to use a write operation safely. Do not expose a mutation that requires the client to guess identifiers, lookup codes, current values, or related state.
+- Preserve the draft-review-approve-write-verify workflow. Prefer safe partial mutations when complete replacement could erase unrelated data.
+- Do not mirror a UI control merely because it exists. Native dialogs, presentation-only behavior, application preferences, and environment-wide or irreversible maintenance operations may remain desktop-only unless a deliberate safe headless contract is designed.
+- A feature may be excluded from MCP only for a concrete reason such as being presentation-only, requiring native user interaction, lacking a safe headless contract, or creating disproportionate destructive risk. Record that reason in the implementation plan or task completion report. Never omit MCP consideration silently.
+
 ## Development Approach
 
 - Use small vertical slices.
@@ -113,3 +123,4 @@ Report:
 - How to run/build/test.
 - Any assumptions.
 - Any incomplete parts.
+- The MCP applicability decision for every new or changed application capability, including what was exposed or the concrete reason it remains desktop-only.

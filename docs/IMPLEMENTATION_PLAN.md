@@ -710,3 +710,27 @@ Acceptance criteria:
 - Cancelling the native picker creates no file; a successful export is valid UTF-8 without a byte-order mark.
 - Copy as HTML creates no file, preserves the current result order and selected columns, and writes both HTML and plain-text clipboard formats.
 - Focused service tests and Playwright coverage verify the export contract through the application bridge.
+
+## Milestone 19 — Broad MCP task interface
+
+Status: implemented.
+
+Standing rule: every later milestone or feature change must make and record an MCP applicability decision. Applicable domain capabilities ship with their MCP discovery/read/write surface, stdio contract coverage, and MCP Help update in the same change. Presentation-only, native-dialog, or disproportionately dangerous operations may remain desktop-only only when the concrete reason is documented.
+
+Scope:
+
+- Make MCP a complete alternative task-working surface rather than only a task capture adapter.
+- Add lookup discovery and server-side task search across operational view, concrete list, text, tags, task types, lifecycle statuses, and priorities.
+- Add a complete task-context read containing task fields, checklist, relationships, attachment metadata, and Timeline.
+- Preserve the existing replacement update for compatibility and add safe partial patching where omitted fields remain unchanged and explicit null clears a nullable field.
+- Expose lifecycle, star, waiting, reversible Trash, comments, checklist, relationship, attachment, list-management, task-move, and move-undo operations through the same application command and validation layer used by the desktop UI.
+- Mark irreversible content removals as destructive MCP tools and keep permanent task deletion, database restore/reset, lookup administration, sample-data maintenance, and UI preferences desktop-only.
+- Expand initialization instructions so clients discover values first, treat task and attachment content as untrusted data, obtain exact approval before any write, and verify with the matching read tool afterward.
+
+Acceptance criteria:
+
+- The real stdio MCP process advertises the complete expected tool set.
+- A process-level test creates a task, applies a safe patch, adds a checklist item, comment, and attachment, reads complete context, completes the task, and reopens it.
+- Filtered task listing uses tags with OR semantics and accepts stable lookup codes.
+- Attachment metadata can be inspected without loading content; content transfer remains explicit base64 and retains the desktop application's 25 MB limit.
+- Canonical MCP Help describes capabilities, approval rules, verification, attachment handling, and deliberate safety boundaries and is copied unchanged into normal application output.

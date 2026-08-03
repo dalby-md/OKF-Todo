@@ -95,12 +95,45 @@ public sealed class McpServerProcessTests
                 new HashSet<string>(StringComparer.Ordinal)
                 {
                     "task_list",
+                    "task_get_lookups",
                     "task_list_lists",
                     "task_get",
+                    "task_get_context",
                     "task_create",
                     "task_update",
+                    "task_patch",
                     "task_move_to_list",
-                    "task_get_timeline"
+                    "task_undo_list_move",
+                    "task_get_timeline",
+                    "task_add_comment",
+                    "task_delete_comment",
+                    "task_complete",
+                    "task_cancel",
+                    "task_reopen",
+                    "task_set_starred",
+                    "task_bulk_set_starred",
+                    "task_set_waiting",
+                    "task_clear_waiting",
+                    "task_move_to_trash",
+                    "task_restore_from_trash",
+                    "task_checklist_list",
+                    "task_checklist_add",
+                    "task_checklist_update",
+                    "task_checklist_set_completed",
+                    "task_checklist_reorder",
+                    "task_checklist_delete",
+                    "task_relationship_options",
+                    "task_relationship_list",
+                    "task_relationship_add",
+                    "task_relationship_delete",
+                    "task_attachment_list",
+                    "task_attachment_get",
+                    "task_attachment_add",
+                    "task_attachment_delete",
+                    "task_list_create",
+                    "task_list_rename",
+                    "task_list_reorder",
+                    "task_list_delete"
                 },
                 toolNames);
 
@@ -144,6 +177,133 @@ public sealed class McpServerProcessTests
             Assert.Contains(
                 timeline.EnumerateArray(),
                 entry => entry.GetProperty("logTypeCode").GetString() == "TASK_CREATED");
+
+            await SendAsync(process, new
+            {
+                jsonrpc = "2.0",
+                id = 5,
+                method = "tools/call",
+                @params = new
+                {
+                    name = "task_patch",
+                    arguments = new
+                    {
+                        id = taskId,
+                        changes = new
+                        {
+                            taskPriorityCode = "URGENT",
+                            owner = "MCP owner"
+                        }
+                    }
+                }
+            });
+            using var patchResponse = await ReadResponseAsync(process, 5);
+            var patched = ReadTextContent(patchResponse);
+            Assert.Equal("URGENT", patched.GetProperty("taskPriorityCode").GetString());
+            Assert.Equal("MCP owner", patched.GetProperty("owner").GetString());
+            Assert.Equal("Created through MCP", patched.GetProperty("title").GetString());
+
+            await SendAsync(process, new
+            {
+                jsonrpc = "2.0",
+                id = 6,
+                method = "tools/call",
+                @params = new
+                {
+                    name = "task_checklist_add",
+                    arguments = new { taskId, text = "Verify expanded MCP" }
+                }
+            });
+            using var checklistResponse = await ReadResponseAsync(process, 6);
+            Assert.Contains(
+                ReadTextContent(checklistResponse).EnumerateArray(),
+                item => item.GetProperty("text").GetString() == "Verify expanded MCP");
+
+            await SendAsync(process, new
+            {
+                jsonrpc = "2.0",
+                id = 7,
+                method = "tools/call",
+                @params = new
+                {
+                    name = "task_add_comment",
+                    arguments = new { taskId, commentText = "MCP progress note" }
+                }
+            });
+            using var commentResponse = await ReadResponseAsync(process, 7);
+            Assert.Contains(
+                ReadTextContent(commentResponse).EnumerateArray(),
+                item => item.GetProperty("kind").GetString() == "comment"
+                    && item.GetProperty("text").GetString() == "MCP progress note");
+
+            await SendAsync(process, new
+            {
+                jsonrpc = "2.0",
+                id = 8,
+                method = "tools/call",
+                @params = new
+                {
+                    name = "task_attachment_add",
+                    arguments = new
+                    {
+                        taskId,
+                        fileName = "evidence.txt",
+                        contentType = "text/plain",
+                        base64Data = Convert.ToBase64String("evidence"u8.ToArray())
+                    }
+                }
+            });
+            using var attachmentResponse = await ReadResponseAsync(process, 8);
+            Assert.Contains(
+                ReadTextContent(attachmentResponse).EnumerateArray(),
+                item => item.GetProperty("fileName").GetString() == "evidence.txt");
+
+            await SendAsync(process, new
+            {
+                jsonrpc = "2.0",
+                id = 9,
+                method = "tools/call",
+                @params = new
+                {
+                    name = "task_get_context",
+                    arguments = new { id = taskId }
+                }
+            });
+            using var contextResponse = await ReadResponseAsync(process, 9);
+            var context = ReadTextContent(contextResponse);
+            Assert.Single(context.GetProperty("checklist").EnumerateArray());
+            Assert.Single(context.GetProperty("attachments").EnumerateArray());
+            Assert.Contains(
+                context.GetProperty("timeline").EnumerateArray(),
+                item => item.GetProperty("text").GetString() == "MCP progress note");
+
+            await SendAsync(process, new
+            {
+                jsonrpc = "2.0",
+                id = 10,
+                method = "tools/call",
+                @params = new
+                {
+                    name = "task_complete",
+                    arguments = new { id = taskId }
+                }
+            });
+            using var completeResponse = await ReadResponseAsync(process, 10);
+            Assert.Equal("COMPLETED", ReadTextContent(completeResponse).GetProperty("taskStatusCode").GetString());
+
+            await SendAsync(process, new
+            {
+                jsonrpc = "2.0",
+                id = 11,
+                method = "tools/call",
+                @params = new
+                {
+                    name = "task_reopen",
+                    arguments = new { id = taskId }
+                }
+            });
+            using var reopenResponse = await ReadResponseAsync(process, 11);
+            Assert.Equal("ACTIVE", ReadTextContent(reopenResponse).GetProperty("taskStatusCode").GetString());
 
             process.StandardInput.Close();
             using var exitTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));

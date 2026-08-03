@@ -62,6 +62,40 @@ public sealed class TaskServiceTests
     }
 
     [Fact]
+    public async Task List_AppliesMcpSearchFieldFiltersAndLimit()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var matching = await database.Tasks.CreateAsync(CreateRequest("Investigate deployment") with
+        {
+            Body = "Contains the diagnostic needle",
+            TaskPriorityCode = "URGENT",
+            Tags = ["Backend", "Deployment"],
+            Owner = "Platform"
+        }, CancellationToken.None);
+        await database.Tasks.CreateAsync(CreateRequest("Prepare release notes") with
+        {
+            TaskTypeCode = "REQUEST",
+            Tags = ["Documentation"]
+        }, CancellationToken.None);
+
+        var results = await database.Tasks.ListAsync(new TaskListRequest(
+            View: "all",
+            Search: "diagnostic needle",
+            Tags: ["backend", "anything-else"],
+            TaskTypeCodes: ["error"],
+            TaskStatusCodes: ["active"],
+            TaskPriorityCodes: ["urgent"],
+            Limit: 1), CancellationToken.None);
+
+        Assert.Equal(matching.Id, Assert.Single(results).Id);
+
+        var invalidLimit = await Assert.ThrowsAsync<ValidationException>(() => database.Tasks.ListAsync(
+            new TaskListRequest("all", Limit: 1001),
+            CancellationToken.None));
+        Assert.Equal("limit", invalidLimit.Field);
+    }
+
+    [Fact]
     public async Task CreateListGetAndUpdate_PersistBasicTaskFieldsAndLogsMeaningfulChanges()
     {
         await using var database = await TestDatabase.CreateAsync();

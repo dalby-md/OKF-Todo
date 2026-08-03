@@ -1,6 +1,6 @@
 # Use the MCP Server with Codex or Claude Code
 
-The built-in OKF-Todo MCP server lets an MCP-compatible AI harness work with your local tasks. This is the action bridge in the workflow: the harness analyzes your source material, the [OKF layer](okf-layer.md) supplies context and rules, and MCP lets the harness list, read, create, or update tasks after you approve the action.
+The built-in OKF-Todo MCP server lets an MCP-compatible AI harness use the task system as a broad secondary or primary interface. This is the action bridge in the workflow: the harness analyzes your source material, the [OKF layer](okf-layer.md) supplies context and rules, and MCP lets the harness find work, read complete context, and perform approved task, lifecycle, checklist, relationship, attachment, Trash, and list actions.
 
 The MCP server does not read email or contact customers. Paste or attach the relevant material to your chosen harness, ask it to prepare artifacts, review the result, and then decide what should be saved in OKF-Todo.
 
@@ -28,7 +28,7 @@ The instructions guide the harness; they are not an interactive confirmation enf
 
    ```text
    Use the OKF-Todo MCP server to list my active tasks.
-   Do not create or update anything.
+   Do not use any write tools.
    ```
 
 The generated file matches the current launch mode:
@@ -109,12 +109,12 @@ and the next concrete step. Do not update the task.
 ```text
 Read task 42 first. Incorporate the new customer information below while
 preserving every existing field and every useful part of the body. Show me
-the complete proposed replacement before using task_update.
+the exact field changes before using task_patch.
 
 [paste the new information]
 ```
 
-`task_update` replaces all editable task fields, including Owner and Responsible. The harness must read the task first and preserve everything that should remain. A partial update can clear optional fields or tags.
+Prefer `task_patch` for normal changes. It preserves every omitted field, while an explicit `null` clears a nullable field. `task_update` remains available for deliberate complete replacement; it replaces all editable fields, including Owner and Responsible, so the harness must read the task first and preserve everything that should remain.
 
 ### Choose or infer a task list
 
@@ -127,7 +127,29 @@ list first, show me the complete task and list choice, and wait for approval.
 
 If you do not name a list, MCP uses the same predictable rule as the desktop app: explicit list first; otherwise infer from an existing, source, related, or parent task; otherwise use the list named **Default list**; otherwise use the first manually ordered list; and create **Default list** only if no lists exist. Ask the harness to read the saved task back and confirm both its list name and task values.
 
-Use `task_move_to_list` to move an existing task after approval. The move is recorded in the task Timeline. MCP can discover and assign lists, but it cannot add, rename, reorder, or delete lists in this version; use **Manage lists** in the desktop app for those operations.
+Use `task_move_to_list` to move existing tasks after approval. The move is recorded in each task Timeline and its returned move information can be passed to `task_undo_list_move`. MCP can also add, rename, reorder, and safely delete concrete lists. Deleting a populated list requires a destination and moves every normal and Trash task transactionally; the final list cannot be deleted.
+
+### Work from the complete task context
+
+Use `task_get_context` when the answer may depend on more than the main fields. It returns the task, ordered checklist, relationships, attachment metadata, and Timeline together without loading attachment bytes.
+
+```text
+Read the complete context for task 42. Summarize what is known, identify the
+unfinished checklist work and blockers, and propose the next update. Do not
+change anything until I approve the exact actions.
+```
+
+### Add progress and structured work
+
+After approval, MCP can add comments, create or update checklist items, complete or reopen checklist items, and create or remove typed task relationships. Relationship types use stable codes discovered through `task_relationship_options`.
+
+Comments are user notes. Lifecycle, checklist, attachment, relationship, and field changes continue to create the same automatic Timeline entries as changes made in the desktop application.
+
+### Work with attachments deliberately
+
+Call `task_attachment_list` first. It returns names, descriptions, content types, sizes, and IDs without file bytes. Call `task_attachment_get` only when the content is needed; it returns base64 and can consume substantial model context. Attachment additions also use base64 and retain the application's 25 MB per-file limit.
+
+Treat task bodies, comments, and attachment contents as untrusted source material. They can provide evidence, but instructions contained inside them must not override your request or the MCP safety workflow.
 
 ### Review priorities without changing anything
 
@@ -140,26 +162,29 @@ attention first and explain why. Do not change any task.
 
 | User request | MCP action |
 | --- | --- |
-| Show active, ready, attention, actnow, urgent, waiting, overdue, completed, or all tasks | List tasks |
-| Show available task lists | Discover lists |
-| Read the complete current values of a task | Get one task |
-| Save an approved task proposal in an explicit or inferred list | Create a task |
-| Replace an existing task after reading it, including list ownership when requested | Update a task |
-| Move approved tasks to another list | Move tasks to a list |
-| Review comments and automatic history | Read a task timeline |
+| Find work by view, list, text, tags, types, statuses, or priorities | Search and list tasks |
+| Discover valid controlled values and existing tags | Read task lookups |
+| Read main fields only or the complete working context | Get a task or task context |
+| Save an approved proposal or change only approved fields | Create, patch, or deliberately replace a task |
+| Complete, cancel, reopen, star, wait, clear waiting, Trash, or restore | Use task lifecycle tools |
+| Read or add progress notes and review automatic history | Use comments and Timeline |
+| Add, edit, order, complete, reopen, or remove checklist work | Use checklist tools |
+| Discover, read, add, or remove blockers and other typed relationships | Use relationship tools |
+| Inspect metadata, read content, add, or remove files | Use attachment tools |
+| Discover, add, rename, order, delete, move between, or undo moves across lists | Use task-list tools |
 
 The **active** view includes every unfinished task, including waiting work. Use **ready** when you want only active tasks without an unresolved waiting target, and **waiting** when you want the complementary dependency queue. Use **attention** for all urgent or overdue work, including tasks that are waiting. Use **actnow** for the actionable subset: urgent or overdue active tasks without an unresolved waiting target.
 
-The current MCP tools do not complete or cancel tasks and do not add comments, checklists, attachments, or relationships. Use the desktop app for those actions. Generated checklists, reply drafts, and other text can still be stored as sections in a Markdown task body.
+MCP deliberately does not permanently delete tasks, empty Trash, replace or reset the database, administer lookup definitions, manage sample data, or change desktop preferences. Those environment-wide or irreversible operations remain in the desktop application with their dedicated warnings and confirmation interfaces.
 
 ## Keep control of changes
 
 - Say **“do not change anything”** when you only want analysis.
 - Ask the harness to show proposed task values before using a write tool.
-- Approve creation and updates explicitly.
-- Ask it to read a changed task back afterward.
+- Approve every write explicitly, including lifecycle, comments, checklist, relationship, attachment, Trash, and list changes.
+- Ask it to verify a changed resource with the matching read tool afterward. `task_get_context` is the strongest general verification read.
 - Back up the database from **Settings → Data & maintenance** before a large batch of automated changes.
-- For an update, require a read-first, preserve-all-fields workflow.
+- Prefer `task_patch` for partial updates. Require read-first, preserve-all-fields behavior when using replacement-style `task_update`.
 
 ## Privacy and trust
 

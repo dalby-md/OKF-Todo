@@ -420,7 +420,7 @@ OKF-Todo works as a complete local desktop task application without AI.
 If you want an AI harness such as Codex or Claude Code to help turn email, transcripts, notes, or logs into proposed tasks and other artifacts, use one of the optional integration guides:
 
 - [Use the OKF layer](okf-layer.md) when the harness needs structured knowledge about the database and you intend to control direct database access.
-- [Use the MCP server](mcp-server.md) when you want a compatible harness to use a restricted set of local task tools.
+- [Use the MCP server](mcp-server.md) when you want a compatible harness to use OKF-Todo as a broad secondary or primary task interface. It can discover and find work, read complete task context, make approved partial changes, use lifecycle actions, add comments and checklists, manage relationships and attachments, work with reversible Trash, and organize concrete lists.
 
 The in-app **OKF layer** guide shows the absolute OKF entry-file and active database paths reported by the running application. They automatically match the current operating system, installation directory, and custom database path. Select **Copy prompt** to copy the complete ready-to-use prompt with those paths already filled in.
 

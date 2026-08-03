@@ -297,6 +297,16 @@ public sealed class TaskService(
         CancellationToken cancellationToken)
     {
         var view = string.IsNullOrWhiteSpace(request.View) ? "active" : request.View.Trim().ToLowerInvariant();
+        var search = string.IsNullOrWhiteSpace(request.Search) ? null : request.Search.Trim();
+        var tags = NormalizeFilterValues(request.Tags);
+        var taskTypeCodes = NormalizeFilterValues(request.TaskTypeCodes, uppercase: true);
+        var taskStatusCodes = NormalizeFilterValues(request.TaskStatusCodes, uppercase: true);
+        var taskPriorityCodes = NormalizeFilterValues(request.TaskPriorityCodes, uppercase: true);
+        if (request.Limit is < 1 or > 1000)
+        {
+            throw new ValidationException("Limit must be between 1 and 1000.", "limit");
+        }
+
         var today = DateTime.UtcNow.Date;
         var query = dbContext.TaskItems
             .AsNoTracking()
@@ -358,6 +368,42 @@ public sealed class TaskService(
                 && task.TaskStatus.Code == TaskStatusCodes.Active)
         };
 
+        if (search is not null)
+        {
+            query = query.Where(task =>
+                task.Title.Contains(search)
+                || (task.Body != null && task.Body.Contains(search))
+                || (task.SourceReference != null && task.SourceReference.Contains(search))
+                || (task.Owner != null && task.Owner.Contains(search))
+                || (task.Responsible != null && task.Responsible.Contains(search))
+                || task.Tags.Any(taskTag => taskTag.TaskTag != null
+                    && taskTag.TaskTag.Value.Contains(search)));
+        }
+
+        if (tags.Count > 0)
+        {
+            query = query.Where(task => task.Tags.Any(taskTag =>
+                taskTag.TaskTag != null && tags.Contains(taskTag.TaskTag.Value)));
+        }
+
+        if (taskTypeCodes.Count > 0)
+        {
+            query = query.Where(task => task.TaskType != null
+                && taskTypeCodes.Contains(task.TaskType.Code));
+        }
+
+        if (taskStatusCodes.Count > 0)
+        {
+            query = query.Where(task => task.TaskStatus != null
+                && taskStatusCodes.Contains(task.TaskStatus.Code));
+        }
+
+        if (taskPriorityCodes.Count > 0)
+        {
+            query = query.Where(task => task.TaskPriority != null
+                && taskPriorityCodes.Contains(task.TaskPriority.Code));
+        }
+
         var orderedQuery = view == "trash"
             ? query.OrderByDescending(task => task.DeletedAt)
             : view is "attention" or "actnow"
@@ -398,7 +444,7 @@ public sealed class TaskService(
             .ThenBy(task => task.Deadline)
             .ThenByDescending(task => task.UpdatedAt);
 
-        return await orderedQuery
+        var projectedQuery = orderedQuery
             .Select(task => new TaskListItemDto(
                 task.Id,
                 task.Title,
@@ -438,8 +484,26 @@ public sealed class TaskService(
                 task.Owner,
                 task.Responsible,
                 task.CreatedAt,
-                task.UpdatedAt))
-            .ToListAsync(cancellationToken);
+                task.UpdatedAt));
+
+        if (request.Limit is not null)
+        {
+            projectedQuery = projectedQuery.Take(request.Limit.Value);
+        }
+
+        return await projectedQuery.ToListAsync(cancellationToken);
+    }
+
+    private static IReadOnlyCollection<string> NormalizeFilterValues(
+        IReadOnlyCollection<string>? values,
+        bool uppercase = false)
+    {
+        return values?
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => uppercase ? value.Trim().ToUpperInvariant() : value.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList()
+            ?? [];
     }
 
     public async Task<TaskDetailDto> GetAsync(int id, CancellationToken cancellationToken)
@@ -1465,7 +1529,15 @@ public sealed record LookupReorderRequest(
     string Group,
     IReadOnlyList<string> OrderedCodes);
 
-public sealed record TaskListRequest(string? View, int? TaskListId = null);
+public sealed record TaskListRequest(
+    string? View,
+    int? TaskListId = null,
+    string? Search = null,
+    IReadOnlyCollection<string>? Tags = null,
+    IReadOnlyCollection<string>? TaskTypeCodes = null,
+    IReadOnlyCollection<string>? TaskStatusCodes = null,
+    IReadOnlyCollection<string>? TaskPriorityCodes = null,
+    int? Limit = null);
 
 public sealed record TagSettingsItemDto(int Id, string Value, int UsageCount);
 
