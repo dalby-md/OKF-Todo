@@ -218,17 +218,33 @@ public sealed class AppPreferenceServiceTests
 
             var defaults = await service.GetTaskExportColumnPreferenceAsync(CancellationToken.None);
             Assert.Equal(TaskMarkdownExportColumns.All, defaults.Columns);
+            Assert.Equal(TaskMarkdownExportSortModes.CurrentTaskOrder, defaults.SortMode);
+            Assert.Equal(
+                TaskMarkdownExportSortDirections.Descending,
+                defaults.SortDirections[TaskMarkdownExportColumns.Updated]);
 
             var saved = await service.SaveTaskExportColumnPreferenceAsync(
                 new TaskExportColumnPreferenceSaveRequest(
-                    [TaskMarkdownExportColumns.Title, TaskMarkdownExportColumns.Tags]),
+                    [TaskMarkdownExportColumns.Tags, TaskMarkdownExportColumns.Title],
+                    TaskMarkdownExportSortModes.Recipe,
+                    new Dictionary<string, string>
+                    {
+                        [TaskMarkdownExportColumns.Tags] = TaskMarkdownExportSortDirections.Descending,
+                        [TaskMarkdownExportColumns.Title] = TaskMarkdownExportSortDirections.Ascending
+                    }),
                 CancellationToken.None);
             Assert.Equal(
-                [TaskMarkdownExportColumns.Title, TaskMarkdownExportColumns.Tags],
+                [TaskMarkdownExportColumns.Tags, TaskMarkdownExportColumns.Title],
                 saved.Columns);
+            Assert.Equal(TaskMarkdownExportSortModes.Recipe, saved.SortMode);
+            Assert.Equal(
+                TaskMarkdownExportSortDirections.Descending,
+                saved.SortDirections[TaskMarkdownExportColumns.Tags]);
 
             var loaded = await service.GetTaskExportColumnPreferenceAsync(CancellationToken.None);
             Assert.Equal(saved.Columns, loaded.Columns);
+            Assert.Equal(saved.SortMode, loaded.SortMode);
+            Assert.Equal(saved.SortDirections, loaded.SortDirections);
 
             var exception = await Assert.ThrowsAsync<ValidationException>(() =>
                 service.SaveTaskExportColumnPreferenceAsync(

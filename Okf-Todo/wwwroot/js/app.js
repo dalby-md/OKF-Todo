@@ -63,21 +63,25 @@
     return options.concat(group.options)
   }, [])
   const taskExportColumns = [
-    { code: 'ID', label: 'ID' },
-    { code: 'TITLE', label: 'Title' },
-    { code: 'LIST', label: 'List' },
-    { code: 'TYPE', label: 'Type' },
-    { code: 'STATUS', label: 'Status' },
-    { code: 'PRIORITY', label: 'Priority' },
-    { code: 'DEADLINE', label: 'Deadline' },
-    { code: 'WAITING_FOR', label: 'Waiting for' },
-    { code: 'OWNER', label: 'Owner' },
-    { code: 'RESPONSIBLE', label: 'Responsible' },
-    { code: 'SOURCE', label: 'Source' },
-    { code: 'TAGS', label: 'Tags' },
-    { code: 'CHECKLIST', label: 'Checklist' },
-    { code: 'UPDATED', label: 'Updated' }
+    { code: 'ID', label: 'ID', icon: '&#xE943;', kind: 'number' },
+    { code: 'TITLE', label: 'Title', icon: '&#xE8D2;', kind: 'text' },
+    { code: 'LIST', label: 'List', icon: '&#xEA37;', kind: 'lookup' },
+    { code: 'TYPE', label: 'Type', icon: '&#xE8EC;', kind: 'lookup' },
+    { code: 'STATUS', label: 'Status', icon: '&#xE73E;', kind: 'lookup' },
+    { code: 'PRIORITY', label: 'Priority', icon: '&#xE7C1;', kind: 'lookup' },
+    { code: 'DEADLINE', label: 'Deadline', icon: '&#xE787;', kind: 'date' },
+    { code: 'WAITING_FOR', label: 'Waiting for', icon: '&#xE823;', kind: 'text' },
+    { code: 'OWNER', label: 'Owner', icon: '&#xE77B;', kind: 'text' },
+    { code: 'RESPONSIBLE', label: 'Responsible', icon: '&#xE716;', kind: 'text' },
+    { code: 'SOURCE', label: 'Source', icon: '&#xE71B;', kind: 'lookup' },
+    { code: 'TAGS', label: 'Tags', icon: '&#xE8EC;', kind: 'text' },
+    { code: 'CHECKLIST', label: 'Checklist', icon: '&#xE9D5;', kind: 'progress' },
+    { code: 'UPDATED', label: 'Updated', icon: '&#xE787;', kind: 'date-time' }
   ]
+  const taskExportSortModes = {
+    currentTaskOrder: 'CURRENT_TASK_ORDER',
+    recipe: 'RECIPE'
+  }
   const lookupSettingsGroups = {
     taskTypes: 'Task types',
     taskPriorities: 'Priorities',
@@ -227,6 +231,12 @@
   let taskExportTaskListId = null
   let taskExportTaskIds = []
   let taskExportSelectedColumns = taskExportColumns.map(function (column) { return column.code })
+  let taskExportSortMode = taskExportSortModes.currentTaskOrder
+  let taskExportSortDirections = taskExportColumns.reduce(function (directions, column) {
+    directions[column.code] = column.code === 'UPDATED' ? 'DESC' : 'ASC'
+    return directions
+  }, {})
+  let taskExportDraggedColumn = null
   let taskExportColumnSavePromise = Promise.resolve()
   let trashUndoTimer = null
   const selectedTaskIds = new Set()
@@ -907,17 +917,6 @@
         return `<option value="${option.code}">${option.label}</option>`
       }).join('')
       return `<optgroup label="${group.label}">${options}</optgroup>`
-    }).join('')
-  }
-
-  function renderTaskExportColumnOptions() {
-    return taskExportColumns.map(function (column) {
-      return `
-        <label class="task-export-column-option">
-          <input type="checkbox" value="${column.code}">
-          <span>${column.label}</span>
-        </label>
-      `
     }).join('')
   }
 
@@ -2003,55 +2002,66 @@
           <section class="settings-dialog task-export-dialog" role="dialog" aria-modal="true" aria-labelledby="task-export-title" aria-describedby="task-export-intro">
             <header class="task-export-header">
               <div class="task-export-heading">
-                <span class="task-export-heading-icon fluent-icon" aria-hidden="true">&#xEDE1;</span>
-                <div>
-                  <p class="eyebrow">Share a task overview</p>
-                  <h2 id="task-export-title">Share task table</h2>
-                </div>
+                <h2 id="task-export-title">Export recipe</h2>
+                <span id="task-export-current-title" class="task-export-scope-pill">Current results</span>
+                <span id="task-export-current-count" class="task-export-option-count">0</span>
               </div>
               <button id="task-export-close-button" class="secondary-button task-export-close-button" type="button" aria-label="Close export" title="Close">
                 <span class="fluent-icon" aria-hidden="true">&#xE711;</span>
               </button>
             </header>
 
-            <p id="task-export-intro" class="task-export-intro">
-              Export a Markdown file or copy a formatted HTML table using the current search, filters, and sort order.
+            <p id="task-export-intro" class="sr-only">
+              Build the table from left to right, then choose whether its recipe should also order the rows.
             </p>
+            <p id="task-export-current-description" class="task-export-current-description">Current search and filters.</p>
 
-            <fieldset class="task-export-options">
-              <legend class="sr-only">Tasks to export</legend>
-              <div class="task-export-option">
-                <span class="task-export-option-icon fluent-icon" aria-hidden="true">&#xE8FD;</span>
-                <span class="task-export-option-copy">
-                  <strong id="task-export-current-title">Current results</strong>
-                  <span id="task-export-current-description">The visible result set, including any finished tasks hidden by a collapsed group.</span>
-                </span>
-                <span id="task-export-current-count" class="task-export-option-count">0</span>
-              </div>
-            </fieldset>
-
-            <section class="task-export-columns" aria-labelledby="task-export-columns-title">
-              <div class="task-export-columns-header">
-                <div>
-                  <strong id="task-export-columns-title">Columns</strong>
-                  <span id="task-export-columns-summary">All columns selected</span>
+            <div class="task-export-composer">
+              <aside class="task-export-field-library" aria-labelledby="task-export-fields-title">
+                <div class="task-export-section-heading">
+                  <div>
+                    <strong id="task-export-fields-title">Fields</strong>
+                    <span>Add fields to build the column order.</span>
+                  </div>
+                  <span id="task-export-available-count" class="task-export-field-count"></span>
                 </div>
-                <div class="task-export-column-actions">
-                  <button id="task-export-columns-all" class="text-button" type="button">Select all</button>
-                  <button id="task-export-columns-none" class="text-button" type="button">Clear</button>
-                </div>
-              </div>
-              <div id="task-export-column-options" class="task-export-column-options">
-                ${renderTaskExportColumnOptions()}
-              </div>
-              <p id="task-export-list-column-note" class="task-export-list-column-note" hidden>
-                List is available only when All lists is selected.
-              </p>
-            </section>
+                <label class="task-export-field-search" for="task-export-field-search">
+                  <span class="fluent-icon" aria-hidden="true">&#xE721;</span>
+                  <input id="task-export-field-search" type="search" placeholder="Search fields" autocomplete="off">
+                </label>
+                <div id="task-export-field-library-list" class="task-export-field-library-list"></div>
+              </aside>
 
-            <div id="task-export-unsaved-warning" class="task-export-unsaved-warning" hidden>
-              <span class="fluent-icon" aria-hidden="true">&#xE7BA;</span>
-              <p><strong>Unsaved task changes.</strong> They will be saved before the export is created.</p>
+              <section class="task-export-recipe" aria-labelledby="task-export-recipe-title">
+                <div class="task-export-section-heading">
+                  <div>
+                    <strong id="task-export-recipe-title">Export recipe</strong>
+                    <span id="task-export-columns-summary">Drag fields to set the table's left-to-right order.</span>
+                  </div>
+                </div>
+
+                <div class="task-export-row-order" role="group" aria-labelledby="task-export-row-order-title">
+                  <span id="task-export-row-order-title" class="sr-only">Row order</span>
+                  <button type="button" data-task-export-sort-mode="CURRENT_TASK_ORDER" aria-pressed="true">
+                    <span class="fluent-icon" aria-hidden="true">&#xEA37;</span>
+                    <span>Keep task queue order</span>
+                  </button>
+                  <button type="button" data-task-export-sort-mode="RECIPE" aria-pressed="false">
+                    <span class="fluent-icon" aria-hidden="true">&#xE8CB;</span>
+                    <span>Sort by recipe</span>
+                  </button>
+                </div>
+                <p id="task-export-sort-explanation" class="task-export-sort-explanation"></p>
+                <div id="task-export-recipe-list" class="task-export-recipe-list"></div>
+
+                <div class="task-export-live-preview">
+                  <div class="task-export-live-preview-heading">
+                    <strong>Preview</strong>
+                    <span id="task-export-preview-summary"></span>
+                  </div>
+                  <div id="task-export-preview-table" class="task-export-preview-table"></div>
+                </div>
+              </section>
             </div>
 
             <p id="task-export-error" class="form-error" hidden></p>
@@ -2659,11 +2669,38 @@
   }
 
   function getTaskExportSortDescription() {
+    if (taskExportSortMode === taskExportSortModes.recipe) {
+      const parts = getApplicableTaskExportColumns().map(function (code) {
+        const column = getTaskExportColumn(code)
+        const direction = taskExportSortDirections[code] === 'DESC' ? 'descending' : 'ascending'
+        return `${column.label} ${direction}`
+      })
+      return `Export recipe: ${parts.join(', then ')}`
+    }
+
     const option = getTaskSortOption(getCurrentTaskSortMode())
     const direction = getCurrentTaskSortDirection() === taskSortDirectionCodes.descending
       ? 'descending'
       : 'ascending'
     return `${option.label}, ${direction}`
+  }
+
+  function getTaskExportColumn(code) {
+    return taskExportColumns.find(function (column) { return column.code === code }) || taskExportColumns[0]
+  }
+
+  function getTaskExportDirectionLabels(column) {
+    if (column.kind === 'lookup') return ['Configured order', 'Reverse order']
+    if (column.kind === 'date') return ['Earliest first', 'Latest first']
+    if (column.kind === 'date-time') return ['Oldest first', 'Newest first']
+    if (column.kind === 'number') return ['Lowest first', 'Highest first']
+    if (column.kind === 'progress') return ['Least complete', 'Most complete']
+    return ['A–Z', 'Z–A']
+  }
+
+  function getTaskExportDirectionLabel(code) {
+    const labels = getTaskExportDirectionLabels(getTaskExportColumn(code))
+    return taskExportSortDirections[code] === 'DESC' ? labels[1] : labels[0]
   }
 
   function getApplicableTaskExportColumns() {
@@ -2672,22 +2709,142 @@
     })
   }
 
-  function renderTaskExportColumns() {
+  function getTaskExportPreviewValue(task, code) {
+    if (!task) return '—'
+    switch (code) {
+      case 'ID': return `#${task.id}`
+      case 'TITLE': return task.title || '—'
+      case 'LIST': return task.taskListName || '—'
+      case 'TYPE': return task.taskTypeName || '—'
+      case 'STATUS': return task.taskStatusName || '—'
+      case 'PRIORITY': return task.taskPriorityName || '—'
+      case 'DEADLINE': return task.deadline ? formatShortDate(task.deadline) : '—'
+      case 'WAITING_FOR': return task.activeWaitingForLabel || '—'
+      case 'OWNER': return task.owner || '—'
+      case 'RESPONSIBLE': return task.responsible || '—'
+      case 'SOURCE': return task.taskSourceName || '—'
+      case 'TAGS': return (task.tags || []).join(', ') || '—'
+      case 'CHECKLIST': return task.checklistCount > 0
+        ? `${task.completedChecklistCount}/${task.checklistCount}`
+        : '—'
+      case 'UPDATED': return task.updatedAt
+        ? new Date(task.updatedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+        : '—'
+      default: return '—'
+    }
+  }
+
+  function renderTaskExportFieldLibrary() {
     const isGlobal = taskExportTaskListId == null
-    $('#task-export-column-options input').each(function () {
-      const code = $(this).val().toString()
-      $(this)
-        .prop('checked', taskExportSelectedColumns.includes(code))
-        .prop('disabled', code === 'LIST' && !isGlobal)
+    const query = String($('#task-export-field-search').val() || '').trim().toLocaleLowerCase()
+    const availableColumns = taskExportColumns.filter(function (column) {
+      return !taskExportSelectedColumns.includes(column.code)
+        && (!query || column.label.toLocaleLowerCase().includes(query))
     })
 
+    $('#task-export-available-count').text(`${availableColumns.length} available`)
+    $('#task-export-field-library-list').html(availableColumns.length === 0
+      ? `<p class="task-export-field-empty">${query ? 'No fields match this search.' : 'Every field is in the export recipe.'}</p>`
+      : availableColumns.map(function (column) {
+          const unavailable = column.code === 'LIST' && !isGlobal
+          return `
+            <div class="task-export-field-row${unavailable ? ' is-unavailable' : ''}">
+              <span class="task-export-field-icon fluent-icon" aria-hidden="true">${column.icon}</span>
+              <span class="task-export-field-label">
+                <strong>${column.label}</strong>
+                ${unavailable ? '<span>All lists only</span>' : ''}
+              </span>
+              <button class="task-export-add-field" type="button" data-column-code="${column.code}"${unavailable ? ' disabled' : ''} aria-label="Add ${column.label} to export recipe" title="Add ${column.label}">
+                <span class="fluent-icon" aria-hidden="true">&#xE710;</span>
+              </button>
+            </div>
+          `
+        }).join(''))
+  }
+
+  function renderTaskExportRecipeRows() {
+    const isGlobal = taskExportTaskListId == null
+    const sortByRecipe = taskExportSortMode === taskExportSortModes.recipe
+    $('#task-export-recipe-list').html(taskExportSelectedColumns.map(function (code, index) {
+      const column = getTaskExportColumn(code)
+      const unavailable = code === 'LIST' && !isGlobal
+      const labels = getTaskExportDirectionLabels(column)
+      const direction = taskExportSortDirections[code] === 'DESC' ? 'DESC' : 'ASC'
+      return `
+        <div class="task-export-recipe-row${unavailable ? ' is-unavailable' : ''}" draggable="true" data-column-code="${code}">
+          <span class="task-export-drag-grip fluent-icon" aria-hidden="true">&#xE700;</span>
+          <span class="task-export-recipe-position" aria-hidden="true">${index + 1}</span>
+          <span class="task-export-field-icon fluent-icon" aria-hidden="true">${column.icon}</span>
+          <span class="task-export-recipe-label">
+            <strong>${column.label}</strong>
+            <span>${unavailable ? 'Not used in this list scope' : 'Column ' + (index + 1)}</span>
+          </span>
+          <select class="task-export-direction" data-column-code="${code}" aria-label="Sort direction for ${column.label}"${!sortByRecipe || unavailable ? ' disabled' : ''}>
+            <option value="ASC"${direction === 'ASC' ? ' selected' : ''}>${labels[0]}</option>
+            <option value="DESC"${direction === 'DESC' ? ' selected' : ''}>${labels[1]}</option>
+          </select>
+          <span class="task-export-recipe-move">
+            <button type="button" data-task-export-move="up" data-column-code="${code}"${index === 0 ? ' disabled' : ''} aria-label="Move ${column.label} up" title="Move up">
+              <span class="fluent-icon" aria-hidden="true">&#xE70E;</span>
+            </button>
+            <button type="button" data-task-export-move="down" data-column-code="${code}"${index === taskExportSelectedColumns.length - 1 ? ' disabled' : ''} aria-label="Move ${column.label} down" title="Move down">
+              <span class="fluent-icon" aria-hidden="true">&#xE70D;</span>
+            </button>
+          </span>
+          <button class="task-export-remove-field" type="button" data-column-code="${code}" aria-label="Remove ${column.label} from export recipe" title="Remove ${column.label}">
+            <span class="fluent-icon" aria-hidden="true">&#xE711;</span>
+          </button>
+        </div>
+      `
+    }).join(''))
+  }
+
+  function renderTaskExportLivePreview() {
+    const columns = getApplicableTaskExportColumns()
+    const visibleTasks = currentView === 'trash' ? [] : getVisibleTasks()
+    const previewTasks = visibleTasks.slice(0, 50)
+    const sortSummary = taskExportSortMode === taskExportSortModes.recipe
+      ? columns.map(function (code) {
+          const arrow = taskExportSortDirections[code] === 'DESC' ? '↓' : '↑'
+          return `${getTaskExportColumn(code).label} ${arrow}`
+        }).join(' → ')
+      : getTaskExportSortDescription()
+
+    const previewCountSummary = visibleTasks.length > previewTasks.length
+      ? `${previewTasks.length} of ${visibleTasks.length} tasks`
+      : `${visibleTasks.length} tasks`
+    $('#task-export-preview-summary').text(`${previewCountSummary} · ${sortSummary}`)
+    $('#task-export-preview-table').html(columns.length === 0
+      ? '<p class="task-export-preview-empty">Add a field to preview the exported table.</p>'
+      : previewTasks.length === 0
+        ? '<p class="task-export-preview-empty">No matching tasks to preview.</p>'
+      : `
+          <div class="task-export-preview-scroll">
+            <table>
+              <thead><tr>${columns.map(function (code) { return `<th>${encodeText(getTaskExportColumn(code).label)}</th>` }).join('')}</tr></thead>
+              <tbody>${previewTasks.map(function (task) {
+                return `<tr>${columns.map(function (code) { return `<td>${encodeText(getTaskExportPreviewValue(task, code))}</td>` }).join('')}</tr>`
+              }).join('')}</tbody>
+            </table>
+          </div>
+        `)
+  }
+
+  function renderTaskExportColumns() {
     const applicableColumns = getApplicableTaskExportColumns()
-    const availableCount = isGlobal ? taskExportColumns.length : taskExportColumns.length - 1
     $('#task-export-columns-summary').text(
-      applicableColumns.length === availableCount
-        ? 'All available columns selected'
-        : `${applicableColumns.length} of ${availableCount} available columns selected`)
-    $('#task-export-list-column-note').prop('hidden', isGlobal)
+      `${applicableColumns.length} ${applicableColumns.length === 1 ? 'field' : 'fields'} · drag to set column order`)
+    $('[data-task-export-sort-mode]').each(function () {
+      $(this).attr('aria-pressed', String($(this).attr('data-task-export-sort-mode') === taskExportSortMode))
+    })
+
+    $('#task-export-sort-explanation').text(taskExportSortMode === taskExportSortModes.recipe
+      ? 'Rows compare field 1, then field 2, until a difference is found. Empty values remain last.'
+      : `Rows keep the task queue order: ${getTaskExportSortDescription()}.`)
+
+    renderTaskExportFieldLibrary()
+    renderTaskExportRecipeRows()
+    renderTaskExportLivePreview()
   }
 
   function queueTaskExportColumnPreferenceSave() {
@@ -2696,13 +2853,15 @@
     }
 
     const columns = taskExportSelectedColumns.slice()
+    const sortMode = taskExportSortMode
+    const sortDirections = { ...taskExportSortDirections }
     taskExportColumnSavePromise = taskExportColumnSavePromise
       .then(function () {
-        return sendBridgeMessage('task.export.columns.save', { columns })
+        return sendBridgeMessage('task.export.columns.save', { columns, sortMode, sortDirections })
       })
       .catch(function (error) {
         $('#task-export-error')
-          .text(getErrorMessage(error, 'Could not save the export columns'))
+          .text(getErrorMessage(error, 'Could not save the export recipe'))
           .prop('hidden', false)
       })
   }
@@ -2717,6 +2876,17 @@
     queueTaskExportColumnPreferenceSave()
   }
 
+  function moveTaskExportColumn(code, targetIndex) {
+    const currentIndex = taskExportSelectedColumns.indexOf(code)
+    if (currentIndex < 0) return
+    const boundedIndex = Math.max(0, Math.min(targetIndex, taskExportSelectedColumns.length - 1))
+    if (boundedIndex === currentIndex) return
+
+    taskExportSelectedColumns.splice(currentIndex, 1)
+    taskExportSelectedColumns.splice(boundedIndex, 0, code)
+    updateTaskExportColumnSelection()
+  }
+
   function renderTaskExportPreview() {
     const scopeName = getTaskExportScopeName()
     const visibleTasks = currentView === 'trash' ? [] : getVisibleTasks()
@@ -2724,14 +2894,13 @@
 
     $('#task-export-current-title').text(`${viewLabels[currentView]} in ${scopeName}`)
     $('#task-export-current-description').text(
-      `Current search and filters; ${getTaskExportSortDescription()}.`)
+      'Current search and filters, including finished tasks hidden by a collapsed group.')
     $('#task-export-current-count').text(taskExportTaskIds.length)
     renderTaskExportColumns()
     const hasApplicableColumns = getApplicableTaskExportColumns().length > 0
     $('#task-export-error')
       .text(hasApplicableColumns ? '' : 'Select at least one column available in this list scope.')
       .prop('hidden', hasApplicableColumns)
-    $('#task-export-unsaved-warning').prop('hidden', !hasUnsavedChanges())
     setTaskExportBusy(false)
   }
 
@@ -2750,8 +2919,18 @@
           return availableColumn.code === column
         })
       })
+      taskExportSortMode = preference.sortMode === taskExportSortModes.recipe
+        ? taskExportSortModes.recipe
+        : taskExportSortModes.currentTaskOrder
+      taskExportSortDirections = taskExportColumns.reduce(function (directions, column) {
+        directions[column.code] = preference.sortDirections
+          && preference.sortDirections[column.code] === 'DESC'
+            ? 'DESC'
+            : (column.code === 'UPDATED' ? 'DESC' : 'ASC')
+        return directions
+      }, {})
       renderTaskExportPreview()
-      $('#task-export-confirm-button').trigger('focus')
+      $('#task-export-field-search').trigger('focus')
     } catch (error) {
       $('#task-export-error')
         .text(getErrorMessage(error, 'Could not prepare the task export'))
@@ -2777,7 +2956,6 @@
         return false
       }
 
-      $('#task-export-unsaved-warning').prop('hidden', true)
     }
 
     taskExportTaskListId = activeTaskListId
@@ -2805,7 +2983,9 @@
       taskListId: taskExportTaskListId,
       viewName: viewLabels[currentView],
       sortDescription: getTaskExportSortDescription(),
-      columns: taskExportSelectedColumns
+      columns: taskExportSelectedColumns,
+      sortMode: taskExportSortMode,
+      sortDirections: taskExportSortDirections
     }
   }
 
@@ -7169,26 +7349,69 @@
         closeTaskExportDialog()
       }
     })
-    $('#task-export-column-options').on('change', 'input', function () {
-      const code = $(this).val().toString()
-      taskExportSelectedColumns = $(this).prop('checked')
-        ? taskExportSelectedColumns.concat(code).filter(function (value, index, values) {
-            return values.indexOf(value) === index
-          })
-        : taskExportSelectedColumns.filter(function (value) { return value !== code })
-      taskExportSelectedColumns = taskExportColumns
-        .map(function (column) { return column.code })
-        .filter(function (column) { return taskExportSelectedColumns.includes(column) })
+    $('#task-export-field-search').on('input', renderTaskExportFieldLibrary)
+    $('#task-export-field-library-list').on('click', '.task-export-add-field', function () {
+      const code = $(this).attr('data-column-code')
+      if (!code || taskExportSelectedColumns.includes(code)) return
+      taskExportSelectedColumns.push(code)
       updateTaskExportColumnSelection()
     })
-    $('#task-export-columns-all').on('click', function () {
-      taskExportSelectedColumns = taskExportColumns.map(function (column) { return column.code })
+
+    $('#task-export-recipe-list').on('click', '.task-export-remove-field', function () {
+      const code = $(this).attr('data-column-code')
+      taskExportSelectedColumns = taskExportSelectedColumns.filter(function (value) { return value !== code })
+      updateTaskExportColumnSelection()
+      $('#task-export-field-search').trigger('focus')
+    })
+
+    $('#task-export-recipe-list').on('click', '[data-task-export-move]', function () {
+      const code = $(this).attr('data-column-code')
+      const currentIndex = taskExportSelectedColumns.indexOf(code)
+      const delta = $(this).attr('data-task-export-move') === 'up' ? -1 : 1
+      moveTaskExportColumn(code, currentIndex + delta)
+      $(`[data-task-export-move="${delta < 0 ? 'up' : 'down'}"][data-column-code="${code}"]`).trigger('focus')
+    })
+
+    $('#task-export-recipe-list').on('change', '.task-export-direction', function () {
+      const code = $(this).attr('data-column-code')
+      taskExportSortDirections[code] = $(this).val() === 'DESC' ? 'DESC' : 'ASC'
       updateTaskExportColumnSelection()
     })
-    $('#task-export-columns-none').on('click', function () {
-      taskExportSelectedColumns = []
+
+    $('[data-task-export-sort-mode]').on('click', function () {
+      taskExportSortMode = $(this).attr('data-task-export-sort-mode') === taskExportSortModes.recipe
+        ? taskExportSortModes.recipe
+        : taskExportSortModes.currentTaskOrder
       updateTaskExportColumnSelection()
-      $('#task-export-column-options input:not(:disabled)').first().trigger('focus')
+    })
+
+    $('#task-export-recipe-list').on('dragstart', '.task-export-recipe-row', function (event) {
+      taskExportDraggedColumn = $(this).attr('data-column-code')
+      $(this).addClass('is-dragging')
+      if (event.originalEvent && event.originalEvent.dataTransfer) {
+        event.originalEvent.dataTransfer.effectAllowed = 'move'
+        event.originalEvent.dataTransfer.setData('text/plain', taskExportDraggedColumn)
+      }
+    })
+    $('#task-export-recipe-list').on('dragover', '.task-export-recipe-row', function (event) {
+      event.preventDefault()
+      $('.task-export-recipe-row').removeClass('is-drop-target')
+      if ($(this).attr('data-column-code') !== taskExportDraggedColumn) {
+        $(this).addClass('is-drop-target')
+      }
+    })
+    $('#task-export-recipe-list').on('drop', '.task-export-recipe-row', function (event) {
+      event.preventDefault()
+      const targetCode = $(this).attr('data-column-code')
+      if (taskExportDraggedColumn && targetCode && targetCode !== taskExportDraggedColumn) {
+        moveTaskExportColumn(taskExportDraggedColumn, taskExportSelectedColumns.indexOf(targetCode))
+      }
+      taskExportDraggedColumn = null
+      $('.task-export-recipe-row').removeClass('is-dragging is-drop-target')
+    })
+    $('#task-export-recipe-list').on('dragend', '.task-export-recipe-row', function () {
+      taskExportDraggedColumn = null
+      $('.task-export-recipe-row').removeClass('is-dragging is-drop-target')
     })
     $('#task-export-confirm-button').on('click', function () {
       exportTasksToMarkdown().catch(function (error) {

@@ -1,34 +1,47 @@
-# First-run decision sheet design QA
+# Design QA — Task export recipe refinement
 
-## Target
+## Comparison target
 
-- Selected direction: Product Design option 2, a centered decision sheet with two explanatory paths and a quiet Help/Skip footer.
-- Reference: `C:\Users\soere\.codex\generated_images\019fb46b-5383-7770-8f13-bf56e3ea9da2\exec-7e5cbe1e-69fa-4d0b-a1f6-eccb3c268f83.png`
-- Comparison sheet: `C:\Users\soere\.codex\visualizations\2026\07\30\019fb46b-5383-7770-8f13-bf56e3ea9da2\first-run-option-2-comparison.png`
-- Captured viewport: 1600 x 1000 CSS pixels.
+- Source visual truth: `docs/images/design-options/task-export-option-3-export-recipe.png`
+- Implementation screenshot: `docs/images/design-options/task-export-option-3-implementation.png`
+- Combined comparison: `docs/images/design-options/task-export-option-3-design-qa-comparison.png`
+- State: light theme, All lists, Active results, six-field recipe, Sort by recipe selected
+- CSS viewport: 1354 × 1162 at device scale factor 1
+- Source pixels: 1354 × 1162
+- Implementation pixels: 1354 × 1162
+- Density normalization: none required
 
-## QA passes
+## Findings
 
-### Pass 1
+- No actionable P0, P1, or P2 differences remain.
+- The larger implementation frame and taller preview are intentional refinements requested after selecting option 3. They preserve the source hierarchy while improving data inspection.
+- The export-only unsaved-change banner has been removed. Export still saves open task changes before continuing, so the safety behavior remains without consuming dialog space.
+- The preview now shows multiple realistic rows, has a sticky header, and independently scrolls vertically and horizontally.
 
-- P1: An obsolete `#first-run-sample-button` flex rule overrode the new grid layout, centering the sample title and separating it from the primary choice alignment.
-- P2: Dark-mode capture occurred during the 140 ms theme transition, making both decision rows look washed out.
+## Required fidelity surfaces
 
-Fixes applied:
+- Fonts and typography: existing application type family, weights, hierarchy, truncation, and compact UI sizing remain consistent with the source direction and surrounding product.
+- Spacing and layout rhythm: the two-pane grid, numbered recipe rows, row-order control, preview, and footer remain aligned. The wider frame and reclaimed vertical space give the preview materially better proportions without clipping actions.
+- Colors and visual tokens: established teal, neutral surfaces, borders, focus states, and semantic action colors are preserved in light and dark theme rules.
+- Image and asset quality: this interface contains no raster imagery requiring recreation. Existing Fluent icon assets remain sharp and consistent.
+- Copy and content: labels remain concise and product-specific. Removed banner copy no longer competes with the preview.
 
-- Removed the obsolete ID-specific flex layout so both choices use the same decision-row grid.
-- Added theme-settled checks before dark-mode visual capture and locked the semantic teal/gold surfaces with dark-theme-qualified selectors.
+## Full-view evidence
 
-### Pass 2
+The combined image shows the saved option and refined implementation at equal dimensions. The implementation retains the defining field-library/recipe split, prominent sort-mode switch, six ordered rows, per-field direction controls, and preview. The requested increase in modal and preview size is clearly visible, and footer actions remain persistently available.
 
-- Modal is centered and blocks the underlying workspace.
-- Heading, choice rows, reassurance, Help note, and Skip action follow the selected visual hierarchy.
-- Both decision rows align consistently and retain clear keyboard focus.
-- Light mode matches the selected off-white, teal, and warm-gold direction.
-- Dark mode uses layered graphite surfaces with teal and gold semantic accents and readable text.
-- No clipping, overflow, broken spacing, or mismatched radii is visible at the captured viewport.
-- Focus, busy state, Skip behavior, and sample-data workflow remain covered by the focused UI test.
+No focused crop was needed because the equal-size full-view comparison keeps all relevant controls and table text readable at original resolution.
 
-## Final result
+## Comparison history
 
-Passed. No open P0, P1, or P2 visual issues.
+- Earlier P2: preview was shallow and showed only one row; the unsaved-change notice consumed valuable vertical space.
+- Fix: removed the notice, increased the desktop dialog from 1040px to 1220px maximum width, increased composer height, allocated a dedicated preview grid track, rendered up to 50 rows, and added independent overflow with a sticky header.
+- Post-fix evidence: `task-export-option-3-implementation.png` shows four real preview rows and substantial remaining scroll space; the browser test verifies modal width, preview height, multiple rows, and `overflow-y: auto`.
+
+## Interaction verification
+
+- Focused browser UI test covers adding, removing, and moving fields; choosing recipe sorting; changing direction; persisted reopening; multi-row preview rendering; expanded layout; and scrollable overflow.
+- JavaScript syntax check and release build pass.
+- Canonical Help is copied unchanged into normal application output.
+
+final result: passed

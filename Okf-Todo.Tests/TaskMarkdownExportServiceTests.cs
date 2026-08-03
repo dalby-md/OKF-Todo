@@ -147,6 +147,63 @@ public sealed class TaskMarkdownExportServiceTests
     }
 
     [Fact]
+    public async Task ExportAsync_RecipeOrder_SortsByOrderedColumnsAndDirections()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var directory = CreateTestDirectory();
+        var exportPath = Path.Combine(directory, "recipe-order.md");
+
+        try
+        {
+            var defaultList = (await database.TaskLists.ListAsync(CancellationToken.None))
+                .Single(taskList => taskList.Name == "Default list");
+            var normalAlpha = await database.Tasks.CreateAsync(
+                CreateRequest("Alpha normal", defaultList.Id, priorityCode: "NORMAL"),
+                CancellationToken.None);
+            var urgent = await database.Tasks.CreateAsync(
+                CreateRequest("Urgent task", defaultList.Id, priorityCode: "URGENT"),
+                CancellationToken.None);
+            var normalZulu = await database.Tasks.CreateAsync(
+                CreateRequest("Zulu normal", defaultList.Id, priorityCode: "NORMAL"),
+                CancellationToken.None);
+
+            using var loggerFactory = LoggerFactory.Create(_ => { });
+            var service = new TaskMarkdownExportService(
+                database.DbContext,
+                new TestMarkdownExportDestinationPicker(exportPath),
+                CreatePreferenceService(database, directory, loggerFactory),
+                loggerFactory.CreateLogger<TaskMarkdownExportService>());
+
+            await service.ExportAsync(
+                new TaskMarkdownExportRequest(
+                    [normalAlpha.Id, normalZulu.Id, urgent.Id],
+                    defaultList.Id,
+                    "Active",
+                    "Title, ascending",
+                    [TaskMarkdownExportColumns.Priority, TaskMarkdownExportColumns.Title],
+                    TaskMarkdownExportSortModes.Recipe,
+                    new Dictionary<string, string>
+                    {
+                        [TaskMarkdownExportColumns.Priority] = TaskMarkdownExportSortDirections.Ascending,
+                        [TaskMarkdownExportColumns.Title] = TaskMarkdownExportSortDirections.Descending
+                    }),
+                CancellationToken.None);
+
+            var markdown = await File.ReadAllTextAsync(exportPath);
+            Assert.Contains("- Ordering: Export recipe: Priority ascending, then Title descending", markdown);
+            Assert.Contains("| Priority | Title |", markdown);
+            Assert.True(markdown.IndexOf("Urgent task", StringComparison.Ordinal)
+                < markdown.IndexOf("Zulu normal", StringComparison.Ordinal));
+            Assert.True(markdown.IndexOf("Zulu normal", StringComparison.Ordinal)
+                < markdown.IndexOf("Alpha normal", StringComparison.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task ExportAsync_WhenTaskIdsContainTrash_RejectsStaleResults()
     {
         await using var database = await TestDatabase.CreateAsync();

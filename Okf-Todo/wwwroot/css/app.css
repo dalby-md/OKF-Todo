@@ -5520,8 +5520,7 @@ body.is-resizing-editor * {
   font-weight: 800;
 }
 
-.task-export-columns,
-.task-export-unsaved-warning {
+.task-export-columns {
   margin: 0 24px;
   padding: 11px 13px;
   border-radius: 10px;
@@ -5602,20 +5601,6 @@ body.is-resizing-editor * {
   margin: 0;
 }
 
-.task-export-unsaved-warning {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  color: #714a08;
-  background: #fff4d6;
-}
-
-.task-export-unsaved-warning p {
-  margin: 0;
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
 .task-export-dialog > .form-error {
   margin: -6px 24px 0;
 }
@@ -5632,6 +5617,440 @@ body.is-resizing-editor * {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+.task-export-dialog {
+  width: min(1220px, calc(100vw - 32px));
+  max-height: calc(100vh - 24px);
+}
+
+.task-export-dialog .task-export-header {
+  padding: 17px 24px;
+}
+
+.task-export-dialog .task-export-heading {
+  gap: 10px;
+}
+
+.task-export-scope-pill {
+  display: inline-flex;
+  min-height: 28px;
+  padding: 0 10px;
+  align-items: center;
+  border: 1px solid #c9d9d6;
+  border-radius: 999px;
+  color: #42615e;
+  background: #ffffff;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.task-export-current-description {
+  margin: -8px 24px 0;
+  color: #65767b;
+  font-size: 0.76rem;
+}
+
+.task-export-scope {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  margin: 0 24px;
+  padding: 10px 13px;
+  border: 1px solid #d9e4e2;
+  border-radius: 11px;
+  background: #f8fbfa;
+}
+
+.task-export-scope-icon,
+.task-export-field-icon {
+  display: grid;
+  place-items: center;
+  color: #0f766e;
+}
+
+.task-export-scope > span:nth-child(2),
+.task-export-section-heading > div,
+.task-export-field-label,
+.task-export-recipe-label {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.task-export-scope strong,
+.task-export-section-heading strong {
+  color: #203235;
+  font-size: 0.88rem;
+}
+
+.task-export-scope > span:nth-child(2) > span,
+.task-export-section-heading span,
+.task-export-field-label span,
+.task-export-recipe-label span,
+.task-export-sort-explanation,
+.task-export-preview-summary {
+  color: #66777c;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.task-export-composer {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.82fr) minmax(480px, 1.8fr);
+  height: min(760px, calc(100vh - 220px));
+  min-height: 520px;
+  margin: 0 24px;
+  overflow: hidden;
+  border: 1px solid #d4dfdd;
+  border-radius: 13px;
+  background: #ffffff;
+}
+
+.task-export-field-library,
+.task-export-recipe {
+  display: grid;
+  min-height: 0;
+  padding: 16px;
+}
+
+.task-export-field-library {
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 12px;
+  border-right: 1px solid #e0e8e6;
+  background: #fafcfc;
+}
+
+.task-export-recipe {
+  grid-template-rows: auto auto auto minmax(210px, 1fr) minmax(190px, 0.72fr);
+  gap: 11px;
+}
+
+.task-export-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.task-export-field-count {
+  white-space: nowrap;
+}
+
+.task-export-field-search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 39px;
+  padding: 0 10px;
+  border: 1px solid #cbd9d7;
+  border-radius: 9px;
+  color: #718287;
+  background: #ffffff;
+}
+
+.task-export-field-search:focus-within {
+  border-color: #5fa9a1;
+  box-shadow: 0 0 0 3px rgb(15 118 110 / 10%);
+}
+
+.task-export-field-search input {
+  min-width: 0;
+  min-height: 35px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
+
+.task-export-field-library-list,
+.task-export-recipe-list {
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.task-export-field-library-list {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.task-export-field-row {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 8px;
+  min-height: 43px;
+  padding: 5px 6px 5px 9px;
+  border: 1px solid #e1e8e7;
+  border-radius: 9px;
+  background: #ffffff;
+}
+
+.task-export-field-row:hover:not(.is-unavailable) {
+  border-color: #a5c7c3;
+  background: #f7fbfa;
+}
+
+.task-export-field-row.is-unavailable,
+.task-export-recipe-row.is-unavailable {
+  opacity: 0.55;
+}
+
+.task-export-field-label strong,
+.task-export-recipe-label strong {
+  overflow: hidden;
+  color: #294043;
+  font-size: 0.79rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-export-add-field,
+.task-export-remove-field,
+.task-export-recipe-move button {
+  display: grid;
+  min-width: 30px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  color: #0f6f68;
+  background: #e7f3f1;
+}
+
+.task-export-add-field:hover:not(:disabled),
+.task-export-add-field:focus-visible,
+.task-export-recipe-move button:hover:not(:disabled),
+.task-export-recipe-move button:focus-visible {
+  color: #ffffff;
+  background: #0f766e;
+}
+
+.task-export-row-order {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid #cbd9d7;
+  border-radius: 10px;
+  background: #f6f9f8;
+}
+
+.task-export-row-order button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 0;
+  color: #506367;
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.78rem;
+}
+
+.task-export-row-order button + button {
+  border-left: 1px solid #d7e2e0;
+}
+
+.task-export-row-order button[aria-pressed="true"] {
+  z-index: 1;
+  color: #0b625c;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #0f766e, 0 3px 10px rgb(22 94 87 / 8%);
+  font-weight: 750;
+}
+
+.task-export-sort-explanation {
+  min-height: 18px;
+  margin: 0;
+}
+
+.task-export-recipe-list {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  padding: 3px 4px 3px 0;
+}
+
+.task-export-recipe-row {
+  display: grid;
+  grid-template-columns: 18px 30px 26px minmax(90px, 1fr) minmax(118px, 150px) auto 30px;
+  align-items: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 6px 7px;
+  border: 1px solid #dce5e4;
+  border-radius: 9px;
+  background: #ffffff;
+  transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
+}
+
+.task-export-recipe-row:hover {
+  border-color: #a8c9c5;
+}
+
+.task-export-recipe-row.is-dragging {
+  opacity: 0.5;
+}
+
+.task-export-recipe-row.is-drop-target {
+  border-color: #0f766e;
+  background: #eef8f6;
+  transform: translateY(2px);
+}
+
+.task-export-drag-grip {
+  color: #8b999c;
+  cursor: grab;
+}
+
+.task-export-recipe-position {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #0f766e;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.task-export-direction {
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 28px 0 9px;
+  font-size: 0.74rem;
+}
+
+.task-export-recipe-move {
+  display: flex;
+  gap: 3px;
+}
+
+.task-export-recipe-move button {
+  width: 27px;
+  min-width: 27px;
+  height: 27px;
+  color: #526b6e;
+  background: #f0f4f4;
+}
+
+.task-export-remove-field {
+  color: #728286;
+  background: transparent;
+}
+
+.task-export-remove-field:hover:not(:disabled),
+.task-export-remove-field:focus-visible {
+  color: #a43a36;
+  background: #faecea;
+}
+
+.task-export-live-preview {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 7px;
+  min-height: 0;
+  padding-top: 11px;
+  overflow: hidden;
+  border-top: 1px solid #e1e8e7;
+}
+
+.task-export-live-preview-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.task-export-live-preview-heading strong {
+  color: #294043;
+  font-size: 0.8rem;
+}
+
+.task-export-preview-table {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.task-export-preview-scroll {
+  height: 100%;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  border: 1px solid #dce5e4;
+  border-radius: 8px;
+}
+
+.task-export-preview-table table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.task-export-preview-table th,
+.task-export-preview-table td {
+  max-width: 180px;
+  padding: 7px 9px;
+  overflow: hidden;
+  border-right: 1px solid #e4ebea;
+  color: #40575a;
+  font-size: 0.69rem;
+  text-align: left;
+  text-overflow: ellipsis;
+}
+
+.task-export-preview-table th {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  color: #294043;
+  background: #f4f8f7;
+  font-weight: 750;
+}
+
+.task-export-preview-table th:last-child,
+.task-export-preview-table td:last-child {
+  border-right: 0;
+}
+
+.task-export-field-empty,
+.task-export-preview-empty {
+  margin: 0;
+  padding: 16px 8px;
+  color: #748489;
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .task-export-dialog {
+    width: min(760px, calc(100vw - 32px));
+    overflow: auto;
+  }
+
+  .task-export-composer {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 0;
+  }
+
+  .task-export-field-library {
+    max-height: 260px;
+    border-right: 0;
+    border-bottom: 1px solid #e0e8e6;
+  }
+
+  .task-export-recipe {
+    grid-template-rows: auto auto auto minmax(220px, 40vh) minmax(180px, 32vh);
+  }
 }
 
 .task-selection-coachmark {
@@ -5871,8 +6290,7 @@ body.is-resizing-editor * {
     padding-inline: 18px;
   }
 
-  .task-export-columns,
-  .task-export-unsaved-warning {
+  .task-export-columns {
     margin-inline: 18px;
   }
 

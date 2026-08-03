@@ -689,8 +689,8 @@ Status: implemented.
 
 Scope:
 
-- Add a visible task-queue **Export** action and a focused current-results preview dialog.
-- Export the ordered task IDs produced by the selected concrete list or synthetic **All lists**, active lifecycle view, search, tag/type/status/priority filters, and current sort field and direction.
+- Add a visible task-queue **Export** action and a focused current-results preview dialog with a two-pane ordered **Export recipe**.
+- Export the task IDs produced by the selected concrete list or synthetic **All lists**, active lifecycle view, search, and tag/type/status/priority filters. Preserve current queue order by default, with an explicit **Sort by recipe** mode for composite ordering by the ordered export fields.
 - Keep collapsed groups presentation-only, so matching finished Starred tasks remain included, and exclude Trash entirely.
 - Provide a picker for the existing operational columns and persist the selected column set in the current user's application preferences.
 - Generate a compact operational Markdown table with the selected IDs, planning fields, ownership, source, tags, checklist progress, and updated timestamps.
@@ -704,7 +704,7 @@ Acceptance criteria:
 - A global export contains exactly the current filtered results across concrete lists and includes the List column.
 - A Starred-view export includes matching completed and cancelled tasks even when the Finished group is collapsed.
 - Trash is excluded and the Export action is unavailable in the Trash view.
-- The export dialog restores the current user's last valid column selection, requires at least one applicable column, and applies List only to global exports.
+- The export dialog restores the current user's ordered field recipe, row-order mode, and per-field directions; requires at least one applicable field; and applies List only to global exports while retaining its saved recipe position.
 - Markdown-reserved characters and multiline values cannot break the generated table.
 - Cancelling the native picker creates no file; a successful export is valid UTF-8 without a byte-order mark.
 - Copy as HTML creates no file, preserves the current result order and selected columns, and writes both HTML and plain-text clipboard formats.

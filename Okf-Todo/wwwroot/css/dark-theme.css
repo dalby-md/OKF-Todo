@@ -1615,14 +1615,106 @@ html.theme-dark .first-run-choice-sample:hover:not(:disabled) {
   background: #282c2f;
 }
 
-.task-export-unsaved-warning {
-  color: #f2d58b;
-  background: #3a301b;
-}
-
 .task-export-actions {
   border-color: #40464a;
   background: #202326;
+}
+
+.task-export-scope,
+.task-export-composer,
+.task-export-field-row,
+.task-export-recipe-row,
+.task-export-field-search,
+.task-export-row-order button[aria-pressed="true"],
+.task-export-preview-scroll {
+  border-color: #344552;
+  background: #111922;
+}
+
+.task-export-field-library,
+.task-export-preview-table th {
+  border-color: #344552;
+  background: #16212b;
+}
+
+.task-export-recipe,
+.task-export-row-order {
+  border-color: #344552;
+  background: #111922;
+}
+
+.task-export-scope strong,
+.task-export-section-heading strong,
+.task-export-field-label strong,
+.task-export-recipe-label strong,
+.task-export-live-preview-heading strong,
+.task-export-preview-table th {
+  color: #edf3f6;
+}
+
+.task-export-scope > span:nth-child(2) > span,
+.task-export-section-heading span,
+.task-export-field-label span,
+.task-export-recipe-label span,
+.task-export-sort-explanation,
+.task-export-preview-summary,
+.task-export-preview-table td,
+.task-export-field-empty,
+.task-export-preview-empty {
+  color: #93a3ae;
+}
+
+.task-export-field-search input {
+  color: #edf3f6;
+}
+
+.task-export-field-row:hover:not(.is-unavailable),
+.task-export-recipe-row.is-drop-target {
+  border-color: #d29b2b;
+  background: #1c252d;
+}
+
+.task-export-scope-icon,
+.task-export-field-icon,
+.task-export-row-order button[aria-pressed="true"] {
+  color: #ffd166;
+}
+
+.task-export-scope-pill {
+  color: #e2ddd2;
+  border-color: #46535d;
+  background: #16212b;
+}
+
+.task-export-current-description {
+  color: #93a3ae;
+}
+
+.task-export-recipe-position,
+.task-export-add-field:hover:not(:disabled),
+.task-export-add-field:focus-visible,
+.task-export-recipe-move button:hover:not(:disabled),
+.task-export-recipe-move button:focus-visible {
+  color: #17191b;
+  background: #e0a632;
+}
+
+.task-export-add-field,
+.task-export-recipe-move button {
+  color: #e8b94f;
+  background: #302a1f;
+}
+
+.task-export-direction {
+  color: #edf3f6;
+  border-color: #40515e;
+  background-color: #16212b;
+}
+
+.task-export-live-preview,
+.task-export-preview-table th,
+.task-export-preview-table td {
+  border-color: #2d3d49;
 }
 
 /* Graphite Workbench final layer
@@ -2288,11 +2380,6 @@ textarea:focus {
 
 .task-export-option input {
   accent-color: var(--theme-accent);
-}
-
-.task-export-unsaved-warning {
-  color: #f0cc7d;
-  background: var(--theme-warning-soft);
 }
 
 @media (max-width: 900px) {

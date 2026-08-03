@@ -241,13 +241,17 @@ The same action system supports individual and bulk work. Individual actions liv
 
 ## Task inventory export and HTML clipboard
 
-The task-queue header provides a visible **Export** action for creating a portable Markdown work inventory or copying a formatted HTML table. Both actions contain exactly the current results: the selected concrete list or synthetic **All lists** scope, active lifecycle view, search text, tag, type, status, and priority filters, in the current sort field and direction. The dialog previews the resulting count before continuing.
+The task-queue header provides a visible **Export** action for creating a portable Markdown work inventory or copying a formatted HTML table. Both actions contain exactly the current results: the selected concrete list or synthetic **All lists** scope, active lifecycle view, search text, tag, type, status, and priority filters. The dialog previews the resulting count before continuing.
 
 Collapsed groups are presentation only and do not remove matching tasks from the export. In particular, completed and cancelled tasks in the Starred view remain included when its Finished group is collapsed.
 
 When the synthetic **All lists** scope is selected, the Markdown table includes a List column. A concrete-list export omits the redundant List column.
 
-The export dialog provides a column picker limited to the existing task-inventory fields: task ID, title, list when global, type, status, priority, deadline, waiting target, owner, responsible person, source, tags, checklist progress, and last-updated timestamp. At least one column available in the current list scope is required. The selected column set is stored in the current user's application preferences and restored the next time the dialog opens. The List selection is retained but only applies when **All lists** is selected.
+The export dialog provides a two-pane **Export recipe** limited to the existing task-inventory fields: task ID, title, list when global, type, status, priority, deadline, waiting target, owner, responsible person, source, tags, checklist progress, and last-updated timestamp. The field library adds fields to the ordered recipe; the recipe supports drag reordering plus keyboard-accessible move controls and determines the exported table's left-to-right column order. At least one field available in the current list scope is required. The ordered selection is stored in the current user's application preferences and restored the next time the dialog opens. The List selection and its position are retained but only apply when **All lists** is selected.
+
+**Row order** is explicit and independent of editing the recipe. **Keep task queue order** preserves the current view sort field and direction. **Sort by recipe** compares tasks by the first applicable recipe field, then the second, and continues until a difference is found. Every selected field has an ascending or descending direction appropriate to its data type; lookup fields use configured lookup sort order, blank values remain last in either direction, and task ID is the final deterministic tie-breaker. The selected row-order mode and per-field directions are stored with the ordered recipe.
+
+The export dialog uses a large desktop workspace. Its preview receives a substantial share of the available height, shows up to the first 50 matching tasks, and scrolls independently in both directions while the field library and recipe remain usable.
 
 Multiline text and Markdown table delimiters are escaped so the generated table remains valid. Bodies, comments, Timeline entries, relationships, and attachment content are not included; this is an operational work inventory, not an archival export.
 

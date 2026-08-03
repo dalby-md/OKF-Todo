@@ -170,10 +170,21 @@ public sealed class TaskMarkdownExportService(
                 "columns");
         }
 
+        var sortMode = TaskMarkdownExportSortModes.Normalize(request.SortMode);
+        var sortDirections = TaskMarkdownExportSortDirections.Normalize(request.SortDirections);
+        if (sortMode == TaskMarkdownExportSortModes.Recipe)
+        {
+            rows = SortRowsByRecipe(rows, selectedColumns, sortDirections);
+        }
+
+        var sortDescription = sortMode == TaskMarkdownExportSortModes.Recipe
+            ? BuildRecipeSortDescription(selectedColumns, sortDirections)
+            : NormalizeDisplayValue(request.SortDescription, "Current task queue order", 160);
+
         return new PreparedTaskExport(
             scope,
             NormalizeDisplayValue(request.ViewName, "Current view", 80),
-            NormalizeDisplayValue(request.SortDescription, "Current view order", 160),
+            sortDescription,
             selectedColumns,
             rows,
             DateTime.UtcNow);
@@ -225,9 +236,13 @@ public sealed class TaskMarkdownExportService(
                 task.Id,
                 task.Title,
                 task.TaskList!.Name,
+                task.TaskList.SortOrder,
                 task.TaskType!.Name,
+                task.TaskType.SortOrder,
                 task.TaskStatus!.Name,
+                task.TaskStatus.SortOrder,
                 task.TaskPriority == null ? null : task.TaskPriority.Name,
+                task.TaskPriority == null ? null : task.TaskPriority.SortOrder,
                 task.Deadline,
                 task.WaitingTargets
                     .Where(waitingFor => waitingFor.ResolvedAt == null)
@@ -236,6 +251,7 @@ public sealed class TaskMarkdownExportService(
                 task.Owner,
                 task.Responsible,
                 task.TaskSource == null ? null : task.TaskSource.Name,
+                task.TaskSource == null ? null : task.TaskSource.SortOrder,
                 task.SourceReference,
                 task.Tags
                     .Where(taskTag => taskTag.TaskTag != null)
@@ -256,6 +272,185 @@ public sealed class TaskMarkdownExportService(
 
         var rowsById = loadedRows.ToDictionary(row => row.Id);
         return taskIds.Select(taskId => rowsById[taskId]).ToList();
+    }
+
+    private static IReadOnlyList<TaskMarkdownExportRow> SortRowsByRecipe(
+        IReadOnlyList<TaskMarkdownExportRow> rows,
+        IReadOnlyList<string> selectedColumns,
+        IReadOnlyDictionary<string, string> sortDirections)
+    {
+        return rows
+            .OrderBy(row => row, Comparer<TaskMarkdownExportRow>.Create((left, right) =>
+                CompareRecipeRows(left, right, selectedColumns, sortDirections)))
+            .ToList();
+    }
+
+    private static int CompareRecipeRows(
+        TaskMarkdownExportRow left,
+        TaskMarkdownExportRow right,
+        IReadOnlyList<string> selectedColumns,
+        IReadOnlyDictionary<string, string> sortDirections)
+    {
+        foreach (var column in selectedColumns)
+        {
+            var direction = sortDirections.GetValueOrDefault(column)
+                == TaskMarkdownExportSortDirections.Descending
+                    ? -1
+                    : 1;
+            var comparison = CompareRecipeColumn(left, right, column, direction);
+            if (comparison != 0)
+            {
+                return comparison;
+            }
+        }
+
+        return left.Id.CompareTo(right.Id);
+    }
+
+    private static int CompareRecipeColumn(
+        TaskMarkdownExportRow left,
+        TaskMarkdownExportRow right,
+        string column,
+        int direction)
+    {
+        return column switch
+        {
+            TaskMarkdownExportColumns.Id => left.Id.CompareTo(right.Id) * direction,
+            TaskMarkdownExportColumns.Title => CompareText(left.Title, right.Title, direction),
+            TaskMarkdownExportColumns.List => CompareLookup(
+                left.TaskListSortOrder,
+                left.TaskListName,
+                right.TaskListSortOrder,
+                right.TaskListName,
+                direction),
+            TaskMarkdownExportColumns.Type => CompareLookup(
+                left.TaskTypeSortOrder,
+                left.TaskTypeName,
+                right.TaskTypeSortOrder,
+                right.TaskTypeName,
+                direction),
+            TaskMarkdownExportColumns.Status => CompareLookup(
+                left.TaskStatusSortOrder,
+                left.TaskStatusName,
+                right.TaskStatusSortOrder,
+                right.TaskStatusName,
+                direction),
+            TaskMarkdownExportColumns.Priority => CompareNullableLookup(
+                left.TaskPrioritySortOrder,
+                left.TaskPriorityName,
+                right.TaskPrioritySortOrder,
+                right.TaskPriorityName,
+                direction),
+            TaskMarkdownExportColumns.Deadline => CompareNullable(left.Deadline, right.Deadline, direction),
+            TaskMarkdownExportColumns.WaitingFor => CompareText(left.WaitingFor, right.WaitingFor, direction),
+            TaskMarkdownExportColumns.Owner => CompareText(left.Owner, right.Owner, direction),
+            TaskMarkdownExportColumns.Responsible => CompareText(left.Responsible, right.Responsible, direction),
+            TaskMarkdownExportColumns.Source => CompareNullableLookup(
+                left.TaskSourceSortOrder,
+                FormatSource(left.TaskSourceName, left.SourceReference),
+                right.TaskSourceSortOrder,
+                FormatSource(right.TaskSourceName, right.SourceReference),
+                direction),
+            TaskMarkdownExportColumns.Tags => CompareText(
+                string.Join(", ", left.Tags),
+                string.Join(", ", right.Tags),
+                direction),
+            TaskMarkdownExportColumns.Checklist => CompareChecklist(left, right, direction),
+            TaskMarkdownExportColumns.Updated => left.UpdatedAt.CompareTo(right.UpdatedAt) * direction,
+            _ => 0
+        };
+    }
+
+    private static int CompareLookup(
+        int leftOrder,
+        string leftName,
+        int rightOrder,
+        string rightName,
+        int direction)
+    {
+        var comparison = leftOrder.CompareTo(rightOrder) * direction;
+        return comparison != 0 ? comparison : CompareText(leftName, rightName, direction);
+    }
+
+    private static int CompareNullableLookup(
+        int? leftOrder,
+        string? leftName,
+        int? rightOrder,
+        string? rightName,
+        int direction)
+    {
+        var nullComparison = CompareNulls(leftName, rightName);
+        if (nullComparison != 0)
+        {
+            return nullComparison;
+        }
+
+        if (string.IsNullOrWhiteSpace(leftName))
+        {
+            return 0;
+        }
+
+        var orderComparison = leftOrder.GetValueOrDefault().CompareTo(rightOrder.GetValueOrDefault()) * direction;
+        return orderComparison != 0 ? orderComparison : CompareText(leftName, rightName, direction);
+    }
+
+    private static int CompareText(string? left, string? right, int direction)
+    {
+        var nullComparison = CompareNulls(left, right);
+        if (nullComparison != 0)
+        {
+            return nullComparison;
+        }
+
+        return string.IsNullOrWhiteSpace(left)
+            ? 0
+            : StringComparer.OrdinalIgnoreCase.Compare(left, right) * direction;
+    }
+
+    private static int CompareNullable<T>(T? left, T? right, int direction)
+        where T : struct, IComparable<T>
+    {
+        if (!left.HasValue || !right.HasValue)
+        {
+            return left.HasValue ? -1 : right.HasValue ? 1 : 0;
+        }
+
+        return left.Value.CompareTo(right.Value) * direction;
+    }
+
+    private static int CompareChecklist(
+        TaskMarkdownExportRow left,
+        TaskMarkdownExportRow right,
+        int direction)
+    {
+        if (left.ChecklistCount == 0 || right.ChecklistCount == 0)
+        {
+            return left.ChecklistCount == 0
+                ? right.ChecklistCount == 0 ? 0 : 1
+                : -1;
+        }
+
+        var leftRatio = (decimal)left.CompletedChecklistCount / left.ChecklistCount;
+        var rightRatio = (decimal)right.CompletedChecklistCount / right.ChecklistCount;
+        var comparison = leftRatio.CompareTo(rightRatio) * direction;
+        return comparison != 0
+            ? comparison
+            : left.ChecklistCount.CompareTo(right.ChecklistCount) * direction;
+    }
+
+    private static int CompareNulls(string? left, string? right)
+    {
+        var leftMissing = string.IsNullOrWhiteSpace(left);
+        var rightMissing = string.IsNullOrWhiteSpace(right);
+        return leftMissing == rightMissing ? 0 : leftMissing ? 1 : -1;
+    }
+
+    private static string BuildRecipeSortDescription(
+        IReadOnlyList<string> columns,
+        IReadOnlyDictionary<string, string> sortDirections)
+    {
+        return "Export recipe: " + string.Join(", then ", columns.Select(column =>
+            $"{GetColumnHeader(column)} {(sortDirections.GetValueOrDefault(column) == TaskMarkdownExportSortDirections.Descending ? "descending" : "ascending")}"));
     }
 
     private static string RenderMarkdown(
@@ -589,12 +784,69 @@ public static class TaskMarkdownExportColumns
     }
 }
 
+public static class TaskMarkdownExportSortModes
+{
+    public const string CurrentTaskOrder = "CURRENT_TASK_ORDER";
+    public const string Recipe = "RECIPE";
+
+    public static string Normalize(string? value)
+    {
+        var normalized = string.IsNullOrWhiteSpace(value)
+            ? CurrentTaskOrder
+            : value.Trim().ToUpperInvariant();
+        if (normalized is CurrentTaskOrder or Recipe)
+        {
+            return normalized;
+        }
+
+        throw new ValidationException("Task export row order is invalid.", "sortMode");
+    }
+}
+
+public static class TaskMarkdownExportSortDirections
+{
+    public const string Ascending = "ASC";
+    public const string Descending = "DESC";
+
+    public static IReadOnlyDictionary<string, string> Normalize(
+        IReadOnlyDictionary<string, string>? values)
+    {
+        var normalized = TaskMarkdownExportColumns.All.ToDictionary(
+            column => column,
+            column => column == TaskMarkdownExportColumns.Updated ? Descending : Ascending,
+            StringComparer.Ordinal);
+
+        if (values is null)
+        {
+            return normalized;
+        }
+
+        foreach (var pair in values)
+        {
+            var column = pair.Key?.Trim().ToUpperInvariant();
+            var direction = pair.Value?.Trim().ToUpperInvariant();
+            if (string.IsNullOrWhiteSpace(column)
+                || !TaskMarkdownExportColumns.All.Contains(column, StringComparer.Ordinal)
+                || direction is not (Ascending or Descending))
+            {
+                throw new ValidationException("Task export sort directions are invalid.", "sortDirections");
+            }
+
+            normalized[column] = direction;
+        }
+
+        return normalized;
+    }
+}
+
 public sealed record TaskMarkdownExportRequest(
     IReadOnlyCollection<int>? TaskIds,
     int? TaskListId,
     string? ViewName,
     string? SortDescription,
-    IReadOnlyCollection<string>? Columns);
+    IReadOnlyCollection<string>? Columns,
+    string? SortMode = null,
+    IReadOnlyDictionary<string, string>? SortDirections = null);
 
 public sealed record TaskMarkdownExportResult(
     bool Cancelled,
@@ -624,14 +876,19 @@ internal sealed record TaskMarkdownExportRow(
     int Id,
     string Title,
     string TaskListName,
+    int TaskListSortOrder,
     string TaskTypeName,
+    int TaskTypeSortOrder,
     string TaskStatusName,
+    int TaskStatusSortOrder,
     string? TaskPriorityName,
+    int? TaskPrioritySortOrder,
     DateTime? Deadline,
     string? WaitingFor,
     string? Owner,
     string? Responsible,
     string? TaskSourceName,
+    int? TaskSourceSortOrder,
     string? SourceReference,
     IReadOnlyCollection<string> Tags,
     int CompletedChecklistCount,

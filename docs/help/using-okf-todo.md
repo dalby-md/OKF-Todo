@@ -263,13 +263,17 @@ Select **Done selecting** when finished.
 
 Select **Export** beside the task count when you need a task overview for a handover, incident review, planning note, customer-status preparation, or another document.
 
-The export contains exactly the tasks in the current results: the selected list or **All lists**, the current lifecycle view, search text, tag, type, status, and priority filters, in the current sort order. The dialog shows the scope, ordering, and resulting task count before you continue.
+The export contains exactly the tasks in the current results: the selected list or **All lists**, the current lifecycle view, search text, tag, type, status, and priority filters. The dialog shows the scope, ordering, and resulting task count before you continue.
 
 Collapsing a group does not remove its matching tasks from the export. For example, completed and cancelled Starred tasks remain included when the Finished group is collapsed.
 
 When **All lists** is selected, the export includes a List column so readers can see where each task belongs. A concrete-list export omits that redundant column. Export is not available in the Trash view, and trashed tasks are never included.
 
-Use **Columns** to choose any combination of ID, Title, List, Type, Status, Priority, Deadline, Waiting for, Owner, Responsible, Source, Tags, Checklist, and Updated. Select at least one column available in the current list scope. **List** applies only when **All lists** is selected, but your List choice is retained when you return to a concrete list. OKF-Todo saves the last valid selection in your user preferences and restores it the next time you open Export.
+Use the **Fields** library to add ID, Title, List, Type, Status, Priority, Deadline, Waiting for, Owner, Responsible, Source, Tags, Checklist, or Updated to the **Export recipe**. The recipe order is the exported table's left-to-right column order. Drag a recipe field to reorder it, or use its move buttons from the keyboard. Remove a field to return it to the library. Select at least one field available in the current list scope. **List** applies only when **All lists** is selected, but its selection and position are retained when you return to a concrete list. OKF-Todo saves the ordered recipe in your user preferences and restores it the next time you open Export.
+
+Under **Row order**, choose **Keep task queue order** to export tasks in the current view order. Choose **Sort by recipe** to sort by the first recipe field, then use each following field to break ties. Use the direction control on a recipe field to reverse that part of the sort. Empty values remain last. OKF-Todo remembers this mode and the field directions with the recipe.
+
+The larger **Preview** area shows up to the first 50 matching tasks. Scroll the preview vertically to inspect more rows or horizontally when the recipe contains more columns; the field library and ordered recipe remain in place.
 
 Choose **Export Markdown** to create a `.md` file. If the open task has unsaved changes, OKF-Todo saves them first. Then choose the destination in the Windows save dialog. The application remembers the directory used by the last successful task export.
 

@@ -354,7 +354,9 @@ public sealed class AppPreferenceService(
     {
         var preferences = await ReadPreferencesAsync(cancellationToken);
         return new TaskExportColumnPreferenceDto(
-            NormalizeOrDefaultTaskExportColumns(preferences.TaskExportColumns));
+            NormalizeOrDefaultTaskExportColumns(preferences.TaskExportColumns),
+            TaskMarkdownExportSortModes.Normalize(preferences.TaskExportSortMode),
+            TaskMarkdownExportSortDirections.Normalize(preferences.TaskExportSortDirections));
     }
 
     public async Task<TaskExportColumnPreferenceDto> SaveTaskExportColumnPreferenceAsync(
@@ -362,16 +364,24 @@ public sealed class AppPreferenceService(
         CancellationToken cancellationToken)
     {
         var columns = TaskMarkdownExportColumns.Normalize(request.Columns);
+        var sortMode = TaskMarkdownExportSortModes.Normalize(request.SortMode);
+        var sortDirections = TaskMarkdownExportSortDirections.Normalize(request.SortDirections);
         var preferences = await ReadPreferencesAsync(cancellationToken);
         await WritePreferencesAsync(
-            preferences with { TaskExportColumns = columns },
+            preferences with
+            {
+                TaskExportColumns = columns,
+                TaskExportSortMode = sortMode,
+                TaskExportSortDirections = sortDirections
+            },
             cancellationToken);
 
         logger.LogInformation(
-            "Saved task export column preference {TaskExportColumns}.",
-            columns);
+            "Saved task export recipe {TaskExportColumns} with row order {TaskExportSortMode}.",
+            columns,
+            sortMode);
 
-        return new TaskExportColumnPreferenceDto(columns);
+        return new TaskExportColumnPreferenceDto(columns, sortMode, sortDirections);
     }
 
     private async Task<StoredPreferences> ReadPreferencesAsync(CancellationToken cancellationToken)
@@ -1025,9 +1035,15 @@ public sealed record WindowPreferenceDto(int? Left, int? Top, int? Width, int? H
 
 public sealed record WindowPreferenceSaveRequest(int? Left, int? Top, int? Width, int? Height, bool IsMaximized);
 
-public sealed record TaskExportColumnPreferenceDto(IReadOnlyList<string> Columns);
+public sealed record TaskExportColumnPreferenceDto(
+    IReadOnlyList<string> Columns,
+    string SortMode,
+    IReadOnlyDictionary<string, string> SortDirections);
 
-public sealed record TaskExportColumnPreferenceSaveRequest(IReadOnlyCollection<string>? Columns);
+public sealed record TaskExportColumnPreferenceSaveRequest(
+    IReadOnlyCollection<string>? Columns,
+    string? SortMode = null,
+    IReadOnlyDictionary<string, string>? SortDirections = null);
 
 internal sealed record StoredPreferences(
     string? EditorBodyFormatCode,
@@ -1056,4 +1072,6 @@ internal sealed record StoredPreferences(
     string? TaskListScope = null,
     IReadOnlyCollection<string>? TaskExportColumns = null,
     string? TaskFilterLayout = null,
-    string? FontSize = null);
+    string? FontSize = null,
+    string? TaskExportSortMode = null,
+    IReadOnlyDictionary<string, string>? TaskExportSortDirections = null);

@@ -1434,7 +1434,7 @@ public sealed class NewTaskDialogUiTests
     }
 
     [Fact]
-    public async Task TaskExport_UsesCurrentFilteredResultsInCurrentSortOrder()
+    public async Task TaskExport_UsesOrderedRecipeAndPersistsRecipeSorting()
     {
         await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
         using var playwright = await Playwright.CreateAsync();
@@ -1445,12 +1445,20 @@ public sealed class NewTaskDialogUiTests
         });
         await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
         {
-            ViewportSize = new ViewportSize { Width = 1487, Height = 1058 }
+            ViewportSize = new ViewportSize { Width = 1354, Height = 1162 }
         });
         await context.AddInitScriptAsync(BridgeAdapterScript);
         await context.AddInitScriptAsync(ClipboardAdapterScript);
 
         var page = await context.NewPageAsync();
+        var consoleErrors = new ConcurrentQueue<string>();
+        page.Console += (_, message) =>
+        {
+            if (message.Type == "error")
+            {
+                consoleErrors.Enqueue(message.Text);
+            }
+        };
         await page.GotoAsync(
             $"{fixture.BaseUrl}/index.html?v=task-markdown-export-contract",
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
@@ -1493,15 +1501,39 @@ public sealed class NewTaskDialogUiTests
         Assert.Contains(
             "Current search and filters",
             await page.Locator("#task-export-current-description").TextContentAsync());
-        Assert.Contains(
-            "Title, descending",
-            await page.Locator("#task-export-current-description").TextContentAsync());
         Assert.Equal(0, await page.Locator("input[name='task-export-kind']").CountAsync());
-        await page.Locator("#task-export-columns-none").ClickAsync();
-        await page.Locator("#task-export-column-options input[value='TITLE']").CheckAsync();
-        await page.Locator("#task-export-column-options input[value='STATUS']").CheckAsync();
+        while (await page.Locator("#task-export-recipe-list .task-export-remove-field").CountAsync() > 0)
+        {
+            await page.Locator("#task-export-recipe-list .task-export-remove-field").First.ClickAsync();
+        }
+        await page.Locator("#task-export-field-library-list .task-export-add-field[data-column-code='STATUS']").ClickAsync();
+        await page.Locator("#task-export-field-library-list .task-export-add-field[data-column-code='PRIORITY']").ClickAsync();
+        await page.Locator("#task-export-field-library-list .task-export-add-field[data-column-code='DEADLINE']").ClickAsync();
+        await page.Locator("#task-export-field-library-list .task-export-add-field[data-column-code='TITLE']").ClickAsync();
+        await page.Locator("#task-export-field-library-list .task-export-add-field[data-column-code='OWNER']").ClickAsync();
+        await page.Locator("#task-export-field-library-list .task-export-add-field[data-column-code='UPDATED']").ClickAsync();
+        await page.Locator("[data-task-export-sort-mode='RECIPE']").ClickAsync();
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('#task-export-columns-summary')?.textContent.startsWith('2 of')");
+            "() => document.querySelector('#task-export-columns-summary')?.textContent.startsWith('6 fields')");
+        Assert.Equal(0, await page.Locator("#task-export-unsaved-warning").CountAsync());
+        Assert.True((await page.Locator(".task-export-dialog").BoundingBoxAsync())?.Width >= 1180);
+        Assert.True((await page.Locator(".task-export-live-preview").BoundingBoxAsync())?.Height >= 190);
+        Assert.True(await page.Locator("#task-export-preview-table tbody tr").CountAsync() >= 2);
+        Assert.Equal(
+            "auto",
+            await page.Locator(".task-export-preview-scroll").EvaluateAsync<string>(
+                "element => getComputedStyle(element).overflowY"));
+        await CaptureViewportAsync(page, "task-export-option-3-implementation.png");
+
+        await page.Locator(".task-export-remove-field[data-column-code='PRIORITY']").ClickAsync();
+        await page.Locator(".task-export-remove-field[data-column-code='DEADLINE']").ClickAsync();
+        await page.Locator(".task-export-remove-field[data-column-code='OWNER']").ClickAsync();
+        await page.Locator(".task-export-remove-field[data-column-code='UPDATED']").ClickAsync();
+        await page.Locator("[data-task-export-move='up'][data-column-code='TITLE']").ClickAsync();
+        await page.Locator(".task-export-direction[data-column-code='TITLE']").SelectOptionAsync("DESC");
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-export-columns-summary')?.textContent.startsWith('2 fields')"
+                + " && document.querySelector('[data-task-export-sort-mode=\"RECIPE\"]')?.getAttribute('aria-pressed') === 'true'");
         await page.Locator("#task-export-confirm-button").ClickAsync();
         await page.Locator("#task-export-overlay").WaitForAsync(new LocatorWaitForOptions
         {
@@ -1510,7 +1542,7 @@ public sealed class NewTaskDialogUiTests
 
         var markdown = await fixture.ReadTaskExportAsync();
         Assert.Contains("- Scope: Active results in All lists", markdown);
-        Assert.Contains("- Ordering: Title, descending", markdown);
+        Assert.Contains("- Ordering: Export recipe: Title descending, then Status ascending", markdown);
         Assert.Contains("| Title | Status |", markdown);
         Assert.DoesNotContain("| ID |", markdown);
         Assert.DoesNotContain("| List |", markdown);
@@ -1529,11 +1561,19 @@ public sealed class NewTaskDialogUiTests
         {
             State = WaitForSelectorState.Visible
         });
-        Assert.True(await page.Locator("#task-export-column-options input[value='TITLE']").IsCheckedAsync());
-        Assert.True(await page.Locator("#task-export-column-options input[value='STATUS']").IsCheckedAsync());
+        Assert.Equal(2, await page.Locator("#task-export-recipe-list .task-export-recipe-row").CountAsync());
         Assert.Equal(
-            2,
-            await page.Locator("#task-export-column-options input:checked").CountAsync());
+            "TITLE",
+            await page.Locator("#task-export-recipe-list .task-export-recipe-row").First.GetAttributeAsync("data-column-code"));
+        Assert.Equal(
+            "STATUS",
+            await page.Locator("#task-export-recipe-list .task-export-recipe-row").Last.GetAttributeAsync("data-column-code"));
+        Assert.Equal(
+            "true",
+            await page.Locator("[data-task-export-sort-mode='RECIPE']").GetAttributeAsync("aria-pressed"));
+        Assert.Equal(
+            "DESC",
+            await page.Locator(".task-export-direction[data-column-code='TITLE']").InputValueAsync());
         await page.Locator("#task-export-copy-html-button").ClickAsync();
         await page.Locator("#task-export-overlay").WaitForAsync(new LocatorWaitForOptions
         {
@@ -1551,6 +1591,7 @@ public sealed class NewTaskDialogUiTests
         Assert.Contains("task.export.html", fixture.BridgeMessageTypes);
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#save-status')?.textContent.includes('as HTML')");
+        Assert.Empty(consoleErrors);
     }
 
     [Fact]
