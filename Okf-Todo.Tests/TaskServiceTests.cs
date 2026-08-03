@@ -317,6 +317,48 @@ public sealed class TaskServiceTests
     }
 
     [Fact]
+    public async Task List_ActNowIncludesAttentionTasksExceptThoseWaiting()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var today = DateTime.UtcNow.Date;
+
+        var urgent = await database.Tasks.CreateAsync(CreateRequest("Urgent and actionable") with
+        {
+            TaskPriorityCode = TaskPriorityCodes.Urgent
+        }, CancellationToken.None);
+        var overdue = await database.Tasks.CreateAsync(CreateRequest("Overdue and actionable") with
+        {
+            Deadline = today.AddDays(-1)
+        }, CancellationToken.None);
+        var waitingUrgent = await database.Tasks.CreateAsync(CreateRequest("Urgent but waiting") with
+        {
+            TaskPriorityCode = TaskPriorityCodes.Urgent
+        }, CancellationToken.None);
+        var waitingOverdue = await database.Tasks.CreateAsync(CreateRequest("Overdue but waiting") with
+        {
+            Deadline = today.AddDays(-2)
+        }, CancellationToken.None);
+        await database.Tasks.AddWaitingForAsync(
+            new TaskWaitingForSaveRequest(waitingUrgent.Id, "Vendor response"),
+            CancellationToken.None);
+        await database.Tasks.AddWaitingForAsync(
+            new TaskWaitingForSaveRequest(waitingOverdue.Id, "Maintenance window"),
+            CancellationToken.None);
+
+        var attentionTasks = await database.Tasks.ListAsync(
+            new TaskListRequest("attention"),
+            CancellationToken.None);
+        Assert.Equal(
+            [waitingOverdue.Id, overdue.Id, waitingUrgent.Id, urgent.Id],
+            attentionTasks.Select(task => task.Id));
+
+        var actNowTasks = await database.Tasks.ListAsync(
+            new TaskListRequest("actnow"),
+            CancellationToken.None);
+        Assert.Equal([overdue.Id, urgent.Id], actNowTasks.Select(task => task.Id));
+    }
+
+    [Fact]
     public async Task StarTrashRestoreAndPermanentDelete_SupportIndividualAndBulkTaskManagement()
     {
         await using var database = await TestDatabase.CreateAsync();

@@ -140,7 +140,7 @@ attention first and explain why. Do not change any task.
 
 | User request | MCP action |
 | --- | --- |
-| Show active, ready, urgent, waiting, overdue, completed, or all tasks | List tasks |
+| Show active, ready, attention, actnow, urgent, waiting, overdue, completed, or all tasks | List tasks |
 | Show available task lists | Discover lists |
 | Read the complete current values of a task | Get one task |
 | Save an approved task proposal in an explicit or inferred list | Create a task |
@@ -148,7 +148,7 @@ attention first and explain why. Do not change any task.
 | Move approved tasks to another list | Move tasks to a list |
 | Review comments and automatic history | Read a task timeline |
 
-The **active** view includes every unfinished task, including waiting work. Use **ready** when you want only active tasks without an unresolved waiting target, and **waiting** when you want the complementary dependency queue.
+The **active** view includes every unfinished task, including waiting work. Use **ready** when you want only active tasks without an unresolved waiting target, and **waiting** when you want the complementary dependency queue. Use **attention** for all urgent or overdue work, including tasks that are waiting. Use **actnow** for the actionable subset: urgent or overdue active tasks without an unresolved waiting target.
 
 The current MCP tools do not complete or cancel tasks and do not add comments, checklists, attachments, or relationships. Use the desktop app for those actions. Generated checklists, reply drafts, and other text can still be stored as sections in a Markdown task body.
 

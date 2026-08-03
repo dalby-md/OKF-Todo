@@ -7,6 +7,7 @@
     ready: 'Ready',
     starred: 'Starred',
     attention: 'Attention',
+    actnow: 'Act now',
     waiting: 'Waiting',
     completed: 'Completed',
     all: 'All statuses',
@@ -17,6 +18,7 @@
     ready: 'Active tasks that are not waiting',
     starred: 'Tasks you marked for focus',
     attention: 'Active tasks that are urgent or overdue, grouped by why they need attention. Overdue means before today; due today is not overdue.',
+    actnow: 'Active tasks that are urgent or overdue and are not waiting. Overdue means before today; due today is not overdue.',
     waiting: 'Active tasks waiting for a person, response, or other event',
     completed: 'Tasks that have been completed',
     all: 'Active, completed, and cancelled tasks',
@@ -448,6 +450,7 @@
     $('#save-status')
       .removeClass('is-ready is-dirty is-saved is-error')
       .addClass(state ? `is-${state}` : '')
+      .attr('title', message)
       .text(message)
   }
 
@@ -521,6 +524,15 @@
     }
 
     return 'active'
+  }
+
+  function hasActiveWaitingTarget(task) {
+    const label = task && task.activeWaitingForLabel != null
+      ? task.activeWaitingForLabel
+      : task && task.activeWaitingFor
+        ? task.activeWaitingFor.label
+        : null
+    return Boolean((label || '').toString().trim())
   }
 
   function selectViewForTask(task) {
@@ -932,6 +944,7 @@
       ready: '&#xE768;',
       starred: '&#xE734;',
       attention: '&#xE814;',
+      actnow: '&#xE7C1;',
       waiting: '&#xE823;',
       completed: '&#xE73E;',
       all: '&#xEA37;',
@@ -5166,7 +5179,11 @@
     renderTaskFilterSummary()
     $('#task-view').val(currentView)
     $('#task-list-title').text(viewLabels[currentView])
-    $('#task-list-view-help').prop('hidden', currentView !== 'attention')
+    const hasViewHelp = currentView === 'attention' || currentView === 'actnow'
+    $('#task-list-view-help')
+      .prop('hidden', !hasViewHelp)
+      .attr('aria-label', `About the ${viewLabels[currentView]} view`)
+      .attr('title', viewDescriptions[currentView])
     $('#task-list-header-count').text(`${visibleTasks.length} ${visibleTasks.length === 1 ? 'task' : 'tasks'}`)
     $('#task-export-button').prop('hidden', currentView === 'trash')
     const isFirstRun = hasLoadedDatabaseStatus
@@ -5193,8 +5210,16 @@
         return
       }
 
-      const title = hasFilters ? 'No matching tasks' : `No ${viewLabels[currentView].toLowerCase()} tasks`
-      const detail = hasFilters ? 'Adjust the search or filters' : 'Create a task or switch view'
+      const title = hasFilters
+        ? 'No matching tasks'
+        : currentView === 'actnow'
+          ? 'Nothing needs action now'
+          : `No ${viewLabels[currentView].toLowerCase()} tasks`
+      const detail = hasFilters
+        ? 'Adjust the search or filters'
+        : currentView === 'actnow'
+          ? 'Urgent or overdue work appears here when it is not waiting'
+          : 'Create a task or switch view'
 
       $('#task-list').html(`
         <div class="empty-list">
@@ -5206,7 +5231,7 @@
       return
     }
 
-    if (currentView === 'attention') {
+    if (currentView === 'attention' || currentView === 'actnow') {
       $('#task-list').html(renderAttentionTaskGroups(visibleTasks))
     } else if (currentView === 'starred') {
       const activeStarredTasks = visibleTasks.filter(function (task) { return !isFinishedTask(task) })
@@ -6698,7 +6723,7 @@
 
     const isNewTask = !currentTask.id
     const previousTaskListId = currentTask.taskListId
-    const wasWaiting = Boolean((currentTask.activeWaitingForLabel || '').toString().trim())
+    const wasWaiting = hasActiveWaitingTarget(currentTask)
     const wasGlobalScope = activeTaskListId == null
     let switchedOperationalView = false
     clearValidationState()
@@ -6739,9 +6764,13 @@
 
       if (isNewTask) {
         selectViewForTask(savedTask)
-      } else if (savedTask.taskStatusCode === 'ACTIVE') {
-        const isWaiting = Boolean((savedTask.activeWaitingForLabel || '').toString().trim())
-        if (wasWaiting !== isWaiting) {
+      } else {
+        const isWaiting = Boolean((payload.activeWaitingForLabel || '').toString().trim())
+        if (currentView === 'actnow'
+          && (isWaiting || (!isTaskUrgent(savedTask) && !isTaskOverdue(savedTask)))) {
+          currentView = isWaiting ? 'waiting' : 'active'
+          switchedOperationalView = true
+        } else if (savedTask.taskStatusCode === 'ACTIVE' && wasWaiting !== isWaiting) {
           if (currentView === 'ready' && isWaiting) {
             currentView = 'waiting'
             switchedOperationalView = true

@@ -37,7 +37,7 @@ public sealed class AppPreferenceService(
     private const int MinimumWindowCoordinate = -20000;
     private const int MaximumWindowCoordinate = 20000;
     private const bool DefaultWindowIsMaximized = true;
-    private static readonly string[] TaskViews = ["active", "ready", "starred", "attention", "waiting", "completed", "all", "trash"];
+    private static readonly string[] TaskViews = ["active", "ready", "starred", "attention", "actnow", "waiting", "completed", "all", "trash"];
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true

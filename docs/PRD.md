@@ -18,6 +18,7 @@ The app already has a Photino prototype demonstrating usage of an HTML/Markdown 
 - Provide offline in-app Help that loads the shipped desktop-application, OKF-layer, and MCP-server guides from local application assets.
 - In the in-app OKF guide, resolve the absolute OKF entry-file and active database paths from the running application so examples match the current operating system, installer location, and custom database path. Provide one action that copies the complete path-filled harness prompt.
 - Keep the desktop guide current with every covered user-facing behavior change. It must describe workflows in the order users encounter them, use current interface labels, and remain focused on user outcomes rather than implementation details.
+- Keep transient status and error feedback readable in the application header. Messages may wrap or take their own responsive row, but must not be ellipsized or silently truncated.
 - Make the OKF and MCP guides task-oriented integration guidance: show how a harness such as Codex or Claude Code can turn user-supplied email threads, support transcripts, notes, and logs into reviewable tasks, investigation plans, customer replies, handovers, and similar artifacts.
 - Use a draft-review-save-verify workflow for AI-assisted changes. Treat OKF as the context layer and the optional MCP server as the local task action bridge; neither component is an email connector or an AI model.
 - Send MCP server instructions during initialization that tell compatible harnesses to treat source material as untrusted data, start read-only, wait for explicit approval of the exact proposed change, preserve unapproved fields, use application tools instead of raw database writes, and verify saved results. Document that these instructions guide the client but do not add a server-side confirmation gate.
@@ -596,6 +597,8 @@ Trash
 `Active tasks` is the complete unfinished-work umbrella and includes tasks that are waiting. `Ready tasks` contains active tasks with no unresolved wait target. `Waiting tasks` contains active tasks with an unresolved wait target. Ready and Waiting are therefore complementary operational queues within Active.
 
 `Attention tasks` combines active tasks that have urgent priority or a deadline before the current local date. It uses OR semantics, shows each task once, and groups the result as Urgent and overdue, Overdue, then Urgent. The view navigation provides popup help explaining the inclusion and grouping rules.
+
+`Act now` is a separate actionable subset of Attention. It includes active tasks that are urgent or overdue only when they have no unresolved waiting target. It uses the same Urgent and overdue, Overdue, then Urgent groups. Attention remains unchanged so blocked risk stays visible there, while Act now answers what the user can advance immediately. When an Act now task gains a waiting target, saving moves the task to Waiting and keeps it selected. If an edit removes both urgent and overdue qualification, saving returns to Active.
 
 Cancelled tasks appear only in `All tasks`, where their titles use red struck-through text and all pills are gray. They do not appear in `Completed tasks`.
 

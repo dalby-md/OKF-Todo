@@ -45,6 +45,8 @@ The workspace has four parts:
 | **Task queue** | Searches, filters, sorts, selects, opens, and exports tasks in the current list scope. |
 | **Task details** | Shows and edits the selected task. |
 
+The status pill beside the application actions reports saves, copied content, completed operations, and errors. Longer messages wrap or use their own header row so the complete feedback remains readable.
+
 The list switcher and the Views rail work together. For example, selecting the **Support** list and the **Waiting** view shows waiting tasks in Support. Selecting **All lists** and **Waiting** shows waiting tasks across every list.
 
 Two labels that sound similar have different purposes:
@@ -103,6 +105,7 @@ Hover over a view in the navigation rail to see a one-line description of the wo
 | **Ready** | See active tasks that have no unresolved waiting target and can be worked on now. |
 | **Starred** | Return to tasks you deliberately marked for focus. Finished starred tasks remain available in a collapsed Finished group. |
 | **Attention** | Review active tasks that are urgent or overdue. Each task appears once, grouped as Urgent and overdue, Overdue, then Urgent. Hover over its navigation entry or the information icon beside its heading for an explanation. |
+| **Act now** | Work the actionable part of Attention: urgent or overdue active tasks that do not have an unresolved waiting target. It uses the same three groups. |
 | **Waiting** | See tasks that depend on a person, team, case, response, or other external event. |
 | **Completed** | Review completed work. |
 | **All statuses** | See active, completed, and cancelled work together. |
@@ -111,6 +114,8 @@ Hover over a view in the navigation rail to see a one-line description of the wo
 **Ready** and **Waiting** divide active work by whether it has an unresolved waiting target. Use **Ready** as the focused queue for work you can advance now, and return to **Active** when you need the complete unfinished picture.
 
 **Attention** uses an OR rule: a task belongs there when it has Urgent priority, when its deadline is overdue, or both. Overdue means before today; a task due today is not overdue. A task that is both urgent and overdue appears only in the first group, never twice.
+
+**Act now** keeps that same urgency and overdue rule but removes anything currently waiting. Use Attention when you need the complete risk picture, including blocked work. Use Act now when you want the shorter queue of tasks you can advance immediately. Adding a waiting target from Act now moves the saved task to **Waiting** and keeps it selected.
 
 When you add a waiting target while working in **Ready**, saving moves the task to **Waiting** and keeps it selected. Clearing the waiting target from **Waiting** moves it back to **Ready** in the same way.
 

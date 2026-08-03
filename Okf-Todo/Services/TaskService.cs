@@ -328,6 +328,13 @@ public sealed class TaskService(
                 && ((task.TaskPriority != null
                         && task.TaskPriority.Code == TaskPriorityCodes.Urgent)
                     || (task.Deadline != null && task.Deadline < today))),
+            "actnow" => query.Where(task => task.DeletedAt == null
+                && task.TaskStatus != null
+                && task.TaskStatus.Code == TaskStatusCodes.Active
+                && ((task.TaskPriority != null
+                        && task.TaskPriority.Code == TaskPriorityCodes.Urgent)
+                    || (task.Deadline != null && task.Deadline < today))
+                && !task.WaitingTargets.Any(waitingFor => waitingFor.ResolvedAt == null)),
             "urgent" => query.Where(task => task.DeletedAt == null
                 && task.TaskStatus != null
                 && task.TaskStatus.Code == TaskStatusCodes.Active
@@ -353,7 +360,7 @@ public sealed class TaskService(
 
         var orderedQuery = view == "trash"
             ? query.OrderByDescending(task => task.DeletedAt)
-            : view == "attention"
+            : view is "attention" or "actnow"
                 ? query
                     .OrderBy(task => task.Deadline != null
                             && task.Deadline < today

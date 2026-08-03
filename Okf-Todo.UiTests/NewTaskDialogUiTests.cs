@@ -1646,10 +1646,60 @@ public sealed class NewTaskDialogUiTests
         await page.Locator(".task-view-rail-button[data-task-view='attention']").ClickAsync();
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#task-list-title').textContent === 'Attention' && document.querySelector('#task-view').value === 'attention'");
+        var attentionCount = await page.Locator("#task-list .task-row").CountAsync();
+        await page.Locator(".task-view-rail-button[data-task-view='actnow']").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#task-list-title').textContent === 'Act now' && document.querySelector('#task-view').value === 'actnow'");
+        Assert.Contains(
+            "not waiting",
+            await page.Locator(".task-view-rail-button[data-task-view='actnow']").GetAttributeAsync("title"));
+        Assert.True(await page.Locator("#task-list .task-row").CountAsync() > 0);
+        Assert.True(await page.Locator("#task-list .task-row").CountAsync() <= attentionCount);
+        Assert.Equal(0, await page.Locator("#task-list .task-badge-waiting").CountAsync());
+        var actNowTaskId = await page.Locator("#task-list .task-row").First.GetAttributeAsync("data-task-id");
+        var actNowTaskTitle = await page.Locator("#task-list .task-row-title").First.TextContentAsync();
+        await page.Locator("#task-list .task-row").First.ClickAsync();
+        await page.WaitForFunctionAsync(
+            "title => document.querySelector('#task-title')?.value === title",
+            actNowTaskTitle);
+        await page.Locator("#waiting-text").FillAsync("External response");
+        await page.Locator("#save-button").ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#save-status')?.textContent === 'Saved'");
+        Assert.Equal("Waiting", await page.Locator("#task-list-title").TextContentAsync());
+        Assert.Equal(
+            actNowTaskId,
+            await page.Locator(".task-row[aria-current='true']").GetAttributeAsync("data-task-id"));
         await page.Locator(".task-view-rail-button[data-task-view='active']").ClickAsync();
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#task-list-title').textContent === 'Active' && document.querySelector('#task-view').value === 'active'");
         await CaptureWorkspaceAsync(page, "triage-command-large.png");
+
+        await page.SetViewportSizeAsync(1280, 900);
+        const string longStatusMessage = "MCP configuration copied for the current source checkout";
+        await page.Locator("#save-status").EvaluateAsync(
+            "(element, message) => { element.textContent = message; element.className = 'save-status is-saved'; }",
+            longStatusMessage);
+        Assert.Equal(longStatusMessage, await page.Locator("#save-status").TextContentAsync());
+        var statusLayout = await page.Locator("#save-status").EvaluateAsync<JsonElement>(
+            """
+            element => ({
+              clientWidth: element.clientWidth,
+              scrollWidth: element.scrollWidth,
+              whiteSpace: getComputedStyle(element).whiteSpace,
+              textOverflow: getComputedStyle(element).textOverflow
+            })
+            """);
+        Assert.True(statusLayout.GetProperty("clientWidth").GetInt32() > 132);
+        Assert.True(
+            statusLayout.GetProperty("scrollWidth").GetInt32()
+            <= statusLayout.GetProperty("clientWidth").GetInt32());
+        Assert.Equal("normal", statusLayout.GetProperty("whiteSpace").GetString());
+        Assert.Equal("clip", statusLayout.GetProperty("textOverflow").GetString());
+        await AssertNoHorizontalPageOverflowAsync(page);
+        await CaptureWorkspaceAsync(page, "status-message-readable.png");
+        await page.Locator("#save-status").EvaluateAsync(
+            "element => { element.textContent = 'Loaded'; element.className = 'save-status is-ready'; }");
 
         await page.SetViewportSizeAsync(1100, 900);
         var mediumRail = await page.Locator(".task-view-rail").BoundingBoxAsync();

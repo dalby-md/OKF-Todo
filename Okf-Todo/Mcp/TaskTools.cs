@@ -12,10 +12,10 @@ public static class TaskTools
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     [McpServerTool(Name = "task_list", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
-    [Description("List OKF-Todo tasks. The view can be active, ready, urgent, waiting, overdue, completed, or all.")]
+    [Description("List OKF-Todo tasks. The view can be active, ready, attention, actnow, urgent, waiting, overdue, completed, or all.")]
     public static Task<IReadOnlyCollection<TaskListItemDto>> ListAsync(
         ApplicationCommandService commandService,
-        [Description("Task view: active, ready, urgent, waiting, overdue, completed, or all. Ready contains active tasks without an unresolved waiting target. Defaults to active.")] string? view = null,
+        [Description("Task view: active, ready, attention, actnow, urgent, waiting, overdue, completed, or all. Actnow contains urgent or overdue active tasks without an unresolved waiting target. Defaults to active.")] string? view = null,
         [Description("Optional concrete task-list ID. Omit to search across all lists. Trash is always global.")] int? taskListId = null,
         CancellationToken cancellationToken = default) =>
         ExecuteAsync<IReadOnlyCollection<TaskListItemDto>>(

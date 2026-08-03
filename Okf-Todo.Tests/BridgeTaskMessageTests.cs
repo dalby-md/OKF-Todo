@@ -636,6 +636,7 @@ public sealed class BridgeTaskMessageTests
         Assert.False(initial.GetProperty("taskSelectionCoachmarkSeen").GetBoolean());
         Assert.Equal("LIGHT", initial.GetProperty("colorScheme").GetString());
         Assert.Equal("ATTENTION", initial.GetProperty("taskSortModes").GetProperty("active").GetString());
+        Assert.Equal("ATTENTION", initial.GetProperty("taskSortModes").GetProperty("actnow").GetString());
         Assert.Equal("ATTENTION", initial.GetProperty("taskSortModes").GetProperty("waiting").GetString());
         Assert.Equal("ASC", initial.GetProperty("taskSortDirections").GetProperty("active").GetString());
         Assert.Equal("ASC", initial.GetProperty("taskSortDirections").GetProperty("waiting").GetString());
@@ -685,6 +686,7 @@ public sealed class BridgeTaskMessageTests
         Assert.True(saved.GetProperty("taskSelectionCoachmarkSeen").GetBoolean());
         Assert.Equal("DARK", saved.GetProperty("colorScheme").GetString());
         Assert.Equal("RECENTLY_UPDATED", saved.GetProperty("taskSortModes").GetProperty("active").GetString());
+        Assert.Equal("ATTENTION", saved.GetProperty("taskSortModes").GetProperty("actnow").GetString());
         Assert.Equal("WAITING_LONGEST", saved.GetProperty("taskSortModes").GetProperty("waiting").GetString());
         Assert.Equal("ATTENTION", saved.GetProperty("taskSortModes").GetProperty("all").GetString());
         Assert.Equal("DESC", saved.GetProperty("taskSortDirections").GetProperty("active").GetString());
@@ -705,6 +707,7 @@ public sealed class BridgeTaskMessageTests
         Assert.True(loaded.GetProperty("taskSelectionCoachmarkSeen").GetBoolean());
         Assert.Equal("DARK", loaded.GetProperty("colorScheme").GetString());
         Assert.Equal("RECENTLY_UPDATED", loaded.GetProperty("taskSortModes").GetProperty("active").GetString());
+        Assert.Equal("ATTENTION", loaded.GetProperty("taskSortModes").GetProperty("actnow").GetString());
         Assert.Equal("WAITING_LONGEST", loaded.GetProperty("taskSortModes").GetProperty("waiting").GetString());
         Assert.Equal("DESC", loaded.GetProperty("taskSortDirections").GetProperty("active").GetString());
         Assert.Equal("ASC", loaded.GetProperty("taskSortDirections").GetProperty("waiting").GetString());
