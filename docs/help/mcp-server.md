@@ -177,6 +177,96 @@ The **active** view includes every unfinished task, including waiting work. Use 
 
 MCP deliberately does not permanently delete tasks, empty Trash, replace or reset the database, administer lookup definitions, manage sample data, or change desktop preferences. Those environment-wide or irreversible operations remain in the desktop application with their dedicated warnings and confirmation interfaces.
 
+## Complete tool reference
+
+The mode indicates the effect declared by the MCP server. **Read** tools do not change OKF-Todo. **Write** tools change data but are not classified as destructive. **Destructive** tools permanently remove content or perform a deletion-like action and deserve additional review. Moving a task to Trash is marked destructive even though it is reversible.
+
+The application contract tests compare this reference with the tools advertised by the real stdio MCP server. Adding, removing, or renaming a tool without updating this section fails the test.
+
+<!-- MCP-TOOL-REFERENCE-START -->
+
+### Discover and read
+
+| Tool | Mode | Purpose |
+| --- | --- | --- |
+| `task_list` | Read | Search tasks by operational view, concrete list, text, tags, task types, lifecycle statuses, and priorities. |
+| `task_get_lookups` | Read | Discover valid task types, statuses, priorities, sources, body formats, and existing tags. |
+| `task_list_lists` | Read | Discover concrete task lists, their manual order, and task counts. |
+| `task_get` | Read | Read the main editable and lifecycle fields of one task. |
+| `task_get_context` | Read | Read task fields, checklist, relationships, attachment metadata, and Timeline together. |
+| `task_get_timeline` | Read | Read comments and automatic history for one task, newest first. |
+
+### Create and edit tasks
+
+| Tool | Mode | Purpose |
+| --- | --- | --- |
+| `task_create` | Write | Create an approved task using stable lookup codes and explicit or inferred list ownership. |
+| `task_patch` | Write | Change only named fields; omitted fields are preserved and explicit `null` clears a nullable field. |
+| `task_update` | Write | Replace every editable task field. Read first and preserve every value that should remain. |
+| `task_move_to_list` | Write | Move one or more non-Trash tasks to a concrete list and return move information. |
+| `task_undo_list_move` | Write | Undo a previous list move using the complete items returned by `task_move_to_list`. |
+
+### Lifecycle, focus, and Trash
+
+| Tool | Mode | Purpose |
+| --- | --- | --- |
+| `task_complete` | Write | Complete an active task and record the transition. |
+| `task_cancel` | Write | Cancel an active task and record the transition. |
+| `task_reopen` | Write | Reopen a completed or cancelled task as active. |
+| `task_set_starred` | Write | Star or unstar one task. |
+| `task_bulk_set_starred` | Write | Star or unstar several non-Trash tasks together. |
+| `task_set_waiting` | Write | Set or replace the active waiting target while keeping the task active. |
+| `task_clear_waiting` | Write | Resolve and clear the active waiting target. |
+| `task_move_to_trash` | Destructive, reversible | Move tasks to Trash while preserving their content and lifecycle state. |
+| `task_restore_from_trash` | Write | Restore tasks from Trash to normal views. |
+
+### Comments and Timeline
+
+| Tool | Mode | Purpose |
+| --- | --- | --- |
+| `task_add_comment` | Write | Add an approved progress note or observation to a task Timeline. |
+| `task_delete_comment` | Destructive | Permanently delete one user comment; automatic history cannot be deleted. |
+
+### Checklists
+
+| Tool | Mode | Purpose |
+| --- | --- | --- |
+| `task_checklist_list` | Read | Read the ordered checklist and completion state for one task. |
+| `task_checklist_add` | Write | Append an approved checklist item. |
+| `task_checklist_update` | Write | Replace one checklist item's text. |
+| `task_checklist_set_completed` | Write | Complete or reopen one checklist item. |
+| `task_checklist_reorder` | Write | Replace checklist order using every current checklist item ID exactly once. |
+| `task_checklist_delete` | Destructive | Permanently delete one checklist item. |
+
+### Relationships
+
+| Tool | Mode | Purpose |
+| --- | --- | --- |
+| `task_relationship_options` | Read | Discover active relationship type codes and eligible target tasks. |
+| `task_relationship_list` | Read | Read all forward and reverse relationships for one task. |
+| `task_relationship_add` | Write | Add a typed relationship between two non-Trash tasks and log it on both. |
+| `task_relationship_delete` | Destructive | Permanently remove a relationship and log the removal on both tasks. |
+
+### Attachments
+
+| Tool | Mode | Purpose |
+| --- | --- | --- |
+| `task_attachment_list` | Read | Read attachment names, types, sizes, descriptions, and IDs without file content. |
+| `task_attachment_get` | Read | Read one attachment as base64 content after inspecting its metadata. |
+| `task_attachment_add` | Write | Store an approved base64 attachment subject to the 25 MB file limit. |
+| `task_attachment_delete` | Destructive | Permanently remove one attachment from a task. |
+
+### Task-list organization
+
+| Tool | Mode | Purpose |
+| --- | --- | --- |
+| `task_list_create` | Write | Create a concrete task list with a unique name. |
+| `task_list_rename` | Write | Rename a concrete task list. |
+| `task_list_reorder` | Write | Replace manual list order using every current list ID exactly once. |
+| `task_list_delete` | Destructive | Delete a list, transactionally moving its tasks when a destination is required. |
+
+<!-- MCP-TOOL-REFERENCE-END -->
+
 ## Keep control of changes
 
 - Say **“do not change anything”** when you only want analysis.

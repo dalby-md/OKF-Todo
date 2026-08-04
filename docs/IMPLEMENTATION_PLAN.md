@@ -734,3 +734,4 @@ Acceptance criteria:
 - Filtered task listing uses tags with OR semantics and accepts stable lookup codes.
 - Attachment metadata can be inspected without loading content; content transfer remains explicit base64 and retains the desktop application's 25 MB limit.
 - Canonical MCP Help describes capabilities, approval rules, verification, attachment handling, and deliberate safety boundaries and is copied unchanged into normal application output.
+- Canonical MCP Help contains a grouped reference for every advertised tool. The real stdio process test extracts that reference and fails when attributed server tools and documented tools differ.

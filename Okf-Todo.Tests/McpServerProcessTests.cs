@@ -85,12 +85,15 @@ public sealed class McpServerProcessTests
             });
 
             using var toolsResponse = await ReadResponseAsync(process, 2);
-            var toolNames = toolsResponse.RootElement
+            var advertisedTools = toolsResponse.RootElement
                 .GetProperty("result")
                 .GetProperty("tools")
                 .EnumerateArray()
-                .Select(tool => tool.GetProperty("name").GetString()!)
-                .ToHashSet(StringComparer.Ordinal);
+                .ToDictionary(
+                    tool => tool.GetProperty("name").GetString()!,
+                    tool => tool.Clone(),
+                    StringComparer.Ordinal);
+            var toolNames = advertisedTools.Keys.ToHashSet(StringComparer.Ordinal);
             Assert.Equal(
                 new HashSet<string>(StringComparer.Ordinal)
                 {
@@ -136,6 +139,38 @@ public sealed class McpServerProcessTests
                     "task_list_delete"
                 },
                 toolNames);
+
+            var helpPath = Path.Combine(
+                Path.GetDirectoryName(serverPath)!,
+                "wwwroot",
+                "help",
+                "mcp-server.md");
+            var documentedTools = ReadDocumentedToolReference(helpPath);
+            Assert.Equal(
+                toolNames.OrderBy(name => name, StringComparer.Ordinal),
+                documentedTools.Keys.OrderBy(name => name, StringComparer.Ordinal));
+
+            foreach (var (name, tool) in advertisedTools)
+            {
+                var documented = documentedTools[name];
+                var annotations = tool.GetProperty("annotations");
+                var isReadOnly = annotations.GetProperty("readOnlyHint").GetBoolean();
+                var isDestructive = annotations.GetProperty("destructiveHint").GetBoolean();
+                if (isReadOnly)
+                {
+                    Assert.Equal("Read", documented.Mode);
+                }
+                else if (isDestructive)
+                {
+                    Assert.StartsWith("Destructive", documented.Mode, StringComparison.Ordinal);
+                }
+                else
+                {
+                    Assert.Equal("Write", documented.Mode);
+                }
+
+                Assert.False(string.IsNullOrWhiteSpace(documented.Purpose));
+            }
 
             await SendAsync(process, new
             {
@@ -368,4 +403,37 @@ public sealed class McpServerProcessTests
         using var document = JsonDocument.Parse(text);
         return document.RootElement.Clone();
     }
+
+    private static IReadOnlyDictionary<string, DocumentedTool> ReadDocumentedToolReference(string helpPath)
+    {
+        Assert.True(File.Exists(helpPath), $"Shipped MCP Help was not found at {helpPath}.");
+        var markdown = File.ReadAllText(helpPath);
+        const string startMarker = "<!-- MCP-TOOL-REFERENCE-START -->";
+        const string endMarker = "<!-- MCP-TOOL-REFERENCE-END -->";
+        var start = markdown.IndexOf(startMarker, StringComparison.Ordinal);
+        var end = markdown.IndexOf(endMarker, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"MCP Help is missing {startMarker}.");
+        Assert.True(end > start, $"MCP Help is missing {endMarker} after the start marker.");
+
+        var section = markdown[(start + startMarker.Length)..end];
+        var rows = section
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Where(line => line.StartsWith("| `task_", StringComparison.Ordinal))
+            .Select(line => line.Split('|', StringSplitOptions.TrimEntries))
+            .Select(parts =>
+            {
+                Assert.True(parts.Length >= 5, $"Invalid MCP Help tool row: {string.Join('|', parts)}");
+                return new DocumentedTool(
+                    parts[1].Trim('`'),
+                    parts[2],
+                    parts[3]);
+            })
+            .ToList();
+
+        Assert.NotEmpty(rows);
+        Assert.Equal(rows.Count, rows.Select(row => row.Name).Distinct(StringComparer.Ordinal).Count());
+        return rows.ToDictionary(row => row.Name, StringComparer.Ordinal);
+    }
+
+    private sealed record DocumentedTool(string Name, string Mode, string Purpose);
 }
