@@ -52,6 +52,10 @@ public sealed class ApplicationCommandService(IServiceProvider services)
                 .ExportAsync(GetPayload<TaskMarkdownExportRequest>(command), cancellationToken),
             "task.export.html" => await scopedServices.GetRequiredService<TaskMarkdownExportService>()
                 .CreateHtmlClipboardAsync(GetPayload<TaskMarkdownExportRequest>(command), cancellationToken),
+            "task.export.checklists.get" => await scopedServices.GetRequiredService<TaskMarkdownExportService>()
+                .GetChecklistPreviewAsync(
+                    GetPayload<TaskExportChecklistPreviewRequest>(command),
+                    cancellationToken),
             "task.export.columns.get" => await scopedServices.GetRequiredService<AppPreferenceService>()
                 .GetTaskExportColumnPreferenceAsync(cancellationToken),
             "task.export.columns.save" => await scopedServices.GetRequiredService<AppPreferenceService>()

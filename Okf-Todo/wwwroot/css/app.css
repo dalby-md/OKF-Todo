@@ -6040,6 +6040,65 @@ body.is-resizing-editor * {
   border-right: 0;
 }
 
+.task-export-preview-table td.is-checklist-items {
+  min-width: 250px;
+  max-width: 360px;
+  overflow: visible;
+  vertical-align: top;
+  white-space: normal;
+  text-overflow: clip;
+}
+
+.task-export-checklist-items {
+  display: grid;
+  gap: 5px;
+}
+
+.task-export-checklist-item {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 7px;
+  align-items: baseline;
+  line-height: 1.35;
+}
+
+.task-export-checklist-item strong {
+  color: #9a5a00;
+  font-size: 0.61rem;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.task-export-checklist-item.is-completed strong {
+  color: #167255;
+}
+
+.task-export-checklist-item > span {
+  overflow-wrap: anywhere;
+}
+
+.task-export-checklist-toggle {
+  justify-self: start;
+  padding: 2px 0;
+  border: 0;
+  color: #147a73;
+  background: transparent;
+  font-size: 0.66rem;
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.task-export-checklist-toggle:hover,
+.task-export-checklist-toggle:focus-visible {
+  color: #0b5f59;
+}
+
+.task-export-checklist-loading,
+.task-export-checklist-empty {
+  color: #748489;
+}
+
 .task-export-field-empty,
 .task-export-preview-empty {
   margin: 0;

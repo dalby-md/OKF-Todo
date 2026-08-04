@@ -77,7 +77,8 @@
     { code: 'RESPONSIBLE', label: 'Responsible', icon: '&#xE716;', kind: 'text' },
     { code: 'SOURCE', label: 'Source', icon: '&#xE71B;', kind: 'lookup' },
     { code: 'TAGS', label: 'Tags', icon: '&#xE8EC;', kind: 'text' },
-    { code: 'CHECKLIST', label: 'Checklist', icon: '&#xE9D5;', kind: 'progress' },
+    { code: 'CHECKLIST', label: 'Checklist progress', icon: '&#xE9D5;', kind: 'progress' },
+    { code: 'CHECKLIST_ITEMS', label: 'Checklist items', icon: '&#xE9D5;', kind: 'progress' },
     { code: 'UPDATED', label: 'Updated', icon: '&#xE787;', kind: 'date-time' }
   ]
   const taskExportSortModes = {
@@ -240,6 +241,9 @@
   }, {})
   let taskExportDraggedColumn = null
   let taskExportColumnSavePromise = Promise.resolve()
+  let taskExportChecklistItemsByTaskId = new Map()
+  let taskExportChecklistPreviewPromise = null
+  const taskExportExpandedChecklistTaskIds = new Set()
   let trashUndoTimer = null
   const selectedTaskIds = new Set()
   const helpDocumentCache = new Map()
@@ -2747,6 +2751,62 @@
     }
   }
 
+  async function ensureTaskExportChecklistPreview() {
+    if (taskExportChecklistPreviewPromise) {
+      return taskExportChecklistPreviewPromise
+    }
+
+    const taskIds = taskExportTaskIds.slice()
+    taskExportChecklistPreviewPromise = sendBridgeMessage(
+      'task.export.checklists.get',
+      { taskIds: taskIds })
+      .then(function (rows) {
+        taskExportChecklistItemsByTaskId = new Map(taskIds.map(function (taskId) {
+          return [taskId, []]
+        }))
+        ;(rows || []).forEach(function (row) {
+          taskExportChecklistItemsByTaskId.set(row.taskId, row.items || [])
+        })
+      })
+      .catch(function (error) {
+        taskExportChecklistPreviewPromise = null
+        throw error
+      })
+
+    return taskExportChecklistPreviewPromise
+  }
+
+  function renderTaskExportPreviewCell(task, code) {
+    if (code !== 'CHECKLIST_ITEMS') {
+      return encodeText(getTaskExportPreviewValue(task, code))
+    }
+
+    if (!taskExportChecklistItemsByTaskId.has(task.id)) {
+      return '<span class="task-export-checklist-loading">Loading…</span>'
+    }
+
+    const items = taskExportChecklistItemsByTaskId.get(task.id) || []
+    if (items.length === 0) {
+      return '<span class="task-export-checklist-empty">—</span>'
+    }
+
+    const expanded = taskExportExpandedChecklistTaskIds.has(task.id)
+    const visibleItems = expanded ? items : items.slice(0, 3)
+    const itemRows = visibleItems.map(function (item) {
+      const status = item.isCompleted ? 'Done' : 'Open'
+      return `
+        <span class="task-export-checklist-item${item.isCompleted ? ' is-completed' : ''}">
+          <strong>${status}</strong>
+          <span>${encodeText(item.text)}</span>
+        </span>
+      `
+    }).join('')
+    const toggle = items.length > 3
+      ? `<button class="task-export-checklist-toggle" type="button" data-task-id="${task.id}">${expanded ? 'Show fewer' : `Show all ${items.length}`}</button>`
+      : ''
+    return `<span class="task-export-checklist-items">${itemRows}${toggle}</span>`
+  }
+
   function renderTaskExportFieldLibrary() {
     const isGlobal = taskExportTaskListId == null
     const query = String($('#task-export-field-search').val() || '').trim().toLocaleLowerCase()
@@ -2836,7 +2896,10 @@
             <table>
               <thead><tr>${columns.map(function (code) { return `<th>${encodeText(getTaskExportColumn(code).label)}</th>` }).join('')}</tr></thead>
               <tbody>${previewTasks.map(function (task) {
-                return `<tr>${columns.map(function (code) { return `<td>${encodeText(getTaskExportPreviewValue(task, code))}</td>` }).join('')}</tr>`
+                return `<tr>${columns.map(function (code) {
+                  const checklistClass = code === 'CHECKLIST_ITEMS' ? ' class="is-checklist-items"' : ''
+                  return `<td${checklistClass}>${renderTaskExportPreviewCell(task, code)}</td>`
+                }).join('')}</tr>`
               }).join('')}</tbody>
             </table>
           </div>
@@ -2920,6 +2983,9 @@
   async function openTaskExportDialog() {
     taskExportTaskListId = activeTaskListId
     taskExportTaskIds = []
+    taskExportChecklistItemsByTaskId = new Map()
+    taskExportChecklistPreviewPromise = null
+    taskExportExpandedChecklistTaskIds.clear()
     $('#task-export-error').text('').prop('hidden', true)
     $('#task-export-current-count').text('…')
     $('#task-export-overlay').prop('hidden', false)
@@ -2943,6 +3009,10 @@
         return directions
       }, {})
       renderTaskExportPreview()
+      if (taskExportSelectedColumns.includes('CHECKLIST_ITEMS')) {
+        await ensureTaskExportChecklistPreview()
+        renderTaskExportLivePreview()
+      }
       $('#task-export-field-search').trigger('focus')
     } catch (error) {
       $('#task-export-error')
@@ -7384,6 +7454,26 @@
       if (!code || taskExportSelectedColumns.includes(code)) return
       taskExportSelectedColumns.push(code)
       updateTaskExportColumnSelection()
+      if (code === 'CHECKLIST_ITEMS') {
+        ensureTaskExportChecklistPreview()
+          .then(renderTaskExportLivePreview)
+          .catch(function (error) {
+            $('#task-export-error')
+              .text(getErrorMessage(error, 'Could not load checklist items for the preview'))
+              .prop('hidden', false)
+          })
+      }
+    })
+
+    $('#task-export-preview-table').on('click', '.task-export-checklist-toggle', function () {
+      const taskId = Number($(this).attr('data-task-id'))
+      if (!Number.isInteger(taskId)) return
+      if (taskExportExpandedChecklistTaskIds.has(taskId)) {
+        taskExportExpandedChecklistTaskIds.delete(taskId)
+      } else {
+        taskExportExpandedChecklistTaskIds.add(taskId)
+      }
+      renderTaskExportLivePreview()
     })
 
     $('#task-export-recipe-list').on('click', '.task-export-remove-field', function () {

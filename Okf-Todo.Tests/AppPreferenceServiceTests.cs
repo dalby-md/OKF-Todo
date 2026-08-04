@@ -217,7 +217,8 @@ public sealed class AppPreferenceServiceTests
                 NullLogger<AppPreferenceService>.Instance);
 
             var defaults = await service.GetTaskExportColumnPreferenceAsync(CancellationToken.None);
-            Assert.Equal(TaskMarkdownExportColumns.All, defaults.Columns);
+            Assert.Equal(TaskMarkdownExportColumns.Default, defaults.Columns);
+            Assert.DoesNotContain(TaskMarkdownExportColumns.ChecklistItems, defaults.Columns);
             Assert.Equal(TaskMarkdownExportSortModes.CurrentTaskOrder, defaults.SortMode);
             Assert.Equal(
                 TaskMarkdownExportSortDirections.Descending,

@@ -655,7 +655,7 @@ public sealed class AppPreferenceService(
         catch (ValidationException exception)
         {
             logger.LogWarning(exception, "Stored task export column preference is invalid.");
-            return TaskMarkdownExportColumns.All;
+            return TaskMarkdownExportColumns.Default;
         }
     }
 

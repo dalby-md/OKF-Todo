@@ -146,6 +146,32 @@ public sealed class TaskMarkdownExportService(
             content.Scope.Name);
     }
 
+    public async Task<IReadOnlyCollection<TaskExportChecklistPreviewDto>> GetChecklistPreviewAsync(
+        TaskExportChecklistPreviewRequest request,
+        CancellationToken cancellationToken)
+    {
+        var taskIds = NormalizePreviewTaskIds(request.TaskIds);
+        if (taskIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await dbContext.TaskItems
+            .AsNoTracking()
+            .Where(task => task.DeletedAt == null && taskIds.Contains(task.Id))
+            .OrderBy(task => task.Id)
+            .Select(task => new TaskExportChecklistPreviewDto(
+                task.Id,
+                task.ChecklistItems
+                    .OrderBy(item => item.SortOrder)
+                    .ThenBy(item => item.Id)
+                    .Select(item => new TaskExportChecklistItemDto(
+                        item.Text,
+                        item.IsCompleted))
+                    .ToList()))
+            .ToListAsync(cancellationToken);
+    }
+
     private async Task<PreparedTaskExport> PrepareExportAsync(
         TaskMarkdownExportRequest request,
         CancellationToken cancellationToken)
@@ -260,6 +286,13 @@ public sealed class TaskMarkdownExportService(
                     .ToList(),
                 task.ChecklistItems.Count(item => item.IsCompleted),
                 task.ChecklistItems.Count,
+                task.ChecklistItems
+                    .OrderBy(item => item.SortOrder)
+                    .ThenBy(item => item.Id)
+                    .Select(item => new TaskExportChecklistItemDto(
+                        item.Text,
+                        item.IsCompleted))
+                    .ToList(),
                 task.UpdatedAt))
             .ToListAsync(cancellationToken);
 
@@ -356,6 +389,7 @@ public sealed class TaskMarkdownExportService(
                 string.Join(", ", right.Tags),
                 direction),
             TaskMarkdownExportColumns.Checklist => CompareChecklist(left, right, direction),
+            TaskMarkdownExportColumns.ChecklistItems => CompareChecklist(left, right, direction),
             TaskMarkdownExportColumns.Updated => left.UpdatedAt.CompareTo(right.UpdatedAt) * direction,
             _ => 0
         };
@@ -519,7 +553,14 @@ public sealed class TaskMarkdownExportService(
             foreach (var column in selectedColumns)
             {
                 builder.Append("<td style=\"border:1px solid #d1d5db;padding:6px 8px;vertical-align:top\">");
-                builder.Append(EncodeHtmlCell(GetColumnValue(column, row)));
+                if (column == TaskMarkdownExportColumns.ChecklistItems)
+                {
+                    AppendHtmlChecklistItems(builder, row.ChecklistItems);
+                }
+                else
+                {
+                    builder.Append(EncodeHtmlCell(GetColumnValue(column, row)));
+                }
                 builder.Append("</td>");
             }
             builder.Append("</tr>");
@@ -551,6 +592,27 @@ public sealed class TaskMarkdownExportService(
             .Replace("\r", "<br>", StringComparison.Ordinal);
     }
 
+    private static void AppendHtmlChecklistItems(
+        StringBuilder builder,
+        IReadOnlyCollection<TaskExportChecklistItemDto> checklistItems)
+    {
+        if (checklistItems.Count == 0)
+        {
+            return;
+        }
+
+        builder.Append("<ul style=\"margin:0;padding-left:18px\">");
+        foreach (var item in checklistItems)
+        {
+            builder.Append("<li><strong>");
+            builder.Append(item.IsCompleted ? "Done" : "Open");
+            builder.Append("</strong> — ");
+            builder.Append(WebUtility.HtmlEncode(item.Text));
+            builder.Append("</li>");
+        }
+        builder.Append("</ul>");
+    }
+
     private static string GetColumnHeader(string column)
     {
         return column switch
@@ -567,7 +629,8 @@ public sealed class TaskMarkdownExportService(
             TaskMarkdownExportColumns.Responsible => "Responsible",
             TaskMarkdownExportColumns.Source => "Source",
             TaskMarkdownExportColumns.Tags => "Tags",
-            TaskMarkdownExportColumns.Checklist => "Checklist",
+            TaskMarkdownExportColumns.Checklist => "Checklist progress",
+            TaskMarkdownExportColumns.ChecklistItems => "Checklist items",
             TaskMarkdownExportColumns.Updated => "Updated",
             _ => throw new InvalidOperationException($"Unsupported task export column '{column}'.")
         };
@@ -593,6 +656,7 @@ public sealed class TaskMarkdownExportService(
             TaskMarkdownExportColumns.Checklist => row.ChecklistCount == 0
                 ? string.Empty
                 : $"{row.CompletedChecklistCount}/{row.ChecklistCount}",
+            TaskMarkdownExportColumns.ChecklistItems => FormatChecklistItems(row.ChecklistItems),
             TaskMarkdownExportColumns.Updated => $"{row.UpdatedAt:yyyy-MM-dd HH:mm} UTC",
             _ => throw new InvalidOperationException($"Unsupported task export column '{column}'.")
         };
@@ -603,6 +667,14 @@ public sealed class TaskMarkdownExportService(
         builder.Append("| ");
         builder.Append(string.Join(" | ", values.Select(EscapeCell)));
         builder.AppendLine(" |");
+    }
+
+    private static string FormatChecklistItems(
+        IReadOnlyCollection<TaskExportChecklistItemDto> checklistItems)
+    {
+        return string.Join(
+            '\n',
+            checklistItems.Select(item => $"{(item.IsCompleted ? "Done" : "Open")} — {item.Text}"));
     }
 
     private static string EscapeCell(string? value)
@@ -657,6 +729,21 @@ public sealed class TaskMarkdownExportService(
             throw new ValidationException(
                 "There are no tasks in the current results.",
                 "taskIds");
+        }
+
+        if (values.Any(taskId => taskId <= 0) || values.Distinct().Count() != values.Count)
+        {
+            throw new ValidationException("Task IDs are invalid.", "taskIds");
+        }
+
+        return values.ToList();
+    }
+
+    private static IReadOnlyList<int> NormalizePreviewTaskIds(IReadOnlyCollection<int>? values)
+    {
+        if (values is null)
+        {
+            return [];
         }
 
         if (values.Any(taskId => taskId <= 0) || values.Distinct().Count() != values.Count)
@@ -741,6 +828,7 @@ public static class TaskMarkdownExportColumns
     public const string Source = "SOURCE";
     public const string Tags = "TAGS";
     public const string Checklist = "CHECKLIST";
+    public const string ChecklistItems = "CHECKLIST_ITEMS";
     public const string Updated = "UPDATED";
 
     public static readonly string[] All =
@@ -758,14 +846,19 @@ public static class TaskMarkdownExportColumns
         Source,
         Tags,
         Checklist,
+        ChecklistItems,
         Updated
     ];
+
+    public static readonly string[] Default = All
+        .Where(column => column != ChecklistItems)
+        .ToArray();
 
     public static IReadOnlyList<string> Normalize(IReadOnlyCollection<string>? values)
     {
         if (values is null)
         {
-            return All;
+            return Default;
         }
 
         var normalized = values
@@ -862,6 +955,14 @@ public sealed record TaskHtmlClipboardResult(
     string ExportKind,
     string ScopeName);
 
+public sealed record TaskExportChecklistPreviewRequest(IReadOnlyCollection<int>? TaskIds);
+
+public sealed record TaskExportChecklistPreviewDto(
+    int TaskId,
+    IReadOnlyCollection<TaskExportChecklistItemDto> Items);
+
+public sealed record TaskExportChecklistItemDto(string Text, bool IsCompleted);
+
 internal sealed record TaskExportScope(int? TaskListId, string Name, bool IncludeListColumn);
 
 internal sealed record PreparedTaskExport(
@@ -893,4 +994,5 @@ internal sealed record TaskMarkdownExportRow(
     IReadOnlyCollection<string> Tags,
     int CompletedChecklistCount,
     int ChecklistCount,
+    IReadOnlyCollection<TaskExportChecklistItemDto> ChecklistItems,
     DateTime UpdatedAt);

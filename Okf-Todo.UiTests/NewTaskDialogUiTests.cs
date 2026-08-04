@@ -1512,13 +1512,21 @@ public sealed class NewTaskDialogUiTests
         await page.Locator("#task-export-field-library-list .task-export-add-field[data-column-code='TITLE']").ClickAsync();
         await page.Locator("#task-export-field-library-list .task-export-add-field[data-column-code='OWNER']").ClickAsync();
         await page.Locator("#task-export-field-library-list .task-export-add-field[data-column-code='UPDATED']").ClickAsync();
+        await page.Locator("#task-export-field-library-list .task-export-add-field[data-column-code='CHECKLIST']").ClickAsync();
+        await page.Locator("#task-export-field-library-list .task-export-add-field[data-column-code='CHECKLIST_ITEMS']").ClickAsync();
         await page.Locator("[data-task-export-sort-mode='RECIPE']").ClickAsync();
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('#task-export-columns-summary')?.textContent.startsWith('6 fields')");
+            "() => document.querySelector('#task-export-columns-summary')?.textContent.startsWith('8 fields')"
+                + " && document.querySelectorAll('.task-export-checklist-item').length > 0");
         Assert.Equal(0, await page.Locator("#task-export-unsaved-warning").CountAsync());
         Assert.True((await page.Locator(".task-export-dialog").BoundingBoxAsync())?.Width >= 1180);
         Assert.True((await page.Locator(".task-export-live-preview").BoundingBoxAsync())?.Height >= 190);
         Assert.True(await page.Locator("#task-export-preview-table tbody tr").CountAsync() >= 2);
+        var checklistToggle = page.Locator(".task-export-checklist-toggle").First;
+        await checklistToggle.WaitForAsync();
+        Assert.StartsWith("Show all", await checklistToggle.TextContentAsync());
+        await checklistToggle.ClickAsync();
+        Assert.Equal("Show fewer", await page.Locator(".task-export-checklist-toggle").First.TextContentAsync());
         Assert.Equal(
             "auto",
             await page.Locator(".task-export-preview-scroll").EvaluateAsync<string>(
@@ -1529,6 +1537,8 @@ public sealed class NewTaskDialogUiTests
         await page.Locator(".task-export-remove-field[data-column-code='DEADLINE']").ClickAsync();
         await page.Locator(".task-export-remove-field[data-column-code='OWNER']").ClickAsync();
         await page.Locator(".task-export-remove-field[data-column-code='UPDATED']").ClickAsync();
+        await page.Locator(".task-export-remove-field[data-column-code='CHECKLIST']").ClickAsync();
+        await page.Locator(".task-export-remove-field[data-column-code='CHECKLIST_ITEMS']").ClickAsync();
         await page.Locator("[data-task-export-move='up'][data-column-code='TITLE']").ClickAsync();
         await page.Locator(".task-export-direction[data-column-code='TITLE']").SelectOptionAsync("DESC");
         await page.WaitForFunctionAsync(
@@ -1554,6 +1564,7 @@ public sealed class NewTaskDialogUiTests
             markdown.IndexOf("Verify deployment variable replacement", StringComparison.Ordinal)
             < markdown.IndexOf("Fix failed production deployment", StringComparison.Ordinal));
         Assert.Contains("task.export.markdown", fixture.BridgeMessageTypes);
+        Assert.Contains("task.export.checklists.get", fixture.BridgeMessageTypes);
         Assert.Contains("task.export.columns.save", fixture.BridgeMessageTypes);
 
         await page.Locator("#task-export-button").ClickAsync();

@@ -694,7 +694,7 @@ Scope:
 - Export the task IDs produced by the selected concrete list or synthetic **All lists**, active lifecycle view, search, and tag/type/status/priority filters. Preserve current queue order by default, with an explicit **Sort by recipe** mode for composite ordering by the ordered export fields.
 - Keep collapsed groups presentation-only, so matching finished Starred tasks remain included, and exclude Trash entirely.
 - Provide a picker for the existing operational columns and persist the selected column set in the current user's application preferences.
-- Generate a compact operational Markdown table with the selected IDs, planning fields, ownership, source, tags, checklist progress, and updated timestamps.
+- Generate a compact operational Markdown table with the selected IDs, planning fields, ownership, source, tags, checklist progress, optional detailed checklist items with Open/Done status, and updated timestamps.
 - Generate an encoded, compact HTML version of the same table and copy it with a plain-text Markdown fallback through the WebView clipboard API.
 - Use the native save-file dialog, remember the last successful export directory, and write UTF-8 files atomically.
 - Require the current task's unsaved edits to be saved before exporting.
@@ -710,6 +710,8 @@ Acceptance criteria:
 - Cancelling the native picker creates no file; a successful export is valid UTF-8 without a byte-order mark.
 - Copy as HTML creates no file, preserves the current result order and selected columns, and writes both HTML and plain-text clipboard formats.
 - Focused service tests and Playwright coverage verify the export contract through the application bridge.
+- Preserve **Checklist progress** as the compact default field and add **Checklist items** as an opt-in field. Preview up to three items with an explicit expansion control; Markdown and HTML always contain the complete ordered item list.
+- MCP applicability: no export-specific MCP tool is added because `task_checklist_list` and `task_get_context` already expose the same checklist text, order, and completion state through safe headless reads. The preview-loading bridge command is presentation-specific.
 
 ## Milestone 19 — Broad MCP task interface
 

@@ -42,6 +42,20 @@ public sealed class TaskMarkdownExportServiceTests
             await database.Tasks.MoveToTrashAsync(
                 new TaskIdsRequest([trashedTask.Id]),
                 CancellationToken.None);
+            var checklistService = new TaskChecklistService(database.DbContext);
+            await checklistService.CreateAsync(
+                new TaskChecklistCreateRequest(exportedTask.Id, "Check | logs <script>"),
+                CancellationToken.None);
+            var checklist = await checklistService.CreateAsync(
+                new TaskChecklistCreateRequest(exportedTask.Id, "Deploy approved fix"),
+                CancellationToken.None);
+            var completedChecklistItem = checklist.Single(item => item.Text == "Deploy approved fix");
+            await checklistService.SetCompletedAsync(
+                new TaskChecklistCompleteRequest(
+                    exportedTask.Id,
+                    completedChecklistItem.Id,
+                    true),
+                CancellationToken.None);
             await database.Tasks.CompleteAsync(exportedTask.Id, CancellationToken.None);
 
             var picker = new TestMarkdownExportDestinationPicker(exportPath);
@@ -66,7 +80,9 @@ public sealed class TaskMarkdownExportServiceTests
                         TaskMarkdownExportColumns.Owner,
                         TaskMarkdownExportColumns.Responsible,
                         TaskMarkdownExportColumns.Source,
-                        TaskMarkdownExportColumns.Tags
+                        TaskMarkdownExportColumns.Tags,
+                        TaskMarkdownExportColumns.Checklist,
+                        TaskMarkdownExportColumns.ChecklistItems
                     ]),
                 CancellationToken.None);
 
@@ -82,7 +98,7 @@ public sealed class TaskMarkdownExportServiceTests
             var markdown = await File.ReadAllTextAsync(exportPath);
             Assert.Contains("- Scope: All results in Default list", markdown);
             Assert.Contains("- Ordering: Title, descending", markdown);
-            Assert.Contains("| ID | Title | Status | Owner | Responsible | Source | Tags |", markdown);
+            Assert.Contains("| ID | Title | Status | Owner | Responsible | Source | Tags | Checklist progress | Checklist items |", markdown);
             Assert.DoesNotContain("| Type |", markdown);
             Assert.DoesNotContain("| Priority |", markdown);
             Assert.DoesNotContain("| ID | Title | List |", markdown);
@@ -91,6 +107,7 @@ public sealed class TaskMarkdownExportServiceTests
             Assert.Contains("Ada \\*Lovelace\\*", markdown);
             Assert.Contains("Email: CASE\\_42", markdown);
             Assert.Contains("mail\\|thread", markdown);
+            Assert.Contains("| 1/2 | Open — Check \\| logs &lt;script&gt;<br>Done — Deploy approved fix |", markdown);
             Assert.Contains("Second task", markdown);
             Assert.True(
                 markdown.IndexOf("Second task", StringComparison.Ordinal)
@@ -120,7 +137,9 @@ public sealed class TaskMarkdownExportServiceTests
                         TaskMarkdownExportColumns.Owner,
                         TaskMarkdownExportColumns.Responsible,
                         TaskMarkdownExportColumns.Source,
-                        TaskMarkdownExportColumns.Tags
+                        TaskMarkdownExportColumns.Tags,
+                        TaskMarkdownExportColumns.Checklist,
+                        TaskMarkdownExportColumns.ChecklistItems
                     ]),
                 CancellationToken.None);
 
@@ -133,12 +152,18 @@ public sealed class TaskMarkdownExportServiceTests
             Assert.Contains("Platform | team", clipboard.Html);
             Assert.Contains("Ada *Lovelace*", clipboard.Html);
             Assert.Contains("Email: CASE_42", clipboard.Html);
+            Assert.Contains(">Checklist progress</th>", clipboard.Html);
+            Assert.Contains(">Checklist items</th>", clipboard.Html);
+            Assert.Contains("<ul style=\"margin:0;padding-left:18px\">", clipboard.Html);
+            Assert.Contains("<strong>Open</strong> — Check | logs &lt;script&gt;", clipboard.Html);
+            Assert.Contains("<strong>Done</strong> — Deploy approved fix", clipboard.Html);
             Assert.DoesNotContain("Different list task", clipboard.Html);
             Assert.DoesNotContain("Trashed task", clipboard.Html);
             Assert.True(
                 clipboard.Html.IndexOf("Second task", StringComparison.Ordinal)
                 < clipboard.Html.IndexOf("Investigate", StringComparison.Ordinal));
             Assert.Contains("| ID | Title | Status |", clipboard.PlainText);
+            Assert.Contains("Open — Check \\| logs &lt;script&gt;<br>Done — Deploy approved fix", clipboard.PlainText);
         }
         finally
         {
