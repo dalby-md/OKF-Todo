@@ -66,6 +66,8 @@ Windows users can install the self-contained application with the
 
 The installer includes the desktop application and OKF context layer. Installing the MCP server is offered as a user choice and is selected by default.
 
+Installing, upgrading, repairing, or uninstalling OKF-Todo never overwrites or removes the database. Database replacement is available only through the application's explicit restore and reset workflows.
+
 **You don't need to be a local administrator to install this.**
 
 
@@ -244,6 +246,45 @@ The installer is written to:
 ```text
 artifacts\installer\Okf-Todo-0.1.0-win-x64-setup.exe
 ```
+
+### Build the local MSIX feasibility prototype
+
+The experimental MSIX path is independent of Inno Setup and never publishes to
+Microsoft Store. It reuses the same self-contained `win-x64` payload, signs it
+with a local-only development certificate, and launches against an isolated
+prototype database.
+
+Both installer builds fail if a database file enters their staged payload. The
+MSIX and Inno installers contain application files only and never install over
+the user's database.
+
+Install Microsoft's lightweight Windows App Development CLI, then build and
+install the package:
+
+```powershell
+winget install -e --id Microsoft.WinAppCli --source winget
+.\packaging\msix\build-msix-prototype.ps1 -Version 0.1.0.0 -Install
+.\packaging\msix\start-msix-prototype.ps1
+```
+
+See [the MSIX prototype guide](packaging/msix/README.md) for upgrade, sample-data,
+and cleanup commands. The existing Inno installer remains the production
+packaging path.
+
+### Build the Microsoft Store package
+
+The Store build is separate from the local MSIX prototype and uses the immutable
+identity reserved in Partner Center. It produces an unsigned `.msix`; Microsoft
+signs the package after Store certification, so this path does not require a
+purchased code-signing certificate.
+
+```powershell
+.\packaging\msix\build-msix-store.ps1 -Version 0.1.0.0
+```
+
+The artifact is written under `artifacts\msix-store\output`. See the
+[Microsoft Store package guide](packaging/msix/STORE.md) for the exact identity,
+validation, versioning, data-safety, MCP-alias, and Partner Center handoff rules.
 
 To publish, merge, and validate the staging payload without compiling the setup executable:
 

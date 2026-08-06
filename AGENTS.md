@@ -90,6 +90,13 @@ Use `TaskItem` as the C# entity name instead of `Task` to avoid confusion with `
 - Include a reviewed migration and refreshed OKF bundle with every committed physical schema change.
 - Treat `InitialCreate` as the earliest supported database version; no pre-migration database compatibility is required.
 
+## Installation Data Safety — Hard Rule
+
+- Installation, upgrade, repair, and uninstallation must never overwrite, replace, bundle, move, or delete a user database.
+- Keep application payloads separate from `%LOCALAPPDATA%\Okf-Todo\okf-todo.db` and any custom database path.
+- Every installer and package build must fail if its staged payload contains a SQLite database or if installer logic targets the managed database path.
+- Database replacement is allowed only through the application's explicit restore or reset workflows, with their validation, confirmation, and safety-backup rules.
+
 ## OKF Database Context
 
 - After every database-design change, use the repo-local `compile-okf-context` skill.

@@ -30,6 +30,8 @@ $stagingRoot = Join-Path $artifactRoot 'staging'
 $coreStaging = Join-Path $stagingRoot 'core'
 $okfStaging = Join-Path $stagingRoot 'okf\todo-database'
 $integrationStaging = Join-Path $stagingRoot 'integration'
+$packagingSafetyScript = Join-Path $repoRoot 'packaging\packaging-safety.ps1'
+. $packagingSafetyScript
 
 function Reset-Directory {
     param([Parameter(Mandatory)][string]$Path)
@@ -169,6 +171,11 @@ try {
         throw 'GUI staging unexpectedly contains authored HTML Help. Markdown files are the canonical Help source.'
     }
 
+    Assert-NoPackagedDatabaseFiles -Path $stagingRoot
+
+    $installerScript = Join-Path $PSScriptRoot 'Okf-Todo.iss'
+    Assert-InstallerDoesNotManageUserDatabase -Path $installerScript
+
     Invoke-SignFile -Path (Join-Path $coreStaging 'Okf-Todo.exe')
 
     Write-Host "Staging ready at $stagingRoot"
@@ -180,7 +187,6 @@ try {
     }
 
     $iscc = Find-InnoCompiler
-    $installerScript = Join-Path $PSScriptRoot 'Okf-Todo.iss'
     Write-Host "Compiling installer with $iscc..."
     & $iscc "/DAppVersion=$Version" $installerScript
     if ($LASTEXITCODE -ne 0) {

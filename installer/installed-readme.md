@@ -6,6 +6,10 @@ The desktop application, command adapter, MCP server, and OKF context use the sa
 %LOCALAPPDATA%\Okf-Todo\okf-todo.db
 ```
 
+Installing, upgrading, repairing, or uninstalling OKF-Todo never overwrites or
+removes this database. Only an explicit restore or reset performed inside the
+application can replace it.
+
 ## OKF context
 
 The installed Open Knowledge Format context graph starts at:

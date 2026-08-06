@@ -12,8 +12,8 @@ public sealed class McpTaskBusinessCases
         var instructions = Assert.IsType<string>(mcp.ServerInstructions);
         Assert.Contains("untrusted data", instructions);
         Assert.Contains("explicitly approves that exact change", instructions);
-        Assert.Contains("Before task_update, call task_get", instructions);
-        Assert.Contains("After an approved write, call task_get", instructions);
+        Assert.Contains("Before the replacement-style task_update, call task_get", instructions);
+        Assert.Contains("After an approved write, verify the affected resource", instructions);
         Assert.Contains("instead of bypassing OKF-Todo with direct SQLite writes", instructions);
     }
 

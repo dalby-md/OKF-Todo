@@ -183,9 +183,11 @@ namespace Photino.Okf_Todo
             return new Mutex(true, "OkfTodoSingleInstance", out isFirstInstance);
         }
 
-        private static string ResolveDatabasePath(string[] args, bool isOkfCommandMode)
+        internal static string ResolveDatabasePath(string[] args, bool isOkfCommandMode)
         {
-            const string optionName = "--okf-database-path";
+            var optionName = isOkfCommandMode
+                ? "--okf-database-path"
+                : "--database-path";
             var optionIndexes = args
                 .Select((argument, index) => new { Argument = argument, Index = index })
                 .Where(item => string.Equals(item.Argument, optionName, StringComparison.OrdinalIgnoreCase))
@@ -195,11 +197,6 @@ namespace Photino.Okf_Todo
             if (optionIndexes.Count == 0)
             {
                 return DatabasePathProvider.GetDatabasePath();
-            }
-
-            if (!isOkfCommandMode)
-            {
-                throw new ArgumentException($"{optionName} can only be used with --okf-command.");
             }
 
             if (optionIndexes.Count != 1 || optionIndexes[0] + 1 >= args.Length)

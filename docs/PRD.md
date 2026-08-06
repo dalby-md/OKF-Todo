@@ -11,6 +11,7 @@ The app already has a Photino prototype demonstrating usage of an HTML/Markdown 
 ## Product principles
 
 - Local-first personal system.
+- Installation, upgrade, repair, and uninstallation must never overwrite, replace, bundle, move, or delete the user's SQLite database. Only the explicit validated restore and confirmed reset workflows may replace it.
 - Fast task capture.
 - Very few required fields.
 - Structured enough for sorting, filtering, and history.

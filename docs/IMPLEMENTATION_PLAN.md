@@ -737,3 +737,75 @@ Acceptance criteria:
 - Attachment metadata can be inspected without loading content; content transfer remains explicit base64 and retains the desktop application's 25 MB limit.
 - Canonical MCP Help describes capabilities, approval rules, verification, attachment handling, and deliberate safety boundaries and is copied unchanged into normal application output.
 - Canonical MCP Help contains a grouped reference for every advertised tool. The real stdio process test extracts that reference and fails when attributed server tools and documented tools differ.
+
+## Milestone 20 — Local MSIX feasibility prototype
+
+Status: implemented.
+
+Scope:
+
+- Preserve Inno Setup as the production installer and reuse its self-contained
+  `win-x64` staging payload for an independent MSIX build.
+- Generate a development package identity, visual assets, and local-only
+  self-signed certificate through Microsoft's Windows App Development CLI.
+- Hide the prototype from the Start menu and expose a unique execution alias so
+  all desktop tests use an explicit isolated database.
+- Support an absolute `--database-path` override for desktop test launches while
+  preserving the existing MCP and OKF command-path options.
+- Provide repeatable build, install, isolated launch, in-place upgrade, and
+  uninstall scripts without publishing or reserving anything in Partner Center.
+- MCP applicability: no new MCP tool is added because MSIX construction,
+  certificate trust, installation, and Store publication are deployment and
+  native operating-system operations rather than task-domain workflows. The
+  packaged executable retains the complete existing MCP surface and can be
+  exercised against the isolated prototype database.
+
+Acceptance criteria:
+
+- The generated package contains the executable, static web assets, canonical
+  Markdown Help, lookup seed, installed integration material, and OKF bundle.
+- The package installs only after its local development certificate is trusted.
+- Inno Setup and MSIX staging fail when a database file is present, and installer definitions fail validation when they target the managed user-database path.
+- Installation, upgrade, repair, and normal uninstallation never overwrite, replace, move, or delete the normal or custom user database.
+- Launching through the prototype script cannot open the normal personal
+  database.
+- Installing a higher four-part package version performs an MSIX update while
+  preserving the isolated external database.
+- Removing the package preserves prototype data unless removal is explicitly
+  requested and never removes the normal OKF-Todo database.
+
+## Milestone 21 — Microsoft Store production package
+
+Status: implemented; Partner Center submission pending.
+
+Scope:
+
+- Keep the Inno installer and local MSIX prototype independent while reusing the
+  verified self-contained `win-x64` application payload.
+- Build an unsigned Store `.msix` with the immutable Partner Center identity for
+  Store ID `9PP5FM2933BR`; rely on Microsoft signing after certification instead
+  of requiring a purchased certificate.
+- Show **OKF-Todo** in the Start menu and expose stable execution alias
+  `okf-todo.exe` for command, OKF, and MCP use.
+- Bundle an MCP client configuration using the stable execution alias rather
+  than a version-specific WindowsApps path.
+- Preserve the external local-first database across install, upgrade, repair,
+  uninstall, and transitions between Inno and Store distribution.
+- MCP applicability: Store construction and publication remain deployment and
+  Partner Center operations, so no packaging MCP tool is added. The Store
+  package retains the full existing MCP task interface through its execution
+  alias and packaged client configuration.
+
+Acceptance criteria:
+
+- The manifest matches the reserved package name, publisher, display names, and
+  four-part version, targets `Windows.Desktop`, and declares `runFullTrust`.
+- The upload artifact is unsigned, is not installed by the build, and is ready
+  for Partner Center certification and Microsoft signing.
+- The package contains the desktop executable, static assets, canonical Help,
+  OKF bundle, integration guide, and alias-based MCP configuration.
+- Package construction fails if any SQLite database, journal, WAL, or signature-
+  matching database file enters the payload.
+- Store install lifecycle operations never replace or delete
+  `%LOCALAPPDATA%\Okf-Todo\okf-todo.db`.
+- The Windows App Certification Kit is run before the first public submission.

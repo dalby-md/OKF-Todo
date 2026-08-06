@@ -344,6 +344,8 @@ Use the **Compact** task filter layout when you want more room for the task list
 
 Open **Settings → Data & maintenance** to protect or replace the local database and to manage sample data.
 
+Installing, upgrading, repairing, or uninstalling OKF-Todo never replaces or removes your database. Database replacement happens only when you explicitly use **Restore from a file** or **Reset all data** and complete the corresponding validation and confirmation workflow.
+
 ### Back up your work
 
 Select **Create backup**, then choose a destination in the Windows save dialog.
