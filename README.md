@@ -58,20 +58,13 @@ It is designed for the work that often falls between formal systems: production 
 - Complete database backup from inside the application.
 - Offline in-app Help for the desktop application, OKF layer, and optional MCP server.
 
+See [OKF-Todo on dalby.md](https://dalby.md/projects/okf-todo) for the project overview, screenshots, and background.
+
 ## Install from Microsoft Store
 
 Windows users can [get OKF-Todo from Microsoft Store](https://apps.microsoft.com/detail/9PP5FM2933BR).
 
-See [OKF-Todo on dalby.md](https://dalby.md/projects/okf-todo) for the project overview, screenshots, and background.
-
-Installing, updating, or removing OKF-Todo never overwrites or removes the database. Database replacement is available only through the application's explicit restore and reset workflows.
-
-**You don't need to be a local administrator to install this.**
-
-
-# Section for IT professionals
-
-### Database file
+## Database file
 The database is stored under the operating system's local application-data directory:
 
 | Platform | Typical database path |
@@ -82,8 +75,10 @@ The database is stored under the operating system's local application-data direc
 
 Do not delete this file unless you intentionally want to remove all application data.
 
+Installing, updating, or removing OKF-Todo never overwrites or removes the database. Database replacement is available only through the application's explicit restore and reset workflows.
 
-### Requirements
+
+## Requirements
 
 The current alpha is run from source. You need. 
 - Windows 10 or later, macOS 10.15 or later, or a current Linux desktop distribution.
@@ -92,7 +87,7 @@ The current alpha is run from source. You need.
 
 Windows is the primary tested platform for version 0.1. The application architecture and Photino shell are cross-platform, but macOS and Linux packaging and verification are still in progress.
 
-### Run the application
+## Run the application
 
 Clone the repository, change to its root directory, and run the application using your shell.
 
@@ -120,7 +115,7 @@ On first launch, OKF-Todo creates its database and initial lookup values automat
 
 On later releases, pending EF Core migrations are applied automatically before the application reads or writes task data.
 
-### Connect an MCP client
+## Connect an MCP client
 
 Build the OKF-Todo executable in the repository root:
 
@@ -166,7 +161,7 @@ dotnet run --project .\Okf-Todo\Okf-Todo.csproj -- --mcp --database-path C:\temp
 
 The MCP protocol uses standard output. Server and framework logs are written to standard error so they do not corrupt the protocol stream.
 
-### Back up and restore data
+## Back up and restore data
 
 Open **Setup**, then select **Back up database**. Choose a destination in the native save dialog. The application creates and validates a complete SQLite backup before replacing the selected destination.
 
