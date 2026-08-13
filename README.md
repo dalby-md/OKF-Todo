@@ -58,15 +58,13 @@ It is designed for the work that often falls between formal systems: production 
 - Complete database backup from inside the application.
 - Offline in-app Help for the desktop application, OKF layer, and optional MCP server.
 
-## Windows Installer
+## Install from Microsoft Store
 
-Windows users can install the self-contained application with the 
+Windows users can [get OKF-Todo from Microsoft Store](https://apps.microsoft.com/detail/9PP5FM2933BR).
 
-[OKF-Todo 0.1 installer for Windows x64](https://github.com/dalby-md/OKF-Todo/releases/latest/download/Okf-Todo-0.1-win-x64-setup.exe).
+See [OKF-Todo on dalby.md](https://dalby.md/projects/okf-todo) for the project overview, screenshots, and background.
 
-The installer includes the desktop application and OKF context layer. Installing the MCP server is offered as a user choice and is selected by default.
-
-Installing, upgrading, repairing, or uninstalling OKF-Todo never overwrites or removes the database. Database replacement is available only through the application's explicit restore and reset workflows.
+Installing, updating, or removing OKF-Todo never overwrites or removes the database. Database replacement is available only through the application's explicit restore and reset workflows.
 
 **You don't need to be a local administrator to install this.**
 
