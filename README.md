@@ -19,7 +19,7 @@ For AI-assisted work, the recommended workflow is **draft, review, save, verify*
 
 An AI harness can work with OKF-Todo in several ways:
 
-- **[OKF-guided access](docs/help/okf-layer.md):** give the harness structured context about OKF-Todo's concepts, schema, relationships, integrity rules, and lifecycle conventions. OKF provides knowledge and navigation; it does not itself grant access to task data or perform updates.
+- **[OKF knowledge layer](docs/help/okf-layer.md):** give the harness structured context about OKF-Todo's concepts, schema, relationships, integrity rules, and lifecycle conventions. OKF provides knowledge and navigation; it does not itself grant access to task data or perform updates.
 - **[MCP server](docs/help/mcp-server.md):** let an MCP-compatible harness list, read, create, and update tasks and inspect their timelines through structured tools.
 - **[CLI commands](docs/okf/todo-database/references/application-command-interface.md):** let people, scripts, and agents execute application commands from a terminal.
 - **Direct SQLite access:** let a user, script, or harness read or write the local database directly when it has permission to access the file.
