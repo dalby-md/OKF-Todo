@@ -39,13 +39,21 @@ body,
   box-shadow: 0 1px 10px rgb(0 0 0 / 24%);
 }
 
-.app-brand-mark {
-  color: #111;
-  background: var(--theme-accent);
+.app-brand-tagline {
+  color: var(--theme-muted);
 }
 
-.app-brand div > span {
-  color: var(--theme-muted);
+.app-brand-links {
+  color: #71858c;
+}
+
+.app-brand-links a {
+  color: #b5c9cd;
+}
+
+.app-brand-links a:hover,
+.app-brand-links a:focus-visible {
+  color: var(--theme-accent);
 }
 
 .task-sidebar {
@@ -1775,17 +1783,11 @@ textarea {
   box-shadow: 0 8px 28px rgb(0 0 0 / 20%);
 }
 
-.app-brand-mark {
-  color: #241006;
-  background: var(--theme-accent);
-  box-shadow: 0 8px 20px rgb(237 178 73 / 18%);
-}
-
 .app-brand h1 {
   color: var(--theme-text);
 }
 
-.app-brand div > span {
+.app-brand-tagline {
   color: var(--theme-muted);
 }
 

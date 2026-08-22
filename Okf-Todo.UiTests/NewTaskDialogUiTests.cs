@@ -658,6 +658,51 @@ public sealed class NewTaskDialogUiTests
     }
 
     [Fact]
+    public async Task ProjectLinks_AppearWithoutAnIconAndOpenThroughTheBridge()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1400, Height = 900 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(
+            $"{fixture.BaseUrl}/index.html?v=project-links",
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+
+        var links = page.Locator(".app-brand-link");
+        Assert.Equal(2, await links.CountAsync());
+        Assert.Equal("GitHub", await links.Nth(0).TextContentAsync());
+        Assert.Equal("https://github.com/dalby-md/Okf-Todo", await links.Nth(0).GetAttributeAsync("href"));
+        Assert.Equal("dalby.md", await links.Nth(1).TextContentAsync());
+        Assert.Equal("https://dalby.md/projects/okf-todo", await links.Nth(1).GetAttributeAsync("href"));
+        Assert.Equal(0, await page.Locator(".app-brand-mark").CountAsync());
+
+        var taglineFontSize = await page.Locator(".app-brand-tagline").EvaluateAsync<string>(
+            "element => getComputedStyle(element).fontSize");
+        var linksFontSize = await page.Locator(".app-brand-links").EvaluateAsync<string>(
+            "element => getComputedStyle(element).fontSize");
+        Assert.Equal(taglineFontSize, linksFontSize);
+
+        var responseTask = page.WaitForResponseAsync(
+            response => response.Url.EndsWith("/__ui-test/bridge", StringComparison.Ordinal));
+        await links.Nth(0).ClickAsync();
+        await responseTask;
+
+        Assert.Contains("application.externalLink.open", fixture.BridgeMessageTypes);
+        await AssertNoHorizontalPageOverflowAsync(page);
+    }
+
+    [Fact]
     public async Task Help_DefaultsToDesktopGuideAndLoadsAllCanonicalTopics()
     {
         await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
@@ -2757,6 +2802,8 @@ public sealed class NewTaskDialogUiTests
             builder.Services.AddSingleton<IBackupDestinationPicker, CancelledBackupDestinationPicker>();
             builder.Services.AddSingleton<ITaskMarkdownExportDestinationPicker>(
                 new TestMarkdownExportDestinationPicker(Path.Combine(testDirectory, "task-export.md")));
+            builder.Services.AddSingleton<IExternalLinkLauncher, NoOpExternalLinkLauncher>();
+            builder.Services.AddSingleton<ExternalLinkService>();
             builder.Services.AddScoped<LookupSeedService>();
             builder.Services.AddScoped<TaskLifecycleService>();
             builder.Services.AddScoped<TaskListService>();
@@ -2924,6 +2971,13 @@ public sealed class NewTaskDialogUiTests
             string suggestedFileName,
             string? initialDirectory,
             CancellationToken cancellationToken) => Task.FromResult<string?>(exportPath);
+    }
+
+    private sealed class NoOpExternalLinkLauncher : IExternalLinkLauncher
+    {
+        public void Open(Uri uri)
+        {
+        }
     }
 
     private sealed record TaskEvidence(

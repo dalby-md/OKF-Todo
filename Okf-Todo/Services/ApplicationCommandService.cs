@@ -34,6 +34,8 @@ public sealed class ApplicationCommandService(IServiceProvider services)
                 .SaveLayoutPreferenceAsync(GetPayload<LayoutPreferenceSaveRequest>(command), cancellationToken),
             "help.runtimeContext.get" => scopedServices.GetRequiredService<HelpRuntimeContextService>()
                 .GetContext(),
+            "application.externalLink.open" => scopedServices.GetRequiredService<ExternalLinkService>()
+                .Open(GetPayload<ExternalLinkOpenRequest>(command)),
             "database.backup.create" => await scopedServices.GetRequiredService<DatabaseBackupService>()
                 .CreateAsync(cancellationToken),
             "database.status.get" => await scopedServices.GetRequiredService<SampleDataService>()

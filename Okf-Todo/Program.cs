@@ -451,6 +451,8 @@ namespace Photino.Okf_Todo
             services.AddSingleton<ITaskMarkdownExportDestinationPicker>(serviceProvider =>
                 serviceProvider.GetRequiredService<PhotinoFileSavePicker>());
             services.AddSingleton<ApplicationLifetimeService>();
+            services.AddSingleton<IExternalLinkLauncher, SystemExternalLinkLauncher>();
+            services.AddSingleton<ExternalLinkService>();
             services.AddSingleton(new McpClientConfigurationService(AppContext.BaseDirectory));
             services.AddSingleton(serviceProvider => new HelpRuntimeContextService(
                 AppContext.BaseDirectory,

@@ -2,6 +2,8 @@
 
 OKF-Todo is a local task application for keeping development, support, investigation, and follow-up work in one place. You can use it entirely through the desktop interface. No AI assistant, online account, or hosted service is required.
 
+The upper-left application header includes **GitHub** and **dalby.md** links to the project's source repository and project page. They open in your default browser.
+
 This guide follows the way you normally work: choose where the task belongs, capture it quickly, add useful detail, find it again, and move it safely through completion or cancellation.
 
 ## Hotkey map

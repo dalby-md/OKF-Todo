@@ -1062,10 +1062,14 @@
       <main class="app-shell">
         <header class="app-topbar">
           <div class="app-brand">
-            <span class="app-brand-mark fluent-icon" aria-hidden="true">&#xE8A5;</span>
-            <div>
+            <div class="app-brand-copy">
               <h1 id="app-title">OKF-Todo</h1>
-              <span>Local task system</span>
+              <span class="app-brand-tagline">Local task system</span>
+              <nav class="app-brand-links" aria-label="Project links">
+                <a class="app-brand-link" href="https://github.com/dalby-md/Okf-Todo" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <span aria-hidden="true">&middot;</span>
+                <a class="app-brand-link" href="https://dalby.md/projects/okf-todo" target="_blank" rel="noopener noreferrer">dalby.md</a>
+              </nav>
             </div>
           </div>
           <div class="task-list-switcher-group" aria-label="Task list">
@@ -7592,6 +7596,14 @@
     $('#help-content').on('click', 'a[data-help-topic-link]', function (event) {
       event.preventDefault()
       loadHelpTopic($(this).attr('data-help-topic-link'), false)
+    })
+    $('.app-brand-link').on('click', function (event) {
+      event.preventDefault()
+      sendBridgeMessage('application.externalLink.open', {
+        url: $(this).attr('href')
+      }).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not open the project link'), 'error')
+      })
     })
 
     $('#settings-button').on('click', openSettings)
