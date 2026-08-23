@@ -1,155 +1,182 @@
 # AI Assistants and OKF-Todo
 
-OKF-Todo can work with an AI assistant that has access to suitable tools on your
-computer. The assistant does not have to be designed specifically for coding,
-and the AI model itself does not have to run locally.
+An AI assistant is an AI chat application that can also use tools on your
+computer. Instead of only answering a question, it may be able to open files,
+search folders, run programs, and save results after you approve them.
 
-What matters is whether the assistant can receive your source material, use the
-OKF-Todo context, reach an approved action interface, and let you review its
-work before anything is saved.
+Codex, Claude Code, Gemini CLI, GitHub Copilot CLI, and OpenCode are examples.
+You do not need to use one of these specific products. Any AI assistant can help
+if it has the access needed for the work you want it to do.
 
-## Model, assistant, and tools
+## What can an AI assistant do for you?
 
-These terms describe different parts of the system:
+Imagine that a customer sends you a long email about a production problem. You
+can give the email to an AI assistant and ask it to:
 
-- An **AI model** interprets instructions and generates a response. On its own,
-  it cannot see a path on your computer, run a command, or update OKF-Todo.
-- An **AI assistant** combines a model with an application that manages the
-  conversation, context, permissions, and available tools.
-- A **tool** performs a concrete action, such as reading a Markdown file,
-  running an application command, querying SQLite, or calling an MCP operation.
+- summarize what happened;
+- separate confirmed facts from assumptions;
+- prepare an OKF-Todo task;
+- suggest an investigation plan;
+- draft a reply to the customer;
+- show everything to you for review;
+- save the approved task in OKF-Todo;
+- read the saved task back and confirm what was stored.
 
-The assistant may use a model hosted by a provider while its approved tools run
-on your computer. In that arrangement, the tools are local even though model
-inference is not. Check the assistant provider's data and privacy controls before
-supplying customer mail, support transcripts, logs, or other sensitive material.
+The same approach works with support transcripts, meeting notes, diagnostic
+logs, deployment output, ideas, and handover notes. The assistant does the
+reading and drafting. You decide what is correct and what should be saved.
 
-OKF-Todo remains a local-first application: its database and application
-services stay on your computer. Connecting an AI assistant does not by itself
-make the model local or prevent selected conversation content from being sent to
-the assistant's model provider.
+## What does the assistant need?
 
-## What access the assistant needs
+An assistant that can only chat can still write a useful summary or task draft.
+You must then copy the result into OKF-Todo yourself.
 
-The required access depends on the result you want and the interface you choose.
+An assistant becomes much more useful when it can use tools on your computer.
+For OKF-Todo, useful tools include:
 
-| Approach | Required capability | What the assistant can do |
-| --- | --- | --- |
-| Artifact only | Accept source material and produce reviewable text or files | Prepare summaries, plans, replies, handovers, and proposed tasks without opening the OKF-Todo database |
-| OKF with direct SQLite | Read local Markdown files and use a SQLite-capable tool against the approved database path | Inspect current values and perform explicitly approved database changes using the installed OKF rules |
-| MCP server | Act as an MCP client and start or connect to the local OKF-Todo MCP server | Discover, read, create, and update supported task data through structured application tools |
-| CLI commands | Run approved local commands and read structured command results | Use the OKF-Todo application command interface from a terminal or script |
+- a file-reading tool for the installed OKF instructions;
+- a SQLite tool that can read and write the OKF-Todo database;
+- an MCP client that can connect to the OKF-Todo MCP server;
+- a terminal tool that can run OKF-Todo commands.
 
-Generic file access is not sufficient for direct database work. A SQLite database
-must not be edited as an ordinary text or binary file. Direct database access
-requires a SQLite-capable tool and compliance with the schema, foreign-key,
-transaction, and Timeline rules described by the installed OKF context.
+The assistant only needs one way to save work. It does not need all of these
+tools.
 
-For broad task work, prefer the MCP server because it exposes structured
-operations backed by the application's validation and lifecycle services. The
-CLI is useful for explicit application commands and automation. Direct SQLite
-access is an advanced route: it can perform operations outside the application
-services, so the assistant is responsible for preserving integrity and recording
-required history.
+## Direct SQLite access can be a major advantage
 
-## Compatibility checklist
+OKF-Todo keeps its data in one local SQLite database. If your AI assistant can
+work with SQLite, it can read your real task data instead of relying on text that
+you copy into the conversation.
 
-An assistant is a practical fit for OKF-Todo when it supports the capabilities
-needed by your chosen approach:
+With approved SQLite access, the assistant can:
 
-- It can receive the source material you want analyzed without treating that
-  material as instructions to follow.
-- It can read the installed OKF Markdown entry point and follow relevant links.
-- It can access paths outside its initial workspace when you explicitly approve
-  the OKF directory or database location.
-- It can use at least one safe action route: OKF with a SQLite-capable tool, the
-  local MCP server, or OKF-Todo CLI commands.
-- It has understandable permission controls for file access, commands, and tools.
-- It can begin with read-only inspection and show the complete proposed change.
-- It can wait for explicit approval before writing.
-- It can read the affected task data back after saving and show the final stored
-  result.
+- search existing tasks before proposing a duplicate;
+- use the actual task types, priorities, lists, and other values in your
+  database;
+- create or update tasks without manual copying;
+- make several related changes together;
+- read the records back immediately and show you exactly what was saved.
 
-An assistant that can only generate chat responses can still prepare useful
-artifacts. It is not able to update OKF-Todo until you provide a compatible,
-approved action route.
+This is especially useful when turning a large amount of source material into
+several related tasks or when the assistant needs to understand existing work
+before suggesting a change.
 
-## Example implementations
+SQLite access must come from a real SQLite-capable tool. The database is not a
+text document and must not be edited with an ordinary file editor. The assistant
+should first read the installed OKF files, which explain the database structure
+and OKF-Todo's rules.
 
-The products below are representative examples, not endorsements or a complete
-compatibility list. Their features and configuration formats can change, so use
-their current official documentation when connecting them.
+Direct SQLite writes do not pass through the OKF-Todo application services. The
+assistant must therefore follow the documented database rules, use a
+transaction, preserve relationships, and add required Timeline history. If you
+prefer a more controlled interface, use the MCP server instead.
 
-### Codex
+## SQLite, MCP, CLI, or chat only?
 
-[Codex](https://developers.openai.com/codex) can work with project files and
-controlled tools, run commands in an approved environment, and use MCP servers.
-That makes it suitable for the OKF and CLI routes as well as the built-in
-OKF-Todo MCP server. A Codex task working in this repository is an example of an
-AI assistant using a model together with workspace access, permissions, and
-local tools; Codex is more than the model alone.
+There are four practical ways to use an AI assistant with OKF-Todo:
 
-### Claude Code
+### Direct SQLite
 
-[Claude Code](https://code.claude.com/docs/en/cli-usage) provides terminal and
-file tools and can configure MCP servers. It can use the OKF context with an
-approved database tool, run OKF-Todo CLI commands, or connect to the OKF-Todo
-MCP server.
+Choose this when the assistant has a trustworthy SQLite tool and you want the
+most direct and flexible access to your local data. Give it access to both the
+installed OKF files and the database. Always require a proposal before a write.
 
-### Gemini CLI
+### MCP server
 
-[Gemini CLI](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md)
-works with local files and tools and supports configurable MCP servers. It can
-use the OKF context and local commands or connect to the OKF-Todo MCP server when
-the required paths, folder trust, and tool calls are approved.
+Choose this when the assistant supports MCP. MCP gives the assistant named
+OKF-Todo tools for finding, reading, creating, and updating tasks. These tools
+use the application's rules and automatically handle supported Timeline
+history. The assistant does not need direct database access.
 
-### GitHub Copilot CLI
+### OKF-Todo commands
 
-[GitHub Copilot CLI](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference)
-supports permission-controlled file and command access and
-[configurable local MCP servers](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers).
-It can use OKF-Todo when the required directories and operations are allowed for
-the session or repository.
+Choose this when the assistant can run terminal commands. The assistant can use
+OKF-Todo's command interface and read the structured result returned by the
+application.
 
-### OpenCode
+### Chat only
 
-[OpenCode](https://opencode.ai/docs/tools) provides file editing and terminal
-tools with configurable permissions and supports
-[local MCP servers](https://opencode.ai/v2/docs/mcp-servers). It can use the
-OKF, CLI, or MCP routes when configured with access to the necessary local paths
-and commands.
+Choose this when the assistant cannot use local tools. It can still analyze your
+material and prepare drafts, but you copy the approved result into OKF-Todo
+yourself.
 
-Other desktop applications, command-line agents, IDE assistants, and custom
-agent systems can also work with OKF-Todo. Product category is less important
-than satisfying the compatibility checklist and preserving the approval
-workflow.
+## Does the AI have to run locally?
 
-## Draft, review, save, verify
+No. The application containing the assistant may run on your computer while the
+AI model runs on the provider's servers. In that case, the assistant can use
+local tools even though the model itself is not local.
 
-Use the same four-stage workflow with every assistant and every action route:
+Your OKF-Todo database remains on your computer. However, text or files you give
+to the assistant may be sent to its model provider. Check the provider's privacy
+and data controls before sharing customer emails, logs, or other sensitive
+material.
 
-1. **Draft:** provide the source material and request a proposed artifact or
-   task change without allowing a write.
-2. **Review:** check facts, assumptions, target tasks, fields, attachments, and
-   lifecycle actions. Correct the proposal in the conversation.
-3. **Save:** explicitly approve the exact proposal and the interface the
-   assistant should use. Approval for one change is not open-ended permission
-   for later changes.
-4. **Verify:** have the assistant read the saved result through the database,
-   MCP, or application command interface and show what is now stored.
+## Examples of AI assistants
 
-Granting access to a directory, database, command, or MCP server only makes the
-capability available. It is not approval to make every possible change. Keep
-tool permissions as narrow as practical and approve writes only after reviewing
-the complete proposal.
+These are examples, not endorsements or a complete list. Products change, so
+follow their current official documentation when enabling file, terminal, or
+MCP access.
 
-## Continue with an action guide
+- [Codex](https://developers.openai.com/codex) can work with files, run approved
+  tools and commands, and use MCP servers.
+- [Claude Code](https://code.claude.com/docs/en/cli-usage) provides file and
+  terminal tools and can connect to MCP servers.
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md)
+  works with local files and tools and supports MCP servers.
+- [GitHub Copilot CLI](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference)
+  provides permission-controlled file and command access and supports
+  [local MCP servers](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers).
+- [OpenCode](https://opencode.ai/docs/tools) provides file and terminal tools
+  with configurable permissions and supports
+  [local MCP servers](https://opencode.ai/v2/docs/mcp-servers).
 
-- Use the [OKF layer guide](help/okf-layer.md) for installed paths, direct
-  SQLite workflows, reusable prompts, and the detailed approval process.
-- Use the [MCP server guide](help/mcp-server.md) to configure a compatible MCP
-  client and work through structured OKF-Todo tools.
-- Use the [application command interface](okf/todo-database/references/application-command-interface.md)
-  for the supported CLI command contract.
-- Use [OKF-Todo day to day](help/using-okf-todo.md) when you want to work only
-  through the desktop application.
+When considering another product, ask three simple questions:
+
+1. Can it read files from locations I approve?
+2. Can it use SQLite, MCP, or local commands?
+3. Can it ask before making changes and show me the saved result afterward?
+
+If the answer is yes, it can probably work with OKF-Todo.
+
+## A safe first example
+
+Start by asking the assistant to prepare a draft without saving anything:
+
+```text
+Read the customer email below and prepare an OKF-Todo task.
+Separate confirmed facts from assumptions and include an investigation plan.
+Do not save anything yet. Show me the complete proposed task first.
+
+[paste the customer email here]
+```
+
+Review the title, task body, priority, tags, and proposed actions. Correct
+anything that is wrong or unclear. When the proposal is ready, approve that
+specific change:
+
+```text
+I approve this proposed task. Save exactly this version in OKF-Todo, then read
+the saved task back and show me what was stored.
+```
+
+This creates a simple four-step habit:
+
+1. **Draft:** the assistant prepares a proposal without changing OKF-Todo.
+2. **Review:** you correct facts, assumptions, and task details.
+3. **Save:** you explicitly approve the exact change.
+4. **Verify:** the assistant reads the saved result back.
+
+Giving an assistant access to a file, database, command, or MCP server does not
+mean that every change is approved. Access makes the tool available. Your
+approval decides when and how it may be used.
+
+## Next steps
+
+- Follow the [OKF layer guide](help/okf-layer.md) when you want the assistant to
+  read the installed OKF instructions and work directly with SQLite.
+- Follow the [MCP server guide](help/mcp-server.md) when you want the assistant
+  to use structured OKF-Todo tools.
+- Read the [application command interface](okf/todo-database/references/application-command-interface.md)
+  when you want the assistant to run OKF-Todo commands.
+- Read [Using OKF-Todo day to day](help/using-okf-todo.md) when you want to use
+  the desktop application without an AI assistant.
