@@ -6,6 +6,21 @@ The upper-left application header includes a **GitHub** link to the project's so
 
 This guide follows the way you normally work: choose where the task belongs, capture it quickly, add useful detail, find it again, and move it safely through completion or cancellation.
 
+## Getting started
+
+You only need these steps to begin using OKF-Todo:
+
+1. If the first-run dialog is open, choose **Create first task**. Otherwise, choose a list in the **List** switcher and select **New task**.
+2. Enter a clear title and select **Save**. The task is created immediately and opens in the task details area.
+3. Add any useful details, such as priority, deadline, tags, or a description, then select the main **Save** button.
+4. Find work again by choosing a view such as **Active**, **Ready**, or **Waiting**, or by entering text in **Search tasks**.
+5. Select **Complete** when the work is finished. The task remains available in the **Completed** view.
+6. Protect your work by opening **Settings → Data & maintenance**, selecting **Create backup**, and choosing where to save the database copy.
+
+If you prefer to learn with examples, choose **Explore with sample data** in the first-run dialog. You can later remove only the sample tasks from **Settings → Data & maintenance** without removing tasks you created yourself.
+
+That is enough to start using OKF-Todo. The rest of this page is the complete guide to shortcuts, lists, views, task details, attachments, relationships, Trash, preferences, and database maintenance.
+
 ## Hotkey map
 
 The primary workspace actions use function keys so they remain available without conflicting with editor shortcuts:
