@@ -2,7 +2,7 @@
 
 > **Version 0.1 alpha - work in progress.** Expect incomplete features and changes to the user interface. Database will be migrated to newest version if necessary.
 
-An open-source, offline To-Do application for developers and supporters built with SQLite supporting Open Knowledge Format and MCP. 
+An open-source, offline To-Do application for developers and supporters built with SQLite supporting [Open Knowledge Format (OKF)](docs/what-is-okf.md) and MCP.
 
 [![OKF-Todo task workspace showing task views, rich task details, tags, waiting status, Markdown editing, and a checklist](docs/images/okf-todo-task-workspace.png)](docs/images/okf-todo-task-workspace.png)
 

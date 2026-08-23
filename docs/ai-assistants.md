@@ -90,8 +90,11 @@ before suggesting a change.
 
 SQLite access must come from a real SQLite-capable tool. The database is not a
 text document and must not be edited with an ordinary file editor. The assistant
-should first read the installed OKF files, which explain the database structure
-and OKF-Todo's rules.
+should first read the installed [OKF files](what-is-okf.md), which explain the
+database structure and OKF-Todo's rules.
+
+All the AI assistants named in this guide can use SQLite when a SQLite-capable
+local or MCP tool is available and approved.
 
 Direct SQLite writes do not pass through the OKF-Todo application services. The
 assistant must therefore follow the documented database rules, use a
@@ -205,6 +208,8 @@ approval decides when and how it may be used.
 
 ## Next steps
 
+- Start with [What is OKF?](what-is-okf.md) for a beginner-friendly explanation
+  of the context layer installed with OKF-Todo.
 - Follow the [OKF layer guide](help/okf-layer.md) when you want the assistant to
   read the installed OKF instructions and work directly with SQLite.
 - Follow the [MCP server guide](help/mcp-server.md) when you want the assistant
