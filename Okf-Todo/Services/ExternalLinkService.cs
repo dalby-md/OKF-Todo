@@ -9,8 +9,7 @@ public sealed class ExternalLinkService(
 {
     private static readonly HashSet<string> SupportedUrls = new(StringComparer.Ordinal)
     {
-        "https://github.com/dalby-md/Okf-Todo",
-        "https://dalby.md/projects/okf-todo"
+        "https://github.com/dalby-md/Okf-Todo"
     };
 
     public ExternalLinkOpenResult Open(ExternalLinkOpenRequest request)

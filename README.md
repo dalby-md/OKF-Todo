@@ -58,8 +58,6 @@ It is designed for the work that often falls between formal systems: production 
 - Complete database backup from inside the application.
 - Offline in-app Help for the desktop application, OKF layer, and optional MCP server.
 
-See [OKF-Todo on dalby.md](https://dalby.md/projects/okf-todo) for the project overview, screenshots, and background.
-
 ## Install from Microsoft Store
 
 Windows users can [get OKF-Todo from Microsoft Store](https://apps.microsoft.com/detail/9PP5FM2933BR).

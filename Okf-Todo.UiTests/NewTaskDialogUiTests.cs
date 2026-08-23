@@ -658,7 +658,7 @@ public sealed class NewTaskDialogUiTests
     }
 
     [Fact]
-    public async Task ProjectLinks_AppearWithoutAnIconAndOpenThroughTheBridge()
+    public async Task ProjectLink_AppearsWithoutAnIconAndOpensThroughTheBridge()
     {
         await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
         using var playwright = await Playwright.CreateAsync();
@@ -680,11 +680,9 @@ public sealed class NewTaskDialogUiTests
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
 
         var links = page.Locator(".app-brand-link");
-        Assert.Equal(2, await links.CountAsync());
+        Assert.Equal(1, await links.CountAsync());
         Assert.Equal("GitHub", await links.Nth(0).TextContentAsync());
         Assert.Equal("https://github.com/dalby-md/Okf-Todo", await links.Nth(0).GetAttributeAsync("href"));
-        Assert.Equal("dalby.md", await links.Nth(1).TextContentAsync());
-        Assert.Equal("https://dalby.md/projects/okf-todo", await links.Nth(1).GetAttributeAsync("href"));
         Assert.Equal(0, await page.Locator(".app-brand-mark").CountAsync());
 
         var taglineFontSize = await page.Locator(".app-brand-tagline").EvaluateAsync<string>(

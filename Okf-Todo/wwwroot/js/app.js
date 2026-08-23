@@ -1065,10 +1065,8 @@
             <div class="app-brand-copy">
               <h1 id="app-title">OKF-Todo</h1>
               <span class="app-brand-tagline">Local task system</span>
-              <nav class="app-brand-links" aria-label="Project links">
+              <nav class="app-brand-links" aria-label="Project link">
                 <a class="app-brand-link" href="https://github.com/dalby-md/Okf-Todo" target="_blank" rel="noopener noreferrer">GitHub</a>
-                <span aria-hidden="true">&middot;</span>
-                <a class="app-brand-link" href="https://dalby.md/projects/okf-todo" target="_blank" rel="noopener noreferrer">dalby.md</a>
               </nav>
             </div>
           </div>
