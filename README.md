@@ -11,19 +11,19 @@ An open-source, offline To-Do application for developers and supporters built wi
 
 ## AI-First Data
 
-OKF-Todo is designed to help an AI coding harness turn unstructured work into practical artifacts. Give Codex, Claude Code, or another compatible harness a customer email thread, support transcript, meeting notes, diagnostic output, or similar source material and ask it to prepare an internal task, investigation plan, customer reply, handover, status update, or another useful artifact.
+OKF-Todo is designed to help an [AI assistant with access to local tools](docs/ai-assistants.md) turn unstructured work into practical artifacts. Give Codex, Claude Code, or another compatible assistant a customer email thread, support transcript, meeting notes, diagnostic output, or similar source material and ask it to prepare an internal task, investigation plan, customer reply, handover, status update, or another useful artifact.
 
 The application is not dependent on AI. It also works as a traditional desktop To-Do application where you can create, organize, update, and complete tasks entirely through the user interface. No hosted account is required, and your data remains local. See [Using OKF-Todo day to day](docs/help/using-okf-todo.md) for the complete end-user workflow.
 
-For AI-assisted work, the recommended workflow is **draft, review, save, verify**: ask the harness to analyze the source without changing anything, review its proposal, explicitly approve any task creation or update, and then read the saved result back. The [OKF user guide](docs/help/okf-layer.md) and [MCP user guide](docs/help/mcp-server.md) provide complete examples and reusable prompts.
+For AI-assisted work, the recommended workflow is **draft, review, save, verify**: ask the assistant to analyze the source without changing anything, review its proposal, explicitly approve any task creation or update, and then read the saved result back. The [OKF user guide](docs/help/okf-layer.md) and [MCP user guide](docs/help/mcp-server.md) provide complete examples and reusable prompts.
 
-An AI harness can work with OKF-Todo in several ways:
+An AI assistant can work with OKF-Todo in several ways:
 
-- **[OKF knowledge layer](docs/help/okf-layer.md):** give the harness structured context about OKF-Todo's concepts, schema, relationships, integrity rules, and lifecycle conventions. OKF provides knowledge and navigation; it does not itself grant access to task data or perform updates.
-- **[MCP server](docs/help/mcp-server.md):** let an MCP-compatible harness list, read, create, and update tasks and inspect their timelines through structured tools.
+- **[OKF knowledge layer](docs/help/okf-layer.md):** give the assistant structured context about OKF-Todo's concepts, schema, relationships, integrity rules, and lifecycle conventions. OKF provides knowledge and navigation; it does not itself grant access to task data or perform updates.
+- **[MCP server](docs/help/mcp-server.md):** let an MCP-compatible client list, read, create, and update tasks and inspect their timelines through structured tools.
 - **[CLI commands](docs/okf/todo-database/references/application-command-interface.md):** let people, scripts, and agents execute application commands from a terminal.
-- **Direct SQLite access:** let a user, script, or harness read or write the local database directly when it has permission to access the file.
-- **Desktop interface:** use every task-management feature manually without an AI harness.
+- **Direct SQLite access:** let a user, script, or assistant read or write the local database directly when it has permission to access the file and a SQLite-capable tool.
+- **Desktop interface:** use every task-management feature manually without an AI assistant.
 
 The desktop interface, CLI, and MCP server use the same application services, so their changes consistently apply validation, lifecycle rules, and automatic task history. Direct SQLite writes are also possible, but they bypass those services; the caller is therefore responsible for preserving data integrity and recording any required history.
 
