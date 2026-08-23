@@ -34,7 +34,7 @@ You must then copy the result into OKF-Todo yourself.
 An assistant becomes much more useful when it can use tools on your computer.
 For OKF-Todo, useful tools include:
 
-- a file-reading tool for the installed OKF instructions;
+- a file-reading tool for the installed [OKF instructions](what-is-okf.md);
 - a SQLite tool that can read and write the OKF-Todo database;
 - an MCP client that can connect to the OKF-Todo MCP server;
 - a terminal tool that can run OKF-Todo commands.
@@ -44,11 +44,12 @@ tools.
 
 ## OKF-Todo finds the paths for you
 
-You do not have to find the OKF files or database yourself, and you do not have
-to type their paths into a prompt. Start OKF-Todo, open the in-app **Help**, and
-choose **OKF layer**. The running application already knows:
+You do not have to find the [OKF files](what-is-okf.md) or database yourself,
+and you do not have to type their paths into a prompt. Start OKF-Todo, open the
+in-app **Help**, and choose [**OKF layer**](what-is-okf.md). The running
+application already knows:
 
-- the exact OKF entry-file path for this installation;
+- the exact [OKF entry-file](what-is-okf.md) path for this installation;
 - the active database path, including a custom database path;
 - the current operating system and installation location.
 
@@ -67,7 +68,8 @@ where it stores data.
 The same principle applies to the other access methods described below. The
 in-app **MCP server** guide shows the exact configuration path and provides
 ready-to-copy configuration for this running copy of OKF-Todo. For CLI work,
-the OKF entry point links the assistant to the application command interface.
+the [OKF entry point](what-is-okf.md) links the assistant to the application
+command interface.
 
 ## Direct SQLite access can be a major advantage
 
@@ -109,9 +111,10 @@ There are four practical ways to use an AI assistant with OKF-Todo:
 
 Choose this when the assistant has a trustworthy SQLite tool and you want the
 most direct and flexible access to your local data. In the in-app **Help**, open
-**OKF layer**, select **Copy prompt**, and paste it into the assistant. The
-copied prompt already contains the exact installed OKF and active database
-paths. Always require a proposal before a write.
+the [**OKF layer**](what-is-okf.md), select **Copy prompt**, and paste it into
+the assistant. The copied prompt already contains the exact installed
+[OKF](what-is-okf.md) and active database paths. Always require a proposal
+before a write.
 
 ### MCP server
 
@@ -126,9 +129,9 @@ launch configuration for this installed application or source checkout.
 
 Choose this when the assistant can run terminal commands. The assistant can use
 OKF-Todo's command interface and read the structured result returned by the
-application. Start with **Help** → **OKF layer** so the assistant receives the
-correct OKF entry point; that context links to the application command
-interface and its supported command contract.
+application. Start with **Help** → [**OKF layer**](what-is-okf.md) so the
+assistant receives the correct [OKF entry point](what-is-okf.md); that context
+links to the application command interface and its supported command contract.
 
 ### Chat only
 
@@ -211,7 +214,8 @@ approval decides when and how it may be used.
 - Start with [What is OKF?](what-is-okf.md) for a beginner-friendly explanation
   of the context layer installed with OKF-Todo.
 - Follow the [OKF layer guide](help/okf-layer.md) when you want the assistant to
-  read the installed OKF instructions and work directly with SQLite.
+  read the installed [OKF instructions](what-is-okf.md) and work directly with
+  SQLite.
 - Follow the [MCP server guide](help/mcp-server.md) when you want the assistant
   to use structured OKF-Todo tools.
 - Read the [application command interface](okf/todo-database/references/application-command-interface.md)
