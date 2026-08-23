@@ -4,6 +4,10 @@
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0</TargetFramework>
 		<Platforms>AnyCPU</Platforms>
+		<VersionPrefix>0.2.0</VersionPrefix>
+		<VersionSuffix>alpha</VersionSuffix>
+		<AssemblyVersion>0.2.0.0</AssemblyVersion>
+		<FileVersion>0.2.0.0</FileVersion>
 		<ApplicationIcon>wwwroot\favicon.ico</ApplicationIcon>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>

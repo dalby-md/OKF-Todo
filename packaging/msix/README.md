@@ -35,14 +35,14 @@ From the repository root:
 
 ```powershell
 .\packaging\msix\build-msix-prototype.ps1 `
-  -Version 0.1.0.0 `
+  -Version 0.2.0.0 `
   -Install
 ```
 
 The package is written to:
 
 ```text
-artifacts\msix\output\Okf-Todo-0.1.0.0-win-x64-prototype.msix
+artifacts\msix\output\Okf-Todo-0.2.0.0-win-x64-prototype.msix
 ```
 
 Generated packages, manifests, assets, and development certificates remain
@@ -74,7 +74,7 @@ certificate:
 
 ```powershell
 .\packaging\msix\build-msix-prototype.ps1 `
-  -Version 0.1.0.1 `
+  -Version 0.2.0.1 `
   -Install
 ```
 

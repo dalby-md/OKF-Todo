@@ -1,6 +1,6 @@
 # OKF-Todo
 
-> **Version 0.1 alpha - work in progress.** Expect incomplete features and changes to the user interface. Database will be migrated to newest version if necessary.
+> **Version 0.2 alpha - work in progress.** Expect incomplete features and changes to the user interface. The application applies pending database migrations at startup when necessary.
 
 An open-source, offline To-Do application for developers and supporters built with SQLite supporting [Open Knowledge Format (OKF)](docs/what-is-okf.md) and MCP.
 
@@ -58,9 +58,13 @@ It is designed for the work that often falls between formal systems: production 
 - Complete database backup from inside the application.
 - Offline in-app Help for the desktop application, OKF layer, and optional MCP server.
 
-## Install from Microsoft Store
+## Install on Windows
 
-Windows users can [get OKF-Todo from Microsoft Store](https://apps.microsoft.com/detail/9PP5FM2933BR).
+Windows users can [get OKF-Todo from Microsoft Store](https://apps.microsoft.com/detail/9PP5FM2933BR) or download the Inno Setup installer from the [latest GitHub release](https://github.com/dalby-md/OKF-Todo/releases/latest).
+
+The GitHub-hosted alpha installer is not Authenticode signed. Windows may show
+an unknown-publisher or Microsoft Defender SmartScreen warning. The Microsoft
+Store package is signed by Microsoft after certification.
 
 ## Database file
 The database is stored under the operating system's local application-data directory:
@@ -78,12 +82,13 @@ Installing, updating, or removing OKF-Todo never overwrites or removes the datab
 
 ## Requirements
 
-The current alpha is run from source. You need. 
+Packaged installation is available for Windows. Source builds require:
+
 - Windows 10 or later, macOS 10.15 or later, or a current Linux desktop distribution.
-- If you want to use dotnet builder and runner. You should use [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0). 
+- The [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 - The platform webview used by Photino: WebView2 on Windows, the system WebKit view on macOS, or GTK/WebKit on Linux.
 
-Windows is the primary tested platform for version 0.1. The application architecture and Photino shell are cross-platform, but macOS and Linux packaging and verification are still in progress.
+Windows is the primary packaged and tested platform for version 0.2 alpha. The application architecture and Photino shell are cross-platform, but macOS and Linux packaging and verification are still in progress.
 
 ## Run the application
 
@@ -165,7 +170,7 @@ Open **Setup**, then select **Back up database**. Choose a destination in the na
 
 The backup includes task lists, tasks, body images, attachments, lookups, tags, relationships, comments, checklists, and history. Interface preferences such as layout, selected list scope, and color scheme are stored separately and are not included.
 
-Restore is manual in version 0.1:
+Restore is manual in version 0.2 alpha:
 
 1. Close OKF-Todo.
 2. Keep a copy of the current database if needed.
@@ -180,7 +185,7 @@ OKF-Todo is a single-user, local-first application. It has no authentication, cl
 
 ## Current Limitations
 
-Version 0.1 is an alpha release intended for evaluation and personal use:
+Version 0.2 is an alpha release intended for evaluation and personal use:
 
 - Windows, macOS, and Linux can run from source; Windows currently receives the most testing.
 - A Windows installer can be built from the repository. Automatic updates and macOS/Linux packages are not available yet.
@@ -223,19 +228,19 @@ The Windows installer is a self-contained `win-x64` Inno Setup package. It insta
 Install Inno Setup 7 (or compatible Inno Setup 6), then run from the repository root:
 
 ```powershell
-.\installer\build-installer.ps1 -Version 0.1.0
+.\installer\build-installer.ps1 -Version 0.2.0
 ```
 
 Or from Windows cmd:
 
 ```cmd
-installer\build-installer.cmd -Version 0.1.0
+installer\build-installer.cmd -Version 0.2.0
 ```
 
 The installer is written to:
 
 ```text
-artifacts\installer\Okf-Todo-0.1.0-win-x64-setup.exe
+artifacts\installer\Okf-Todo-0.2.0-win-x64-setup.exe
 ```
 
 ### Build the local MSIX feasibility prototype
@@ -254,13 +259,13 @@ install the package:
 
 ```powershell
 winget install -e --id Microsoft.WinAppCli --source winget
-.\packaging\msix\build-msix-prototype.ps1 -Version 0.1.0.0 -Install
+.\packaging\msix\build-msix-prototype.ps1 -Version 0.2.0.0 -Install
 .\packaging\msix\start-msix-prototype.ps1
 ```
 
 See [the MSIX prototype guide](packaging/msix/README.md) for upgrade, sample-data,
-and cleanup commands. The existing Inno installer remains the production
-packaging path.
+and cleanup commands. The Inno installer remains the direct-download packaging
+path.
 
 ### Build the Microsoft Store package
 
@@ -270,7 +275,7 @@ signs the package after Store certification, so this path does not require a
 purchased code-signing certificate.
 
 ```powershell
-.\packaging\msix\build-msix-store.ps1 -Version 0.1.0.0
+.\packaging\msix\build-msix-store.ps1 -Version 0.2.0.0
 ```
 
 The artifact is written under `artifacts\msix-store\output`. See the
@@ -280,7 +285,7 @@ validation, versioning, data-safety, MCP-alias, and Partner Center handoff rules
 To publish, merge, and validate the staging payload without compiling the setup executable:
 
 ```powershell
-.\installer\build-installer.ps1 -Version 0.1.0 -SkipInstallerCompile
+.\installer\build-installer.ps1 -Version 0.2.0 -SkipInstallerCompile
 ```
 
 The desktop application, OKF command adapter, and MCP server are provided by the single payload staged under `artifacts\installer\staging\core`; the installed OKF bundle is staged under `artifacts\installer\staging\okf`.
@@ -288,7 +293,7 @@ The desktop application, OKF command adapter, and MCP server are provided by the
 For a signed production build, provide the Windows SDK `signtool.exe`, certificate thumbprint, and optional RFC 3161 timestamp URL:
 
 ```powershell
-.\installer\build-installer.ps1 -Version 0.1.0 `
+.\installer\build-installer.ps1 -Version 0.2.0 `
   -SignToolPath 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe' `
   -CertificateThumbprint '<certificate-thumbprint>'
 ```
@@ -309,16 +314,42 @@ The tag and title identify the build as alpha, but the GitHub release is intenti
 Override the calculated tag when necessary:
 
 ```powershell
-.\installer\update_release_exe.ps1 -Tag v0.1.8-alpha
+.\installer\update_release_exe.ps1 -Tag v0.2.0-alpha
 ```
 
 Preview the derived version, asset name, and stable URL without building or contacting GitHub when an explicit tag is supplied:
 
 ```powershell
-.\installer\update_release_exe.ps1 -Tag v0.1.8-alpha -WhatIf
+.\installer\update_release_exe.ps1 -Tag v0.2.0-alpha -WhatIf
 ```
 
-Use `publish-github-release.ps1` only for the alternative versioned, non-alpha release workflow. Do not run both publishing scripts for the same installer.
+For a coordinated Store and GitHub launch, build the tested installer once and
+create a GitHub draft for the exact release commit:
+
+```powershell
+.\installer\build-installer.ps1 -Version 0.2.0
+.\installer\publish-github-release.ps1 `
+  -Version 0.2.0 `
+  -Tag v0.2.0-alpha `
+  -Title 'OKF-Todo 0.2.0 alpha' `
+  -NotesFile docs\release-notes\v0.2.0-alpha.md `
+  -Draft
+```
+
+The publisher refuses a dirty working tree, targets the current commit, uploads
+the versioned installer and its SHA-256 checksum, and leaves the release as a
+draft while Store certification runs. After Partner Center certifies and holds
+the Store submission, publish that tested draft as GitHub's latest release:
+
+```powershell
+.\installer\publish-github-release.ps1 `
+  -Tag v0.2.0-alpha `
+  -PublishDraft `
+  -Latest
+```
+
+Do not run `update_release_exe.ps1` and the coordinated draft workflow for the
+same release.
 
 ## AI harness
 OKF-Todo is built using Codex but is not tied to Codex. It uses AGENTS.md and skills and other crosss platform designs.

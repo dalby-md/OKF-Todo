@@ -31,20 +31,22 @@ MSIX versions contain four numeric parts:
 major.minor.patch.revision
 ```
 
-Use the product release version in the first three parts and normally keep the
-revision at zero:
+Use the product release version in the first three parts and keep the revision
+at zero:
 
 | Release | MSIX version |
 | --- | --- |
 | First alpha | `0.1.0.0` |
 | Next feature or fix release | `0.1.1.0` |
-| Next minor release | `0.2.0.0` |
+| Current 0.2 alpha | `0.2.0.0` |
 | First stable release | `1.0.0.0` |
 
 Every uploaded replacement package must have a version higher than every
 previously published package for the same architecture. Never reuse or decrease
-a package version. If a package must be rebuilt after upload, increment the
-revision, for example from `0.1.1.0` to `0.1.1.1`.
+a package version. For coordinated GitHub, Inno Setup, and Store releases, if
+package contents must change after upload, increment the product patch version
+across every channel; for example, replace `0.2.0-alpha` / `0.2.0` / `0.2.0.0`
+with `0.2.1-alpha` / `0.2.1` / `0.2.1.0`.
 
 Keep the values in `store-identity.psd1` unchanged. Updating within the same
 package family is what lets Windows recognize a new package as an update.
@@ -98,13 +100,13 @@ contract tests described in `Okf-Todo.InstalledContractTests/README.md`.
 Build the Store package with the selected version:
 
 ```powershell
-.\packaging\msix\build-msix-store.ps1 -Version 0.1.1.0
+.\packaging\msix\build-msix-store.ps1 -Version 0.2.0.0
 ```
 
 Expected upload artifact:
 
 ```text
-artifacts\msix-store\output\Okf-Todo-0.1.1.0-win-x64-store.msix
+artifacts\msix-store\output\Okf-Todo-0.2.0.0-win-x64-store.msix
 ```
 
 The build script publishes a self-contained `win-x64` application, copies the
@@ -116,7 +118,7 @@ Do not install the unsigned Store artifact locally. Use the signed prototype
 package for local install and upgrade testing:
 
 ```powershell
-.\packaging\msix\build-msix-prototype.ps1 -Version 0.1.1.0 -Install
+.\packaging\msix\build-msix-prototype.ps1 -Version 0.2.0.0 -Install
 .\packaging\msix\start-msix-prototype.ps1
 ```
 
@@ -135,10 +137,13 @@ payload, manifest, native dependencies, or permissions have changed.
 5. Update the **Store listing**:
    - description and feature list match the released application;
    - **What's new in this version** describes user-visible changes;
-   - screenshots show the current UI and contain no private task data;
+   - use `docs/images/okf-todo-task-workspace.png` as the required current UI screenshot and confirm that it contains no private task data;
+   - use `docs/release-notes/v0.2.0-alpha.md` as the source for the 0.2 alpha **What's new** text;
    - copyright, support URL, website, and privacy URL remain correct.
-6. Complete **Submission options**, including the `runFullTrust` explanation and
-   useful certification notes.
+6. Complete **Submission options**, including the `runFullTrust` explanation,
+   useful certification notes, and manual publication after certification. Do
+   not allow the Store submission to publish automatically for a coordinated
+   GitHub, Inno Setup, and Store launch.
 7. Review every section until Partner Center marks it complete, then select
    **Submit for certification**.
 
@@ -167,6 +172,11 @@ image before publication, either:
 Cancel only for a serious problem because resubmission restarts certification.
 Watch the certification report and preserve the exact failure message if the
 submission is rejected.
+
+When certification succeeds, keep the submission unpublished until the tested
+GitHub draft and its Inno Setup asset are ready. Then publish the Store
+submission and immediately publish the GitHub draft as **Latest**. Record both
+publication times and verify both public listings.
 
 ### 6. Verify after publication
 
@@ -270,4 +280,3 @@ Do not commit:
 - [Store submission options and restricted capabilities](https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/msix/manage-submission-options)
 - [App capability declarations](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/app-capability-declarations)
 - [Package flights](https://learn.microsoft.com/en-us/windows/apps/publish/package-flights)
-

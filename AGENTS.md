@@ -97,6 +97,14 @@ Use `TaskItem` as the C# entity name instead of `Task` to avoid confusion with `
 - Every installer and package build must fail if its staged payload contains a SQLite database or if installer logic targets the managed database path.
 - Database replacement is allowed only through the application's explicit restore or reset workflows, with their validation, confirmation, and safety-backup rules.
 
+## Microsoft Store, Inno Setup, And Release Artwork — Hard Rule
+
+- Always use `C:\git\Okf-Todo\Okf-Todo\Resources\Okf-Todo-icon.png` (`Okf-Todo/Resources/Okf-Todo-icon.png` in the GitHub repository) as the source icon for the desktop application, Microsoft Store/MSIX package, and Inno Setup installer.
+- Keep `Okf-Todo/wwwroot/favicon.ico` synchronized with that source icon. It is the shared icon input for the .NET executable and Photino window, Inno Setup, and generated MSIX visual assets.
+- After changing the source icon, regenerate the multi-size ICO and verify the Release build, the Inno Setup installer icon, and the generated Microsoft Store/MSIX assets all use the updated mark.
+- Always use `C:\git\Okf-Todo\docs\images\okf-todo-task-workspace.png` (`docs/images/okf-todo-task-workspace.png` in the GitHub repository) for the Microsoft Store listing.
+- For every new release, try to update this screenshot so it accurately represents the current released task workspace.
+
 ## OKF Database Context
 
 - After every database-design change, use the repo-local `compile-okf-context` skill.
