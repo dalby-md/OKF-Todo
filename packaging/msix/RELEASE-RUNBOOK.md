@@ -122,9 +122,31 @@ package for local install and upgrade testing:
 .\packaging\msix\start-msix-prototype.ps1
 ```
 
-The prototype uses an isolated database and is not the Store product. Run the
-Windows App Certification Kit against a locally installable build when the
-payload, manifest, native dependencies, or permissions have changed.
+The prototype uses an isolated database and is not the Store product.
+
+Before every public Store submission, run the Windows App Certification Kit
+against the exact Store MSIX that will be uploaded. Run it from an elevated
+PowerShell window in an active user session:
+
+```powershell
+$version = '0.2.0.0'
+$appCert = "${env:ProgramFiles(x86)}\Windows Kits\10\App Certification Kit\appcert.exe"
+$package = ".\artifacts\msix-store\output\Okf-Todo-$version-win-x64-store.msix"
+$reportDirectory = ".\artifacts\msix-store\wack\$version"
+$report = "$reportDirectory\Okf-Todo-$version-wack.xml"
+
+New-Item -ItemType Directory -Path $reportDirectory -Force | Out-Null
+& $appCert reset
+& $appCert test -appxpackagepath $package -reportoutputpath $report
+```
+
+Treat this as a release gate: do not upload the package unless the report says
+it passed. Record the MSIX version, source commit, App Certification Kit
+version, test date, pass/fail result, and report path in a text file beside the
+generated report. Keep the report and record under the ignored `artifacts`
+directory; summarize the pass in the release or repository history. If the
+test fails, preserve the report, fix the package, increment the version when
+required, rebuild, and run the complete test again.
 
 ### 3. Create the Partner Center submission
 
