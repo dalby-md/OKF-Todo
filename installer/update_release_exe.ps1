@@ -6,7 +6,9 @@ param(
 
     [string]$CertificateThumbprint,
 
-    [string]$TimestampUrl = 'http://timestamp.digicert.com'
+    [string]$TimestampUrl = 'http://timestamp.digicert.com',
+
+    [switch]$ReplaceExistingAsset
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,6 +34,25 @@ function Get-GitHubReleaseTags {
             ForEach-Object { $_.Trim() } |
             Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
     )
+}
+
+function Assert-GitHubReleaseIsMutable {
+    param([Parameter(Mandatory)][string]$ReleaseTag)
+
+    $immutableOutput = @(
+        & gh release view $ReleaseTag --json isImmutable --jq '.isImmutable'
+    )
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not inspect GitHub release '$ReleaseTag'. GitHub CLI exited with code $LASTEXITCODE."
+    }
+
+    $isImmutable = ($immutableOutput -join '').Trim()
+    if ($isImmutable -eq 'true') {
+        throw "GitHub release '$ReleaseTag' is immutable. Its asset cannot be replaced; choose a new tag."
+    }
+    if ($isImmutable -ne 'false') {
+        throw "GitHub returned an unexpected immutable state for release '$ReleaseTag': '$isImmutable'."
+    }
 }
 
 function Get-NextAlphaTag {
@@ -66,8 +87,13 @@ if (-not (Test-Path -LiteralPath $buildScript -PathType Leaf)) {
 Push-Location $repoRoot
 try {
     $knownReleaseTags = $null
+    $tagWasProvided = -not [string]::IsNullOrWhiteSpace($Tag)
 
-    if ([string]::IsNullOrWhiteSpace($Tag)) {
+    if ($ReplaceExistingAsset -and -not $tagWasProvided) {
+        throw 'ReplaceExistingAsset requires an explicit -Tag.'
+    }
+
+    if (-not $tagWasProvided) {
         Assert-GitHubCli
         $knownReleaseTags = @(Get-GitHubReleaseTags)
         $Tag = Get-NextAlphaTag -ReleaseTags $knownReleaseTags
@@ -98,9 +124,14 @@ try {
     Write-Output "Installer version: $version"
     Write-Output "Stable asset name: $stableAssetName"
 
-    if (-not $PSCmdlet.ShouldProcess(
-        $Tag,
-        "Build installer $version and publish a new GitHub release as latest")) {
+    $releaseAction = if ($ReplaceExistingAsset) {
+        "Build installer $version and replace its asset in the existing GitHub release"
+    }
+    else {
+        "Build installer $version and publish a new GitHub release as latest"
+    }
+
+    if (-not $PSCmdlet.ShouldProcess($Tag, $releaseAction)) {
         Write-Output "Stable installer URL: $stableInstallerUrl"
         return
     }
@@ -111,8 +142,15 @@ try {
         $knownReleaseTags = @(Get-GitHubReleaseTags)
     }
 
-    if ($knownReleaseTags -contains $Tag) {
+    $releaseExists = $knownReleaseTags -contains $Tag
+    if ($releaseExists -and -not $ReplaceExistingAsset) {
         throw "GitHub release '$Tag' already exists. Choose a new tag."
+    }
+    if (-not $releaseExists -and $ReplaceExistingAsset) {
+        throw "GitHub release '$Tag' does not exist. Omit -ReplaceExistingAsset to create it."
+    }
+    if ($releaseExists -and $ReplaceExistingAsset) {
+        Assert-GitHubReleaseIsMutable -ReleaseTag $Tag
     }
 
     $buildParameters = @{
@@ -142,18 +180,29 @@ try {
         -Destination $stableAssetPath `
         -Force
 
-    & gh release create `
-        $Tag `
-        $stableAssetPath `
-        --title "OKF-Todo $version alpha" `
-        --notes 'Windows installer.' `
-        --latest
+    if ($ReplaceExistingAsset) {
+        & gh release upload $Tag $stableAssetPath --clobber
+        if ($LASTEXITCODE -ne 0) {
+            throw "GitHub release asset replacement failed with exit code $LASTEXITCODE."
+        }
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "GitHub release creation failed with exit code $LASTEXITCODE."
+        Write-Output "Release asset for $Tag replaced."
+    }
+    else {
+        & gh release create `
+            $Tag `
+            $stableAssetPath `
+            --title "OKF-Todo $version alpha" `
+            --notes 'Windows installer.' `
+            --latest
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "GitHub release creation failed with exit code $LASTEXITCODE."
+        }
+
+        Write-Output "Release $Tag created."
     }
 
-    Write-Output "Release $Tag created."
     Write-Output 'Versioned installer:'
     Write-Output $versionedInstallerPath
     Write-Output 'Stable release asset:'

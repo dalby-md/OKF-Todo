@@ -39,6 +39,22 @@ ScaffoldingReadMe.txt
 # dotenv environment variables file
 .env
 
+# Code-signing certificates and private-key material
+*.pfx
+*.p12
+*.pvk
+*.key
+*.pem
+*.cer
+*.crt
+*.p7b
+*.p7c
+*.jks
+*.keystore
+*.snk
+id_rsa
+id_ed25519
+
 # Others
 ~$*
 *~
