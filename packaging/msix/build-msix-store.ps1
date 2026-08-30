@@ -97,6 +97,7 @@ function Assert-StoreManifest {
     if ($identityNode.GetAttribute('Name') -ne $identity.PackageName -or
         $identityNode.GetAttribute('Publisher') -ne $identity.Publisher -or
         $identityNode.GetAttribute('Version') -ne $Version -or
+        $identityNode.GetAttribute('ProcessorArchitecture') -ne $identity.ProcessorArchitecture -or
         $displayNameNode.InnerText -ne $identity.DisplayName -or
         $publisherDisplayNameNode.InnerText -ne $publisherDisplayName) {
         throw 'The generated manifest does not match the immutable Partner Center package identity.'
@@ -181,6 +182,10 @@ try {
     $namespaceManager = [System.Xml.XmlNamespaceManager]::new($manifest.NameTable)
     $namespaceManager.AddNamespace('foundation', 'http://schemas.microsoft.com/appx/manifest/foundation/windows10')
     $namespaceManager.AddNamespace('uap', 'http://schemas.microsoft.com/appx/manifest/uap/windows10')
+
+    $manifest.SelectSingleNode(
+        '/foundation:Package/foundation:Identity',
+        $namespaceManager).SetAttribute('ProcessorArchitecture', $identity.ProcessorArchitecture)
 
     $manifest.SelectSingleNode(
         '/foundation:Package/foundation:Properties/foundation:DisplayName',

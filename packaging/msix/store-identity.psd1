@@ -7,4 +7,5 @@
     StoreId             = '9PP5FM2933BR'
     StoreUrl            = 'https://apps.microsoft.com/detail/9PP5FM2933BR'
     ExecutionAlias      = 'okf-todo.exe'
+    ProcessorArchitecture = 'x64'
 }

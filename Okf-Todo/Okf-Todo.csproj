@@ -8,6 +8,7 @@
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<FileVersion>1.0.0.0</FileVersion>
 		<ApplicationIcon>wwwroot\favicon.ico</ApplicationIcon>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
    		<!-- Generate embedded file manifest when using the Photino.NET StaticFileServer -->
