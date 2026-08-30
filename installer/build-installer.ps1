@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+(\.\d+)?$')]
-    [string]$Version = '0.2.0',
+    [string]$Version = '1.0.0',
 
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Release',
@@ -145,7 +145,7 @@ try {
     Reset-Directory -Path $artifactRoot
     New-Item -ItemType Directory -Path $publishRoot -Force | Out-Null
 
-    Write-Host "Publishing unified OKF-Todo application for $RuntimeIdentifier..."
+    Write-Host "Publishing unified OKF Todo application for $RuntimeIdentifier..."
     Invoke-Publish -Project (Join-Path $repoRoot 'Okf-Todo\Okf-Todo.csproj') -Output $guiPublish
 
     Reset-Directory -Path $stagingRoot

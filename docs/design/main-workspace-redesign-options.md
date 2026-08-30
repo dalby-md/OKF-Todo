@@ -1,10 +1,10 @@
 # Main workspace redesign options
 
-These three design directions are stable references for future OKF-Todo work. The
+These three design directions are stable references for future OKF Todo work. The
 option numbers and names should not be reused for different concepts.
 
 Option 2, **Triage Command**, was selected for implementation on 2026-07-23.
-The product name remains **OKF-Todo**; the option names describe design
+The product name remains **OKF Todo**; the option names describe design
 directions, not product renames.
 
 ## Comparison
@@ -22,7 +22,7 @@ directions, not product renames.
 Quiet Workbench keeps the familiar task-list and task-detail split while making
 the whole application feel calmer and more deliberate.
 
-- A unified top bar carries the OKF-Todo identity, global actions, and save state.
+- A unified top bar carries the OKF Todo identity, global actions, and save state.
 - A compact, flat task list replaces a stack of visually separate cards.
 - The selected task is shown by a restrained accent rail and tonal background.
 - The task detail becomes a clean document canvas with metadata grouped above the
@@ -61,7 +61,7 @@ between queues while keeping one task open.
   red for Urgent, amber for Waiting, rose for Overdue, green for Completed, and
   slate for All. Labels and icons remain present so meaning never depends on
   colour alone.
-- The implementation preserves OKF-Todo terminology and current filtering
+- The implementation preserves OKF Todo terminology and current filtering
   behaviour even where the concept image uses simplified example labels.
 
 Responsive intent:
@@ -104,5 +104,5 @@ Responsive intent:
 - Collapse the library before compressing the document.
 - Move supporting properties into stacked sections on narrow windows.
 
-Use this option if OKF-Todo later develops a stronger emphasis on long-form
+Use this option if OKF Todo later develops a stronger emphasis on long-form
 artifacts, review flows, or document-centric work.

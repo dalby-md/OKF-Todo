@@ -35,7 +35,7 @@ public sealed class DatabaseMaintenanceService(
         if (string.Equals(sourcePath, activePath, StringComparison.OrdinalIgnoreCase))
         {
             throw new ValidationException(
-                "Choose a database file other than the active OKF-Todo database.",
+                "Choose a database file other than the active OKF Todo database.",
                 "sourcePath");
         }
 
@@ -125,7 +125,7 @@ public sealed class DatabaseMaintenanceService(
         if (File.Exists(markerPath))
         {
             throw new ValidationException(
-                "A database restore or reset is already prepared. Close and reopen OKF-Todo first.",
+                "A database restore or reset is already prepared. Close and reopen OKF Todo first.",
                 "database");
         }
 
@@ -190,7 +190,7 @@ public sealed class DatabaseMaintenanceService(
             if (!knownMigrations.Contains(migrationId))
             {
                 throw new ValidationException(
-                    "The selected database was created by a newer or incompatible version of OKF-Todo.",
+                    "The selected database was created by a newer or incompatible version of OKF Todo.",
                     "sourcePath");
             }
         }
@@ -235,7 +235,7 @@ public sealed class DatabaseMaintenanceService(
         if (Convert.ToInt64(await schemaCommand.ExecuteScalarAsync(cancellationToken)) != 1)
         {
             throw new ValidationException(
-                "The selected file is not an OKF-Todo database.",
+                "The selected file is not an OKF Todo database.",
                 "sourcePath");
         }
     }
@@ -339,7 +339,7 @@ public sealed class DatabaseMaintenanceService(
         if (File.Exists(markerPath))
         {
             throw new ValidationException(
-                "A database restore or reset is already prepared. Close and reopen OKF-Todo first.",
+                "A database restore or reset is already prepared. Close and reopen OKF Todo first.",
                 "database");
         }
 
@@ -449,7 +449,7 @@ public static class PendingDatabaseOperationApplier
         catch (SqliteException exception)
         {
             throw new InvalidOperationException(
-                "The database is in use by another OKF-Todo process. Close the MCP server and try again.",
+                "The database is in use by another OKF Todo process. Close the MCP server and try again.",
                 exception);
         }
     }

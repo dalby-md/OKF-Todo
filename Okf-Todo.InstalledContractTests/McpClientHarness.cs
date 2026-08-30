@@ -22,7 +22,7 @@ internal sealed class McpClientHarness : IAsyncDisposable
     {
         var transport = new StdioClientTransport(new StdioClientTransportOptions
         {
-            Name = "OKF-Todo installed contract tests",
+            Name = "OKF Todo installed contract tests",
             Command = product.ApplicationPath,
             Arguments = ["--mcp", "--database-path", databasePath],
             WorkingDirectory = product.RootPath,

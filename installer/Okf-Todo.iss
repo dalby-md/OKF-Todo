@@ -1,7 +1,7 @@
-#define AppName "OKF-Todo"
-#define AppPublisher "OKF-Todo"
+#define AppName "OKF Todo"
+#define AppPublisher "OKF Todo"
 #ifndef AppVersion
-  #define AppVersion "0.2.0"
+  #define AppVersion "1.0.0"
 #endif
 
 [Setup]
@@ -37,10 +37,10 @@ Source: "..\artifacts\installer\staging\okf\*"; DestDir: "{app}\okf"; Flags: ign
 Source: "..\artifacts\installer\staging\integration\README.md"; DestDir: "{app}\integration"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\OKF-Todo"; Filename: "{app}\Okf-Todo.exe"; WorkingDir: "{app}"; IconFilename: "{app}\Okf-Todo.exe"
+Name: "{group}\OKF Todo"; Filename: "{app}\Okf-Todo.exe"; WorkingDir: "{app}"; IconFilename: "{app}\Okf-Todo.exe"
 
 [Run]
-Filename: "{app}\Okf-Todo.exe"; Description: "Launch OKF-Todo"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\Okf-Todo.exe"; Description: "Launch OKF Todo"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: files; Name: "{app}\integration\mcp-config.json"

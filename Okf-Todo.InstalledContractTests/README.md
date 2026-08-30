@@ -1,15 +1,15 @@
 # Installed contract tests
 
-> This project is disabled in `Okf-Todo.slnx` by default because it requires a Windows installation of OKF-Todo. Normal solution builds and test runs must not depend on which product version happens to be installed on the developer's computer.
+> This project is disabled in `Okf-Todo.slnx` by default because it requires a Windows installation of OKF Todo. Normal solution builds and test runs must not depend on which product version happens to be installed on the developer's computer.
 
-These Windows-only black-box tests exercise only an installed OKF-Todo product:
+These Windows-only black-box tests exercise only an installed OKF Todo product:
 
 - `Okf-Todo.exe --okf-command`
 - `Okf-Todo.exe --mcp`
 - `okf\todo-database\index.md` and its installed context files
 - disposable SQLite databases created under the test runner's temporary directory
 
-The project has no references to OKF-Todo application projects. It must not use repository documentation, publish output, installer staging, or the user's normal database as product context.
+The project has no references to OKF Todo application projects. It must not use repository documentation, publish output, installer staging, or the user's normal database as product context.
 
 The suite contains three tracks:
 

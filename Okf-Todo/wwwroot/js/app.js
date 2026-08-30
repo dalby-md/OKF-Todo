@@ -1063,7 +1063,7 @@
         <header class="app-topbar">
           <div class="app-brand">
             <div class="app-brand-copy">
-              <h1 id="app-title">OKF-Todo</h1>
+              <h1 id="app-title">OKF Todo</h1>
               <span class="app-brand-tagline">Local task system</span>
               <nav class="app-brand-links" aria-label="Project link">
                 <a class="app-brand-link" href="https://github.com/dalby-md/Okf-Todo" target="_blank" rel="noopener noreferrer">GitHub</a>
@@ -1445,7 +1445,7 @@
             <header class="first-run-heading">
               <p class="first-run-kicker">Start your way</p>
               <h2 id="first-run-title">No tasks yet</h2>
-              <p id="first-run-description">Create your first task, or explore OKF-Todo with 50 clearly marked sample tasks.</p>
+              <p id="first-run-description">Create your first task, or explore OKF Todo with 50 clearly marked sample tasks.</p>
             </header>
             <div class="first-run-actions">
               <button id="first-run-new-task-button" class="first-run-choice first-run-choice-primary" type="button">
@@ -1458,7 +1458,7 @@
               <button id="first-run-sample-button" class="first-run-choice first-run-choice-sample" type="button">
                 <span class="first-run-choice-copy">
                   <strong class="sample-data-action-label">Explore with sample data</strong>
-                  <span>Load 50 sample tasks to explore OKF-Todo features.</span>
+                  <span>Load 50 sample tasks to explore OKF Todo features.</span>
                   <span id="first-run-removal-note" class="first-run-removal-note">Sample data is easy to remove anytime from Settings → Data &amp; maintenance.<br>Tasks you create yourself are left alone.</span>
                 </span>
                 <span class="first-run-choice-status" aria-hidden="true">
@@ -1490,7 +1490,7 @@
             <div class="help-layout">
               <nav class="help-topic-list" aria-label="Help topics">
                 <button class="help-topic-button is-active" type="button" data-help-topic="using-okf-todo" aria-current="page">
-                  <strong>Using OKF-Todo</strong>
+                  <strong>Using OKF Todo</strong>
                   <span>Create, organize, and finish tasks</span>
                 </button>
                 <button class="help-topic-button" type="button" data-help-topic="okf-layer">
@@ -1554,7 +1554,7 @@
                   <div class="preference-row">
                     <div class="preference-row-copy">
                       <strong>Color scheme</strong>
-                      <span>Choose how OKF-Todo looks.</span>
+                      <span>Choose how OKF Todo looks.</span>
                     </div>
                     <div class="preferences-segmented-control" data-preference-select="color-scheme" role="group" aria-label="Color scheme">
                       <button class="preference-choice" type="button" data-value="LIGHT" aria-pressed="false">Light</button>
@@ -1569,7 +1569,7 @@
                   <div class="preference-row">
                     <div class="preference-row-copy">
                       <strong>Font size</strong>
-                      <span>Adjust text throughout the OKF-Todo interface.</span>
+                      <span>Adjust text throughout the OKF Todo interface.</span>
                     </div>
                     <div class="preferences-segmented-control preferences-font-size-control" data-preference-select="font-size" role="group" aria-label="Font size">
                       <button class="preference-choice" type="button" data-value="SMALLEST" aria-pressed="false">Smallest</button>
@@ -1690,7 +1690,7 @@
 
                 <section class="preferences-page preferences-database-page" data-preference-panel="database" aria-labelledby="preferences-database-title" hidden>
                   <h4 id="preferences-database-title">Protect and manage your data</h4>
-                  <p class="preferences-page-intro">Back up, restore, or manage sample data stored in OKF-Todo.</p>
+                  <p class="preferences-page-intro">Back up, restore, or manage sample data stored in OKF Todo.</p>
 
                   <div class="preferences-subsection-heading database-subsection-heading">
                     <h4>Backup and restore</h4>
@@ -1714,7 +1714,7 @@
 
                   <div class="preferences-subsection-heading database-subsection-heading">
                     <h4>Sample data</h4>
-                    <p>Sample tasks are marked inside the database, so OKF-Todo can remove only those tasks later.</p>
+                    <p>Sample tasks are marked inside the database, so OKF Todo can remove only those tasks later.</p>
                   </div>
                   <div id="database-sample-summary" class="database-summary" aria-live="polite"></div>
                   <button id="add-sample-data-button" class="preference-action-row" type="button">
@@ -1730,7 +1730,7 @@
                   <button id="remove-sample-data-button" class="preference-action-row" type="button" hidden>
                     <span class="preference-row-copy">
                       <strong>Remove sample data</strong>
-                      <span>Delete only the tasks that OKF-Todo marked as sample data, including their related content.</span>
+                      <span>Delete only the tasks that OKF Todo marked as sample data, including their related content.</span>
                     </span>
                     <span class="preference-row-action">Remove samples</span>
                   </button>
@@ -1762,7 +1762,7 @@
               </div>
             </header>
             <div class="database-reset-warning" id="database-reset-warning">
-              <strong>This cannot be undone from inside OKF-Todo.</strong>
+              <strong>This cannot be undone from inside OKF Todo.</strong>
               <p id="database-reset-scope"></p>
               <p>A dated safety backup will be created, but you should still make your own backup before continuing.</p>
             </div>
@@ -1783,7 +1783,7 @@
             <header class="settings-header">
               <div>
                 <p class="eyebrow">Database ready</p>
-                <h2 id="database-restart-title">Restart OKF-Todo to finish</h2>
+                <h2 id="database-restart-title">Restart OKF Todo to finish</h2>
               </div>
             </header>
             <p id="database-restart-message"></p>
@@ -1793,7 +1793,7 @@
             </dl>
             <p class="database-restart-note">Close the app now. The prepared database will replace the current <strong>okf-todo.db</strong> safely at the next start.</p>
             <div class="modal-actions">
-              <button id="database-close-application-button" type="button">Close OKF-Todo</button>
+              <button id="database-close-application-button" type="button">Close OKF Todo</button>
             </div>
           </section>
         </div>
@@ -2291,7 +2291,7 @@
   async function loadTaskLists(options) {
     taskLists = await sendBridgeMessage('taskList.list', {})
     if (!taskLists.length) {
-      throw new Error('OKF-Todo could not create a task list.')
+      throw new Error('OKF Todo could not create a task list.')
     }
 
     const keepCurrentScope = options && options.keepCurrentScope
@@ -6970,7 +6970,7 @@
 
     const copyBlockOptions = topic === 'okf-layer'
       ? {
-          matches: function (text) { return text.includes('Use the OKF-Todo context starting at:') },
+          matches: function (text) { return text.includes('Use the OKF Todo context starting at:') },
           label: 'Ready-to-use prompt',
           button: 'Copy prompt',
           success: 'OKF prompt copied',
@@ -8220,8 +8220,8 @@
     $('#database-close-application-button').on('click', function () {
       $(this).prop('disabled', true).text('Closing...')
       sendBridgeMessage('application.close', {}).catch(function (error) {
-        $('#database-close-application-button').prop('disabled', false).text('Close OKF-Todo')
-        setStatus(getErrorMessage(error, 'Could not close OKF-Todo'), 'error')
+        $('#database-close-application-button').prop('disabled', false).text('Close OKF Todo')
+        setStatus(getErrorMessage(error, 'Could not close OKF Todo'), 'error')
       })
     })
     $('#first-run-new-task-button').on('click', function () {

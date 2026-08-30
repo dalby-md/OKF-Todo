@@ -40,7 +40,7 @@ internal sealed class InstalledProduct
         if (!File.Exists(path))
         {
             throw new FileNotFoundException(
-                $"The {description} was not found at '{path}'. Install OKF-Todo, " +
+                $"The {description} was not found at '{path}'. Install OKF Todo, " +
                 $"or set {InstallDirectoryVariable} to the installation directory.",
                 path);
         }

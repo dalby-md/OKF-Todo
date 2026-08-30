@@ -10,7 +10,7 @@ $packageName = 'OkfTodo.MsixPrototype'
 $package = Get-AppxPackage -Name $packageName -ErrorAction SilentlyContinue
 
 if ($null -eq $package) {
-    Write-Host 'The OKF-Todo MSIX prototype is not installed.'
+    Write-Host 'The OKF Todo MSIX prototype is not installed.'
 }
 else {
     Remove-AppxPackage -Package $package.PackageFullName

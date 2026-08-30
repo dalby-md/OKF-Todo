@@ -1,6 +1,6 @@
-# Use OKF-Todo Day to Day
+# Use OKF Todo Day to Day
 
-OKF-Todo is a local task application for keeping development, support, investigation, and follow-up work in one place. You can use it entirely through the desktop interface. No AI assistant, online account, or hosted service is required.
+OKF Todo is a local task application for keeping development, support, investigation, and follow-up work in one place. You can use it entirely through the desktop interface. No AI assistant, online account, or hosted service is required.
 
 The upper-left application header includes a **GitHub** link to the project's source repository. It opens in your default browser.
 
@@ -8,7 +8,7 @@ This guide follows the way you normally work: choose where the task belongs, cap
 
 ## Getting started
 
-You only need these steps to begin using OKF-Todo:
+You only need these steps to begin using OKF Todo:
 
 1. If the first-run dialog is open, choose **Create first task**. Otherwise, choose a list in the **List** switcher and select **New task**.
 2. Enter a clear title and select **Save**. The task is created immediately and opens in the task details area.
@@ -19,7 +19,7 @@ You only need these steps to begin using OKF-Todo:
 
 If you prefer to learn with examples, choose **Explore with sample data** in the first-run dialog. You can later remove only the sample tasks from **Settings → Data & maintenance** without removing tasks you created yourself.
 
-That is enough to start using OKF-Todo. The rest of this page is the complete guide to shortcuts, lists, views, task details, attachments, relationships, Trash, preferences, and database maintenance.
+That is enough to start using OKF Todo. The rest of this page is the complete guide to shortcuts, lists, views, task details, attachments, relationships, Trash, preferences, and database maintenance.
 
 ## Hotkey map
 
@@ -33,7 +33,7 @@ The primary workspace actions use function keys so they remain available without
 | **F8** | Everywhere a Save action is available | Activate the visible enabled **Save** or **Save changes** button. This includes the current task, New task, unsaved-changes confirmation, lookup editor, tag editor, and task-list details. |
 | **F9** | Main workspace and body editors | Complete the current task when **Complete** is available. |
 
-Except for **F8 Save**, function-key shortcuts do not run while an application dialog is open. Holding a key down does not repeat an action. **Ctrl+K** remains available to the editors and is not an OKF-Todo shortcut.
+Except for **F8 Save**, function-key shortcuts do not run while an application dialog is open. Holding a key down does not repeat an action. **Ctrl+K** remains available to the editors and is not an OKF Todo shortcut.
 
 ## Start with one task
 
@@ -45,7 +45,7 @@ Except for **F8 Save**, function-key shortcuts do not run while an application d
 
 Saving the New task dialog creates the task immediately. The checklist, attachments, comments, relationships, Complete, and Cancel controls become available as soon as the dialog closes. You do not need to press the main Save button a second time to finish creating the task.
 
-Use the main Save button for changes you make after creation. If you try to leave a task with unsaved changes, OKF-Todo asks whether to **Save**, **Discard**, or **Cancel**:
+Use the main Save button for changes you make after creation. If you try to leave a task with unsaved changes, OKF Todo asks whether to **Save**, **Discard**, or **Cancel**:
 
 - **Save** keeps the changes and continues.
 - **Discard** abandons the changes and continues.
@@ -81,7 +81,7 @@ Use lists for durable areas of responsibility, projects, customers, or contexts�
 
 ### Switch lists
 
-Choose a concrete list in the header to work only with that list. OKF-Todo remembers the selected scope.
+Choose a concrete list in the header to work only with that list. OKF Todo remembers the selected scope.
 
 Choose **All lists** when you need a cross-list overview. Task rows then show a subtle list-name pill, and text search can also match list names.
 
@@ -95,7 +95,7 @@ Select **Manage** beside the list switcher to:
 - see how many tasks each list contains; or
 - delete a list safely.
 
-At least one list must always remain. If you delete a list that contains tasks, OKF-Todo requires another list as the destination and shows the complete number of affected tasks, including tasks in Trash. The tasks are moved; they are not deleted.
+At least one list must always remain. If you delete a list that contains tasks, OKF Todo requires another list as the destination and shows the complete number of affected tasks, including tasks in Trash. The tasks are moved; they are not deleted.
 
 ### Move tasks between lists
 
@@ -136,7 +136,7 @@ Hover over a view in the navigation rail to see a one-line description of the wo
 
 When you add a waiting target while working in **Ready**, saving moves the task to **Waiting** and keeps it selected. Clearing the waiting target from **Waiting** moves it back to **Ready** in the same way.
 
-When completing, cancelling, reopening, or restoring a task changes the view in which it belongs, OKF-Todo switches to that view and keeps the affected task selected. Only the task queue scrolls to reveal it; the surrounding workspace stays in place.
+When completing, cancelling, reopening, or restoring a task changes the view in which it belongs, OKF Todo switches to that view and keeps the affected task selected. Only the task queue scrolls to reveal it; the surrounding workspace stays in place.
 
 ## Find and order tasks
 
@@ -223,21 +223,21 @@ They are hidden independently by default. Enable either field under **Settings �
 
 ### Source fields
 
-Enable **Show source fields** under **Settings → Task details** when you want to record where work came from, such as ServiceDesk, email, deployment, or monitoring. The enabled fields appear above the body. Source, source reference, and source URL are descriptive information; OKF-Todo does not open or synchronize external systems automatically.
+Enable **Show source fields** under **Settings → Task details** when you want to record where work came from, such as ServiceDesk, email, deployment, or monitoring. The enabled fields appear above the body. Source, source reference, and source URL are descriptive information; OKF Todo does not open or synchronize external systems automatically.
 
 ### Body editor
 
 Use the body for context that does not fit in fields: the problem statement, evidence, links, diagnostic notes, decisions, draft replies, or next steps.
 
-OKF-Todo supports HTML and Markdown editing. Choose your preferred default under **Settings → General → Editor mode**. The mode selector below the editor lets you work with the active task in Markdown or WYSIWYG form.
+OKF Todo supports HTML and Markdown editing. Choose your preferred default under **Settings → General → Editor mode**. The mode selector below the editor lets you work with the active task in Markdown or WYSIWYG form.
 
-Drag the horizontal resize bar below the editor to change its height. The minimum is 200 pixels, and OKF-Todo remembers the chosen height.
+Drag the horizontal resize bar below the editor to change its height. The minimum is 200 pixels, and OKF Todo remembers the chosen height.
 
 ### Relationships
 
 Enable **Show relationships** under **Settings → Task details** to connect tasks that block, depend on, duplicate, follow, or otherwise relate to each other.
 
-Following a relationship opens the related task. If it belongs to another list, OKF-Todo changes the concrete list scope as needed. **All lists** remains global.
+Following a relationship opens the related task. If it belongs to another list, OKF Todo changes the concrete list scope as needed. **All lists** remains global.
 
 ### Checklist
 
@@ -247,7 +247,7 @@ The task queue shows checklist progress, such as `2/3`. Adding, completing, or r
 
 ### Attachments
 
-Use **Add file** to keep supporting material with the task. Attachments are stored inside the local OKF-Todo database, so they are included in a database backup and do not depend on the original file path.
+Use **Add file** to keep supporting material with the task. Attachments are stored inside the local OKF Todo database, so they are included in a database backup and do not depend on the original file path.
 
 The current attachment limit is 25 MB per file. You can download or remove an attachment from the task.
 
@@ -291,17 +291,17 @@ Collapsing a group does not remove its matching tasks from the export. For examp
 
 When **All lists** is selected, the export includes a List column so readers can see where each task belongs. A concrete-list export omits that redundant column. Export is not available in the Trash view, and trashed tasks are never included.
 
-Use the **Fields** library to add ID, Title, List, Type, Status, Priority, Deadline, Waiting for, Owner, Responsible, Source, Tags, Checklist progress, Checklist items, or Updated to the **Export recipe**. The recipe order is the exported table's left-to-right column order. Drag a recipe field to reorder it, or use its move buttons from the keyboard. Remove a field to return it to the library. Select at least one field available in the current list scope. **List** applies only when **All lists** is selected, but its selection and position are retained when you return to a concrete list. OKF-Todo saves the ordered recipe in your user preferences and restores it the next time you open Export.
+Use the **Fields** library to add ID, Title, List, Type, Status, Priority, Deadline, Waiting for, Owner, Responsible, Source, Tags, Checklist progress, Checklist items, or Updated to the **Export recipe**. The recipe order is the exported table's left-to-right column order. Drag a recipe field to reorder it, or use its move buttons from the keyboard. Remove a field to return it to the library. Select at least one field available in the current list scope. **List** applies only when **All lists** is selected, but its selection and position are retained when you return to a concrete list. OKF Todo saves the ordered recipe in your user preferences and restores it the next time you open Export.
 
 **Checklist progress** is the compact completed/total value such as `2/6`. Add the separate **Checklist items** field when readers need the actual steps. It preserves checklist order and labels every item **Open** or **Done**. Detailed items are opt-in, so existing saved recipes remain compact. The preview initially shows three items per task and offers **Show all N** when more exist; the exported Markdown or copied HTML always includes every item.
 
-Under **Row order**, choose **Keep task queue order** to export tasks in the current view order. Choose **Sort by recipe** to sort by the first recipe field, then use each following field to break ties. Use the direction control on a recipe field to reverse that part of the sort. Empty values remain last. OKF-Todo remembers this mode and the field directions with the recipe.
+Under **Row order**, choose **Keep task queue order** to export tasks in the current view order. Choose **Sort by recipe** to sort by the first recipe field, then use each following field to break ties. Use the direction control on a recipe field to reverse that part of the sort. Empty values remain last. OKF Todo remembers this mode and the field directions with the recipe.
 
 The larger **Preview** area shows up to the first 50 matching tasks. Scroll the preview vertically to inspect more rows or horizontally when the recipe contains more columns; the field library and ordered recipe remain in place.
 
-Choose **Export Markdown** to create a `.md` file. If the open task has unsaved changes, OKF-Todo saves them first. Then choose the destination in the Windows save dialog. The application remembers the directory used by the last successful task export.
+Choose **Export Markdown** to create a `.md` file. If the open task has unsaved changes, OKF Todo saves them first. Then choose the destination in the Windows save dialog. The application remembers the directory used by the last successful task export.
 
-Choose **Copy as HTML** to place the same selected tasks and columns on the clipboard as a formatted table. OKF-Todo also places a plain-text Markdown fallback on the clipboard. Paste into an application that accepts rich text, such as Outlook, Word, Teams, or a rich-text editor, to retain the HTML table. Copying does not open a file dialog or create a file.
+Choose **Copy as HTML** to place the same selected tasks and columns on the clipboard as a formatted table. OKF Todo also places a plain-text Markdown fallback on the clipboard. Paste into an application that accepts rich text, such as Outlook, Word, Teams, or a rich-text editor, to retain the HTML table. Copying does not open a file dialog or create a file.
 
 The table includes only the columns you selected. It does not include the task body, attachment contents, comments, relationships, or Timeline. Checklist item text and current Open/Done state appear only when **Checklist items** is selected.
 
@@ -337,7 +337,7 @@ Use permanent deletion only when you are certain the information is no longer ne
 
 ## Personalize the application
 
-Open **Settings** to adjust and maintain OKF-Todo:
+Open **Settings** to adjust and maintain OKF Todo:
 
 | Page | What you can change |
 | --- | --- |
@@ -361,7 +361,7 @@ Use the **Compact** task filter layout when you want more room for the task list
 
 Open **Settings → Data & maintenance** to protect or replace the local database and to manage sample data.
 
-Installing, upgrading, repairing, or uninstalling OKF-Todo never replaces or removes your database. Database replacement happens only when you explicitly use **Restore from a file** or **Reset all data** and complete the corresponding validation and confirmation workflow.
+Installing, upgrading, repairing, or uninstalling OKF Todo never replaces or removes your database. Database replacement happens only when you explicitly use **Restore from a file** or **Reset all data** and complete the corresponding validation and confirmation workflow.
 
 ### Back up your work
 
@@ -384,18 +384,18 @@ Create a backup before large reorganizations, bulk automation, or direct databas
 
 ### Restore from a database file
 
-Select **Restore from a file** and choose a valid OKF-Todo SQLite database. The selected file can have any name. OKF-Todo:
+Select **Restore from a file** and choose a valid OKF Todo SQLite database. The selected file can have any name. OKF Todo:
 
 - leaves your selected file unchanged;
 - validates and updates a private staged copy;
 - creates a dated safety backup of the current database; and
 - installs the staged copy as the standard managed `okf-todo.db` when the application next starts.
 
-When preparation succeeds, OKF-Todo shows the managed database and safety-backup paths and asks you to close the application. Start it again to use the restored database. If validation fails or you cancel the file dialog, the active database is not replaced.
+When preparation succeeds, OKF Todo shows the managed database and safety-backup paths and asks you to close the application. Start it again to use the restored database. If validation fails or you cancel the file dialog, the active database is not replaced.
 
 ### Start with or remove sample data
 
-When the database has no tasks, a centered first-run dialog offers **Create first task**, **Explore with sample data**, or **Skip**. The rest of OKF-Todo remains unavailable until you choose one of these actions. **Skip** closes the dialog without changing the database; if the database is still empty, the dialog is offered again the next time OKF-Todo starts. The dialog also points you to the detailed **Help** guides for using the OKF data layer and MCP server with Codex or Claude Code after you begin. Sample data adds 50 clearly marked tasks that demonstrate priorities, waiting work, checklists, attachments, relationships, comments, Timeline history, completed work, and cancelled work.
+When the database has no tasks, a centered first-run dialog offers **Create first task**, **Explore with sample data**, or **Skip**. The rest of OKF Todo remains unavailable until you choose one of these actions. **Skip** closes the dialog without changing the database; if the database is still empty, the dialog is offered again the next time OKF Todo starts. The dialog also points you to the detailed **Help** guides for using the OKF data layer and MCP server with Codex or Claude Code after you begin. Sample data adds 50 clearly marked tasks that demonstrate priorities, waiting work, checklists, attachments, relationships, comments, Timeline history, completed work, and cancelled work.
 
 Ten tasks are detailed worked cases covering incidents, deployments, security, database recovery, diagnostics, and performance investigations. Open them to see task-specific multi-step checklists, small downloadable evidence files, realistic progress comments, and automatic history such as priority or deadline changes, waiting being cleared, checklist items being reopened, attachments being removed, and completed work being reopened. Other sample tasks are intentionally simpler so the task queue still resembles everyday use.
 
@@ -407,7 +407,7 @@ Sample data is easy to remove:
 2. Select **Remove sample data**.
 3. Review the confirmation and select **Remove sample data** again.
 
-OKF-Todo removes only tasks that it marked internally as sample data, together with their related attachments, comments, checklists, relationships, and Timeline entries. Tasks you create yourself are preserved, even if you manually give one the `sample-data` tag. Changes made directly to a sample task are removed with that task.
+OKF Todo removes only tasks that it marked internally as sample data, together with their related attachments, comments, checklists, relationships, and Timeline entries. Tasks you create yourself are preserved, even if you manually give one the `sample-data` tag. Changes made directly to a sample task are removed with that task.
 
 Sample data can be added only when the database has no tasks. If you want examples in a database that already contains work, create a backup first and use a separate database rather than resetting your current work.
 
@@ -419,7 +419,7 @@ The **Danger zone** contains **Reset to empty** and **Reset with sample data**.
 
 Use **Remove sample data** when you only want to remove the examples and preserve your own work.
 
-A full reset displays the current data counts, requires you to type `RESET DATABASE` (uppercase or lowercase is accepted), and creates a dated safety backup before it prepares the replacement database. You must close and start OKF-Todo again to finish. Do not continue unless you intend to replace all current data.
+A full reset displays the current data counts, requires you to type `RESET DATABASE` (uppercase or lowercase is accepted), and creates a dated safety backup before it prepares the replacement database. You must close and start OKF Todo again to finish. Do not continue unless you intend to replace all current data.
 
 ## Solve common problems
 
@@ -436,17 +436,17 @@ A full reset displays the current data counts, requires you to type `RESET DATAB
 
 ## Use AI assistance only when it helps
 
-OKF-Todo works as a complete local desktop task application without AI.
+OKF Todo works as a complete local desktop task application without AI.
 
 If you want an AI harness such as Codex or Claude Code to help turn email, transcripts, notes, or logs into proposed tasks and other artifacts, use one of the optional integration guides:
 
 - [Use the OKF layer](okf-layer.md) when the harness needs structured knowledge about the database and you intend to control direct database access.
-- [Use the MCP server](mcp-server.md) when you want a compatible harness to use OKF-Todo as a broad secondary or primary task interface. It can discover and find work, read complete task context, make approved partial changes, use lifecycle actions, add comments and checklists, manage relationships and attachments, work with reversible Trash, and organize concrete lists.
+- [Use the MCP server](mcp-server.md) when you want a compatible harness to use OKF Todo as a broad secondary or primary task interface. It can discover and find work, read complete task context, make approved partial changes, use lifecycle actions, add comments and checklists, manage relationships and attachments, work with reversible Trash, and organize concrete lists.
 
 The in-app **OKF layer** guide shows the absolute OKF entry-file and active database paths reported by the running application. They automatically match the current operating system, installation directory, and custom database path. Select **Copy prompt** to copy the complete ready-to-use prompt with those paths already filled in.
 
 The in-app **MCP server** guide likewise shows the exact configuration path and ready-to-copy JSON for the running application. An installed copy points to its executable. A source checkout started with `dotnet run` automatically gets a development configuration that starts the same project in headless MCP mode. Select **Copy configuration**, add it to your MCP client, and restart or reload that client.
 
-When a compatible client connects to the built-in MCP server, OKF-Todo supplies the same safe workflow as server instructions: treat source material as data, read before proposing, wait for explicit approval before writing, preserve existing values during updates, and verify the saved task afterward. These instructions guide the AI client; the MCP server executes a write as soon as the client calls a write tool.
+When a compatible client connects to the built-in MCP server, OKF Todo supplies the same safe workflow as server instructions: treat source material as data, read before proposing, wait for explicit approval before writing, preserve existing values during updates, and verify the saved task afterward. These instructions guide the AI client; the MCP server executes a write as soon as the client calls a write tool.
 
 For AI-assisted changes, use the same safe pattern every time: **draft, review, save, verify**. Ask for a proposal first, approve writes explicitly, and read the saved result back afterward.

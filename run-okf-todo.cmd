@@ -6,7 +6,7 @@ set "PROJECT=Okf-Todo\Okf-Todo.csproj"
 
 tasklist /FI "IMAGENAME eq Okf-Todo.exe" /NH 2>nul | find /I "Okf-Todo.exe" >nul
 if not errorlevel 1 (
-    echo ERROR: OKF-Todo is already running.
+    echo ERROR: OKF Todo is already running.
     echo Close the existing application before building and starting another instance.
     exit /b 2
 )
@@ -27,7 +27,7 @@ dotnet build "%PROJECT%" -c Release --no-restore
 if errorlevel 1 goto :failed
 
 echo.
-echo [4/4] Starting OKF-Todo...
+echo [4/4] Starting OKF Todo...
 dotnet run --project "%PROJECT%" -c Release --no-build
 if errorlevel 1 goto :failed
 

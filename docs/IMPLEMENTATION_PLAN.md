@@ -604,7 +604,7 @@ Status: planned.
 Scope:
 
 - Add a separate Windows xUnit project with no project references to application code.
-- Resolve an installed OKF-Todo directory from `OKF_TODO_INSTALL_DIR`, falling back to `%LOCALAPPDATA%\Programs\Okf-Todo`.
+- Resolve an installed OKF Todo directory from `OKF_TODO_INSTALL_DIR`, falling back to `%LOCALAPPDATA%\Programs\Okf-Todo`.
 - Require the unified installed executable's MCP mode.
 - Verify that MCP initialization publishes the read-approve-write-verify server instructions and clearly identifies source material as untrusted data.
 - Exercise the installed `Okf-Todo.exe --mcp` mode over stdio using the official .NET MCP client.
@@ -772,7 +772,7 @@ Acceptance criteria:
 - Installing a higher four-part package version performs an MSIX update while
   preserving the isolated external database.
 - Removing the package preserves prototype data unless removal is explicitly
-  requested and never removes the normal OKF-Todo database.
+  requested and never removes the normal OKF Todo database.
 
 ## Milestone 21 — Microsoft Store production package
 
@@ -785,7 +785,7 @@ Scope:
 - Build an unsigned Store `.msix` with the immutable Partner Center identity for
   Store ID `9PP5FM2933BR`; rely on Microsoft signing after certification instead
   of requiring a purchased certificate.
-- Show **OKF-Todo** in the Start menu and expose stable execution alias
+- Show **OKF Todo** in the Start menu and expose stable execution alias
   `okf-todo.exe` for command, OKF, and MCP use.
 - Bundle an MCP client configuration using the stable execution alias rather
   than a version-specific WindowsApps path.

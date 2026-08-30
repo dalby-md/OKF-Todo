@@ -2,7 +2,7 @@
 
 The browser UI tests exercise the real files from `Okf-Todo/wwwroot` in Microsoft Edge through Playwright. The browser bridge is connected to the application's real `BridgeMessageHandler`, services, EF Core model, and a temporary SQLite database.
 
-The tests never open the user's OKF-Todo database. Each run creates an isolated database under the system temporary directory and deletes it afterwards.
+The tests never open the user's OKF Todo database. Each run creates an isolated database under the system temporary directory and deletes it afterwards.
 
 Run the UI tests on Windows with Microsoft Edge installed:
 

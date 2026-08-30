@@ -58,7 +58,7 @@ namespace Photino.Okf_Todo
 
             using var services = CreateServices(isOkfCommandMode, databasePath);
             var startupLogger = services.GetRequiredService<ILogger<Program>>();
-            startupLogger.LogInformation("Starting OKF-Todo from {BaseDirectory}", AppContext.BaseDirectory);
+            startupLogger.LogInformation("Starting OKF Todo from {BaseDirectory}", AppContext.BaseDirectory);
             PendingDatabaseOperationApplier.Apply(databasePath, startupLogger);
 
             using (var scope = services.CreateScope())
@@ -129,7 +129,7 @@ namespace Photino.Okf_Todo
 
             var windowPreference = LoadWindowPreference(services, startupLogger);
             var window = new PhotinoWindow()
-                .SetTitle("OKF-Todo")
+                .SetTitle("OKF Todo")
                 .SetUseOsDefaultSize(false)
                 .SetSize(GetStartupWindowSize(windowPreference))
                 .SetResizable(true)

@@ -1,6 +1,6 @@
 # Microsoft Store release runbook
 
-Use this runbook for every public Microsoft Store release of **OKF-Todo**. The
+Use this runbook for every public Microsoft Store release of **OKF Todo**. The
 Store package is independent of the Inno Setup installer and the locally signed
 MSIX prototype.
 
@@ -10,7 +10,7 @@ Do not change these values unless Partner Center explicitly assigns replacements
 
 | Property | Value |
 | --- | --- |
-| Product | `OKF-Todo` |
+| Product display name | `OKF Todo` |
 | Store ID | `9PP5FM2933BR` |
 | Package identity name | `SrenDalby.OKF-Todo` |
 | Publisher | `CN=663443C5-B2D3-4685-B52C-3CBCB8B68071` |
@@ -38,7 +38,6 @@ at zero:
 | --- | --- |
 | First alpha | `0.1.0.0` |
 | Next feature or fix release | `0.1.1.0` |
-| Current 0.2 alpha | `0.2.0.0` |
 | First stable release | `1.0.0.0` |
 
 Every uploaded replacement package must have a version higher than every
@@ -48,8 +47,10 @@ package contents must change after upload, increment the product patch version
 across every channel; for example, replace `0.2.0-alpha` / `0.2.0` / `0.2.0.0`
 with `0.2.1-alpha` / `0.2.1` / `0.2.1.0`.
 
-Keep the values in `store-identity.psd1` unchanged. Updating within the same
-package family is what lets Windows recognize a new package as an update.
+Keep the package name, publisher, Store ID, and execution alias in
+`store-identity.psd1` unchanged. Updating within the same package family is what
+lets Windows recognize a new package as an update. The display name may change
+when the corresponding name is reserved in Partner Center.
 
 ## One-time prerequisites
 
@@ -100,13 +101,13 @@ contract tests described in `Okf-Todo.InstalledContractTests/README.md`.
 Build the Store package with the selected version:
 
 ```powershell
-.\packaging\msix\build-msix-store.ps1 -Version 0.2.0.0
+.\packaging\msix\build-msix-store.ps1 -Version 1.0.0.0
 ```
 
 Expected upload artifact:
 
 ```text
-artifacts\msix-store\output\Okf-Todo-0.2.0.0-win-x64-store.msix
+artifacts\msix-store\output\Okf-Todo-1.0.0.0-win-x64-store.msix
 ```
 
 The build script publishes a self-contained `win-x64` application, copies the
@@ -118,7 +119,7 @@ Do not install the unsigned Store artifact locally. Use the signed prototype
 package for local install and upgrade testing:
 
 ```powershell
-.\packaging\msix\build-msix-prototype.ps1 -Version 0.2.0.0 -Install
+.\packaging\msix\build-msix-prototype.ps1 -Version 1.0.0.0 -Install
 .\packaging\msix\start-msix-prototype.ps1
 ```
 
@@ -129,7 +130,7 @@ against the exact Store MSIX that will be uploaded. Run it from an elevated
 PowerShell window in an active user session:
 
 ```powershell
-$version = '0.2.0.0'
+$version = '1.0.0.0'
 $appCert = "${env:ProgramFiles(x86)}\Windows Kits\10\App Certification Kit\appcert.exe"
 $package = ".\artifacts\msix-store\output\Okf-Todo-$version-win-x64-store.msix"
 $reportDirectory = ".\artifacts\msix-store\wack\$version"
@@ -150,38 +151,42 @@ required, rebuild, and run the complete test again.
 
 ### 3. Create the Partner Center submission
 
-1. Open **Partner Center → Apps and games → OKF-Todo**.
-2. Select **Start update** or **Create a new submission**.
-3. Under **Packages**, upload the new Store `.msix` and wait until validation is
+1. Open the existing product in **Partner Center → Apps and games**.
+2. Under **Product management → Manage app name reservations**, reserve
+   **OKF Todo**. Keep the original package identity and Store ID unchanged.
+3. Select **Start update** or **Create a new submission**.
+4. Under **Packages**, upload the new Store `.msix` and wait until validation is
    complete. Confirm the displayed identity, architecture, and version.
-4. Review **Pricing and availability**, **Properties**, **Age ratings**, and the
+5. Review **Pricing and availability**, **Properties**, **Age ratings**, and the
    privacy URL. Do not assume copied values are still current.
-5. Update the **Store listing**:
+6. Update the **Store listing**:
+   - select **OKF Todo** in the **Product name** list for every published language;
    - description and feature list match the released application;
    - **What's new in this version** describes user-visible changes;
    - use `docs/images/okf-todo-task-workspace.png` as the required current UI screenshot and confirm that it contains no private task data;
-   - use `docs/release-notes/v0.2.0-alpha.md` as the source for the 0.2 alpha **What's new** text;
+   - use `docs/images/okf-todo-store-logo.png` as the 1:1 Store logo;
+   - use `docs/release-notes/v1.0.0.md` as the source for the 1.0 **What's new** text;
    - copyright, support URL, website, and privacy URL remain correct.
-6. Complete **Submission options**, including the `runFullTrust` explanation,
+7. Complete **Submission options**, including the `runFullTrust` explanation,
    useful certification notes, and manual publication after certification. Do
    not allow the Store submission to publish automatically for a coordinated
    GitHub, Inno Setup, and Store launch.
-7. Review every section until Partner Center marks it complete, then select
+8. Review every section until Partner Center marks it complete, then select
    **Submit for certification**.
 
 ### 4. Explain `runFullTrust`
 
-Keep `runFullTrust`. It is required because Photino runs OKF-Todo as a packaged
+Keep `runFullTrust`. It is required because Photino runs OKF Todo as a packaged
 Win32 desktop application outside AppContainer. It does not request
 administrator elevation.
 
 Use this short explanation when Partner Center asks why it is required:
 
-> OKF-Todo is a packaged Photino.NET Win32 app requiring runFullTrust to launch outside AppContainer. It uses only the signed-in user's standard permissions and never requests administrator elevation. Full trust supports its desktop window, localhost-only server, local SQLite data, file dialogs, attachments, backup/export, and local command-line and MCP interfaces. It installs no services or drivers, makes no machine-wide changes, and sends no task data to cloud services.
+> OKF Todo is a packaged Photino.NET Win32 app requiring runFullTrust to launch outside AppContainer. It uses only the signed-in user's standard permissions and never requests administrator elevation. Full trust supports its desktop window, localhost-only server, local SQLite data, file dialogs, attachments, backup/export, and local command-line and MCP interfaces. It installs no services or drivers, makes no machine-wide changes, and sends no task data to cloud services.
 
 Suggested certification notes:
 
-> No account, credentials, subscription, or external service is required. Launch OKF-Todo from the Start menu and create and save a task to exercise the main workflow. File dialogs can be tested through database backup or export and attachment selection. All application functionality works locally.
+> No account, credentials, subscription, or external service is required. Launch OKF Todo from the Start menu and create and save a task to exercise the main workflow. File dialogs can be tested through database backup or export and attachment selection. All application functionality works locally.
 
 ### 5. While certification is running
 
@@ -205,7 +210,7 @@ publication times and verify both public listings.
 1. Wait until Partner Center reports **In the Store**.
 2. Open the public Store page in a signed-out or private browser window and
    verify the title, description, screenshots, privacy link, and install button.
-3. Install or update OKF-Todo from Microsoft Store on a test machine or Windows
+3. Install or update OKF Todo from Microsoft Store on a test machine or Windows
    user profile.
 4. Confirm:
    - the application launches from Start;

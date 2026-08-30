@@ -61,7 +61,7 @@ public sealed class PhotinoFileSavePicker :
         CancellationToken cancellationToken)
     {
         return PickAsync(
-            title: "Export OKF-Todo tasks",
+            title: "Export OKF Todo tasks",
             suggestedFileName,
             initialDirectory,
             filterLabel: "Markdown document",
@@ -86,10 +86,10 @@ public sealed class PhotinoFileSavePicker :
         var selectedPath = OperatingSystem.IsWindows()
             ? await ShowWindowsOpenFileAsync(
                 activeWindow.WindowHandle,
-                "Restore OKF-Todo database",
+                "Restore OKF Todo database",
                 defaultDirectory)
             : (await activeWindow.ShowOpenFileAsync(
-                "Restore OKF-Todo database",
+                "Restore OKF Todo database",
                 defaultDirectory,
                 false,
                 [("SQLite database", ["db"])]))

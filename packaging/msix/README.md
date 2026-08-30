@@ -1,4 +1,4 @@
-# OKF-Todo MSIX feasibility prototype
+# OKF Todo MSIX feasibility prototype
 
 This packaging path creates a real, locally installable MSIX without replacing
 the production Inno Setup installer or publishing anything to Microsoft Store.
@@ -13,7 +13,7 @@ The prototype uses:
   `%LOCALAPPDATA%\Okf-Todo\MsixPrototype\okf-todo.db`.
 
 The package is deliberately hidden from the Start menu. Launch it through the
-provided script so it cannot accidentally open the normal OKF-Todo database.
+provided script so it cannot accidentally open the normal OKF Todo database.
 Package construction fails if any SQLite database enters the payload. Installing,
 upgrading, repairing, or uninstalling the package never overwrites the normal or
 prototype database.
@@ -35,14 +35,14 @@ From the repository root:
 
 ```powershell
 .\packaging\msix\build-msix-prototype.ps1 `
-  -Version 0.2.0.0 `
+  -Version 1.0.0.0 `
   -Install
 ```
 
 The package is written to:
 
 ```text
-artifacts\msix\output\Okf-Todo-0.2.0.0-win-x64-prototype.msix
+artifacts\msix\output\Okf-Todo-1.0.0.0-win-x64-prototype.msix
 ```
 
 Generated packages, manifests, assets, and development certificates remain
@@ -74,7 +74,7 @@ certificate:
 
 ```powershell
 .\packaging\msix\build-msix-prototype.ps1 `
-  -Version 0.2.0.1 `
+  -Version 1.0.0.1 `
   -Install
 ```
 

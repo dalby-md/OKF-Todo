@@ -20,7 +20,7 @@ public sealed class ApplicationLifetimeService(ILogger<ApplicationLifetimeServic
         _ = Task.Run(async () =>
         {
             await Task.Delay(250);
-            logger.LogInformation("Closing OKF-Todo after a prepared database operation.");
+            logger.LogInformation("Closing OKF Todo after a prepared database operation.");
             activeWindow.Close();
         });
 

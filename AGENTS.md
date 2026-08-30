@@ -114,7 +114,7 @@ Use `TaskItem` as the C# entity name instead of `Task` to avoid confusion with `
 
 ## MCP Feature Parity — Hard Rule
 
-Treat MCP as a broad secondary or primary way to use OKF-Todo. Every new or changed application feature must include an explicit MCP applicability decision in the same change.
+Treat MCP as a broad secondary or primary way to use OKF Todo. Every new or changed application feature must include an explicit MCP applicability decision in the same change.
 
 - When the capability makes sense in a headless task workflow, expose it through MCP in the same change. Reuse the application service and command validation layer; add accurate read-only, destructive, idempotent, and open-world annotations; update the real stdio MCP contract tests; and update `docs/help/mcp-server.md` plus the normal in-program Help output.
 - Provide the discovery and read operations an MCP client needs to use a write operation safely. Do not expose a mutation that requires the client to guess identifiers, lookup codes, current values, or related state.

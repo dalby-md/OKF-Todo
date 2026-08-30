@@ -499,7 +499,7 @@ public sealed class TaskMarkdownExportService(
         var columns = selectedColumns.Select(GetColumnHeader).ToList();
 
         var builder = new StringBuilder();
-        builder.AppendLine("# OKF-Todo task export");
+        builder.AppendLine("# OKF Todo task export");
         builder.AppendLine();
         builder.AppendLine($"- Scope: {EscapeInline(scopeDescription)}");
         builder.AppendLine($"- Exported: {exportedAt:yyyy-MM-dd HH:mm} UTC");
@@ -531,7 +531,7 @@ public sealed class TaskMarkdownExportService(
         var scopeDescription = $"{viewName} results in {scope.Name}";
         var builder = new StringBuilder();
         builder.Append("<div>");
-        builder.Append("<h1>OKF-Todo task export</h1>");
+        builder.Append("<h1>OKF Todo task export</h1>");
         builder.Append("<ul>");
         AppendHtmlMetadata(builder, "Scope", scopeDescription);
         AppendHtmlMetadata(builder, "Exported", $"{exportedAt:yyyy-MM-dd HH:mm} UTC");

@@ -14,6 +14,6 @@ public sealed class McpServerInstructionsTests
         Assert.Contains("Before the replacement-style task_update", McpServerRunner.ServerInstructions);
         Assert.Contains("verify the affected resource", McpServerRunner.ServerInstructions);
         Assert.Contains("attachment metadata", McpServerRunner.ServerInstructions);
-        Assert.Contains("instead of bypassing OKF-Todo with direct SQLite writes", McpServerRunner.ServerInstructions);
+        Assert.Contains("instead of bypassing OKF Todo with direct SQLite writes", McpServerRunner.ServerInstructions);
     }
 }

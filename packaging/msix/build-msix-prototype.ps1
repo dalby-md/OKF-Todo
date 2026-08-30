@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+\.\d+$')]
-    [string]$Version = '0.2.0.0',
+    [string]$Version = '1.0.0.0',
 
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Release',
@@ -164,7 +164,7 @@ try {
             --package-name $packageName `
             --publisher-name $publisher `
             --version $Version `
-            --description 'OKF-Todo local MSIX feasibility prototype' `
+            --description 'OKF Todo local MSIX feasibility prototype' `
             --executable 'Okf-Todo.exe' `
             --logo-path (Join-Path $packageRoot 'wwwroot\favicon.ico') `
             --template Packaged `
@@ -189,12 +189,12 @@ try {
     $displayName = $manifest.SelectSingleNode(
         '/foundation:Package/foundation:Properties/foundation:DisplayName',
         $namespaceManager)
-    $displayName.InnerText = 'OKF-Todo MSIX Prototype'
+    $displayName.InnerText = 'OKF Todo MSIX Prototype'
 
     $visualElements = $manifest.SelectSingleNode(
         '/foundation:Package/foundation:Applications/foundation:Application/uap:VisualElements',
         $namespaceManager)
-    $visualElements.SetAttribute('DisplayName', 'OKF-Todo MSIX Prototype')
+    $visualElements.SetAttribute('DisplayName', 'OKF Todo MSIX Prototype')
     $visualElements.SetAttribute('AppListEntry', 'none')
 
     $writerSettings = [System.Xml.XmlWriterSettings]::new()

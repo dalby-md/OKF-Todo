@@ -179,7 +179,7 @@ def main() -> int:
         for table in tables
     ]
     write(root / "index.md", index("Todo Database", [
-        ("OKF-Todo SQLite Database", "databases/okf-todo.md", "Describes the local SQLite database and its ownership boundary."),
+        ("OKF Todo SQLite Database", "databases/okf-todo.md", "Describes the local SQLite database and its ownership boundary."),
         ("Tables", "tables/index.md", "Indexes the physical application tables."),
         ("Database References", "references/index.md", "Indexes relationships, integrity rules, and schema lifecycle guidance."),
     ]))
@@ -189,9 +189,9 @@ def main() -> int:
 
     database_description = "Describes the local SQLite database and its ownership boundary."
     write(root / "databases" / "index.md", index("SQLite Databases", [
-        ("OKF-Todo SQLite Database", "okf-todo.md", database_description),
+        ("OKF Todo SQLite Database", "okf-todo.md", database_description),
     ]))
-    write(root / "databases" / "okf-todo.md", frontmatter("SQLite Database", "OKF-Todo SQLite Database", database_description, "Okf-Todo/Data/DatabasePathProvider.cs", args.timestamp) + f"""# OKF-Todo SQLite Database
+    write(root / "databases" / "okf-todo.md", frontmatter("SQLite Database", "OKF Todo SQLite Database", database_description, "Okf-Todo/Data/DatabasePathProvider.cs", args.timestamp) + f"""# OKF Todo SQLite Database
 
 ## Purpose
 

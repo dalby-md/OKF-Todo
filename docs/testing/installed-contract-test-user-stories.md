@@ -1,8 +1,8 @@
 # Installed Contract Test User Stories
 
-The installed contract test project verifies OKF-Todo from the perspective of an external AI harness. It uses only the Windows-installed executables, installed OKF files, and isolated disposable SQLite databases.
+The installed contract test project verifies OKF Todo from the perspective of an external AI harness. It uses only the Windows-installed executables, installed OKF files, and isolated disposable SQLite databases.
 
-The project is disabled in the main solution by default because these stories require a Windows installation of OKF-Todo. They can still be run explicitly whenever the installed product contract needs verification.
+The project is disabled in the main solution by default because these stories require a Windows installation of OKF Todo. They can still be run explicitly whenever the installed product contract needs verification.
 
 ## MCP user stories
 

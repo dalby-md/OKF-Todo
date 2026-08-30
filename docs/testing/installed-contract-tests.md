@@ -1,6 +1,6 @@
 # Enable or Disable the Installed Contract Tests
 
-`Okf-Todo.InstalledContractTests` is disabled in `Okf-Todo.slnx` by default because it is a Windows-only black-box suite that requires OKF-Todo to be installed. A normal solution test run must remain independent of the product version installed on the developer's computer.
+`Okf-Todo.InstalledContractTests` is disabled in `Okf-Todo.slnx` by default because it is a Windows-only black-box suite that requires OKF Todo to be installed. A normal solution test run must remain independent of the product version installed on the developer's computer.
 
 Disabling the project only removes it from the main solution. It does not delete the project or prevent an explicit test run.
 
@@ -72,4 +72,4 @@ dotnet sln .\Okf-Todo.slnx list
 
 The suite tests an installation rather than the source tree. Its result depends on which installer version is currently installed and whether the installed OKF documentation matches the installed executable. Including it in every solution test run would therefore make ordinary development builds fail because of external machine state rather than a source-code defect.
 
-Run the project explicitly after installing or upgrading OKF-Todo, when validating an installer, or when verifying the compatibility of the installed MCP and OKF contracts.
+Run the project explicitly after installing or upgrading OKF Todo, when validating an installer, or when verifying the compatibility of the installed MCP and OKF contracts.

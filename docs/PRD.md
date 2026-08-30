@@ -453,7 +453,7 @@ Preferences provide a **Data & maintenance** page for backup, restore, sample da
 
 Backup uses the native save-file dialog and SQLite's online backup API. The generated database is validated before it replaces the selected destination. The directory from the last successful backup is remembered; cancelling or failing does not change that preference.
 
-Restore uses the native open-file dialog. A selected SQLite database may have any filename: OKF-Todo validates and migrates a private staged copy, leaves the selected source unchanged, creates a dated safety backup, and installs the staged copy as the managed `okf-todo.db` on the next application start. The UI requires the application to close after preparation so later edits cannot be lost.
+Restore uses the native open-file dialog. A selected SQLite database may have any filename: OKF Todo validates and migrates a private staged copy, leaves the selected source unchanged, creates a dated safety backup, and installs the staged copy as the managed `okf-todo.db` on the next application start. The UI requires the application to close after preparation so later edits cannot be lost.
 
 The Data & maintenance danger zone can replace the complete database with either a fresh empty database or a fresh database containing sample data. It must:
 

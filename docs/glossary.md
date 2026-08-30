@@ -2,15 +2,15 @@
 
 ## Installed Contract Test
 
-An automated black-box test whose product inputs are limited to files placed by the Windows installer. For OKF-Todo, it uses the installed OKF bundle, the installed executable's OKF command and MCP modes, and temporary SQLite databases created through those modes.
+An automated black-box test whose product inputs are limited to files placed by the Windows installer. For OKF Todo, it uses the installed OKF bundle, the installed executable's OKF command and MCP modes, and temporary SQLite databases created through those modes.
 
 ## Installation Root
 
-The directory containing the installed OKF-Todo application. Installed contract tests read it from `OKF_TODO_INSTALL_DIR` or default to `%LOCALAPPDATA%\Programs\Okf-Todo`.
+The directory containing the installed OKF Todo application. Installed contract tests read it from `OKF_TODO_INSTALL_DIR` or default to `%LOCALAPPDATA%\Programs\Okf-Todo`.
 
 ## Test Database
 
-A disposable SQLite database created in a test-owned temporary directory by the installed MCP server. It is never the user's normal OKF-Todo database.
+A disposable SQLite database created in a test-owned temporary directory by the installed MCP server. It is never the user's normal OKF Todo database.
 
 ## Product Context Boundary
 

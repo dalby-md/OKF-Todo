@@ -12,7 +12,7 @@ public static class TaskTools
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     [McpServerTool(Name = "task_list", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
-    [Description("Search and list OKF-Todo tasks by operational view, list, text, tags, types, statuses, and priorities.")]
+    [Description("Search and list OKF Todo tasks by operational view, list, text, tags, types, statuses, and priorities.")]
     public static Task<IReadOnlyCollection<TaskListItemDto>> ListAsync(
         ApplicationCommandService commandService,
         [Description("Task view: active, ready, starred, attention, actnow, urgent, waiting, overdue, completed, all, or trash. Defaults to active.")] string? view = null,
@@ -50,7 +50,7 @@ public static class TaskTools
             cancellationToken);
 
     [McpServerTool(Name = "task_list_lists", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
-    [Description("Discover the concrete task lists available in OKF-Todo, including task counts and manual order.")]
+    [Description("Discover the concrete task lists available in OKF Todo, including task counts and manual order.")]
     public static Task<IReadOnlyCollection<TaskListDto>> ListTaskListsAsync(
         ApplicationCommandService commandService,
         CancellationToken cancellationToken = default) =>
@@ -61,7 +61,7 @@ public static class TaskTools
             cancellationToken);
 
     [McpServerTool(Name = "task_get", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
-    [Description("Get one OKF-Todo task by its numeric ID.")]
+    [Description("Get one OKF Todo task by its numeric ID.")]
     public static Task<TaskDetailDto> GetAsync(
         ApplicationCommandService commandService,
         [Description("Numeric task ID.")] int id,
@@ -91,7 +91,7 @@ public static class TaskTools
     }
 
     [McpServerTool(Name = "task_create", ReadOnly = false, Destructive = false, Idempotent = false, OpenWorld = false)]
-    [Description("Create an OKF-Todo task and return the saved task. Lookup inputs use stable codes, not display names.")]
+    [Description("Create an OKF Todo task and return the saved task. Lookup inputs use stable codes, not display names.")]
     public static Task<TaskDetailDto> CreateAsync(
         ApplicationCommandService commandService,
         [Description("Task title.")] string title,
@@ -107,7 +107,7 @@ public static class TaskTools
         [Description("Optional plain-string tags.")] IReadOnlyCollection<string>? tags = null,
         [Description("Optional task owner.")] string? owner = null,
         [Description("Optional person responsible for the task.")] string? responsible = null,
-        [Description("Optional explicit task-list ID. When omitted, OKF-Todo applies its documented list-resolution rule.")] int? taskListId = null,
+        [Description("Optional explicit task-list ID. When omitted, OKF Todo applies its documented list-resolution rule.")] int? taskListId = null,
         [Description("Optional existing/source/related/parent task ID used to infer list ownership when taskListId is omitted.")] int? contextTaskId = null,
         CancellationToken cancellationToken = default) =>
         McpToolExecutor.ExecuteAsync<TaskDetailDto>(
@@ -133,7 +133,7 @@ public static class TaskTools
             cancellationToken);
 
     [McpServerTool(Name = "task_update", ReadOnly = false, Destructive = false, Idempotent = true, OpenWorld = false)]
-    [Description("Replace the editable fields of an existing OKF-Todo task. Call task_get first and pass every value that must be preserved; omitted optional fields are cleared.")]
+    [Description("Replace the editable fields of an existing OKF Todo task. Call task_get first and pass every value that must be preserved; omitted optional fields are cleared.")]
     public static Task<TaskDetailDto> UpdateAsync(
         ApplicationCommandService commandService,
         [Description("Numeric task ID.")] int id,

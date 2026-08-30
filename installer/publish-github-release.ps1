@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+(\.\d+)?$')]
-    [string]$Version = '0.2.0',
+    [string]$Version = '1.0.0',
 
     [string]$Tag,
 
@@ -20,7 +20,7 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $tag = if ([string]::IsNullOrWhiteSpace($Tag)) { "v$Version" } else { $Tag.Trim() }
-$releaseTitle = if ([string]::IsNullOrWhiteSpace($Title)) { "OKF-Todo $Version" } else { $Title.Trim() }
+$releaseTitle = if ([string]::IsNullOrWhiteSpace($Title)) { "OKF Todo $Version" } else { $Title.Trim() }
 $installerPath = Join-Path `
     $repoRoot `
     "artifacts\installer\Okf-Todo-$Version-win-x64-setup.exe"
@@ -113,7 +113,7 @@ try {
         $createArguments += @('--notes-file', $resolvedNotesFile)
     }
     else {
-        $createArguments += @('--notes', "Windows x64 installer for OKF-Todo $Version.")
+        $createArguments += @('--notes', "Windows x64 installer for OKF Todo $Version.")
     }
     if ($Draft) {
         $createArguments += '--draft'

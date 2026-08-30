@@ -16,7 +16,7 @@ $aliasPath = Join-Path `
     'Microsoft\WindowsApps\okf-todo-msix-preview.exe'
 
 if ($null -eq (Get-AppxPackage -Name $packageName -ErrorAction SilentlyContinue)) {
-    throw 'The OKF-Todo MSIX prototype is not installed. Run build-msix-prototype.ps1 -Install first.'
+    throw 'The OKF Todo MSIX prototype is not installed. Run build-msix-prototype.ps1 -Install first.'
 }
 
 $databasePathRoot = [System.IO.Path]::GetPathRoot($DatabasePath)
@@ -47,5 +47,5 @@ $process = Start-Process `
     -PassThru `
     -Wait:$Wait
 
-Write-Host "Started OKF-Todo MSIX prototype with PID $($process.Id)."
+Write-Host "Started OKF Todo MSIX prototype with PID $($process.Id)."
 Write-Host "Isolated database: $resolvedDatabasePath"

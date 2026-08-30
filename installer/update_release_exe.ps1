@@ -192,7 +192,7 @@ try {
         & gh release create `
             $Tag `
             $stableAssetPath `
-            --title "OKF-Todo $version alpha" `
+            --title "OKF Todo $version alpha" `
             --notes 'Windows installer.' `
             --latest
 

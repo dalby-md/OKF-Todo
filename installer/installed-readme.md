@@ -1,4 +1,4 @@
-# OKF-Todo installed integration
+# OKF Todo installed integration
 
 The desktop application, command adapter, MCP server, and OKF context use the same personal SQLite database:
 
@@ -6,7 +6,7 @@ The desktop application, command adapter, MCP server, and OKF context use the sa
 %LOCALAPPDATA%\Okf-Todo\okf-todo.db
 ```
 
-Installing, upgrading, repairing, or uninstalling OKF-Todo never overwrites or
+Installing, upgrading, repairing, or uninstalling OKF Todo never overwrites or
 removes this database. Only an explicit restore or reset performed inside the
 application can replace it.
 

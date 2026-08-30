@@ -1,6 +1,6 @@
 # Microsoft Store package
 
-This is the production Store packaging path for the reserved **OKF-Todo**
+This is the production Store packaging path for the reserved **OKF Todo**
 product. It is independent of both the Inno Setup installer and the locally
 signed MSIX feasibility prototype.
 
@@ -22,7 +22,7 @@ failures, rollout recovery, and post-publication checks—use the
 
 The package identity name and publisher are assigned by Partner Center. Do not
 rename or normalize them. The user-facing Store and Start-menu name remains
-**OKF-Todo**.
+**OKF Todo**.
 
 ## Build the Store artifact
 
@@ -35,13 +35,13 @@ winget install -e --id Microsoft.WinAppCli --source winget
 Then run from the repository root:
 
 ```powershell
-.\packaging\msix\build-msix-store.ps1 -Version 0.2.0.0
+.\packaging\msix\build-msix-store.ps1 -Version 1.0.0.0
 ```
 
 The upload artifact is written to:
 
 ```text
-artifacts\msix-store\output\Okf-Todo-0.2.0.0-win-x64-store.msix
+artifacts\msix-store\output\Okf-Todo-1.0.0.0-win-x64-store.msix
 ```
 
 The script deliberately does not accept a certificate and does not install the

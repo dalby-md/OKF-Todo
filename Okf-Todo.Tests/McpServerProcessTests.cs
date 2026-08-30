@@ -34,7 +34,7 @@ public sealed class McpServerProcessTests
 #endif
                 "net8.0",
                 "Okf-Todo.exe"));
-            Assert.True(File.Exists(serverPath), $"Unified OKF-Todo executable was not found at {serverPath}.");
+            Assert.True(File.Exists(serverPath), $"Unified OKF Todo executable was not found at {serverPath}.");
 
             var startInfo = new ProcessStartInfo
             {
@@ -344,7 +344,7 @@ public sealed class McpServerProcessTests
             using var exitTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             await process.WaitForExitAsync(exitTimeout.Token);
             Assert.Equal(0, process.ExitCode);
-            Assert.Contains("OKF-Todo MCP server is using database", await standardErrorTask);
+            Assert.Contains("OKF Todo MCP server is using database", await standardErrorTask);
         }
         finally
         {

@@ -1,25 +1,25 @@
-# OKF-Todo
+# OKF Todo
 
-> **Version 0.2 alpha - work in progress.** Expect incomplete features and changes to the user interface. The application applies pending database migrations at startup when necessary.
+> **Version 1.0.0.** The first stable release is packaged for Windows. The application applies pending database migrations at startup when necessary.
 
 An open-source, offline To-Do application for developers and supporters built with SQLite supporting [Open Knowledge Format (OKF)](docs/what-is-okf.md) and MCP.
 
-[![OKF-Todo task workspace showing task views, rich task details, tags, waiting status, Markdown editing, and a checklist](docs/images/okf-todo-task-workspace.png)](docs/images/okf-todo-task-workspace.png)
+[![OKF Todo task workspace showing task views, rich task details, tags, waiting status, Markdown editing, and a checklist](docs/images/okf-todo-task-workspace.png)](docs/images/okf-todo-task-workspace.png)
 
 <sub>Data was created by Codex directly.</sub>
 
 
 ## AI-First Data
 
-OKF-Todo is designed to help an [AI assistant with access to local tools](docs/ai-assistants.md) turn unstructured work into practical artifacts. Give Codex, Claude Code, or another compatible assistant a customer email thread, support transcript, meeting notes, diagnostic output, or similar source material and ask it to prepare an internal task, investigation plan, customer reply, handover, status update, or another useful artifact.
+OKF Todo is designed to help an [AI assistant with access to local tools](docs/ai-assistants.md) turn unstructured work into practical artifacts. Give Codex, Claude Code, or another compatible assistant a customer email thread, support transcript, meeting notes, diagnostic output, or similar source material and ask it to prepare an internal task, investigation plan, customer reply, handover, status update, or another useful artifact.
 
-The application is not dependent on AI. It also works as a traditional desktop To-Do application where you can create, organize, update, and complete tasks entirely through the user interface. No hosted account is required, and your data remains local. See [Using OKF-Todo day to day](docs/help/using-okf-todo.md) for the complete end-user workflow.
+The application is not dependent on AI. It also works as a traditional desktop To-Do application where you can create, organize, update, and complete tasks entirely through the user interface. No hosted account is required, and your data remains local. See [Using OKF Todo day to day](docs/help/using-okf-todo.md) for the complete end-user workflow.
 
 For AI-assisted work, the recommended workflow is **draft, review, save, verify**: ask the assistant to analyze the source without changing anything, review its proposal, explicitly approve any task creation or update, and then read the saved result back. The [OKF user guide](docs/help/okf-layer.md) and [MCP user guide](docs/help/mcp-server.md) provide complete examples and reusable prompts.
 
-An AI assistant can work with OKF-Todo in several ways:
+An AI assistant can work with OKF Todo in several ways:
 
-- **[OKF knowledge layer](docs/help/okf-layer.md):** give the assistant structured context about OKF-Todo's concepts, schema, relationships, integrity rules, and lifecycle conventions. OKF provides knowledge and navigation; it does not itself grant access to task data or perform updates.
+- **[OKF knowledge layer](docs/help/okf-layer.md):** give the assistant structured context about OKF Todo's concepts, schema, relationships, integrity rules, and lifecycle conventions. OKF provides knowledge and navigation; it does not itself grant access to task data or perform updates.
 - **[MCP server](docs/help/mcp-server.md):** let an MCP-compatible client list, read, create, and update tasks and inspect their timelines through structured tools.
 - **[CLI commands](docs/okf/todo-database/references/application-command-interface.md):** let people, scripts, and agents execute application commands from a terminal.
 - **Direct SQLite access:** let a user, script, or assistant read or write the local database directly when it has permission to access the file and a SQLite-capable tool.
@@ -36,7 +36,7 @@ Planned improvements:
 
 - Calculation of initial editor height based on screen resolution. 
 - Possible inspiration points from MS To Do: Lists, flags and stars. 
-- Installers for Mac and Linux.
+- Packaged installers for macOS and Linux. Version 1.0 remains Windows-only.
 
 
 It is designed for the work that often falls between formal systems: production errors, support cases, deployment checks, investigations, ideas, notes, requests, and follow-up tasks. The application runs locally, requires no account or cloud service, and keeps tasks, history, images, and attachments together in one SQLite database.
@@ -60,11 +60,12 @@ It is designed for the work that often falls between formal systems: production 
 
 ## Install on Windows
 
-Windows users can [get OKF-Todo from Microsoft Store](https://apps.microsoft.com/detail/9PP5FM2933BR) or download the Inno Setup installer from the [latest GitHub release](https://github.com/dalby-md/OKF-Todo/releases/latest).
+Windows users can [get OKF Todo from Microsoft Store](https://apps.microsoft.com/detail/9PP5FM2933BR) or download the signed Inno Setup installer from the [latest GitHub release](https://github.com/dalby-md/OKF-Todo/releases/latest).
 
-The GitHub-hosted alpha installer is not Authenticode signed. Windows may show
-an unknown-publisher or Microsoft Defender SmartScreen warning. The Microsoft
-Store package is signed by Microsoft after certification.
+The GitHub-hosted installer is Authenticode signed by Open Source Developer
+Søren Dalby. The Microsoft Store package is signed by Microsoft after
+certification. Packaged installers are not yet available for macOS or Linux;
+those platforms remain source-build targets.
 
 ## Database file
 The database is stored under the operating system's local application-data directory:
@@ -77,7 +78,7 @@ The database is stored under the operating system's local application-data direc
 
 Do not delete this file unless you intentionally want to remove all application data.
 
-Installing, updating, or removing OKF-Todo never overwrites or removes the database. Database replacement is available only through the application's explicit restore and reset workflows.
+Installing, updating, or removing OKF Todo never overwrites or removes the database. Database replacement is available only through the application's explicit restore and reset workflows.
 
 
 ## Requirements
@@ -88,7 +89,7 @@ Packaged installation is available for Windows. Source builds require:
 - The [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 - The platform webview used by Photino: WebView2 on Windows, the system WebKit view on macOS, or GTK/WebKit on Linux.
 
-Windows is the primary packaged and tested platform for version 0.2 alpha. The application architecture and Photino shell are cross-platform, but macOS and Linux packaging and verification are still in progress.
+Windows is the packaged and tested platform for version 1.0. The application architecture and Photino shell are cross-platform, but macOS and Linux packaging and release verification are still in progress.
 
 ## Run the application
 
@@ -114,13 +115,13 @@ dotnet run --project .\Okf-Todo\Okf-Todo.csproj
 
 All following `dotnet` commands in this README assume the current directory is the repository root.
 
-On first launch, OKF-Todo creates its database and initial lookup values automatically. No setup wizard or account is required.
+On first launch, OKF Todo creates its database and initial lookup values automatically. No setup wizard or account is required.
 
 On later releases, pending EF Core migrations are applied automatically before the application reads or writes task data.
 
 ## Connect an MCP client
 
-Build the OKF-Todo executable in the repository root:
+Build the OKF Todo executable in the repository root:
 
 ```powershell
 dotnet build .\Okf-Todo\Okf-Todo.csproj -c Release
@@ -170,31 +171,25 @@ Open **Setup**, then select **Back up database**. Choose a destination in the na
 
 The backup includes task lists, tasks, body images, attachments, lookups, tags, relationships, comments, checklists, and history. Interface preferences such as layout, selected list scope, and color scheme are stored separately and are not included.
 
-Restore is manual in version 0.2 alpha:
-
-1. Close OKF-Todo.
-2. Keep a copy of the current database if needed.
-3. Replace the platform-specific `Okf-Todo/okf-todo.db` file listed under Getting Started with the backup file.
-4. Start OKF-Todo again.
-
-Never replace the active database while the application is running.
+Use **Settings → Data → Restore from a file** to validate a backup, create a
+safety copy, and prepare the restore. Close and restart OKF Todo when prompted.
+Never replace the active database manually while the application is running.
 
 ## Data and Privacy
 
-OKF-Todo is a single-user, local-first application. It has no authentication, cloud synchronization, application telemetry, or external task-system integration. Application data stays in the local SQLite database unless you create a backup or save an attachment copy yourself.
+OKF Todo is a single-user, local-first application. It has no authentication, cloud synchronization, application telemetry, or external task-system integration. Application data stays in the local SQLite database unless you create a backup or save an attachment copy yourself.
 
 ## Current Limitations
 
-Version 0.2 is an alpha release intended for evaluation and personal use:
+Version 1.0 is the first stable Windows release:
 
-- Windows, macOS, and Linux can run from source; Windows currently receives the most testing.
-- A Windows installer can be built from the repository. Automatic updates and macOS/Linux packages are not available yet.
+- Windows is packaged and release-tested. macOS and Linux remain source-build targets without packaged installers.
+- The direct Windows installer does not provide automatic updates; Microsoft Store installations use Store updates.
 - There is no cloud sync or multi-user collaboration.
 - Database downgrades are not supported; back up the database before installing an older application version.
-- Restore is a manual file-replacement operation.
 - Deep integrations with email, ServiceDesk, Teams, and Azure DevOps are not included.
 
-Use the in-application backup command regularly while evaluating the alpha.
+Use the in-application backup command regularly.
 
 ## Development
 
@@ -228,19 +223,19 @@ The Windows installer is a self-contained `win-x64` Inno Setup package. It insta
 Install Inno Setup 7 (or compatible Inno Setup 6), then run from the repository root:
 
 ```powershell
-.\installer\build-installer.ps1 -Version 0.2.0
+.\installer\build-installer.ps1 -Version 1.0.0
 ```
 
 Or from Windows cmd:
 
 ```cmd
-installer\build-installer.cmd -Version 0.2.0
+installer\build-installer.cmd -Version 1.0.0
 ```
 
 The installer is written to:
 
 ```text
-artifacts\installer\Okf-Todo-0.2.0-win-x64-setup.exe
+artifacts\installer\Okf-Todo-1.0.0-win-x64-setup.exe
 ```
 
 ### Build the local MSIX feasibility prototype
@@ -259,7 +254,7 @@ install the package:
 
 ```powershell
 winget install -e --id Microsoft.WinAppCli --source winget
-.\packaging\msix\build-msix-prototype.ps1 -Version 0.2.0.0 -Install
+.\packaging\msix\build-msix-prototype.ps1 -Version 1.0.0.0 -Install
 .\packaging\msix\start-msix-prototype.ps1
 ```
 
@@ -275,7 +270,7 @@ signs the package after Store certification, so this path does not require a
 purchased code-signing certificate.
 
 ```powershell
-.\packaging\msix\build-msix-store.ps1 -Version 0.2.0.0
+.\packaging\msix\build-msix-store.ps1 -Version 1.0.0.0
 ```
 
 The artifact is written under `artifacts\msix-store\output`. See the
@@ -285,7 +280,7 @@ validation, versioning, data-safety, MCP-alias, and Partner Center handoff rules
 To publish, merge, and validate the staging payload without compiling the setup executable:
 
 ```powershell
-.\installer\build-installer.ps1 -Version 0.2.0 -SkipInstallerCompile
+.\installer\build-installer.ps1 -Version 1.0.0 -SkipInstallerCompile
 ```
 
 The desktop application, OKF command adapter, and MCP server are provided by the single payload staged under `artifacts\installer\staging\core`; the installed OKF bundle is staged under `artifacts\installer\staging\okf`.
@@ -293,12 +288,12 @@ The desktop application, OKF command adapter, and MCP server are provided by the
 For a signed production build, provide the Windows SDK `signtool.exe`, certificate thumbprint, and optional RFC 3161 timestamp URL:
 
 ```powershell
-.\installer\build-installer.ps1 -Version 0.2.0 `
+.\installer\build-installer.ps1 -Version 1.0.0 `
   -SignToolPath 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe' `
   -CertificateThumbprint '<certificate-thumbprint>'
 ```
 
-The build signs the unified OKF-Todo executable before packaging, then signs the resulting setup executable. Ordinary development builds remain unsigned.
+The build signs the unified OKF Todo executable before packaging, then signs the resulting setup executable. Ordinary development builds remain unsigned.
 
 To build and publish the next alpha release in one operation, install and authenticate the GitHub CLI, then run:
 
@@ -327,12 +322,12 @@ For a coordinated Store and GitHub launch, build the tested installer once and
 create a GitHub draft for the exact release commit:
 
 ```powershell
-.\installer\build-installer.ps1 -Version 0.2.0
+.\installer\build-installer.ps1 -Version 1.0.0
 .\installer\publish-github-release.ps1 `
-  -Version 0.2.0 `
-  -Tag v0.2.0-alpha `
-  -Title 'OKF-Todo 0.2.0 alpha' `
-  -NotesFile docs\release-notes\v0.2.0-alpha.md `
+  -Version 1.0.0 `
+  -Tag v1.0.0 `
+  -Title 'OKF Todo 1.0.0' `
+  -NotesFile docs\release-notes\v1.0.0.md `
   -Draft
 ```
 
@@ -343,7 +338,7 @@ the Store submission, publish that tested draft as GitHub's latest release:
 
 ```powershell
 .\installer\publish-github-release.ps1 `
-  -Tag v0.2.0-alpha `
+  -Tag v1.0.0 `
   -PublishDraft `
   -Latest
 ```
@@ -352,7 +347,7 @@ Do not run `update_release_exe.ps1` and the coordinated draft workflow for the
 same release.
 
 ## AI harness
-OKF-Todo is built using Codex but is not tied to Codex. It uses AGENTS.md and skills and other crosss platform designs.
+OKF Todo is built using Codex but is not tied to Codex. It uses AGENTS.md, skills, and other cross-platform designs.
 
 ## Testing the installed Windows application
 

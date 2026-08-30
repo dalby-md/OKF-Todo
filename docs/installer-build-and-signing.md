@@ -24,7 +24,7 @@ Use this for development:
 
 ```powershell
 cd C:\git\Okf-Todo
-.\installer\build-installer.ps1 -Version 0.2.0
+.\installer\build-installer.ps1 -Version 1.0.0
 ```
 
 The installer is written to `artifacts/installer`.
@@ -41,7 +41,7 @@ $signTool = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtoo
 $thumbprint = '4C7319FF0FDFC7778CDAC36A40154CA82C1D1B37'
 
 .\installer\build-installer.ps1 `
-  -Version 0.2.0 `
+  -Version 1.0.0 `
   -SignToolPath $signTool `
   -CertificateThumbprint $thumbprint `
   -TimestampUrl 'http://time.certum.pl'
@@ -147,7 +147,7 @@ $signTool = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtoo
 $thumbprint = $env:OKF_TODO_SIGNING_CERTIFICATE_THUMBPRINT
 
 .\installer\build-installer.ps1 `
-  -Version 0.2.0 `
+  -Version 1.0.0 `
   -SignToolPath $signTool `
   -CertificateThumbprint $thumbprint `
   -TimestampUrl 'http://time.certum.pl'

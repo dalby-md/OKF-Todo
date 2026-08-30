@@ -6,7 +6,7 @@ Proposed
 
 ## Context
 
-OKF-Todo ships an OKF context bundle and one executable whose startup modes provide the desktop application, application command adapter, and MCP server. Automated acceptance tests must prove that an AI harness can understand the installed context, use both supported command paths, and observe the resulting SQLite data without relying on source-code knowledge.
+OKF Todo ships an OKF context bundle and one executable whose startup modes provide the desktop application, application command adapter, and MCP server. Automated acceptance tests must prove that an AI harness can understand the installed context, use both supported command paths, and observe the resulting SQLite data without relying on source-code knowledge.
 
 Tests that reference application projects, EF Core entities, internal services, repository documentation, publish output, or a developer database would not verify the installed user experience. Browser automation is also the wrong boundary because these contracts are exposed through files, MCP over standard input/output, and SQLite rather than through the desktop UI.
 
@@ -24,7 +24,7 @@ The installed executable's OKF command and MCP modes are hard preconditions. A m
 
 Use xUnit, the official .NET MCP client, and `Microsoft.Data.Sqlite`. Do not use Playwright for these tests. The suite is deterministic and offline; no AI model, network service, or additional organizational context participates.
 
-Each test receives an isolated temporary directory and database. It launches and terminates only the installed command process required for that test, uses bounded timeouts, and removes temporary data after completion. Tests must never discover or open the user's normal OKF-Todo database.
+Each test receives an isolated temporary directory and database. It launches and terminates only the installed command process required for that test, uses bounded timeouts, and removes temporary data after completion. Tests must never discover or open the user's normal OKF Todo database.
 
 Implement every core business case through both supported installed paths:
 
@@ -55,5 +55,5 @@ The installation root is supplied through `OKF_TODO_INSTALL_DIR`. When it is abs
 - Internal refactoring cannot make the tests pass unless the installed external contracts still work.
 - The Windows installer must be built and installed before running the suite.
 - Because MCP is part of the core executable, every supported installation exposes the same command surface.
-- The tests run only on Windows and require no administrator rights, network access, AI credentials, or existing OKF-Todo data.
+- The tests run only on Windows and require no administrator rights, network access, AI credentials, or existing OKF Todo data.
 - GUI behavior remains covered separately; adding GUI automation later does not change this contract-test boundary.

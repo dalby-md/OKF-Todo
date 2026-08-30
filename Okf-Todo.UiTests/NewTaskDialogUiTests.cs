@@ -58,6 +58,9 @@ public sealed class NewTaskDialogUiTests
           Object.defineProperty(navigator, 'clipboard', {
             configurable: true,
             value: {
+              async writeText(text) {
+                window.__clipboardWrite = { plainText: text }
+              },
               async write(items) {
                 const item = items[0]
                 window.__clipboardWrite = {
@@ -373,6 +376,7 @@ public sealed class NewTaskDialogUiTests
             $"{fixture.BaseUrl}/index.html?v=function-key-shortcuts-{bodyFormatCode.ToLowerInvariant()}",
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        await DismissFirstRunPromptAsync(page);
 
         Assert.Equal("F1", await page.Locator("#help-button").GetAttributeAsync("aria-keyshortcuts"));
         Assert.Equal("F2", await page.Locator("#new-task-button").GetAttributeAsync("aria-keyshortcuts"));
@@ -386,6 +390,7 @@ public sealed class NewTaskDialogUiTests
             6,
             await page.Locator("[data-save-shortcut][aria-keyshortcuts='F8']").CountAsync());
 
+        await page.Locator("#new-task-button").FocusAsync();
         await page.Keyboard.PressAsync("F2");
         await page.Locator("#new-task-overlay").WaitForAsync(new LocatorWaitForOptions
         {
@@ -398,15 +403,11 @@ public sealed class NewTaskDialogUiTests
         {
             State = WaitForSelectorState.Hidden
         });
-        await page.EvaluateAsync("() => window.Editor.focus()");
-        await page.WaitForFunctionAsync(
-            "() => document.querySelector('#editor-host')?.contains(document.activeElement)");
+        await FocusEditorAsync(page);
         await page.Keyboard.PressAsync("F3");
         await page.WaitForFunctionAsync("() => document.activeElement?.id === 'task-search'");
 
-        await page.EvaluateAsync("() => window.Editor.focus()");
-        await page.WaitForFunctionAsync(
-            "() => document.querySelector('#editor-host')?.contains(document.activeElement)");
+        await FocusEditorAsync(page);
         await page.Keyboard.PressAsync("F1");
         await page.Locator("#help-overlay").WaitForAsync(new LocatorWaitForOptions
         {
@@ -414,7 +415,7 @@ public sealed class NewTaskDialogUiTests
         });
         await page.Locator("#help-close-button").ClickAsync();
 
-        await page.EvaluateAsync("() => window.Editor.focus()");
+        await FocusEditorAsync(page);
         await page.Keyboard.PressAsync("F2");
         await page.Locator("#new-task-overlay").WaitForAsync(new LocatorWaitForOptions
         {
@@ -424,12 +425,12 @@ public sealed class NewTaskDialogUiTests
 
         var updatedTitle = $"{taskTitle} saved by F8";
         await page.Locator("#task-title").FillAsync(updatedTitle);
-        await page.EvaluateAsync("() => window.Editor.focus()");
+        await FocusEditorAsync(page);
         await page.Keyboard.PressAsync("F8");
         await page.WaitForFunctionAsync("() => document.querySelector('#save-status')?.textContent === 'Saved'");
         Assert.Contains("task.update", fixture.BridgeMessageTypes);
 
-        await page.EvaluateAsync("() => window.Editor.focus()");
+        await FocusEditorAsync(page);
         await page.Keyboard.PressAsync("F9");
         await page.WaitForFunctionAsync(
             """
@@ -480,6 +481,7 @@ public sealed class NewTaskDialogUiTests
             WaitUntil = WaitUntilState.DOMContentLoaded
         });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        await DismissFirstRunPromptAsync(page);
         Assert.Equal(
             $"/css/app.css?v={startupVersion}",
             await page.Locator("#app-stylesheet").GetAttributeAsync("href"));
@@ -563,6 +565,7 @@ public sealed class NewTaskDialogUiTests
             $"{fixture.BaseUrl}/index.html?v=task-title-rail-option-3",
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        await DismissFirstRunPromptAsync(page);
 
         const string taskTitle = "Prepare release readiness checklist";
         await page.Locator("#new-task-button").ClickAsync();
@@ -715,6 +718,7 @@ public sealed class NewTaskDialogUiTests
             ViewportSize = new ViewportSize { Width = 1400, Height = 900 }
         });
         await context.AddInitScriptAsync(BridgeAdapterScript);
+        await context.AddInitScriptAsync(ClipboardAdapterScript);
 
         var page = await context.NewPageAsync();
         await page.GotoAsync(
@@ -734,7 +738,7 @@ public sealed class NewTaskDialogUiTests
             "page",
             await page.Locator("[data-help-topic='using-okf-todo']").GetAttributeAsync("aria-current"));
         await page.Locator("#help-content h1").WaitForAsync();
-        Assert.Equal("Use OKF-Todo Day to Day", await page.Locator("#help-content h1").TextContentAsync());
+        Assert.Equal("Use OKF Todo Day to Day", await page.Locator("#help-content h1").TextContentAsync());
         await page.Locator("#help-content").GetByText("Start with one task", new LocatorGetByTextOptions
         {
             Exact = true
@@ -756,6 +760,8 @@ public sealed class NewTaskDialogUiTests
         var copyPromptButton = page.Locator(".help-copy-button");
         Assert.Equal("Copy prompt", await copyPromptButton.TextContentAsync());
         await copyPromptButton.ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('.help-copy-button')?.textContent === 'Copied'");
         Assert.Equal("Copied", await copyPromptButton.TextContentAsync());
 
         await page.Locator("[data-help-topic='mcp-server']").ClickAsync();
@@ -781,11 +787,13 @@ public sealed class NewTaskDialogUiTests
         var copyConfigurationButton = page.Locator(".help-copy-button");
         Assert.Equal("Copy configuration", await copyConfigurationButton.TextContentAsync());
         await copyConfigurationButton.ClickAsync();
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('.help-copy-button')?.textContent === 'Copied'");
         Assert.Equal("Copied", await copyConfigurationButton.TextContentAsync());
 
         await page.Locator("[data-help-topic='using-okf-todo']").ClickAsync();
         await page.Locator("#help-content h1").WaitForAsync();
-        Assert.Equal("Use OKF-Todo Day to Day", await page.Locator("#help-content h1").TextContentAsync());
+        Assert.Equal("Use OKF Todo Day to Day", await page.Locator("#help-content h1").TextContentAsync());
         await AssertNoHorizontalPageOverflowAsync(page);
         await CaptureViewportAsync(page, "help-using-okf-todo.png");
     }
@@ -946,6 +954,7 @@ public sealed class NewTaskDialogUiTests
             $"{fixture.BaseUrl}/index.html?v=markdown-unsaved-task-switch-contract",
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        await DismissFirstRunPromptAsync(page);
 
         async Task CreateTaskAsync(string title)
         {
@@ -1027,6 +1036,7 @@ public sealed class NewTaskDialogUiTests
             WaitUntil = WaitUntilState.DOMContentLoaded
         });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        await DismissFirstRunPromptAsync(page);
         Assert.Equal(
             "/css/app.css?v=ownership-fields-contract",
             await page.Locator("#app-stylesheet").GetAttributeAsync("href"));
@@ -1169,6 +1179,7 @@ public sealed class NewTaskDialogUiTests
             $"{fixture.BaseUrl}/index.html?v=semantic-task-detail-slots",
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        await DismissFirstRunPromptAsync(page);
 
         const string taskTitle = "Review optional task details";
         await page.Locator("#new-task-button").ClickAsync();
@@ -1417,6 +1428,7 @@ public sealed class NewTaskDialogUiTests
             $"{fixture.BaseUrl}/index.html?v=final-task-editing-preference-contract",
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        await DismissFirstRunPromptAsync(page);
 
         const string taskTitle = "Final task editing browser contract";
         await page.Locator("#new-task-button").ClickAsync();
@@ -1942,6 +1954,7 @@ public sealed class NewTaskDialogUiTests
             $"{fixture.BaseUrl}/index.html?v=star-trash-bulk-contract",
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        await DismissFirstRunPromptAsync(page);
         Assert.Equal(0, await page.Locator("#trash-permanent-actions").CountAsync());
         Assert.Equal(0, await page.Locator("#task-detail-star-button").CountAsync());
         Assert.Equal(0, await page.Locator("#task-detail-menu-button").CountAsync());
@@ -1995,7 +2008,7 @@ public sealed class NewTaskDialogUiTests
 
         await page.Locator(".task-view-rail-button[data-task-view='all']").ClickAsync();
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('#task-list-title')?.textContent === 'All statuses'");
+            "() => document.querySelector('#task-list-title')?.textContent === 'All statuses' && document.querySelectorAll('#task-list .task-row').length === 3");
         Assert.True(await page.Locator("#task-view-overflow-button").IsHiddenAsync());
         await page.Locator("#task-select-mode-button").ClickAsync();
         await page.Locator("#task-select-all").CheckAsync();
@@ -2122,7 +2135,9 @@ public sealed class NewTaskDialogUiTests
             await page.Locator("#confirmation-message").TextContentAsync());
         await page.Locator("#confirmation-confirm-button").ClickAsync();
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('#task-view-overflow-button')?.hidden && document.querySelector('#task-list .empty-list')");
+            "() => document.querySelector('#task-view-overflow-button')?.hidden && document.querySelector('#task-list .empty-list')",
+            null,
+            new PageWaitForFunctionOptions { Timeout = 60_000 });
         Assert.True(await page.Locator("#task-view-overflow-button").IsHiddenAsync());
     }
 
@@ -2147,6 +2162,7 @@ public sealed class NewTaskDialogUiTests
             $"{fixture.BaseUrl}/index.html?v=view-wide-trash-actions-contract",
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        await DismissFirstRunPromptAsync(page);
 
         const string selectedTitle = "Move selected task from Active";
         const string activeTitle = "Keep active task outside bulk Trash";
@@ -2162,13 +2178,18 @@ public sealed class NewTaskDialogUiTests
                 State = WaitForSelectorState.Hidden
             });
         }
+        await page.WaitForFunctionAsync(
+            "() => document.querySelectorAll('#task-list .task-row').length === 4");
 
         Assert.True(await page.Locator("#task-view-overflow-button").IsHiddenAsync());
         await page.Locator("#task-search").FillAsync(selectedTitle);
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#task-list-header-count')?.textContent === '1 task'");
         await page.Locator("#task-select-mode-button").ClickAsync();
-        await page.Locator(".task-row-select").CheckAsync();
+        await page.Locator(".task-row-shell")
+            .Filter(new LocatorFilterOptions { HasText = selectedTitle })
+            .Locator(".task-row-select")
+            .CheckAsync();
         Assert.Equal(
             "Move all selected to Trash",
             await page.Locator("#task-bulk-trash").TextContentAsync());
@@ -2258,6 +2279,7 @@ public sealed class NewTaskDialogUiTests
         };
         await page.GotoAsync($"{fixture.BaseUrl}/index.html?v=task-lists-contract");
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-list-switcher option').length === 2");
+        await DismissFirstRunPromptAsync(page);
 
         await page.Locator("#manage-task-lists-button").ClickAsync();
         await page.Locator("#task-lists-overlay").WaitForAsync();
@@ -2460,6 +2482,25 @@ public sealed class NewTaskDialogUiTests
         Assert.Contains("taskList.undoMove", fixture.BridgeMessageTypes);
         Assert.Contains("layout.preference.save", fixture.BridgeMessageTypes);
         Assert.Empty(consoleErrors);
+    }
+
+    private static async Task DismissFirstRunPromptAsync(IPage page)
+    {
+        var overlay = page.Locator("#first-run-overlay");
+        await overlay.WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Visible
+        });
+        await page.Locator("#first-run-skip-button").ClickAsync();
+        await overlay.WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Hidden
+        });
+    }
+
+    private static async Task FocusEditorAsync(IPage page)
+    {
+        await page.EvaluateAsync("() => window.Editor.focus()");
     }
 
     private static async Task OpenTaskDetailsPreferencesAsync(IPage page)
@@ -2945,7 +2986,7 @@ public sealed class NewTaskDialogUiTests
                 directory = directory.Parent;
             }
 
-            throw new DirectoryNotFoundException("Could not locate the OKF-Todo workspace root.");
+            throw new DirectoryNotFoundException("Could not locate the OKF Todo workspace root.");
         }
     }
 

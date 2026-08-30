@@ -14,7 +14,7 @@ public sealed class McpTaskBusinessCases
         Assert.Contains("explicitly approves that exact change", instructions);
         Assert.Contains("Before the replacement-style task_update, call task_get", instructions);
         Assert.Contains("After an approved write, verify the affected resource", instructions);
-        Assert.Contains("instead of bypassing OKF-Todo with direct SQLite writes", instructions);
+        Assert.Contains("instead of bypassing OKF Todo with direct SQLite writes", instructions);
     }
 
     [Fact]

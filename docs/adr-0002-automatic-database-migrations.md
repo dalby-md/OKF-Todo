@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-OKF-Todo stores all task data and BLOB content in one local SQLite database. Once users receive the application, schema changes must preserve that data across application upgrades. There are no supported databases from before the initial migration.
+OKF Todo stores all task data and BLOB content in one local SQLite database. Once users receive the application, schema changes must preserve that data across application upgrades. There are no supported databases from before the initial migration.
 
 ## Decision
 
