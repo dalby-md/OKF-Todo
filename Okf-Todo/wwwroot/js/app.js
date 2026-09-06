@@ -3,6 +3,7 @@
   const bridgeTimeoutMs = 15000
   const imageBridgeTimeoutMs = 120000
   const viewLabels = {
+    all: 'All',
     active: 'Active',
     ready: 'Ready',
     starred: 'Starred',
@@ -10,15 +11,14 @@
     actnow: 'Act now',
     waiting: 'Waiting',
     completed: 'Completed',
-    all: 'All statuses',
     trash: 'Trash'
   }
   const viewDescriptions = {
     active: 'All active tasks, including tasks that are waiting',
     ready: 'Active tasks that are not waiting',
     starred: 'Tasks you marked for focus',
-    attention: 'Active tasks that are urgent or overdue, grouped by why they need attention. Overdue means before today; due today is not overdue.',
-    actnow: 'Active tasks that are urgent or overdue and are not waiting. Overdue means before today; due today is not overdue.',
+    attention: 'Review all urgent or overdue active tasks, including those waiting for someone or something. Use Act now to see only those that are not waiting. Overdue means before today; due today is not overdue.',
+    actnow: 'The same as Attention, with waiting tasks excluded.',
     waiting: 'Active tasks waiting for a person, response, or other event',
     completed: 'Tasks that have been completed',
     all: 'Active, completed, and cancelled tasks',
@@ -57,7 +57,7 @@
       options: [
         { code: 'TITLE_ASC', label: 'Title', description: 'Sort tasks alphabetically.' },
         { code: 'TASK_TYPE', label: 'Task type', description: 'Group errors, investigations, requests, and notes.' },
-        { code: 'STATUS', label: 'Status order', description: 'Groups tasks by their configured status order—Active, Completed, then Cancelled by default. Mainly useful in All statuses.' }
+        { code: 'STATUS', label: 'Status order', description: 'Groups tasks by their configured status order—Active, Completed, then Cancelled by default. Mainly useful in All.' }
       ]
     }
   ]

@@ -92,7 +92,7 @@ Every task belongs to exactly one concrete user-managed list. A new or upgraded 
 
 List names are trimmed and case-insensitively unique. Lists have a manual order. The final remaining list cannot be deleted. **Default list** is otherwise an ordinary list and can be renamed, reordered, or deleted once another list exists.
 
-The header list switcher contains the concrete lists plus synthetic **All lists**, which is not stored in SQLite. Normal task views respect the selected concrete list. **All lists** searches and displays tasks across list boundaries and shows a subdued list-name pill on every row. Trash is always global and shows list ownership regardless of the header selection. The lifecycle view named **All** is presented as **All statuses** to distinguish it from **All lists**.
+The header list switcher contains the concrete lists plus synthetic **All lists**, which is not stored in SQLite. Normal task views respect the selected concrete list. **All lists** searches and displays tasks across list boundaries and shows a subdued list-name pill on every row. Trash is always global and shows list ownership regardless of the header selection. The **All** lifecycle view appears first in the Views rail and includes active, completed, and cancelled tasks within the selected list scope.
 
 The selected concrete or global scope persists. First launch selects **Default list**. On narrow screens the list switcher occupies its own full-width header row.
 
@@ -632,7 +632,7 @@ The task list also offers purpose-driven alternatives for developer and support 
 
 - Focus: configured priority, due date, and waiting since.
 - Activity: updated and created timestamps.
-- Organize: title, task type, and **Status order**. Status order follows the configured lifecycle-status order and is mainly useful in the `All statuses` view.
+- Organize: title, task type, and **Status order**. Status order follows the configured lifecycle-status order and is mainly useful in the `All` view.
 
 The compact control exposes the selected sort explanation through a visible, focusable information icon and accessible description. The popup text follows both the selected order and Asc/Desc direction. The control works after text and tag filtering and provides an icon button for ascending or descending direction. The selected field and direction persist separately for each task view. Lookup-based ordering follows the configured lookup sort order rather than display names, and tasks without a value remain last in either direction.
 

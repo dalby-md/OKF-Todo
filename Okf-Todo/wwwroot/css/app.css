@@ -3917,7 +3917,7 @@ body.is-resizing-editor * {
 }
 
 .task-form {
-  width: min(100%, 1180px);
+  width: 100%;
   gap: 11px;
 }
 

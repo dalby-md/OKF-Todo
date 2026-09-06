@@ -69,7 +69,7 @@ The list switcher and the Views rail work together. For example, selecting the *
 Two labels that sound similar have different purposes:
 
 - **All lists** is a list scope. It combines tasks from every concrete list.
-- **All statuses** is a view. It includes active, completed, and cancelled tasks within the selected list scope.
+- **All** is a view. It includes active, completed, and cancelled tasks within the selected list scope.
 
 **Trash** is always global. It shows trashed tasks from every list, regardless of the list currently shown in the header.
 
@@ -118,21 +118,23 @@ Hover over a view in the navigation rail to see a one-line description of the wo
 
 | View | Use it when you want to… |
 | --- | --- |
+| **All** | See active, completed, and cancelled work together. This is the first view in the Views rail. |
 | **Active** | See all current unfinished work, including tasks that are waiting. |
 | **Ready** | See active tasks that have no unresolved waiting target and can be worked on now. |
 | **Starred** | Return to tasks you deliberately marked for focus. Finished starred tasks remain available in a collapsed Finished group. |
-| **Attention** | Review active tasks that are urgent or overdue. Each task appears once, grouped as Urgent and overdue, Overdue, then Urgent. Hover over its navigation entry or the information icon beside its heading for an explanation. |
-| **Act now** | Work the actionable part of Attention: urgent or overdue active tasks that do not have an unresolved waiting target. It uses the same three groups. |
+| **Attention** | See all urgent or overdue active work, including tasks waiting for someone or something. Use it to review what needs attention, even when you cannot act yet. |
+| **Act now** | The same as Attention, with waiting tasks excluded. |
 | **Waiting** | See tasks that depend on a person, team, case, response, or other external event. |
 | **Completed** | Review completed work. |
-| **All statuses** | See active, completed, and cancelled work together. |
 | **Trash** | Restore tasks or permanently remove them. |
 
 **Ready** and **Waiting** divide active work by whether it has an unresolved waiting target. Use **Ready** as the focused queue for work you can advance now, and return to **Active** when you need the complete unfinished picture.
 
 **Attention** uses an OR rule: a task belongs there when it has Urgent priority, when its deadline is overdue, or both. Overdue means before today; a task due today is not overdue. A task that is both urgent and overdue appears only in the first group, never twice.
 
-**Act now** keeps that same urgency and overdue rule but removes anything currently waiting. Use Attention when you need the complete risk picture, including blocked work. Use Act now when you want the shorter queue of tasks you can advance immediately. Adding a waiting target from Act now moves the saved task to **Waiting** and keeps it selected.
+**Act now** is the part of Attention that is not waiting for someone or something. For example, an overdue task waiting for a customer reply appears in **Attention**, but not **Act now**. Clear its waiting target and it appears in both views. A task that is neither urgent nor overdue appears in neither view, even if it is ready to work on.
+
+Both views group tasks as **Urgent and overdue**, **Overdue**, then **Urgent**. Hover over either view in the navigation rail or the information icon beside its heading to see the difference explained. Adding a waiting target from Act now moves the saved task to **Waiting** and keeps it selected.
 
 When you add a waiting target while working in **Ready**, saving moves the task to **Waiting** and keeps it selected. Clearing the waiting target from **Waiting** moves it back to **Ready** in the same way.
 
@@ -174,7 +176,7 @@ When several tags are selected, a task matches if it has any selected tag. Activ
 
 The task count beside the view name always shows the number of results after the current search and filters.
 
-To isolate cancelled tasks without adding another view, select **All statuses**, then select **Cancelled** under **Status**. Choose **All lists** first when the result should span every list.
+To isolate cancelled tasks without adding another view, select **All**, then select **Cancelled** under **Status**. Choose **All lists** first when the result should span every list.
 
 Filters affect only the current on-screen result. They do not change or delete tasks.
 
@@ -193,7 +195,7 @@ Use **Sort** to choose the order. Select its direction button to switch between 
 
 Within those groups, earlier deadlines rise first. Other sort choices help you focus by configured priority, due date, or waiting time; review activity by updated or created time; or organize by title, task type, or **Status order**.
 
-**Status order** groups tasks by the status order configured under **Settings → Data & values**: Active, Completed, then Cancelled by default. It is mainly useful in **All statuses**, because most other views already contain only one status.
+**Status order** groups tasks by the status order configured under **Settings → Data & values**: Active, Completed, then Cancelled by default. It is mainly useful in **All**, because most other views already contain only one status.
 
 Use **Asc** or **Desc** to reverse the selected order. For Triage order, ascending uses the sequence shown above.
 
@@ -230,6 +232,8 @@ Enable **Show source fields** under **Settings → Task details** when you want 
 Use the body for context that does not fit in fields: the problem statement, evidence, links, diagnostic notes, decisions, draft replies, or next steps.
 
 OKF Todo supports HTML and Markdown editing. Choose your preferred default under **Settings → General → Editor mode**. The mode selector below the editor lets you work with the active task in Markdown or WYSIWYG form.
+
+Both HTML and Markdown editors expand to fill the available task-details width. On a large screen, maximize the window to use the extra space. You can drag the divider beside the task queue to give the editor more room.
 
 Drag the horizontal resize bar below the editor to change its height. The minimum is 200 pixels, and OKF Todo remembers the chosen height.
 
@@ -425,7 +429,7 @@ A full reset displays the current data counts, requires you to type `RESET DATAB
 
 | What you see | What to check |
 | --- | --- |
-| A task seems to be missing | Check the selected list, view, search text, tag/type/priority filters, and collapsed Finished group. Try **All lists → All statuses** with filters cleared. |
+| A task seems to be missing | Check the selected list, view, search text, tag/type/priority filters, and collapsed Finished group. Try **All lists → All** with filters cleared. |
 | A completed or cancelled task cannot be edited | Select **Reopen to edit**, or change the applicable setting under **Settings → Task details**. |
 | A task in Trash cannot be edited or starred | Restore it first. Trash tasks are deliberately read only. |
 | A field or section is missing | Check **Settings → Task details** for Source, Owner, Responsible, and Relationships visibility. |

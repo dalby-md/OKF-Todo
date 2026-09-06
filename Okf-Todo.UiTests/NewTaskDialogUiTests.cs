@@ -1660,6 +1660,57 @@ public sealed class NewTaskDialogUiTests
         Assert.Empty(consoleErrors);
     }
 
+    [Theory]
+    [InlineData("HTML", ".tox-tinymce")]
+    [InlineData("MARKDOWN", ".tui-editor-defaultUI")]
+    public async Task BodyEditor_FillsAvailableWidthOnHighResolutionScreens(string format, string editorSelector)
+    {
+        await using var fixture = await UiAppFixture.CreateAsync();
+        await fixture.SendBridgeAsync("editor.preference.save", new
+        {
+            bodyFormatCode = format,
+            markdownEditType = "MARKDOWN"
+        });
+        await fixture.SendBridgeAsync("task.create", new
+        {
+            title = "Wide editor workspace",
+            taskTypeCode = "NOTE",
+            body = "Editor width check",
+            bodyFormatCode = format
+        });
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge",
+            Headless = true
+        });
+        await using var context = await browser.NewContextAsync();
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+        var page = await context.NewPageAsync();
+        await page.GotoAsync($"{fixture.BaseUrl}/index.html?v=wide-editor");
+        await page.Locator("#task-list .task-row").First.ClickAsync();
+        await page.Locator($"#editor-host {editorSelector}").First.WaitForAsync();
+        foreach (var width in new[] { 2560, 3840 })
+        {
+            await page.SetViewportSizeAsync(width, 1440);
+            await page.WaitForFunctionAsync("""
+                () => {
+                  const panel = document.querySelector('.task-editor-panel');
+                  const editor = document.querySelector('#editor-host');
+                  const style = getComputedStyle(panel);
+                  const available = panel.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+                  return available > 1180 && Math.abs(editor.getBoundingClientRect().width - available) < 2;
+                }
+                """);
+            var host = await page.Locator("#editor-host").BoundingBoxAsync();
+            var editor = await page.Locator($"#editor-host {editorSelector}").First.BoundingBoxAsync();
+            Assert.NotNull(host);
+            Assert.NotNull(editor);
+            Assert.InRange(host.Width - editor.Width, 0, 6);
+            await AssertNoHorizontalPageOverflowAsync(page);
+        }
+    }
+
     [Fact]
     public async Task TriageCommandWorkspace_AdaptsAcrossLargeCompactAndSmallWindows()
     {
@@ -1688,7 +1739,7 @@ public sealed class NewTaskDialogUiTests
         Assert.Equal("Status order", await page.Locator("#task-sort option[value='STATUS']").TextContentAsync());
         Assert.Contains("overdue, urgent, ready active work", await page.Locator("#task-sort-help").GetAttributeAsync("title"));
         await page.Locator("#task-sort").SelectOptionAsync("STATUS");
-        Assert.Contains("Mainly useful in All statuses", await page.Locator("#task-sort-help").GetAttributeAsync("title"));
+        Assert.Contains("Mainly useful in All", await page.Locator("#task-sort-help").GetAttributeAsync("title"));
         await page.Locator("#task-sort").SelectOptionAsync("ATTENTION");
 
         var largeRail = await page.Locator(".task-view-rail").BoundingBoxAsync();
@@ -1717,7 +1768,7 @@ public sealed class NewTaskDialogUiTests
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#task-list-title').textContent === 'Act now' && document.querySelector('#task-view').value === 'actnow'");
         Assert.Contains(
-            "not waiting",
+            "waiting tasks excluded",
             await page.Locator(".task-view-rail-button[data-task-view='actnow']").GetAttributeAsync("title"));
         Assert.True(await page.Locator("#task-list .task-row").CountAsync() > 0);
         Assert.True(await page.Locator("#task-list .task-row").CountAsync() <= attentionCount);
@@ -2008,7 +2059,7 @@ public sealed class NewTaskDialogUiTests
 
         await page.Locator(".task-view-rail-button[data-task-view='all']").ClickAsync();
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('#task-list-title')?.textContent === 'All statuses' && document.querySelectorAll('#task-list .task-row').length === 3");
+            "() => document.querySelector('#task-list-title')?.textContent === 'All' && document.querySelectorAll('#task-list .task-row').length === 3");
         Assert.True(await page.Locator("#task-view-overflow-button").IsHiddenAsync());
         await page.Locator("#task-select-mode-button").ClickAsync();
         await page.Locator("#task-select-all").CheckAsync();
@@ -2211,7 +2262,7 @@ public sealed class NewTaskDialogUiTests
                 title);
             await page.Locator("#cancel-button").ClickAsync();
             await page.WaitForFunctionAsync(
-                "taskTitle => document.querySelector('#task-list-title')?.textContent === 'All statuses' && document.querySelector('#task-title')?.value === taskTitle && document.querySelector('#complete-button')?.textContent === 'Reopen'",
+                "taskTitle => document.querySelector('#task-list-title')?.textContent === 'All' && document.querySelector('#task-title')?.value === taskTitle && document.querySelector('#complete-button')?.textContent === 'Reopen'",
                 title);
         }
 
@@ -2230,7 +2281,7 @@ public sealed class NewTaskDialogUiTests
             "Move 2 cancelled tasks to Trash?",
             await page.Locator("#confirmation-title").TextContentAsync());
         Assert.Contains(
-            "all 2 cancelled tasks in All statuses",
+            "all 2 cancelled tasks in All",
             await page.Locator("#confirmation-message").TextContentAsync());
         await page.Locator("#confirmation-confirm-button").ClickAsync();
         await page.WaitForFunctionAsync(
@@ -2553,7 +2604,7 @@ public sealed class NewTaskDialogUiTests
               const expectedListTitle = {
                 active: 'Active',
                 completed: 'Completed',
-                all: 'All statuses'
+                all: 'All'
               }[view]
               if (!row || !list || !activeView) return false
 
@@ -2587,7 +2638,7 @@ public sealed class NewTaskDialogUiTests
                   const expectedListTitle = {
                     active: 'Active',
                     completed: 'Completed',
-                    all: 'All statuses'
+                    all: 'All'
                   }[view]
                   const rowBox = row?.getBoundingClientRect()
                   const listBox = list?.getBoundingClientRect()
