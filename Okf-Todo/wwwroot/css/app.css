@@ -1053,6 +1053,20 @@ h2 {
   min-width: 0;
 }
 
+.waiting-input-row {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.waiting-input-row input {
+  flex: 1;
+}
+
+#waiting-clear-button {
+  flex: 0 0 auto;
+}
+
 .waiting-field {
   min-width: 0;
 }

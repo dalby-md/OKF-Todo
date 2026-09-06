@@ -1779,11 +1779,26 @@ public sealed class NewTaskDialogUiTests
         await page.WaitForFunctionAsync(
             "title => document.querySelector('#task-title')?.value === title",
             actNowTaskTitle);
+        Assert.True(await page.Locator("#waiting-clear-button").IsHiddenAsync());
+        await page.Locator("#waiting-text").FillAsync("Temporary wait");
+        Assert.True(await page.Locator("#waiting-clear-button").IsVisibleAsync());
+        await page.Locator("#waiting-clear-button").ClickAsync();
+        Assert.Equal("", await page.Locator("#waiting-text").InputValueAsync());
+        Assert.True(await page.Locator("#waiting-clear-button").IsHiddenAsync());
+        Assert.Equal("waiting-text", await page.EvaluateAsync<string>("document.activeElement.id"));
         await page.Locator("#waiting-text").FillAsync("External response");
         await page.Locator("#save-button").ClickAsync();
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#save-status')?.textContent === 'Saved'");
+        await page.WaitForFunctionAsync("() => document.querySelector('#task-list-title').textContent === 'Waiting'");
+        Assert.True(await page.Locator("#waiting-clear-button").IsVisibleAsync());
+        await page.Locator("#waiting-clear-button").ClickAsync();
+        Assert.Equal("Unsaved changes", await page.Locator("#save-status").TextContentAsync());
         Assert.Equal("Waiting", await page.Locator("#task-list-title").TextContentAsync());
+        await page.Locator("#save-button").ClickAsync();
+        await page.WaitForFunctionAsync("() => document.querySelector('#task-list-title').textContent === 'Ready'");
+        Assert.Equal("", await page.Locator("#waiting-text").InputValueAsync());
+        Assert.True(await page.Locator("#waiting-clear-button").IsHiddenAsync());
         Assert.Equal(
             actNowTaskId,
             await page.Locator(".task-row[aria-current='true']").GetAttributeAsync("data-task-id"));

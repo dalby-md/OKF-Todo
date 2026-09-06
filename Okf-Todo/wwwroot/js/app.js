@@ -1306,10 +1306,13 @@
                   <span>Deadline</span>
                   <input id="task-deadline" type="date" disabled>
                 </label>
-                <label class="field-block waiting-field" for="waiting-text">
-                  <span>Waiting for</span>
-                  <input id="waiting-text" type="text" autocomplete="off" disabled>
-                </label>
+                <div class="field-block waiting-field">
+                  <label for="waiting-text">Waiting for</label>
+                  <div class="waiting-input-row">
+                    <input id="waiting-text" type="text" autocomplete="off" disabled>
+                    <button id="waiting-clear-button" class="secondary-button" type="button" aria-label="Clear waiting message" title="Clear waiting message" hidden>Clear</button>
+                  </div>
+                </div>
                 <label class="field-block tags-field" for="task-tags">
                   <span>Tags</span>
                   <select id="task-tags" multiple disabled></select>
@@ -4378,6 +4381,7 @@
     $('#editor-mode').val(getSupportedBodyFormatCode(preferredBodyFormatCode))
     $('#waiting-text').val('')
     $('#task-form input, #task-form select').prop('disabled', true)
+    syncWaitingClearButton()
     $('#complete-button, #cancel-button, #save-button, #task-detail-context-menu-button').prop('disabled', true)
     $('#cancel-button').prop('hidden', false)
     $('#task-detail-context-menu-button').prop('hidden', true)
@@ -6043,6 +6047,12 @@
       : ''
   }
 
+  function syncWaitingClearButton() {
+    const input = $('#waiting-text')
+    const canClear = !input.prop('disabled') && input.val().toString().length > 0
+    $('#waiting-clear-button').prop('hidden', !canClear).prop('disabled', !canClear)
+  }
+
   function renderWaitingPanel(task) {
     const waitingFor = task.activeWaitingFor
     const canEditWaiting = isTaskEditable(task)
@@ -6051,6 +6061,7 @@
     $('#waiting-text').val(waitingFor ? describeWaiting(waitingFor) : '')
 
     $('#waiting-text').prop('disabled', !canEditWaiting)
+    syncWaitingClearButton()
   }
 
   function setCommentControlsEnabled(isEnabled) {
@@ -6910,6 +6921,7 @@
 
     if (choice === 'clear') {
       $('#waiting-text').val('')
+      syncWaitingClearButton()
       return true
     }
 
@@ -8134,6 +8146,12 @@
       deleteAttachment(Number($(this).attr('data-attachment-id'))).catch(function (error) { setStatus(getErrorMessage(error, 'Could not remove attachment'), 'error') })
     })
     $('#task-form').on('input change', '#task-title, #task-list-owner, #task-type, #task-priority, #task-deadline, #task-tags, #task-source, #task-source-reference, #task-source-url, #task-owner, #task-responsible, #waiting-text', markDirty)
+    $('#waiting-text').on('input change', syncWaitingClearButton)
+    $('#waiting-clear-button').on('click', function () {
+      const input = $('#waiting-text')
+      if (input.prop('disabled')) return
+      input.val('').trigger('input').trigger('focus')
+    })
     $('#comment-add-button').on('click', function () {
       addComment().catch(function (error) {
         setStatus(getErrorMessage(error, 'Could not add comment'), 'error')

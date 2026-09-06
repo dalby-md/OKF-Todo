@@ -209,7 +209,7 @@ Only the title, task type, and list are required. Add other information when it 
 - **Task type** says what kind of work it is.
 - **Priority** expresses relative urgency: Urgent, Normal, or Can wait.
 - **Deadline** records when the task is due.
-- **Waiting for** records the person, team, case, answer, approval, or event blocking progress. Free text such as `ServiceDesk INC123456` is allowed.
+- **Waiting for** records the person, team, case, answer, approval, or event blocking progress. Free text such as `ServiceDesk INC123456` is allowed. When the field contains text and can be edited, select **Clear** beside it to empty the waiting message, then select **Save** to apply the change.
 - **Tags** add lightweight searchable labels. Type a new value and press Enter, or choose an existing tag.
 
 Task type and lifecycle status are different. A task can be an Investigation or Request while its status is Active, Completed, or Cancelled.
