@@ -211,6 +211,111 @@ public sealed class NewTaskDialogUiTests
     }
 
     [Fact]
+    public async Task LookupColorSwatches_PreviewSaveCancelAndPreserveCustomColors()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
+        await fixture.SendBridgeAsync("lookup.settings.create", new
+        {
+            group = "taskTypes", code = "SWATCH_TEST", name = "Swatch test",
+            description = "", sortOrder = 90, isActive = true, isSelected = false,
+            backgroundColor = "#123456", foregroundColor = "#fedcba"
+        });
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge", Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1280, Height = 1000 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+        var page = await context.NewPageAsync();
+        await page.GotoAsync($"{fixture.BaseUrl}/index.html?v=lookup-swatches");
+        await page.Locator("#settings-button").ClickAsync();
+        await page.Locator("[data-preference-section='data-values']").ClickAsync();
+        await page.Locator("[data-lookup-group='taskTypes']").ClickAsync();
+        var edit = page.Locator(".lookup-list-edit-button[data-code='SWATCH_TEST']");
+        await edit.ClickAsync();
+        Assert.Equal(0, await page.Locator("#lookup-edit-overlay input[type=color]").CountAsync());
+        Assert.True(await page.Locator("#lookup-reset-colors-button").IsHiddenAsync());
+        Assert.Equal(66, await page.Locator("input[name='lookup-background']").CountAsync());
+        Assert.Equal("#123456", await page.Locator("#lookup-edit-background-color").InputValueAsync());
+        Assert.Equal("#fedcba", await page.Locator("#lookup-edit-foreground-color").InputValueAsync());
+        await page.Locator("#lookup-edit-name").FillAsync("Preserved custom colors");
+        await page.Locator("#lookup-edit-save-button").ClickAsync();
+        await edit.ClickAsync();
+        Assert.Equal("#123456", await page.Locator("#lookup-edit-background-color").InputValueAsync());
+        Assert.Equal("#fedcba", await page.Locator("#lookup-edit-foreground-color").InputValueAsync());
+        await page.Locator("input[name='lookup-text'][value='auto']").CheckAsync();
+        Assert.Equal("#ffffff", await page.Locator("#lookup-edit-foreground-color").InputValueAsync());
+        await page.Locator("#lookup-background-swatches").GetByRole(AriaRole.Radio, new() { Name = "Blue", Exact = true }).CheckAsync();
+        Assert.Equal("#202124", await page.Locator("#lookup-edit-foreground-color").InputValueAsync());
+        Assert.Equal("rgb(191, 219, 254)", await page.Locator("#lookup-edit-preview .task-badge").EvaluateAsync<string>("el => getComputedStyle(el).backgroundColor"));
+        await page.Locator("#lookup-edit-cancel-button").ClickAsync();
+        await edit.ClickAsync();
+        Assert.Equal("#123456", await page.Locator("#lookup-edit-background-color").InputValueAsync());
+        await page.Locator("#lookup-background-swatches").GetByRole(AriaRole.Radio, new() { Name = "Blue", Exact = true }).CheckAsync();
+        await page.Locator("input[name='lookup-text'][value='auto']").CheckAsync();
+        await page.Locator("#lookup-edit-save-button").ClickAsync();
+        await edit.ClickAsync();
+        Assert.Equal("#bfdbfe", await page.Locator("#lookup-edit-background-color").InputValueAsync());
+        Assert.Equal("#202124", await page.Locator("#lookup-edit-foreground-color").InputValueAsync());
+        await page.Locator("#lookup-text-choices").GetByRole(AriaRole.Radio, new() { Name = "White", Exact = true }).CheckAsync();
+        await page.Locator("#lookup-background-swatches").GetByRole(AriaRole.Radio, new() { Name = "Dark Blue", Exact = true }).CheckAsync();
+        Assert.Equal("#ffffff", await page.Locator("#lookup-edit-foreground-color").InputValueAsync());
+        await page.Locator("#lookup-edit-save-button").ClickAsync();
+        await edit.ClickAsync();
+        Assert.Equal("#1e40af", await page.Locator("#lookup-edit-background-color").InputValueAsync());
+        Assert.Equal("#ffffff", await page.Locator("#lookup-edit-foreground-color").InputValueAsync());
+        await page.Locator("#lookup-text-choices").GetByRole(AriaRole.Radio, new() { Name = "Dark Purple", Exact = true }).CheckAsync();
+        await page.Locator("#lookup-background-swatches").GetByRole(AriaRole.Radio, new() { Name = "White", Exact = true }).CheckAsync();
+        await page.Locator("#lookup-edit-save-button").ClickAsync();
+        await edit.ClickAsync();
+        Assert.Equal("#ffffff", await page.Locator("#lookup-edit-background-color").InputValueAsync());
+        Assert.Equal("#6b21a8", await page.Locator("#lookup-edit-foreground-color").InputValueAsync());
+        await CaptureWorkspaceAsync(page, "lookup-color-swatches.png");
+        await page.SetViewportSizeAsync(390, 844);
+        await AssertNoHorizontalPageOverflowAsync(page);
+        await page.Locator("#lookup-edit-cancel-button").ClickAsync();
+        await page.Locator("#lookup-list-new-button").ClickAsync();
+        Assert.Equal(65, await page.Locator("input[name='lookup-background']").CountAsync());
+        Assert.True(await page.Locator("input[name='lookup-text'][value='auto']").IsCheckedAsync());
+        var first = page.Locator("input[name='lookup-background']").First;
+        await first.FocusAsync();
+        await page.Keyboard.PressAsync("ArrowRight");
+        Assert.True(await page.Locator("input[name='lookup-background']").Nth(1).IsCheckedAsync());
+        Assert.True(await page.Locator("#lookup-reset-colors-button").IsHiddenAsync());
+        await page.Locator("#lookup-edit-cancel-button").ClickAsync();
+        var shippedEdit = page.Locator(".lookup-list-edit-button[data-code='CRITICAL_ERROR']");
+        await shippedEdit.ClickAsync();
+        Assert.True(await page.Locator("#lookup-reset-colors-button").IsVisibleAsync());
+        await page.Locator("#lookup-background-swatches").GetByRole(AriaRole.Radio, new() { Name = "Blue", Exact = true }).CheckAsync();
+        await page.Locator("#lookup-text-choices").GetByRole(AriaRole.Radio, new() { Name = "Dark Purple", Exact = true }).CheckAsync();
+        await page.Locator("#lookup-edit-save-button").ClickAsync();
+        await shippedEdit.ClickAsync();
+        await page.Locator("#lookup-edit-name").FillAsync("Renamed critical issue");
+        await page.Locator("#lookup-edit-description").FillAsync("Keep this description");
+        await page.Locator("#lookup-reset-colors-button").ClickAsync();
+        Assert.Equal("#b42318", await page.Locator("#lookup-edit-background-color").InputValueAsync());
+        Assert.Equal("#ffffff", await page.Locator("#lookup-edit-foreground-color").InputValueAsync());
+        Assert.Equal("Renamed critical issue", await page.Locator("#lookup-edit-name").InputValueAsync());
+        Assert.Equal("Keep this description", await page.Locator("#lookup-edit-description").InputValueAsync());
+        await page.Locator("#lookup-edit-cancel-button").ClickAsync();
+        await shippedEdit.ClickAsync();
+        Assert.Equal("#bfdbfe", await page.Locator("#lookup-edit-background-color").InputValueAsync());
+        Assert.Equal("#6b21a8", await page.Locator("#lookup-edit-foreground-color").InputValueAsync());
+        await page.Locator("#lookup-edit-name").FillAsync("Renamed critical issue");
+        await page.Locator("#lookup-reset-colors-button").ClickAsync();
+        await page.Locator("#lookup-edit-save-button").ClickAsync();
+        await shippedEdit.ClickAsync();
+        Assert.Equal("#b42318", await page.Locator("#lookup-edit-background-color").InputValueAsync());
+        Assert.Equal("#ffffff", await page.Locator("#lookup-edit-foreground-color").InputValueAsync());
+        Assert.Equal("Renamed critical issue", await page.Locator("#lookup-edit-name").InputValueAsync());
+
+    }
+
+    [Fact]
     public async Task AppearanceFontSize_DefaultsToStandardAndPersistsAllSupportedScales()
     {
         await using var fixture = await UiAppFixture.CreateAsync();

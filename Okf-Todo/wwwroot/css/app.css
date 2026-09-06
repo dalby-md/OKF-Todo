@@ -2109,6 +2109,8 @@ body.is-resizing-editor * {
 
 .lookup-edit-dialog {
   width: min(620px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
 }
 
 .confirmation-dialog {
@@ -2590,6 +2592,8 @@ body.is-resizing-editor * {
 .database-reset-dialog,
 .database-restart-dialog {
   width: min(620px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
 }
 
 .database-reset-warning {
@@ -7501,3 +7505,37 @@ html.task-filter-layout-expanded .task-sort-field {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Lookup badge colors: native radio controls keep swatches keyboard accessible. */
+.lookup-color-field {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.lookup-color-field legend { margin-bottom: 8px; font-weight: 600; }
+.lookup-swatch-grid { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 6px; }
+.lookup-swatch { position: relative; min-width: 0; cursor: pointer; }
+.lookup-swatch > input { position: absolute; opacity: 0; width: 100%; min-height: 24px; height: 24px; margin: 0; cursor: pointer; }
+.lookup-swatch-sample {
+  display: grid;
+  place-items: center;
+  height: 24px;
+  border: 1px solid #718096;
+  border-radius: 4px;
+  background: var(--swatch-color);
+  color: var(--swatch-text);
+}
+.lookup-swatch-sample > span { visibility: hidden; font-size: 0.95rem; font-weight: 700; }
+.lookup-swatch > input:checked + .lookup-swatch-sample { outline: 2px solid currentColor; outline-offset: 2px; }
+.lookup-swatch > input:checked + .lookup-swatch-sample > span { visibility: visible; }
+.lookup-swatch > input:focus-visible + .lookup-swatch-sample { outline: 3px solid #1f6f68; outline-offset: 3px; }
+.lookup-swatch > input:disabled { cursor: default; }
+.lookup-swatch small { display: block; margin-top: 4px; font-size: 0.7rem; }
+.lookup-text-choices { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.lookup-text-choice { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.lookup-text-choice input { width: 16px; min-height: 16px; height: 16px; margin: 0; }
+@media (max-width: 480px) { .lookup-swatch-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+
+.lookup-text-swatches { flex-basis: 100%; }

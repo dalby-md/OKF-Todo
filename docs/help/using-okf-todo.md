@@ -361,6 +361,16 @@ The **Auto** layout adapts to the available window size. Use **Side by side** wh
 
 Use the **Compact** task filter layout when you want more room for the task list. Use **Expanded** when you want Tags, Type, Status, and Priority to remain visible without opening **Filters**.
 
+### Choose badge colors
+
+Under **Settings → Data & values**, edit a lookup value to choose its badge colors. **Background** and **Text** each have their own palette: 64 compact color samples plus a clearly labeled pure **White** (`#FFFFFF`) sample. Choose a color in each palette independently. The checkmark and outline identify your selection. Hover over a sample to see its color name. Use Tab to reach each color group and arrow keys to change its selection.
+
+For **Text**, you can also choose **Automatic**, which picks readable text for the selected background and is the default for new values. A manually selected text color stays unchanged when you change the background. The live preview shows the result before you select **Save**. **Cancel** keeps the saved colors.
+
+For a shipped lookup value with standard colors, select **Reset colors** to restore its original background and text colors in the preview. Select **Save** to apply them, or **Cancel** to keep the saved colors. Reset colors does not change the name, description, or other settings. It is unavailable for custom values, read-only values, and shipped values without defined standard colors.
+
+Existing background or text colors outside the palette appear as **Current color** samples and are preserved until you choose replacements and save. Automatic calculates a text color for this edit; it does not create a persistent automatic-color rule. Read-only values show their colors without allowing changes.
+
 ## Protect and maintain your data
 
 Open **Settings → Data & maintenance** to protect or replace the local database and to manage sample data.

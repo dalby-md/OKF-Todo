@@ -1836,14 +1836,16 @@
                 <span>Description</span>
                 <input id="lookup-edit-description" type="text" autocomplete="off">
               </label>
-              <label class="settings-field" for="lookup-edit-background-color">
-                <span>Background</span>
-                <input id="lookup-edit-background-color" type="color">
-              </label>
-              <label class="settings-field" for="lookup-edit-foreground-color">
-                <span>Text</span>
-                <input id="lookup-edit-foreground-color" type="color">
-              </label>
+              <fieldset class="lookup-color-field">
+                <legend>Background</legend>
+                <div id="lookup-background-swatches" class="lookup-swatch-grid"></div>
+                <input id="lookup-edit-background-color" type="hidden">
+              </fieldset>
+              <fieldset class="lookup-color-field">
+                <legend>Text</legend>
+                <div id="lookup-text-choices" class="lookup-text-choices"></div>
+                <input id="lookup-edit-foreground-color" type="hidden">
+              </fieldset>
             </div>
 
             <div class="lookup-edit-options">
@@ -1855,6 +1857,7 @@
                 <input id="lookup-edit-is-selected" type="checkbox">
                 <span>Default</span>
               </label>
+              <button id="lookup-reset-colors-button" class="secondary-button" type="button" hidden>Reset colors</button>
               <span id="lookup-edit-preview" class="lookup-edit-preview"></span>
             </div>
 
@@ -4060,6 +4063,102 @@
     $('#lookup-settings-groups [data-lookup-group="' + activeLookupSettingsGroup + '"]').trigger('focus')
   }
 
+  const lookupColorFamilies = [
+    ['Grey', ['#f3f4f6', '#e5e7eb', '#6b7280', '#374151']],
+    ['Slate', ['#f1f5f9', '#cbd5e1', '#64748b', '#334155']],
+    ['Blue', ['#eff6ff', '#bfdbfe', '#3b82f6', '#1e40af']],
+    ['Sky', ['#f0f9ff', '#bae6fd', '#0ea5e9', '#075985']],
+    ['Cyan', ['#ecfeff', '#a5f3fc', '#06b6d4', '#155e75']],
+    ['Teal', ['#f0fdfa', '#99f6e4', '#14b8a6', '#115e59']],
+    ['Green', ['#f0fdf4', '#bbf7d0', '#22c55e', '#166534']],
+    ['Lime', ['#f7fee7', '#d9f99d', '#84cc16', '#3f6212']],
+    ['Yellow', ['#fefce8', '#fef08a', '#eab308', '#854d0e']],
+    ['Amber', ['#fffbeb', '#fde68a', '#f59e0b', '#92400e']],
+    ['Orange', ['#fff7ed', '#fed7aa', '#f97316', '#9a3412']],
+    ['Coral', ['#fef2f2', '#fecaca', '#ef4444', '#991b1b']],
+    ['Rose', ['#fff1f2', '#fecdd3', '#f43f5e', '#9f1239']],
+    ['Pink', ['#fdf2f8', '#fbcfe8', '#ec4899', '#9d174d']],
+    ['Purple', ['#faf5ff', '#e9d5ff', '#a855f7', '#6b21a8']],
+    ['Lavender', ['#f5f3ff', '#ddd6fe', '#8b5cf6', '#5b21b6']]
+  ]
+  const lookupColorSwatches = ['Pale ', '', 'Strong ', 'Dark '].flatMap(function (shade, index) {
+    return lookupColorFamilies.map(function (family) { return [shade + family[0], family[1][index]] })
+  })
+  lookupColorSwatches.push(['White', '#ffffff'])
+  let lookupColorState = null
+
+  function getAutomaticLookupTextColor(background) {
+    function luminance(hex) {
+      const channels = hex.slice(1).match(/../g).map(function (part) {
+        const value = parseInt(part, 16) / 255
+        return value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4)
+      })
+      return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722
+    }
+    const value = luminance(background)
+    const dark = luminance('#202124')
+    const darkContrast = (Math.max(value, dark) + 0.05) / (Math.min(value, dark) + 0.05)
+    const lightContrast = 1.05 / (value + 0.05)
+    return darkContrast >= lightContrast ? '#202124' : '#ffffff'
+  }
+
+  function renderLookupSwatches(name, color, isReadOnly, selected) {
+    const swatches = lookupColorSwatches.slice()
+    if (!swatches.some(function (swatch) { return swatch[1] === color })) {
+      swatches.push(['Current color', color])
+    }
+    return swatches.map(function (swatch) {
+      return `<label class="lookup-swatch" title="${swatch[0]} (${swatch[1]})">
+        <input type="radio" name="${name}" value="${swatch[1]}" aria-label="${swatch[0]}" ${swatch[1] === selected ? 'checked' : ''} ${isReadOnly ? 'disabled' : ''}>
+        <span class="lookup-swatch-sample" style="--swatch-color: ${swatch[1]}; --swatch-text: ${getAutomaticLookupTextColor(swatch[1])}" aria-hidden="true"><span>✓</span></span>
+        ${swatch[0] === 'Current color' || swatch[0] === 'White' ? `<small>${swatch[0]}</small>` : ''}
+      </label>`
+    }).join('')
+  }
+
+  function renderLookupColorPicker(item, isReadOnly) {
+    const background = getColorInputValue(item && item.backgroundColor, '#e5e7eb').toLowerCase()
+    const foreground = getColorInputValue(item && item.foregroundColor, '#202124').toLowerCase()
+    lookupColorState = { mode: item ? 'color' : 'auto', foreground }
+    $('#lookup-background-swatches').html(renderLookupSwatches('lookup-background', background, isReadOnly, background))
+    $('#lookup-text-choices').html(`
+      <label class="lookup-text-choice"><input type="radio" name="lookup-text" value="auto" ${!item ? 'checked' : ''} ${isReadOnly ? 'disabled' : ''}><span>Automatic</span></label>
+      <div class="lookup-swatch-grid lookup-text-swatches">${renderLookupSwatches('lookup-text', foreground, isReadOnly, item ? foreground : null)}</div>`)
+    $('#lookup-edit-background-color').val(background)
+    syncLookupTextColor()
+  }
+
+  function syncLookupTextColor() {
+    const background = $('#lookup-edit-background-color').val().toString()
+    const foreground = lookupColorState.mode === 'auto'
+      ? getAutomaticLookupTextColor(background) : lookupColorState.foreground
+    $('#lookup-edit-foreground-color').val(foreground)
+    updateLookupEditPreview()
+  }
+
+  function getShippedLookupColors() {
+    const defaults = lookupSettings && lookupSettings.shippedColors
+      ? lookupSettings.shippedColors[activeLookupSettingsGroup] || [] : []
+    return defaults.find(function (item) { return item.code === editingLookupCode }) || null
+  }
+
+  function resetLookupColors() {
+    const item = editingLookupCode ? findActiveLookupItem(editingLookupCode) : null
+    const defaults = getShippedLookupColors()
+    if (!item || item.isReadOnly || !defaults) return
+    renderLookupColorPicker(defaults, false)
+    // These samples come from the shipped configuration, not the currently saved value.
+    $('#lookup-background-swatches small, #lookup-text-choices small').each(function () {
+      if ($(this).text() === 'Current color') $(this).text('Standard color')
+    })
+    $('#lookup-background-swatches input, #lookup-text-choices input').each(function () {
+      if ($(this).attr('aria-label') === 'Current color') {
+        $(this).attr('aria-label', 'Standard color')
+        $(this).closest('label').attr('title', `Standard color (${this.value})`)
+      }
+    })
+  }
+
   function openLookupEdit(code) {
     editingLookupCode = code || null
     const item = editingLookupCode ? findActiveLookupItem(editingLookupCode) : null
@@ -4078,8 +4177,8 @@
       .prop('checked', item ? item.isActive : true)
       .prop('disabled', isReadOnly || !!(item && activeLookupSettingsGroup === 'taskStatuses' && item.isSystem))
     $('#lookup-edit-is-selected').prop('checked', item ? item.isSelected : false).prop('disabled', isReadOnly)
-    $('#lookup-edit-background-color').val(getColorInputValue(item && item.backgroundColor, '#6b7280')).prop('disabled', isReadOnly)
-    $('#lookup-edit-foreground-color').val(getColorInputValue(item && item.foregroundColor, '#ffffff')).prop('disabled', isReadOnly)
+    renderLookupColorPicker(item, isReadOnly)
+    $('#lookup-reset-colors-button').prop('hidden', isReadOnly || !getShippedLookupColors())
     $('#lookup-edit-error').prop('hidden', true).text('')
     $('#lookup-edit-delete-button')
       .prop('hidden', !(item && item.canDelete))
@@ -7709,7 +7808,16 @@
       $('#lookup-edit-error').prop('hidden', true).text('')
       updateLookupEditPreview()
     })
-    $('#lookup-edit-background-color, #lookup-edit-foreground-color').on('input', updateLookupEditPreview)
+    $('#lookup-reset-colors-button').on('click', resetLookupColors)
+    $('#lookup-background-swatches').on('change', 'input', function () {
+      $('#lookup-edit-background-color').val(this.value)
+      syncLookupTextColor()
+    })
+    $('#lookup-text-choices').on('change', 'input', function () {
+      lookupColorState.mode = this.value === 'auto' ? 'auto' : 'color'
+      if (this.value !== 'auto') lookupColorState.foreground = this.value
+      syncLookupTextColor()
+    })
     $('#lookup-edit-save-button').on('click', function () {
       saveLookupEdit().catch(function (error) {
         $('#lookup-edit-error').text(getErrorMessage(error, 'Could not save lookup')).prop('hidden', false)

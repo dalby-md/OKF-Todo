@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Photino.Okf_Todo.Data;
 
@@ -177,7 +178,31 @@ public sealed class TaskService(
             await GetLookupSettingsItemsAsync(dbContext.TaskSources, usedTaskSourceIds, cancellationToken),
             await GetRelationTypeSettingsAsync(usedRelationTypeIds, cancellationToken),
             await GetLookupSettingsItemsAsync(dbContext.BodyFormats, usedBodyFormatIds, cancellationToken, isReadOnly: true),
-            await GetLookupSettingsItemsAsync(dbContext.TaskLogTypes, usedLogTypeIds, cancellationToken, isReadOnly: true));
+            await GetLookupSettingsItemsAsync(dbContext.TaskLogTypes, usedLogTypeIds, cancellationToken, isReadOnly: true),
+            GetShippedLookupColors());
+    }
+
+    private static IReadOnlyDictionary<string, IReadOnlyCollection<LookupColorDefaultsDto>> GetShippedLookupColors()
+    {
+        using var stream = typeof(TaskService).Assembly.GetManifestResourceStream("LookupColorDefaults.json")
+            ?? throw new InvalidOperationException("Shipped lookup color defaults are missing.");
+        var seed = JsonSerializer.Deserialize<LookupSeedConfiguration>(stream, new JsonSerializerOptions(JsonSerializerDefaults.Web))
+            ?? throw new InvalidOperationException("Shipped lookup color defaults are invalid.");
+
+        static IReadOnlyCollection<LookupColorDefaultsDto> Colors(IReadOnlyCollection<LookupSeedItem> items) =>
+            items.Where(item => item.BackgroundColor is not null && item.ForegroundColor is not null)
+                .Select(item => new LookupColorDefaultsDto(item.Code, item.BackgroundColor!, item.ForegroundColor!))
+                .ToArray();
+
+        return new Dictionary<string, IReadOnlyCollection<LookupColorDefaultsDto>>
+        {
+            ["taskTypes"] = Colors(seed.TaskTypes),
+            ["taskPriorities"] = Colors(seed.TaskPriorities),
+            ["taskStatuses"] = Colors(seed.TaskStatuses),
+            ["taskSources"] = Colors(seed.TaskSources),
+            ["bodyFormats"] = Colors(seed.BodyFormats),
+            ["taskLogTypes"] = Colors(seed.TaskLogTypes)
+        };
     }
 
     public async Task<TaskLookupSettingsDto> UpdateLookupAsync(
@@ -1481,7 +1506,10 @@ public sealed record TaskLookupSettingsDto(
     IReadOnlyCollection<LookupSettingsItemDto> TaskSources,
     IReadOnlyCollection<LookupSettingsItemDto> TaskRelationTypes,
     IReadOnlyCollection<LookupSettingsItemDto> BodyFormats,
-    IReadOnlyCollection<LookupSettingsItemDto> TaskLogTypes);
+    IReadOnlyCollection<LookupSettingsItemDto> TaskLogTypes,
+    IReadOnlyDictionary<string, IReadOnlyCollection<LookupColorDefaultsDto>> ShippedColors);
+
+public sealed record LookupColorDefaultsDto(string Code, string BackgroundColor, string ForegroundColor);
 
 public sealed record LookupSettingsItemDto(
     string Code,

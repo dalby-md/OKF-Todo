@@ -33,6 +33,7 @@
 
 	<ItemGroup>
 		<EmbeddedResource Include="Resources\**" />
+		<EmbeddedResource Include="lookup-seed.json" LogicalName="LookupColorDefaults.json" />
 	</ItemGroup>
 
 	<ItemGroup>
