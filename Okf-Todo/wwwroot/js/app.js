@@ -403,7 +403,7 @@
 
   function renderTaskStatusBadge(task) {
     if (task.taskStatusCode === 'ACTIVE') {
-      return renderBadge(task.taskStatusName, '#6b7280', '#ffffff')
+      return renderBadge(task.taskStatusName, task.taskStatusBackgroundColor, task.taskStatusForegroundColor)
     }
 
     const marker = task.taskStatusCode === 'COMPLETED' ? '✓ ' : task.taskStatusCode === 'CANCELLED' ? '✕ ' : ''
@@ -1682,6 +1682,14 @@
 
                 <section class="preferences-page preferences-data-group" data-preference-panel="data-values" aria-labelledby="preferences-data-values-title" hidden>
                   <h4 id="preferences-data-values-title">Lookup values</h4>
+                  <button id="lookup-reset-all-colors-button" class="preference-action-row" type="button">
+                    <span class="preference-row-copy">
+                      <strong>Reset all colors</strong>
+                      <span>Restore standard colors for task types, priorities, and statuses. Custom values and other settings stay unchanged. You will be asked to confirm.</span>
+                    </span>
+                    <span class="preference-row-action">Reset</span>
+                  </button>
+                  <p id="lookup-reset-all-colors-status" class="settings-help preference-status" role="status" aria-live="polite"></p>
                   <div id="lookup-settings-groups" class="lookup-group-buttons preferences-management-list" aria-label="Lookup groups"></div>
                   <button id="tag-settings-button" class="lookup-group-button preference-action-row" type="button">
                     <span class="preference-row-copy">
@@ -5325,7 +5333,7 @@
           </span>
           <span class="task-row-meta">
             ${taskListPill}
-            ${renderBadge(task.taskTypeName, task.taskTypeBackgroundColor, task.taskTypeForegroundColor)}
+            ${renderBadge(task.taskTypeName, finished ? null : task.taskTypeBackgroundColor, finished ? null : task.taskTypeForegroundColor)}
             ${renderTaskStatusBadge(task)}
             ${priority}
             ${deadline}
@@ -6309,6 +6317,29 @@
         id: currentTask.id
       })
       refreshCurrentTaskWithoutEditor(task)
+    }
+  }
+
+  async function resetAllLookupColors() {
+    if (!await showConfirmationDialog(
+      'Reset all colors?',
+      'Replace customized colors on all standard task types, priorities, and statuses with the shipped defaults? Custom values and other settings will stay unchanged.',
+      'Reset all colors')) {
+      return
+    }
+
+    const button = $('#lookup-reset-all-colors-button')
+    button.prop('disabled', true).attr('aria-busy', 'true')
+    $('#lookup-reset-all-colors-status').text('Resetting colors...')
+    try {
+      lookupSettings = await sendBridgeMessage('lookup.settings.colors.reset', {})
+      renderLookupSettings()
+      await refreshLookupDependentUi()
+      $('#lookup-reset-all-colors-status').text('All standard colors restored.')
+    } catch (error) {
+      $('#lookup-reset-all-colors-status').text(error.message || 'Could not reset colors.')
+    } finally {
+      button.prop('disabled', false).removeAttr('aria-busy')
     }
   }
 
@@ -7813,6 +7844,7 @@
       updateLookupEditPreview()
     })
     $('#lookup-reset-colors-button').on('click', resetLookupColors)
+    $('#lookup-reset-all-colors-button').on('click', resetAllLookupColors)
     $('#lookup-background-swatches').on('change', 'input', function () {
       $('#lookup-edit-background-color').val(this.value)
       syncLookupTextColor()

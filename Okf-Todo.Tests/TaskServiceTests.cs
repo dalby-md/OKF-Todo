@@ -6,6 +6,57 @@ namespace Okf_Todo.Tests;
 public sealed class TaskServiceTests
 {
     [Fact]
+    public async Task ResetLookupColors_PreservesOtherFieldsAndCustomValuesAndIsIdempotent()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var error = await database.DbContext.TaskTypes.SingleAsync(item => item.Code == "ERROR");
+        error.Name = "Bug";
+        error.Description = "Keep this";
+        error.SortOrder = 123;
+        error.IsActive = false;
+        error.IsSelected = true;
+        error.BackgroundColor = "#123456";
+        error.ForegroundColor = "#abcdef";
+        var urgent = await database.DbContext.TaskPriorities.SingleAsync(item => item.Code == "URGENT");
+        urgent.BackgroundColor = "#123456";
+        var completed = await database.DbContext.TaskStatuses.SingleAsync(item => item.Code == "COMPLETED");
+        completed.BackgroundColor = "#123456";
+        database.DbContext.TaskTypes.Add(new Photino.Okf_Todo.Data.TaskType
+        {
+            Code = "CUSTOM", Name = "Custom", BackgroundColor = "#123456", ForegroundColor = "#abcdef"
+        });
+        await database.DbContext.SaveChangesAsync();
+
+        var result = await database.Tasks.ResetLookupColorsAsync(CancellationToken.None);
+        foreach (var (group, items) in new[]
+        {
+            ("taskTypes", result.TaskTypes), ("taskPriorities", result.TaskPriorities), ("taskStatuses", result.TaskStatuses)
+        })
+        {
+            foreach (var standard in result.ShippedColors[group])
+            {
+                var item = Assert.Single(items, item => item.Code == standard.Code);
+                Assert.Equal(standard.BackgroundColor, item.BackgroundColor);
+                Assert.Equal(standard.ForegroundColor, item.ForegroundColor);
+            }
+        }
+
+        database.DbContext.ChangeTracker.Clear();
+        error = await database.DbContext.TaskTypes.SingleAsync(item => item.Code == "ERROR");
+        Assert.Equal("Bug", error.Name);
+        Assert.Equal("Keep this", error.Description);
+        Assert.Equal(123, error.SortOrder);
+        Assert.False(error.IsActive);
+        Assert.True(error.IsSelected);
+        var custom = await database.DbContext.TaskTypes.SingleAsync(item => item.Code == "CUSTOM");
+        Assert.Equal("#123456", custom.BackgroundColor);
+        Assert.Equal("#abcdef", custom.ForegroundColor);
+        var updatedAt = error.UpdatedAt;
+        await database.Tasks.ResetLookupColorsAsync(CancellationToken.None);
+        Assert.Equal(updatedAt, error.UpdatedAt);
+    }
+
+    [Fact]
     public async Task LookupSettings_ExposeSystemManagedGroupsButRejectsMutations()
     {
         await using var database = await TestDatabase.CreateAsync();

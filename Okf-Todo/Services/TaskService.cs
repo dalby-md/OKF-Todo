@@ -205,6 +205,35 @@ public sealed class TaskService(
         };
     }
 
+    public async Task<TaskLookupSettingsDto> ResetLookupColorsAsync(CancellationToken cancellationToken)
+    {
+        var defaults = GetShippedLookupColors();
+        var now = DateTime.UtcNow;
+
+        async Task ResetAsync<TLookup>(DbSet<TLookup> set, string group) where TLookup : LookupEntity
+        {
+            var colors = defaults[group].ToDictionary(item => item.Code, StringComparer.Ordinal);
+            foreach (var item in await set.ToListAsync(cancellationToken))
+            {
+                if (!colors.TryGetValue(item.Code, out var standard)
+                    || (item.BackgroundColor == standard.BackgroundColor && item.ForegroundColor == standard.ForegroundColor))
+                {
+                    continue;
+                }
+
+                item.BackgroundColor = standard.BackgroundColor;
+                item.ForegroundColor = standard.ForegroundColor;
+                item.UpdatedAt = now;
+            }
+        }
+
+        await ResetAsync(dbContext.TaskTypes, "taskTypes");
+        await ResetAsync(dbContext.TaskPriorities, "taskPriorities");
+        await ResetAsync(dbContext.TaskStatuses, "taskStatuses");
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return await GetLookupSettingsAsync(cancellationToken);
+    }
+
     public async Task<TaskLookupSettingsDto> UpdateLookupAsync(
         LookupUpdateRequest request,
         CancellationToken cancellationToken)

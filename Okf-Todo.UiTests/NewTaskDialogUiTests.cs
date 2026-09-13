@@ -21,6 +21,73 @@ namespace Okf_Todo.UiTests;
 
 public sealed class NewTaskDialogUiTests
 {
+    [Fact]
+    public async Task ResetAllColors_RefreshesQueueAndShowsFeedbackInBothThemes()
+    {
+        await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Channel = "msedge", Headless = true
+        });
+        await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1500, Height = 1000 }
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+        var page = await context.NewPageAsync();
+        var change = await page.APIRequest.PostAsync($"{fixture.BaseUrl}/__ui-test/bridge", new APIRequestContextOptions
+        {
+            DataObject = new
+            {
+                messageId = "customize-error", type = "lookup.settings.update",
+                payload = new { group = "taskTypes", code = "ERROR", name = "Error", sortOrder = 20,
+                    isActive = true, isSelected = false, backgroundColor = "#123456", foregroundColor = "#ffffff" }
+            }
+        });
+        Assert.True(change.Ok);
+        await page.GotoAsync($"{fixture.BaseUrl}/index.html", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.Locator("#settings-button").ClickAsync();
+        await page.Locator("[data-preference-section='data-values']").ClickAsync();
+        await page.Locator("#lookup-reset-all-colors-button").ClickAsync();
+        await page.Locator("#confirmation-cancel-button").ClickAsync();
+        var unchanged = await page.APIRequest.PostAsync($"{fixture.BaseUrl}/__ui-test/bridge", new APIRequestContextOptions
+        {
+            DataObject = new { messageId = "verify-cancel", type = "lookup.settings.get", payload = new { } }
+        });
+        using (var unchangedJson = JsonDocument.Parse(await unchanged.TextAsync()))
+        {
+            var unchangedError = unchangedJson.RootElement.GetProperty("payload").GetProperty("taskTypes").EnumerateArray()
+                .Single(item => item.GetProperty("code").GetString() == "ERROR");
+            Assert.Equal("#123456", unchangedError.GetProperty("backgroundColor").GetString());
+        }
+        Assert.Equal("", await page.Locator("#lookup-reset-all-colors-status").TextContentAsync());
+        await page.Locator("#lookup-reset-all-colors-button").ClickAsync();
+        Assert.Equal("Reset all colors?", await page.Locator("#confirmation-title").TextContentAsync());
+        Assert.Equal("Reset all colors", await page.Locator("#confirmation-confirm-button").TextContentAsync());
+        await page.Locator("#confirmation-confirm-button").ClickAsync();
+        await page.WaitForFunctionAsync("() => document.querySelector('#lookup-reset-all-colors-status').textContent === 'All standard colors restored.'");
+        Assert.True(await page.Locator("#lookup-reset-all-colors-button").IsEnabledAsync());
+        await CaptureViewportAsync(page, "reset-all-colors-light.png");
+        await page.EvaluateAsync("""
+            () => {
+              document.documentElement.classList.add('theme-dark');
+              document.getElementById('dark-theme-stylesheet').disabled = false;
+            }
+            """);
+        await CaptureViewportAsync(page, "reset-all-colors-dark.png");
+        var read = await page.APIRequest.PostAsync($"{fixture.BaseUrl}/__ui-test/bridge", new APIRequestContextOptions
+        {
+            DataObject = new { messageId = "verify-colors", type = "lookup.settings.get", payload = new { } }
+        });
+        using var json = JsonDocument.Parse(await read.TextAsync());
+        var error = json.RootElement.GetProperty("payload").GetProperty("taskTypes").EnumerateArray()
+            .Single(item => item.GetProperty("code").GetString() == "ERROR");
+        Assert.Equal("#b42318", error.GetProperty("backgroundColor").GetString());
+        var queueError = page.Locator(".task-row:not(.is-finished) .task-badge").Filter(new LocatorFilterOptions { HasTextRegex = new System.Text.RegularExpressions.Regex("^Error$") }).First;
+        Assert.Equal("rgb(180, 35, 24)", await queueError.EvaluateAsync<string>("element => getComputedStyle(element).backgroundColor"));
+    }
+
     private const string BridgeAdapterScript = """
         (() => {
           const listeners = [];

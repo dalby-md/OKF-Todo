@@ -365,6 +365,10 @@ Use the **Compact** task filter layout when you want more room for the task list
 
 ### Choose badge colors
 
+The standard palette uses soft blue for Request, purple for Idea, slate for Note, teal for Investigation, and indigo for Improvement. Critical error is dark red, Error is red, Urgent is orange, Completed is green, and Cancelled is neutral gray. Waiting uses amber and overdue deadlines use red. Closed tasks keep their status color but show neutral task-type and priority pills so they no longer look like work needing attention.
+
+Under **Settings → Data & values**, select **Reset all colors** to apply the current standard palette to every shipped task type, priority, and status at once. A confirmation dialog explains which colors will be replaced. Select **Reset all colors** in that dialog to save and refresh the queue without restarting, or **Cancel** to keep your current colors. It replaces customized colors on those standard values, but preserves custom values, names, descriptions, ordering, and other settings. A status message confirms completion. To change just one value, use its individual **Reset colors** action instead.
+
 The standard **Error** badge is red with white text, and **Completed** is green with white text. Existing saved colors are preserved when you update the application. To apply these defaults to an existing value, open it under **Settings → Data & values**, select **Reset colors**, then **Save**.
 
 Under **Settings → Data & values**, edit a lookup value to choose its badge colors. **Background** and **Text** each have their own palette: 64 compact color samples plus a clearly labeled pure **White** (`#FFFFFF`) sample. Choose a color in each palette independently. The checkmark and outline identify your selection. Hover over a sample to see its color name. Use Tab to reach each color group and arrow keys to change its selection.

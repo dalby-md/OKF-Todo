@@ -192,6 +192,8 @@ Priority affects sorting and filtering.
 
 ## Lifecycle
 
+The standard lookup palette uses soft blue Request, purple Idea, slate Note, teal Investigation, indigo Improvement, dark red Critical error, red Error, orange Urgent, green Completed, and neutral Active, Cancelled, Normal, and Can wait. Existing saved colors remain unchanged until explicitly reset. Data & values provides Reset all colors, which requires an application HTML confirmation dialog before atomically restoring shipped task-type, priority, and status colors, preserves custom values and all non-color settings, and refreshes the UI. Closed queue rows use neutral type and priority badges while retaining their status color.
+
 Shipped badge defaults use red (`#b42318`) with white text for Error and green (`#22754b`) with white text for Completed. Existing saved lookup colors remain unchanged; Reset colors explicitly applies current shipped defaults.
 
 In every task-queue view, completed and cancelled tasks use muted, struck-through titles and distinct check/cross status badges with the configured status names. Keep metadata and actions readable, preserve selection and navigation, and suppress overdue, priority, and waiting attention styling for closed tasks. Reopening restores normal active-task presentation.

@@ -68,6 +68,8 @@ public sealed class ApplicationCommandService(IServiceProvider services)
                 .GetLookupsAsync(cancellationToken),
             "lookup.settings.get" => await scopedServices.GetRequiredService<TaskService>()
                 .GetLookupSettingsAsync(cancellationToken),
+            "lookup.settings.colors.reset" => await scopedServices.GetRequiredService<TaskService>()
+                .ResetLookupColorsAsync(cancellationToken),
             "lookup.settings.update" => await scopedServices.GetRequiredService<TaskService>()
                 .UpdateLookupAsync(GetPayload<LookupUpdateRequest>(command), cancellationToken),
             "lookup.settings.create" => await scopedServices.GetRequiredService<TaskService>()
