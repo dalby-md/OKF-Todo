@@ -192,6 +192,10 @@ Priority affects sorting and filtering.
 
 ## Lifecycle
 
+Shipped badge defaults use red (`#b42318`) with white text for Error and green (`#22754b`) with white text for Completed. Existing saved lookup colors remain unchanged; Reset colors explicitly applies current shipped defaults.
+
+In every task-queue view, completed and cancelled tasks use muted, struck-through titles and distinct check/cross status badges with the configured status names. Keep metadata and actions readable, preserve selection and navigation, and suppress overdue, priority, and waiting attention styling for closed tasks. Reopening restores normal active-task presentation.
+
 Use the following lifecycle in the first version:
 
 ```text

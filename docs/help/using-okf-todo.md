@@ -142,6 +142,8 @@ When completing, cancelling, reopening, or restoring a task changes the view in 
 
 ## Find and order tasks
 
+Completed and cancelled tasks have muted, struck-through titles in the task queue, including when they appear alongside open work in **All**, **Starred**, or **Trash**. Their status badges distinguish **✓ Completed** from **✕ Cancelled** (using your configured status names). Dates, other metadata, and actions remain readable. Closed tasks do not show overdue warnings or attention colors for priority and waiting. Select a task to review it, or use **Reopen** to return it to active work; restore a trashed task first.
+
 ### Search
 
 Use **Search tasks** to match:
@@ -362,6 +364,8 @@ The **Auto** layout adapts to the available window size. Use **Side by side** wh
 Use the **Compact** task filter layout when you want more room for the task list. Use **Expanded** when you want Tags, Type, Status, and Priority to remain visible without opening **Filters**.
 
 ### Choose badge colors
+
+The standard **Error** badge is red with white text, and **Completed** is green with white text. Existing saved colors are preserved when you update the application. To apply these defaults to an existing value, open it under **Settings → Data & values**, select **Reset colors**, then **Save**.
 
 Under **Settings → Data & values**, edit a lookup value to choose its badge colors. **Background** and **Text** each have their own palette: 64 compact color samples plus a clearly labeled pure **White** (`#FFFFFF`) sample. Choose a color in each palette independently. The checkmark and outline identify your selection. Hover over a sample to see its color name. Use Tab to reach each color group and arrow keys to change its selection.
 

@@ -406,7 +406,8 @@
       return renderBadge(task.taskStatusName, '#6b7280', '#ffffff')
     }
 
-    return renderBadge(task.taskStatusName, task.taskStatusBackgroundColor, task.taskStatusForegroundColor)
+    const marker = task.taskStatusCode === 'COMPLETED' ? '✓ ' : task.taskStatusCode === 'CANCELLED' ? '✕ ' : ''
+    return renderBadge(marker + task.taskStatusName, task.taskStatusBackgroundColor, task.taskStatusForegroundColor)
   }
 
   function formatDate(value) {
@@ -5260,8 +5261,11 @@
 
   function renderTaskRowShell(task) {
     const selectedClass = currentTask && currentTask.id === task.id ? ' is-selected' : ''
-    const waitingClass = task.activeWaitingForLabel ? ' is-waiting' : ''
-    const cancelledClass = task.taskStatusCode === 'CANCELLED' ? ' is-cancelled' : ''
+    const finished = isFinishedTask(task)
+    const waitingClass = task.activeWaitingForLabel && !finished ? ' is-waiting' : ''
+    const finishedClass = finished
+      ? ` is-finished ${task.taskStatusCode === 'COMPLETED' ? 'is-completed' : 'is-cancelled'}`
+      : ''
     const bulkSelectedClass = selectedTaskIds.has(task.id) ? ' is-bulk-selected' : ''
     const trashedClass = task.deletedAt ? ' is-in-trash' : ''
     const transitionReveal = getTaskTransitionReveal(task)
@@ -5277,13 +5281,13 @@
       `
       : ''
     const priority = task.taskPriorityName
-      ? renderBadge(task.taskPriorityName, task.taskPriorityBackgroundColor, task.taskPriorityForegroundColor)
+      ? renderBadge(task.taskPriorityName, finished ? null : task.taskPriorityBackgroundColor, finished ? null : task.taskPriorityForegroundColor)
       : ''
     const deadline = task.deadline
       ? `<span class="task-badge${isTaskOverdue(task) ? ' task-badge-overdue' : ''}">Due ${encodeText(formatShortDate(task.deadline))}</span>`
       : ''
     const waiting = task.activeWaitingForLabel
-      ? `<span class="task-badge task-badge-waiting">Waiting: ${encodeText(task.activeWaitingForLabel)}</span>`
+      ? `<span class="task-badge${finished ? '' : ' task-badge-waiting'}">Waiting: ${encodeText(task.activeWaitingForLabel)}</span>`
       : ''
     const checklistProgress = task.checklistCount > 0
       ? `<span class="task-badge">${task.completedChecklistCount}/${task.checklistCount}</span>`
@@ -5313,7 +5317,7 @@
         <label class="task-row-select-control" title="Select ${encodeAttribute(task.title)}">
           <input class="task-row-select" type="checkbox" data-task-id="${task.id}"${selectedTaskIds.has(task.id) ? ' checked' : ''} aria-label="Select ${encodeAttribute(task.title)}">
         </label>
-        <button class="task-row${selectedClass}${waitingClass}${cancelledClass}${transitionClass}" type="button" data-task-id="${task.id}"${selectedClass ? ' aria-current="true"' : ''}>
+        <button class="task-row${selectedClass}${waitingClass}${finishedClass}${transitionClass}" type="button" data-task-id="${task.id}"${selectedClass ? ' aria-current="true"' : ''}>
           ${transitionLabel}
           <span class="task-row-heading">
             <span class="task-row-title">${encodeText(task.title)}</span>

@@ -1,0 +1,120 @@
+- generic [active] [ref=f5e1]:
+  - link "Skip to content" [ref=f5e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f5e3]:
+    - link "dalby.md home" [ref=f5e4] [cursor=pointer]:
+      - /url: /
+    - navigation "Primary navigation" [ref=f5e5]:
+      - link "Work" [ref=f5e6] [cursor=pointer]:
+        - /url: /work
+      - link "Briefs" [ref=f5e7] [cursor=pointer]:
+        - /url: /briefs
+      - link "About" [ref=f5e8] [cursor=pointer]:
+        - /url: /about
+      - link "Search" [ref=f5e9] [cursor=pointer]:
+        - /url: /search
+  - main [ref=f5e10]:
+    - generic [ref=f5e11]:
+      - generic [ref=f5e12]:
+        - paragraph [ref=f5e13]: Søren Dalby / developer
+        - heading "Software, ideas & useful experiments." [level=1] [ref=f5e14]: Software,ideas & usefulexperiments.
+      - generic [ref=f5e15]:
+        - paragraph [ref=f5e16]: I'm Søren Dalby. I build practical software and use AI as a serious creative tool.
+        - generic [ref=f5e17]:
+          - link "Explore the work" [ref=f5e18] [cursor=pointer]:
+            - /url: /work
+          - link "About Søren" [ref=f5e19] [cursor=pointer]:
+            - /url: /about
+      - complementary [ref=f5e20]:
+        - paragraph [ref=f5e21]: Building in public.
+        - paragraph [ref=f5e22]: This is my playground for shipping small tools, testing ideas, and solving real problems.
+    - generic [ref=f5e23]:
+      - generic [ref=f5e24]:
+        - paragraph [ref=f5e25]: Featured project
+        - heading "OKF Todo" [level=2] [ref=f5e26]
+        - paragraph [ref=f5e27]: An offline-first task system designed to work with local AI assistants.
+        - paragraph [ref=f5e28]: OKF Todo is free and open-source, powered by SQLite, and cross-platform. With native MCP and Open Knowledge Format support, it bridges personal task management and AI workflows.
+        - list "Project characteristics" [ref=f5e29]:
+          - listitem [ref=f5e30]: / MCP
+          - listitem [ref=f5e31]: / OKF
+          - listitem [ref=f5e32]: / AI agents
+          - listitem [ref=f5e33]: / Offline-first
+          - listitem [ref=f5e34]: / Local-first
+          - listitem [ref=f5e35]: / SQLite
+          - listitem [ref=f5e36]: / Open source
+          - listitem [ref=f5e37]: / Cross-platform
+        - generic [ref=f5e38]:
+          - link "Explore OKF Todo" [ref=f5e39] [cursor=pointer]:
+            - /url: /projects/okf-todo
+            - text: Explore OKF Todo
+            - generic [aria-hidden] [ref=f5e40]: →
+          - link "GitHub" [ref=f5e41] [cursor=pointer]:
+            - /url: https://github.com/dalby-md/OKF-Todo
+            - text: GitHub
+            - generic [aria-hidden] [ref=f5e42]: ↗
+      - link "Open the OKF Todo project page" [ref=f5e43] [cursor=pointer]:
+        - /url: /projects/okf-todo
+        - img "OKF Todo desktop workspace showing task views, rich task details and a checklist" [ref=f5e44]
+    - region [ref=f5e45]:
+      - generic [ref=f5e46]:
+        - generic [ref=f5e47]:
+          - paragraph [ref=f5e48]: Latest Technical Briefs / source-linked
+          - heading "Latest briefs." [level=2] [ref=f5e49]
+        - paragraph [ref=f5e50]: Source-linked analysis of tools, agent architectures and the practical software decisions that follow from them.
+      - generic [ref=f5e51]:
+        - article [ref=f5e52]:
+          - generic [ref=f5e53]:
+            - time [ref=f5e54]: 6 September 2026
+            - generic [ref=f5e55]: Component / Developer Tools
+            - generic [ref=f5e56]: 5 minutes
+          - generic [ref=f5e57]:
+            - heading [level=3] [ref=f5e58]:
+              - link "A catalogue of practical skills for AI agents" [ref=f5e59] [cursor=pointer]:
+                - /url: /briefs/agent-skills-are-portable-workflows
+            - paragraph [ref=f5e60]: The awesome-claude-skills repository collects reusable skills for tasks such as document creation, development, research, and automation. Each skill gives an agent instructions for completing a particular workflow. Despite the name, many of these skills can also be adapted for agents beyond Claude.
+          - link "Read A catalogue of practical skills for AI agents" [ref=f5e61] [cursor=pointer]:
+            - /url: /briefs/agent-skills-are-portable-workflows
+            - text: Read ↗
+        - article [ref=f5e62]:
+          - generic [ref=f5e63]:
+            - time [ref=f5e64]: 6 September 2026
+            - generic [ref=f5e65]: Component / Developer Tools
+            - generic [ref=f5e66]: 4 minutes
+          - generic [ref=f5e67]:
+            - heading [level=3] [ref=f5e68]:
+              - 'link "andrej-karpathy-skills: one behavior patch, not a skills library" [ref=f5e69] [cursor=pointer]':
+                - /url: /briefs/andrej-karpathy-skills-one-behavior-patch
+            - paragraph [ref=f5e70]: andrej-karpathy-skills packages four rules for less presumptuous, less bloated coding-agent work. Despite its plural name, it is one behavioural policy repeated across Claude Code and Cursor formats.
+          - 'link "Read andrej-karpathy-skills: one behavior patch, not a skills library" [ref=f5e71] [cursor=pointer]':
+            - /url: /briefs/andrej-karpathy-skills-one-behavior-patch
+            - text: Read ↗
+        - article [ref=f5e72]:
+          - generic [ref=f5e73]:
+            - time [ref=f5e74]: 30 August 2026
+            - generic [ref=f5e75]: Models
+            - generic [ref=f5e76]: 2 minutes
+          - generic [ref=f5e77]:
+            - heading [level=3] [ref=f5e78]:
+              - link "Andrej Karpathy explains how large language models work" [ref=f5e79] [cursor=pointer]:
+                - /url: /briefs/viral-karpathy-lecture-is-an-edited-repost
+            - paragraph [ref=f5e80]: A free, in-depth introduction to how large language models are trained and used. Andrej Karpathy follows the journey from training data and tokenisation to ChatGPT-style assistants, explaining model behaviour, hallucinations and tool use along the way.
+          - link "Read Andrej Karpathy explains how large language models work" [ref=f5e81] [cursor=pointer]:
+            - /url: /briefs/viral-karpathy-lecture-is-an-edited-repost
+            - text: Read ↗
+      - link "View all Technical Briefs" [ref=f5e83] [cursor=pointer]:
+        - /url: /briefs
+        - text: View all Technical Briefs
+        - generic [aria-hidden] [ref=f5e84]: →
+    - generic [ref=f5e85]:
+      - paragraph [ref=f5e86]: The point of the place
+      - heading "Build small. Learn fast. Share what helps." [level=2] [ref=f5e87]: Build small. Learn fast.Share what helps.
+      - paragraph [ref=f5e88]: Some projects become products. Others are useful experiments. Both belong here.
+  - contentinfo [ref=f5e89]:
+    - paragraph [ref=f5e90]: dalby.md — built as a place to keep making.
+    - generic [ref=f5e91]:
+      - link "GitHub" [ref=f5e92] [cursor=pointer]:
+        - /url: https://github.com/dalby-md
+      - link "LinkedIn" [ref=f5e93] [cursor=pointer]:
+        - /url: https://www.linkedin.com/in/sdalby/
+      - link "Privacy" [ref=f5e94] [cursor=pointer]:
+        - /url: /privacy

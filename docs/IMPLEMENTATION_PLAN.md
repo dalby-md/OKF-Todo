@@ -576,6 +576,10 @@ This creates the foundation before the UI grows.
 
 ## General implementation guidance
 
+- Shipped Error and Completed badge defaults are red and green respectively, with white text, shared by initial lookup seeding and Reset colors. Preserve existing saved colors. MCP applicability: default presentation colors only; no new headless operation or contract change.
+
+- Closed-task queue presentation: completed and cancelled titles are muted and struck through, with distinct check/cross status badges. Priority and waiting become neutral, and closed deadlines are not overdue. All queue views share this renderer, including Starred and Trash. MCP applicability: presentation-only; existing status reads and lifecycle operations already expose the underlying state, so no MCP contract change is needed.
+
 - Keep the first version simple.
 - Prefer services for business rules.
 - Do not scatter lifecycle rules in UI code.

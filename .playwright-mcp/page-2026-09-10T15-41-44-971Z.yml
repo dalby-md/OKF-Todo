@@ -1,0 +1,42 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [aria-hidden] [ref=e6]:
+        - generic [ref=e7]: Indlæser
+        - progressbar [aria-hidden] [ref=e8]
+      - main [ref=e15]:
+        - generic [ref=e20]:
+          - heading "Log ind" [level=1] [ref=e21]
+          - generic [ref=e22]: med din Google-konto for at fortsætte til Google Search Console. Denne konto vil være tilgængelig for andre Google-apps i browseren.
+        - generic [ref=e25]:
+          - generic [ref=e30]:
+            - generic [ref=e35]:
+              - textbox "Mailadresse eller telefonnummer" [active] [ref=e36]
+              - generic [aria-hidden]: Mailadresse eller telefonnummer
+            - button "Har du glemt mailadressen?" [ref=e40] [cursor=pointer]
+          - generic [ref=e43]:
+            - text: Er det ikke din computer? Log ind privat via gæstetilstand.
+            - link "Få flere oplysninger om, hvordan du bruger Gæstetilstand (eksternt, åbnes i et nyt vindue)" [ref=e44] [cursor=pointer]:
+              - /url: https://support.google.com/chrome/answer/6130773?hl=da
+              - text: Få flere oplysninger om, hvordan du bruger gæstetilstand
+        - generic [ref=e46]:
+          - button "Næste" [ref=e50]
+          - button "Opret konto" [ref=e59]
+    - contentinfo [ref=e66]:
+      - combobox "Skift sprog Dansk" [ref=e70] [cursor=pointer]:
+        - generic [aria-hidden]:
+          - generic: Dansk
+      - list [ref=e72]:
+        - listitem [ref=e73]:
+          - link "Åbn Hjælp til Google-konto (eksternt, åbnes i et nyt vindue)" [ref=e74] [cursor=pointer]:
+            - /url: https://support.google.com/accounts?hl=da&p=account_iph
+            - text: Hjælp
+        - listitem [ref=e75]:
+          - link "Privatlivspolitik (eksternt, åbnes i et nyt vindue)" [ref=e76] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=DK&hl=da&privacy=true
+            - text: Privatliv
+        - listitem [ref=e77]:
+          - link "Googles servicevilkår (eksternt, åbnes i et nyt vindue)" [ref=e78] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=DK&hl=da
+            - text: Vilkår
+  - iframe [ref=e79]

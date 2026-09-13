@@ -436,21 +436,6 @@ html.task-filter-layout-expanded .task-filter-popover {
   background: var(--theme-accent-soft);
 }
 
-.task-row.is-cancelled,
-.task-row.is-cancelled:hover,
-.task-row.is-cancelled:hover:not(:disabled),
-.task-row.is-cancelled.is-selected,
-.task-row.is-cancelled.is-selected:hover,
-.task-row.is-cancelled.is-selected:hover:not(:disabled) {
-  color: #ff6f61;
-  background: #151516;
-}
-
-.task-row.is-cancelled .task-badge {
-  color: #b8b8b8 !important;
-  background: #303236 !important;
-}
-
 .task-row-meta {
   color: var(--theme-muted);
 }
