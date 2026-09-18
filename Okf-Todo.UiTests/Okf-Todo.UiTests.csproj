@@ -28,4 +28,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(StoreScreenshotCapture)' == 'true'">
+    <Compile Include="..\docs\images\microsoft-store\CaptureScreenshots.cs" Link="CaptureScreenshots.cs" />
+  </ItemGroup>
+
 </Project>

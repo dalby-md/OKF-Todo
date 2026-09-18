@@ -19,7 +19,7 @@ using Photino.Okf_Todo.Services;
 
 namespace Okf_Todo.UiTests;
 
-public sealed class NewTaskDialogUiTests
+public sealed partial class NewTaskDialogUiTests
 {
     [Fact]
     public async Task ResetAllColors_RefreshesQueueAndShowsFeedbackInBothThemes()
