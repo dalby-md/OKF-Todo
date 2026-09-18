@@ -2,15 +2,15 @@ using Microsoft.Playwright;
 
 namespace Okf_Todo.UiTests;
 
-// Compiled only with -p:StoreScreenshotCapture=true. Uses the existing isolated
+// Compiled only with -p:ScreenshotCapture=true. Uses the existing isolated
 // UI fixture, real services and sample data; never opens the user's database.
 public sealed partial class NewTaskDialogUiTests
 {
     [Fact]
-    public async Task CaptureMicrosoftStoreScreenshots()
+    public async Task CaptureProductScreenshots()
     {
-        var output = Environment.GetEnvironmentVariable("OKF_STORE_SCREENSHOT_OUTPUT")
-            ?? throw new InvalidOperationException("Set OKF_STORE_SCREENSHOT_OUTPUT to the Store image directory.");
+        var output = Environment.GetEnvironmentVariable("OKF_SCREENSHOT_OUTPUT")
+            ?? throw new InvalidOperationException("Set OKF_SCREENSHOT_OUTPUT to the screenshot directory.");
         Directory.CreateDirectory(output);
         await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
         using var playwright = await Playwright.CreateAsync();
