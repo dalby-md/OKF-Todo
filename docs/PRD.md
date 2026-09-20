@@ -10,6 +10,10 @@ The app already has a Photino prototype demonstrating usage of an HTML/Markdown 
 
 ## Product principles
 
+- Application dialogs contain keyboard focus, make the background inert, and return focus to their opening control when dismissed. Escape dismisses only the topmost cancellable dialog.
+- Restore native window bounds within a current monitor's usable work area, including after display-size or monitor changes. Preserve valid saved placement and maximized state; keep the complete window frame, scrollbar, and bottom controls on screen.
+- The offline desktop guide provides a linked topic index with keyboard-accessible section navigation.
+
 - Local-first personal system.
 - Installation, upgrade, repair, and uninstallation must never overwrite, replace, bundle, move, or delete the user's SQLite database. Only the explicit validated restore and confirmed reset workflows may replace it.
 - Fast task capture.
@@ -88,6 +92,8 @@ A newly created task starts with status `ACTIVE`.
 
 ## Task lists
 
+The New task dialog's primary action is **Create task**. Subsequent edits use **Save**. The lifecycle action is **Cancel task**, while dialog dismissal remains **Cancel**. Checklist progress has a checklist cue and a tooltip/accessibility label explaining completed and total counts.
+
 Every task belongs to exactly one concrete user-managed list. A new or upgraded database contains **Default list**, and all pre-existing tasks are assigned to it. The application recovers automatically by creating **Default list** transactionally if a database is ever opened with zero lists.
 
 List names are trimmed and case-insensitively unique. Lists have a manual order. The final remaining list cannot be deleted. **Default list** is otherwise an ordinary list and can be renamed, reordered, or deleted once another list exists.
@@ -124,6 +130,8 @@ enabled Source, Owner, or Responsible fields appear before the body. Enabling a
 feature changes its visibility, never its placement. Relationships, checklist,
 and attachments follow the body as related work. Timeline and Add comment
 remain the final section.
+
+Task details scroll independently within the available window height. Keep a visible, usable scrollbar at the panel's right edge and preserve space below the final comment composer, including in smaller windows, stacked layouts, and enlarged interface text.
 
 Completed, cancelled, and Trash tasks that are not editable use a review
 presentation instead of a disabled editing form. Metadata is shown as readable
@@ -251,6 +259,8 @@ The same action system supports individual and bulk work. Individual actions liv
 
 ## Task inventory export and HTML clipboard
 
+The export dialog first shows its scope, count, selected fields, and three column presets: Brief list, Support handover, and Full inventory. Customize reveals the existing ordered recipe, sorting controls, and preview. Saved recipe restores the configuration loaded when opening the dialog. Presets only choose existing inventory fields; bodies, comments, and attachments remain excluded. The field library omits List in concrete-list scope while any saved List recipe position remains preserved.
+
 The task-queue header provides a visible **Export** action for creating a portable Markdown work inventory or copying a formatted HTML table. Both actions contain exactly the current results: the selected concrete list or synthetic **All lists** scope, active lifecycle view, search text, tag, type, status, and priority filters. The dialog previews the resulting count before continuing.
 
 Collapsed groups are presentation only and do not remove matching tasks from the export. In particular, completed and cancelled tasks in the Starred view remain included when its Finished group is collapsed.
@@ -365,6 +375,8 @@ Waiting for: ServiceDesk INC123456
 ```
 
 ## Comments and automatic logs
+
+Timeline provides All activity, Comments, and Changes filters and a Go to comment box button that focuses its existing composer. The Add comment button beside the composer saves the entered text. Filtering preserves chronological ordering and stored history; redundant COMMENT_ADDED log rows are hidden in the desktop presentation. Timeline and its composer remain the final task-detail section.
 
 Comments and logs are separate concepts.
 
@@ -487,6 +499,8 @@ Sample data can be added through the UI only when the database has no tasks. Wit
 
 ## Tags
 
+Task tag chips wrap within the available metadata width, including long values and enlarged interface text. Their removal controls remain accessible.
+
 A task can have zero or more tags. Each tag is only a string expression with no color, order, activation state, or other metadata.
 
 Task-list text search includes tag values. The task list also provides an existing-tag multi-select filter and exact single-select filters for task type, lifecycle status, and priority. Status filtering uses the stable lifecycle code so renamed display values do not change the result. When multiple tags are selected, a task matches when it has any selected tag; it does not need to have all selected tags.
@@ -519,6 +533,8 @@ The relationships section is hidden in task details by default. User preferences
 Only `Blocks` / `Depends on` may affect sorting later.
 
 ## Owner and responsible
+
+When hidden Source, Owner, Responsible, or Relationships contain data, task details identifies that context and provides Show additional details / Hide additional details. Revealing applies only to the current selection and never changes saved visibility preferences. Empty hidden fields remain unobtrusive, and revealed relationships remain navigable.
 
 Tasks can optionally record two separate free-text values:
 

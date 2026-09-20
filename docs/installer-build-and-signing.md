@@ -5,7 +5,7 @@ Certum certificate for public distribution.
 
 > These scripts create the Inno Setup installer, not the Microsoft Store MSIX
 > package. Partner Center signs the Store package separately.
-
+> 
 ## Which script should I use?
 
 | Goal | Script |

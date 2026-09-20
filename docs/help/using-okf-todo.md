@@ -11,7 +11,7 @@ This guide follows the way you normally work: choose where the task belongs, cap
 You only need these steps to begin using OKF Todo:
 
 1. If the first-run dialog is open, choose **Create first task**. Otherwise, choose a list in the **List** switcher and select **New task**.
-2. Enter a clear title and select **Save**. The task is created immediately and opens in the task details area.
+2. Enter a clear title and select **Create task**. The task is created immediately and opens in the task details area.
 3. Add any useful details, such as priority, deadline, tags, or a description, then select the main **Save** button.
 4. Find work again by choosing a view such as **Active**, **Ready**, or **Waiting**, or by entering text in **Search tasks**.
 5. Select **Complete** when the work is finished. The task remains available in the **Completed** view.
@@ -20,6 +20,30 @@ You only need these steps to begin using OKF Todo:
 If you prefer to learn with examples, choose **Explore with sample data** in the first-run dialog. You can later remove only the sample tasks from **Settings → Data & maintenance** without removing tasks you created yourself.
 
 That is enough to start using OKF Todo. The rest of this page is the complete guide to shortcuts, lists, views, task details, attachments, relationships, Trash, preferences, and database maintenance.
+
+## Find a topic
+
+Select a link to jump to that part of this guide. Keyboard users can Tab to a link and press Enter; focus follows the section heading.
+
+- [Getting started](#getting-started)
+- [Keyboard shortcuts](#hotkey-map)
+- [Create and save a task](#start-with-one-task)
+- [Understand the workspace](#understand-the-workspace)
+- [Organize work with lists](#organize-work-with-lists)
+- [Choose a view](#use-views-to-answer-a-question)
+- [Search, filter, and sort](#find-and-order-tasks)
+- [Task details, tags, and body](#add-the-right-amount-of-task-detail)
+- [Relationships](#relationships)
+- [Checklists](#checklist)
+- [Attachments](#attachments)
+- [Timeline and comments](#timeline-and-comments)
+- [Stars](#star-work-that-deserves-attention)
+- [Select several tasks](#work-with-several-tasks-at-once)
+- [Export and copy](#export-or-copy-a-work-inventory)
+- [Complete, cancel, and recover from Trash](#complete-cancel-reopen-and-delete-safely)
+- [Preferences and colors](#personalize-the-application)
+- [Backup, restore, and sample data](#protect-and-maintain-your-data)
+- [Solve common problems](#solve-common-problems)
 
 ## Hotkey map
 
@@ -30,20 +54,22 @@ The primary workspace actions use function keys so they remain available without
 | **F1** | Main workspace and body editors | Open Help. |
 | **F2** | Main workspace and body editors | Open the New task dialog. |
 | **F3** | Main workspace and body editors | Focus and select task search. |
-| **F8** | Everywhere a Save action is available | Activate the visible enabled **Save** or **Save changes** button. This includes the current task, New task, unsaved-changes confirmation, lookup editor, tag editor, and task-list details. |
+| **F8** | Everywhere a Save action is available | Activate the visible enabled **Save**, **Save changes**, or **Create task** button. This includes the current task, New task, unsaved-changes confirmation, lookup editor, tag editor, and task-list details. |
 | **F9** | Main workspace and body editors | Complete the current task when **Complete** is available. |
 
 Except for **F8 Save**, function-key shortcuts do not run while an application dialog is open. Holding a key down does not repeat an action. **Ctrl+K** remains available to the editors and is not an OKF Todo shortcut.
+
+In an application dialog, Tab and Shift+Tab stay inside the topmost dialog. Escape cancels that dialog and returns focus to the control that opened it. A required restart after database replacement cannot be dismissed. In Timeline, **Go to comment box** moves keyboard focus directly to the comment box.
 
 ## Start with one task
 
 1. Choose a list in the **List** switcher at the top of the window.
 2. Select **New task**.
-3. Enter a clear title and select **Save** in the New task dialog.
+3. Enter a clear title and select **Create task** in the New task dialog.
 4. Add the details you need: task type, priority, deadline, waiting target, tags, and body.
 5. Select the main **Save** button when you have changed those details.
 
-Saving the New task dialog creates the task immediately. The checklist, attachments, comments, relationships, Complete, and Cancel controls become available as soon as the dialog closes. You do not need to press the main Save button a second time to finish creating the task.
+Selecting Create task creates the task immediately. The checklist, attachments, comments, relationships, Complete, and Cancel task controls become available as soon as the dialog closes. You do not need to press the main Save button a second time to finish creating the task.
 
 Use the main Save button for changes you make after creation. If you try to leave a task with unsaved changes, OKF Todo asks whether to **Save**, **Discard**, or **Cancel**:
 
@@ -61,6 +87,8 @@ The workspace has four parts:
 | **Views** | Chooses the kind of work to show, such as Active, Ready, Waiting, Completed, or Trash. |
 | **Task queue** | Searches, filters, sorts, selects, opens, and exports tasks in the current list scope. |
 | **Task details** | Shows and edits the selected task. |
+
+When no task is selected, the detail area shows a simple selection prompt. Selecting another task opens its details from the top.
 
 The status pill beside the application actions reports saves, copied content, completed operations, and errors. Longer messages wrap or use their own header row so the complete feedback remains readable.
 
@@ -114,7 +142,7 @@ After a bulk move, the confirmation message offers **Undo**.
 
 Views are shortcuts to meaningful subsets of work:
 
-Hover over a view in the navigation rail to see a one-line description of the work it contains.
+The task queue shows a description of the selected view above the results. You can also hover over a view in the navigation rail for its description. Views that contain only active work omit the repetitive Active badge; mixed views keep explicit lifecycle labels.
 
 | View | Use it when you want to… |
 | --- | --- |
@@ -203,6 +231,10 @@ Use **Asc** or **Desc** to reverse the selected order. For Triage order, ascendi
 
 ## Add the right amount of task detail
 
+When hidden Source, Owner, Responsible, or Relationships contain information, an **Additional details** notice identifies that context. Select **Show additional details** to inspect it for the current task, including navigating its relationships. **Hide additional details** folds it away again. Your saved visibility preferences stay unchanged, and selecting another task returns to those preferences. Empty optional fields stay hidden.
+
+Tags wrap within the field, including long tag names. Each tag remains removable at smaller window widths and larger text sizes.
+
 Only the title, task type, and list are required. Add other information when it helps you decide, act, or hand work over.
 
 ### Core fields
@@ -249,7 +281,7 @@ Following a relationship opens the related task. If it belongs to another list, 
 
 Use checklist items for small steps inside one task. A checklist item is not a separate task and does not have its own priority or deadline.
 
-The task queue shows checklist progress, such as `2/3`. Adding, completing, or reopening checklist items is recorded in the Timeline.
+The task queue shows a checklist symbol and compact progress, such as `2/3`. Its tooltip and accessible label explain the count: **Checklist: 2 of 3 completed**. Adding, completing, or reopening checklist items is recorded in the Timeline.
 
 ### Attachments
 
@@ -265,6 +297,12 @@ The Timeline combines:
 - comments you add manually.
 
 Use comments for dated progress notes that should not replace the task body. The Timeline remains the final section of task details.
+
+Task details scroll independently of the task queue. Use the scrollbar at the right edge of task details, or the mouse wheel while pointing over Checklist, Attachments, or Timeline, to reach the history and comment box. You can scroll past the comment box's lower edge so its full contents and **Add comment** button remain accessible in smaller windows and with larger text.
+
+Choose **All activity**, **Comments**, or **Changes** to find the history you need. Filtering keeps the existing chronological order. Redundant automatic **Comment added** rows are hidden, while the stored audit history remains intact. Select **Go to comment box** beside the filter to jump to the comment box. Enter your text, then select **Add comment** beside the box to save it. Opening another task resets the filter to All activity.
+
+Timeline filters also work when a task is read only. Reopen or restore the task before adding a new comment.
 
 ## Star work that deserves attention
 
@@ -290,6 +328,10 @@ Select **Done selecting** when finished.
 ## Export or copy a work inventory
 
 Select **Export** beside the task count when you need a task overview for a handover, incident review, planning note, customer-status preparation, or another document.
+
+The dialog opens with your **Saved recipe** and a readable list of included fields. Under **Start with**, choose **Brief list** for Title, Status, and Deadline; **Support handover** adds IDs, priority, waiting, ownership, checklist progress, and updated time; **Full inventory** includes every available inventory field, including detailed checklist items. List is included only for All lists. These presets select columns in the existing export; none includes task bodies, comments, or attachments.
+
+Select **Customize** to open the full field library, ordered recipe, sorting controls, and table preview. You can still build any custom recipe. Choosing Saved recipe restores the recipe you opened this dialog with. Selected fields and sorting are remembered for the next export.
 
 The export contains exactly the tasks in the current results: the selected list or **All lists**, the current lifecycle view, search text, tag, type, status, and priority filters. The dialog shows the scope, ordering, and resulting task count before you continue.
 
@@ -317,7 +359,7 @@ Treat the Markdown file as a readable snapshot for communication and analysis. I
 
 ### Complete or cancel
 
-Use **Complete** when the intended work is finished. Use **Cancel** when the task should not be completed.
+Use **Complete** when the intended work is finished. Use **Cancel task** when the task should not be completed. **Cancel** in a dialog only dismisses that dialog.
 
 Completed and cancelled tasks are read only by default. Their details are shown as readable values rather than disabled fields, and their body is shown without editing toolbars. Select **Show full body** when a long body is collapsed. Empty optional fields and unavailable mutation controls stay out of the way, while attachments, relationships, checklist results, and the Timeline remain available for review.
 
@@ -334,6 +376,8 @@ Use **Undo** in the confirmation message when you moved something by mistake.
 Tasks in Trash use the same compact read-only review presentation. Restore a task before changing its fields or related content.
 
 ### Restore or permanently delete
+
+When there are no tasks in Trash, **Trash is empty** explains how recovery works. With no selected task, the detail area shows a simple selection prompt. Search or filters that hide existing Trash items show **No matching tasks** instead.
 
 Open **Trash**, enter selection mode, and select the tasks you want to restore or permanently delete.
 
@@ -354,6 +398,8 @@ Open **Settings** to adjust and maintain OKF Todo:
 | **Data & maintenance** | Back up or restore the database, add or remove sample data, or deliberately reset all data. |
 
 Preference changes apply immediately and persist between application restarts.
+
+OKF Todo remembers its window size and position. On startup, a restored window is resized or moved if needed to fit the available desktop, keeping the right-hand scrollbar and bottom controls on screen. Maximized windows remain maximized. If you manually move or resize the window beyond the screen edge, maximize it using the title bar to bring all controls back into view.
 
 The selected color scheme also applies to the complete in-app **Help** content, including headings, paragraphs, lists, links, tables, inline code, and copyable code blocks.
 

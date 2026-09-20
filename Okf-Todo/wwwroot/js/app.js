@@ -18,7 +18,7 @@
     ready: 'Active tasks that are not waiting',
     starred: 'Tasks you marked for focus',
     attention: 'Review all urgent or overdue active tasks, including those waiting for someone or something. Use Act now to see only those that are not waiting. Overdue means before today; due today is not overdue.',
-    actnow: 'The same as Attention, with waiting tasks excluded.',
+    actnow: 'Urgent or overdue active tasks that are not waiting. Due today is not overdue.',
     waiting: 'Active tasks waiting for a person, response, or other event',
     completed: 'Tasks that have been completed',
     all: 'Active, completed, and cancelled tasks',
@@ -84,6 +84,12 @@
   const taskExportSortModes = {
     currentTaskOrder: 'CURRENT_TASK_ORDER',
     recipe: 'RECIPE'
+  }
+  // Presets select existing inventory fields; they never include bodies or files.
+  const taskExportPresets = {
+    brief: ['TITLE', 'LIST', 'STATUS', 'DEADLINE'],
+    support: ['ID', 'TITLE', 'LIST', 'STATUS', 'PRIORITY', 'WAITING_FOR', 'OWNER', 'RESPONSIBLE', 'DEADLINE', 'CHECKLIST', 'UPDATED'],
+    full: taskExportColumns.map(function (column) { return column.code })
   }
   const lookupSettingsGroups = {
     taskTypes: 'Task types',
@@ -158,6 +164,9 @@
   let isTaskListManagerCreating = false
   let tasks = []
   let currentTask = null
+  let currentTimelineItems = []
+  let currentRelationshipCount = 0
+  let revealedTaskDetails = false
   let currentView = 'active'
   let taskSortModes = createDefaultTaskSortModes()
   let taskSortDirections = createDefaultTaskSortDirections()
@@ -1101,7 +1110,7 @@
               <span>New task</span>
             </button>
             <button id="complete-button" class="secondary-button" type="button" aria-keyshortcuts="F9" title="Complete task (F9)" disabled>Complete</button>
-            <button id="cancel-button" class="secondary-button danger-button" type="button" disabled>Cancel</button>
+            <button id="cancel-button" class="secondary-button danger-button" type="button" disabled>Cancel task</button>
             <span id="save-shortcut-tooltip" class="save-shortcut-tooltip" title="Save task (F8)">
               <button id="save-button" type="button" data-save-shortcut aria-label="Save task (F8)" aria-keyshortcuts="F8" disabled>Save</button>
             </span>
@@ -1235,6 +1244,7 @@
             </div>
           </div>
 
+          <p id="task-view-description" class="task-view-description"></p>
           <div id="task-filter-summary" class="task-filter-summary" hidden>
             <div id="task-filter-chips" class="task-filter-chips" aria-label="Active task filters"></div>
             <button id="task-filter-clear" class="task-filter-clear" type="button" hidden>Clear</button>
@@ -1262,6 +1272,10 @@
           <div id="layout-resizer" class="layout-resizer" role="separator" aria-label="Resize task list" aria-orientation="vertical" tabindex="0"></div>
 
           <section class="task-editor-panel" aria-label="Task details">
+            <div id="task-empty-details" class="empty-list" hidden>
+              <strong>No task selected</strong>
+              <span>Select a task to see its details.</span>
+            </div>
             <form id="task-form" class="task-form">
             <div class="task-title-rail">
               <input
@@ -1289,6 +1303,10 @@
               <button id="task-read-only-reopen-button" class="secondary-button" type="button">Reopen to edit</button>
             </div>
 
+            <div id="task-hidden-context" class="task-hidden-context" hidden>
+              <span id="task-hidden-context-summary"></span>
+              <button id="task-hidden-context-toggle" class="secondary-button" type="button" aria-expanded="false">Show additional details</button>
+            </div>
             <div id="task-editable-details" class="task-editable-details">
               <div class="metadata-grid">
                 <label class="field-block task-list-field" for="task-list-owner">
@@ -1325,10 +1343,12 @@
                 <label class="field-block owner-field" for="task-owner" hidden>
                   <span>Owner</span>
                   <input id="task-owner" type="text" autocomplete="off" disabled>
+                  <small class="field-help">Person or team accountable for the task.</small>
                 </label>
                 <label class="field-block responsible-field" for="task-responsible" hidden>
                   <span>Responsible</span>
                   <input id="task-responsible" type="text" autocomplete="off" disabled>
+                  <small class="field-help">Person expected to perform or coordinate the work.</small>
                 </label>
               </div>
 
@@ -1425,6 +1445,13 @@
             <section class="timeline-section" aria-labelledby="timeline-title">
               <div class="timeline-header">
                 <h3 id="timeline-title">Timeline</h3>
+                <label for="timeline-filter" class="sr-only">Timeline activity</label>
+                <select id="timeline-filter" aria-label="Timeline activity">
+                  <option value="all">All activity</option>
+                  <option value="comments">Comments</option>
+                  <option value="changes">Changes</option>
+                </select>
+                <button id="jump-to-comment" class="secondary-button" type="button">Go to comment box</button>
               </div>
               <div id="timeline-list" class="timeline-list" aria-live="polite">
                 <div class="empty-timeline">No timeline.</div>
@@ -1432,7 +1459,7 @@
               <div id="comment-form" class="comment-form">
                 <label class="sr-only" for="comment-text">Comment</label>
                 <textarea id="comment-text" rows="2" placeholder="Comment" disabled></textarea>
-                <button id="comment-add-button" class="secondary-button" type="button" disabled>Add</button>
+                <button id="comment-add-button" class="secondary-button" type="button" disabled>Add comment</button>
               </div>
             </section>
             </form>
@@ -2050,7 +2077,19 @@
             </p>
             <p id="task-export-current-description" class="task-export-current-description">Current search and filters.</p>
 
-            <div class="task-export-composer">
+            <div class="task-export-presets">
+              <label for="task-export-preset">Start with</label>
+              <select id="task-export-preset">
+                <option value="saved">Saved recipe</option>
+                <option value="brief">Brief list</option>
+                <option value="support">Support handover</option>
+                <option value="full">Full inventory</option>
+              </select>
+              <button id="task-export-customize" class="secondary-button" type="button" aria-expanded="false" aria-controls="task-export-composer">Customize</button>
+            </div>
+            <p id="task-export-included-fields" class="task-export-current-description"></p>
+            <p class="task-export-current-description">Inventory fields only. Bodies, comments, and attachments are not included.</p>
+            <div id="task-export-composer" class="task-export-composer" hidden>
               <aside class="task-export-field-library" aria-labelledby="task-export-fields-title">
                 <div class="task-export-section-heading">
                   <div>
@@ -2132,7 +2171,7 @@
 
             <div class="modal-actions">
               <button id="new-task-cancel-button" class="secondary-button" type="button">Cancel</button>
-              <button id="new-task-save-button" type="button" data-save-shortcut aria-keyshortcuts="F8" title="Save (F8)">Save</button>
+              <button id="new-task-save-button" type="button" data-save-shortcut aria-keyshortcuts="F8" title="Create task (F8)">Create task</button>
             </div>
           </section>
         </div>
@@ -2683,6 +2722,7 @@
 
   function setTaskExportBusy(isBusy, busyAction) {
     $('#task-export-close-button, #task-export-cancel-button').prop('disabled', isBusy)
+    $('#task-export-preset, #task-export-customize').prop('disabled', isBusy)
     const isUnavailable = isBusy
       || taskExportTaskIds.length === 0
       || getApplicableTaskExportColumns().length === 0
@@ -2829,6 +2869,7 @@
     const query = String($('#task-export-field-search').val() || '').trim().toLocaleLowerCase()
     const availableColumns = taskExportColumns.filter(function (column) {
       return !taskExportSelectedColumns.includes(column.code)
+        && (isGlobal || column.code !== 'LIST')
         && (!query || column.label.toLocaleLowerCase().includes(query))
     })
 
@@ -2925,6 +2966,7 @@
 
   function renderTaskExportColumns() {
     const applicableColumns = getApplicableTaskExportColumns()
+    $('#task-export-included-fields').text(`Included fields: ${applicableColumns.map(function (code) { return getTaskExportColumn(code).label }).join(', ') || 'None'}.`)
     $('#task-export-columns-summary').text(
       `${applicableColumns.length} ${applicableColumns.length === 1 ? 'field' : 'fields'} · drag to set column order`)
     $('[data-task-export-sort-mode]').each(function () {
@@ -3007,6 +3049,9 @@
     $('#task-export-current-count').text('…')
     $('#task-export-overlay').prop('hidden', false)
     $('#task-export-confirm-button').prop('disabled', true)
+    $('#task-export-customize').attr('aria-expanded', 'false').text('Customize')
+    $('#task-export-composer').prop('hidden', true)
+    $('#task-export-preset').val('saved').prop('disabled', true)
 
     try {
       const preference = await sendBridgeMessage('task.export.columns.get', {})
@@ -3025,12 +3070,17 @@
             : (column.code === 'UPDATED' ? 'DESC' : 'ASC')
         return directions
       }, {})
+      $('#task-export-preset').data('saved-recipe', {
+        columns: taskExportSelectedColumns.slice(),
+        sortMode: taskExportSortMode,
+        sortDirections: { ...taskExportSortDirections }
+      }).prop('disabled', false)
       renderTaskExportPreview()
       if (taskExportSelectedColumns.includes('CHECKLIST_ITEMS')) {
         await ensureTaskExportChecklistPreview()
         renderTaskExportLivePreview()
       }
-      $('#task-export-field-search').trigger('focus')
+      $('#task-export-preset').trigger('focus')
     } catch (error) {
       $('#task-export-error')
         .text(getErrorMessage(error, 'Could not prepare the task export'))
@@ -3200,6 +3250,8 @@
 
   function renderRelationships(items) {
     const rows = Array.isArray(items) ? items : []
+    currentRelationshipCount = rows.length
+    applyTaskSectionVisibility()
     if (!rows.length) {
       $('#relationships-list').html('<span class="empty-relationships">No relationships.</span>')
       setTaskOwnedControlsEnabled(!!currentTask?.id && isTaskEditable(currentTask))
@@ -4455,6 +4507,13 @@
 
   function renderEmptyEditor() {
     currentTask = null
+    revealedTaskDetails = false
+    $('#task-form').prop('hidden', true)
+    $('#task-empty-details').prop('hidden', false)
+    $('#task-empty-details strong').text(currentView === 'trash' ? 'No task selected in Trash' : 'No task selected')
+    $('#task-empty-details span').text(currentView === 'trash'
+      ? 'Select a task in Trash to review it, restore it, or delete it permanently.'
+      : 'Select a task to see its details.')
     isDirty = false
     isEditorReady = false
     setEditorHeightControlEnabled(false)
@@ -4764,16 +4823,29 @@
   }
 
   function applyTaskSectionVisibility() {
-    const showOwnershipFields = layoutPreference.showOwner || layoutPreference.showResponsible
-    $('.source-grid').prop('hidden', !layoutPreference.showSourceFields)
+    const hiddenDetails = []
+    if (currentTask) {
+      if (!layoutPreference.showSourceFields && (currentTask.taskSourceCode || currentTask.sourceReference || currentTask.sourceUrl)) hiddenDetails.push('Source')
+      if (!layoutPreference.showOwner && currentTask.owner) hiddenDetails.push('Owner')
+      if (!layoutPreference.showResponsible && currentTask.responsible) hiddenDetails.push('Responsible')
+      if (!layoutPreference.showRelationships && currentRelationshipCount > 0) hiddenDetails.push(`Relationships (${currentRelationshipCount})`)
+    }
+    $('#task-hidden-context').prop('hidden', hiddenDetails.length === 0)
+    $('#task-hidden-context-summary').text(`Additional details: ${hiddenDetails.join(', ')}`)
+    $('#task-hidden-context-toggle').attr('aria-expanded', String(revealedTaskDetails))
+      .text(revealedTaskDetails ? 'Hide additional details' : 'Show additional details')
+    const showOwner = layoutPreference.showOwner || (revealedTaskDetails && !!currentTask?.owner)
+    const showResponsible = layoutPreference.showResponsible || (revealedTaskDetails && !!currentTask?.responsible)
+    const showOwnershipFields = showOwner || showResponsible
+    $('.source-grid').prop('hidden', !(layoutPreference.showSourceFields || (revealedTaskDetails && hiddenDetails.includes('Source'))))
     $('.ownership-grid')
       .prop('hidden', !showOwnershipFields)
       .toggleClass(
         'is-single-field',
-        showOwnershipFields && !(layoutPreference.showOwner && layoutPreference.showResponsible))
-    $('.owner-field').prop('hidden', !layoutPreference.showOwner)
-    $('.responsible-field').prop('hidden', !layoutPreference.showResponsible)
-    $('.relationships-section').prop('hidden', !layoutPreference.showRelationships)
+        showOwnershipFields && !(showOwner && showResponsible))
+    $('.owner-field').prop('hidden', !showOwner)
+    $('.responsible-field').prop('hidden', !showResponsible)
+    $('.relationships-section').prop('hidden', !(layoutPreference.showRelationships || (revealedTaskDetails && currentRelationshipCount > 0)))
     $('#show-source-fields').prop('checked', layoutPreference.showSourceFields)
     $('#show-owner').prop('checked', layoutPreference.showOwner)
     $('#show-responsible').prop('checked', layoutPreference.showResponsible)
@@ -5298,7 +5370,7 @@
       ? `<span class="task-badge${finished ? '' : ' task-badge-waiting'}">Waiting: ${encodeText(task.activeWaitingForLabel)}</span>`
       : ''
     const checklistProgress = task.checklistCount > 0
-      ? `<span class="task-badge">${task.completedChecklistCount}/${task.checklistCount}</span>`
+      ? `<span class="task-badge task-checklist-badge" title="Checklist: ${task.completedChecklistCount} of ${task.checklistCount} completed" aria-label="Checklist: ${task.completedChecklistCount} of ${task.checklistCount} completed"><span class="fluent-icon" aria-hidden="true">&#xE9D5;</span> ${task.completedChecklistCount}/${task.checklistCount}</span>`
       : ''
     const taskListPill = isGlobalTaskListScope()
       ? `<span class="task-badge task-list-pill">${encodeText(task.taskListName)}</span>`
@@ -5334,7 +5406,7 @@
           <span class="task-row-meta">
             ${taskListPill}
             ${renderBadge(task.taskTypeName, finished ? null : task.taskTypeBackgroundColor, finished ? null : task.taskTypeForegroundColor)}
-            ${renderTaskStatusBadge(task)}
+            ${task.taskStatusCode === 'ACTIVE' && ['active', 'ready', 'waiting', 'attention', 'actnow'].includes(currentView) ? '' : renderTaskStatusBadge(task)}
             ${priority}
             ${deadline}
             ${waiting}
@@ -5366,6 +5438,7 @@
     renderTaskFilterSummary()
     $('#task-view').val(currentView)
     $('#task-list-title').text(viewLabels[currentView])
+    $('#task-view-description').text(viewDescriptions[currentView])
     const hasViewHelp = currentView === 'attention' || currentView === 'actnow'
     $('#task-list-view-help')
       .prop('hidden', !hasViewHelp)
@@ -5399,11 +5472,15 @@
 
       const title = hasFilters
         ? 'No matching tasks'
+        : currentView === 'trash'
+          ? 'Trash is empty'
         : currentView === 'actnow'
           ? 'Nothing needs action now'
           : `No ${viewLabels[currentView].toLowerCase()} tasks`
       const detail = hasFilters
         ? 'Adjust the search or filters'
+        : currentView === 'trash'
+          ? 'Tasks moved to Trash appear here. You can restore them whenever you need them.'
         : currentView === 'actnow'
           ? 'Urgent or overdue work appears here when it is not waiting'
           : 'Create a task or switch view'
@@ -6201,10 +6278,16 @@
   }
 
   function renderTimeline(items) {
-    const timelineItems = Array.isArray(items) ? items : []
+    currentTimelineItems = Array.isArray(items) ? items : []
+    const filter = $('#timeline-filter').val() || 'all'
+    const timelineItems = currentTimelineItems.filter(function (item) {
+      // Keep the stored audit entries; suppress only their repetitive visual rows.
+      if (item.logTypeCode === 'COMMENT_ADDED') return false
+      return filter === 'all' || (filter === 'comments' ? item.kind === 'comment' : item.kind !== 'comment')
+    })
 
     if (timelineItems.length === 0) {
-      $('#timeline-list').html('<div class="empty-timeline">No timeline.</div>')
+      $('#timeline-list').html(`<div class="empty-timeline">${filter === 'comments' ? 'No comments yet.' : filter === 'changes' ? 'No changes yet.' : 'No timeline.'}</div>`)
       setTaskOwnedControlsEnabled(!!currentTask?.id && isTaskEditable(currentTask))
       return
     }
@@ -6269,7 +6352,7 @@
       await loadTasks({ keepSelection: true })
       setStatus(wasDirty ? 'Unsaved changes' : 'Comment added', wasDirty ? 'dirty' : 'saved')
     } finally {
-      $('#comment-add-button').prop('disabled', false).text('Add')
+      $('#comment-add-button').prop('disabled', false).text('Add comment')
     }
   }
 
@@ -6512,15 +6595,15 @@
         })
     ]
 
-    if (layoutPreference.showOwner && String(task.owner || '').trim()) {
+    if ((layoutPreference.showOwner || revealedTaskDetails) && String(task.owner || '').trim()) {
       details.push(renderReadOnlyDetail('Owner', task.owner))
     }
 
-    if (layoutPreference.showResponsible && String(task.responsible || '').trim()) {
+    if ((layoutPreference.showResponsible || revealedTaskDetails) && String(task.responsible || '').trim()) {
       details.push(renderReadOnlyDetail('Responsible', task.responsible))
     }
 
-    if (layoutPreference.showSourceFields) {
+    if (layoutPreference.showSourceFields || revealedTaskDetails) {
       const sourceName = task.taskSourceName || getSelectedControlText('#task-source', '')
       if (sourceName) {
         details.push(renderReadOnlyDetail('Source', sourceName))
@@ -6671,6 +6754,8 @@
   }
 
   function setTaskOwnedControlsEnabled(isEnabled) {
+    $('#timeline-filter').prop('disabled', !currentTask?.id)
+    $('#jump-to-comment').prop('hidden', !isEnabled)
     $('#attachment-add-button, #attachment-file').prop('disabled', !isEnabled)
     $('#checklist-new-text, #checklist-add-button').prop('disabled', !isEnabled)
     $('#relationship-type, #relationship-task, #relationship-add-button').prop('disabled', !isEnabled)
@@ -6729,7 +6814,15 @@
     const releaseDirtyTracking = suppressDirtyTracking()
 
     try {
+      if (currentTask?.id !== task.id) {
+        revealedTaskDetails = false
+        currentRelationshipCount = 0
+        $('#timeline-filter').val('all')
+        $('.task-editor-panel').scrollTop(0)
+      }
       currentTask = task
+      $('#task-form').prop('hidden', false)
+      $('#task-empty-details').prop('hidden', true)
       isEditorReady = false
       isDirty = false
       clearValidationState()
@@ -7088,6 +7181,14 @@
     const article = document.createElement('article')
     article.className = 'help-document'
     article.innerHTML = html
+    const headingIds = new Map()
+    article.querySelectorAll('h1, h2, h3, h4').forEach(function (heading) {
+      const base = heading.textContent.trim().toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, '-')
+      const count = headingIds.get(base) || 0
+      headingIds.set(base, count + 1)
+      heading.id = count ? `${base}-${count}` : base
+      heading.tabIndex = -1
+    })
 
     article.querySelectorAll('a[href]').forEach(function (link) {
       const href = link.getAttribute('href') || ''
@@ -7357,7 +7458,7 @@
     }
 
     $('#new-task-save-button, #new-task-cancel-button').prop('disabled', true)
-    $('#new-task-save-button').text('Saving')
+    $('#new-task-save-button').text('Creating')
     setStatus('Saving', 'ready')
 
     try {
@@ -7383,7 +7484,7 @@
       $('#new-task-save-button, #new-task-cancel-button').prop('disabled', false)
       throw error
     } finally {
-      $('#new-task-save-button').text('Save')
+      $('#new-task-save-button').text('Create task')
     }
   }
 
@@ -7391,6 +7492,105 @@
     return $('.modal-overlay').filter(function () {
       return !$(this).prop('hidden')
     }).length > 0
+  }
+
+  function bindModalFocusManagement() {
+    const stack = []
+    let lastFocusedElement = document.activeElement
+    const focusable = 'button, a[href], input, select, textarea, [tabindex], [contenteditable="true"]'
+    const cancelButtons = {
+      'confirmation-overlay': '#confirmation-cancel-button',
+      'lookup-edit-overlay': '#lookup-edit-cancel-button',
+      'tag-edit-overlay': '#tag-edit-cancel-button',
+      'tag-list-overlay': '#tag-list-close-button',
+      'lookup-list-overlay': '#lookup-list-close-button',
+      'help-overlay': '#help-close-button',
+      'task-export-overlay': '#task-export-cancel-button',
+      'unsaved-changes-overlay': '#unsaved-cancel-button',
+      'complete-wait-overlay': '#complete-wait-cancel-button',
+      'settings-overlay': '#settings-close-button',
+      'new-task-overlay': '#new-task-cancel-button',
+      'task-list-delete-overlay': '#task-list-delete-cancel',
+      'task-list-move-overlay': '#task-list-move-cancel',
+      'task-lists-overlay': '#task-lists-close-button',
+      'database-reset-overlay': '#database-reset-cancel-button'
+    }
+    function controls(overlay) {
+      return $(overlay).find(focusable).filter(function () {
+        return $(this).is(':visible') && !this.disabled && this.tabIndex >= 0 && !this.closest('[inert]')
+      }).toArray()
+    }
+    function focusDialog(overlay) {
+      const target = controls(overlay)[0] || overlay.querySelector('[role="dialog"]')
+      if (target) {
+        if (!target.matches(focusable)) target.tabIndex = -1
+        target.focus({ preventScroll: true })
+      }
+    }
+    function sync() {
+      const previousTop = stack[stack.length - 1]
+      for (let i = stack.length - 1; i >= 0; i--) {
+        if (stack[i].overlay.hidden) stack.splice(i, 1)
+      }
+      document.querySelectorAll('.modal-overlay:not([hidden])').forEach(function (overlay) {
+        if (!stack.some(item => item.overlay === overlay)) {
+          stack.push({ overlay, returnFocus: document.activeElement })
+        }
+      })
+      const top = stack[stack.length - 1]
+      $('.app-shell').children().each(function () {
+        this.inert = !!top && this !== top.overlay
+      })
+      stack.forEach(function (item, index) { item.overlay.style.zIndex = String(200 + index) })
+      document.body.classList.toggle('has-blocking-modal', !!top)
+      if (previousTop && previousTop !== top && previousTop.overlay.hidden) {
+        const target = previousTop.returnFocus
+        if (target?.isConnected && !target.closest('[hidden], [inert]') && !target.disabled) {
+          target.focus({ preventScroll: true })
+        }
+      }
+      if (top && !top.overlay.contains(document.activeElement)) focusDialog(top.overlay)
+      return top?.overlay
+    }
+    const observer = new MutationObserver(sync)
+    document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
+      observer.observe(overlay, { attributes: true, attributeFilter: ['hidden'] })
+    })
+    document.addEventListener('focusin', function (event) {
+      const openedOverlay = event.target.closest('.modal-overlay:not([hidden])')
+      if (openedOverlay && !stack.some(item => item.overlay === openedOverlay)) {
+        // Some dialogs focus a control synchronously, before the visibility observer runs.
+        stack.push({ overlay: openedOverlay, returnFocus: event.relatedTarget || lastFocusedElement })
+      }
+      lastFocusedElement = event.target
+      const top = stack[stack.length - 1]?.overlay
+      if (top && !top.hidden && !top.contains(event.target)) focusDialog(top)
+    })
+    document.addEventListener('keydown', function (event) {
+      if (event.key !== 'Tab' && event.key !== 'Escape') return
+      const top = sync()
+      if (!top) return
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        event.stopImmediatePropagation()
+        const button = document.querySelector(cancelButtons[top.id] || '#first-run-skip-button')
+        // A pending restore/reset cannot be dismissed; disabled actions stay disabled.
+        if (cancelButtons[top.id] || top.id === 'first-run-overlay') {
+          if (button && !button.disabled) button.click()
+        }
+        return
+      }
+      const elements = controls(top)
+      if (!elements.length) {
+        event.preventDefault()
+        return focusDialog(top)
+      }
+      const index = elements.indexOf(document.activeElement)
+      if ((event.shiftKey && index === 0) || (!event.shiftKey && index === elements.length - 1)) {
+        event.preventDefault()
+        elements[event.shiftKey ? elements.length - 1 : 0].focus()
+      }
+    }, true)
   }
 
   function setFirstRunModalOpen(isOpen) {
@@ -7401,10 +7601,6 @@
 
     const wasHidden = $overlay.prop('hidden')
     $overlay.prop('hidden', !isOpen)
-    $('.app-shell').children().not('#first-run-overlay')
-      .prop('inert', isOpen)
-      .attr('aria-hidden', isOpen ? 'true' : null)
-    $('body').toggleClass('has-blocking-modal', isOpen)
 
     if (isOpen && wasHidden) {
       window.setTimeout(function () {
@@ -7486,6 +7682,42 @@
   }
 
   function bindEvents() {
+    $('#task-hidden-context-toggle').on('click', function () {
+      revealedTaskDetails = !revealedTaskDetails
+      applyTaskSectionVisibility()
+    })
+    $('#timeline-filter').on('change', function () { renderTimeline(currentTimelineItems) })
+    $('#jump-to-comment').on('click', function () { $('#comment-text').trigger('focus') })
+    $('#help-content').on('click', 'a[href^="#"]:not([data-help-topic-link])', function (event) {
+      const id = decodeURIComponent(this.getAttribute('href').slice(1))
+      const heading = document.getElementById(id)
+      if (heading && this.closest('.help-document').contains(heading)) {
+        event.preventDefault()
+        heading.scrollIntoView({ block: 'start' })
+        heading.focus({ preventScroll: true })
+      }
+    })
+    $('#task-export-customize').on('click', function () {
+      const show = $('#task-export-composer').prop('hidden')
+      $('#task-export-composer').prop('hidden', !show)
+      $(this).attr('aria-expanded', String(show)).text(show ? 'Hide customization' : 'Customize')
+    })
+    $('#task-export-preset').on('change', async function () {
+      const preset = taskExportPresets[this.value]
+      const saved = $(this).data('saved-recipe')
+      taskExportSelectedColumns = preset ? preset.slice() : saved.columns.slice()
+      taskExportSortMode = preset ? taskExportSortModes.currentTaskOrder : saved.sortMode
+      taskExportSortDirections = preset ? {} : { ...saved.sortDirections }
+      updateTaskExportColumnSelection()
+      if (taskExportSelectedColumns.includes('CHECKLIST_ITEMS')) {
+        try {
+          await ensureTaskExportChecklistPreview()
+          renderTaskExportLivePreview()
+        } catch (error) {
+          $('#task-export-error').text(getErrorMessage(error, 'Could not load checklist preview')).prop('hidden', false)
+        }
+      }
+    })
     $('#task-list-switcher').on('change', function () {
       const requestedScope = $(this).val().toString()
       allowContextSwitch().then(function (isAllowed) {
@@ -8445,6 +8677,7 @@
     initializeBridgeReceiver()
     bindLayoutResizer()
     bindEvents()
+    bindModalFocusManagement()
     renderEmptyEditor()
 
     try {

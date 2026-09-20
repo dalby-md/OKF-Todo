@@ -101,13 +101,13 @@ public sealed class TaskServiceTests
 
         Assert.Contains(lookups.TaskTypes, item => item.Code == "ERROR" && item.Name == "Error");
         Assert.Contains(lookups.TaskTypes, item =>
-            item.Code == "ERROR" && item.BackgroundColor == "#facc15" && item.ForegroundColor == "#111827");
+            item.Code == "ERROR" && item.BackgroundColor == "#b42318" && item.ForegroundColor == "#ffffff");
         Assert.Contains(lookups.TaskTypes, item => item.Code == "REQUEST" && item.IsSelected);
         Assert.Contains(lookups.TaskStatuses, item => item.Code == "CANCELLED" && item.Name == "Cancelled");
         Assert.Contains(lookups.TaskPriorities, item => item.Code == "NORMAL" && item.Name == "Normal");
         Assert.Contains(lookups.TaskPriorities, item => item.Code == "NORMAL" && item.IsSelected);
         Assert.Contains(lookups.TaskPriorities, item =>
-            item.Code == "URGENT" && item.BackgroundColor == "#b42318" && item.ForegroundColor == "#ffffff");
+            item.Code == "URGENT" && item.BackgroundColor == "#c2410c" && item.ForegroundColor == "#ffffff");
         Assert.Contains(lookups.TaskSources, item => item.Code == "EMAIL" && item.Name == "Email");
         Assert.Contains(lookups.BodyFormats, item => item.Code == "HTML" && item.Name == "HTML");
     }
@@ -192,10 +192,10 @@ public sealed class TaskServiceTests
         Assert.True(listed.TaskStatusSortOrder > 0);
         Assert.Equal("NORMAL", listed.TaskPriorityCode);
         Assert.True(listed.TaskPrioritySortOrder > 0);
-        Assert.Equal("#facc15", listed.TaskTypeBackgroundColor);
-        Assert.Equal("#111827", listed.TaskTypeForegroundColor);
-        Assert.Equal("#6b7280", listed.TaskStatusBackgroundColor);
-        Assert.Equal("#ffffff", listed.TaskStatusForegroundColor);
+        Assert.Equal("#b42318", listed.TaskTypeBackgroundColor);
+        Assert.Equal("#ffffff", listed.TaskTypeForegroundColor);
+        Assert.Equal("#e5e7eb", listed.TaskStatusBackgroundColor);
+        Assert.Equal("#374151", listed.TaskStatusForegroundColor);
         Assert.NotNull(listed.WaitingSince);
         Assert.Equal(["Initial"], listed.Tags);
         Assert.Equal("Support team", listed.Owner);

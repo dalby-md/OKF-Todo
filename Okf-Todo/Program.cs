@@ -162,6 +162,8 @@ namespace Photino.Okf_Todo
             services.GetRequiredService<ApplicationLifetimeService>().Attach(window);
 
             ApplyStartupWindowPlacement(window, windowPreference);
+            window.RegisterWindowCreatedHandler((_, _) =>
+                services.GetRequiredService<WindowPlacementService>().EnsureVisible(window));
             window.WindowClosing += (_, _) =>
             {
                 SaveWindowPreference(services, startupLogger, window);
@@ -442,6 +444,7 @@ namespace Photino.Okf_Todo
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite(DatabasePathProvider.CreateConnectionString(databasePath)));
             services.AddSingleton<HtmlSanitizerService>();
+            services.AddSingleton<WindowPlacementService>();
             services.AddSingleton<IAppPreferencePathProvider, AppPreferencePathProvider>();
             services.AddSingleton<PhotinoFileSavePicker>();
             services.AddSingleton<IBackupDestinationPicker>(serviceProvider =>

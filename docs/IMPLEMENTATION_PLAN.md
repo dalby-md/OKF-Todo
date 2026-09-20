@@ -8,6 +8,22 @@ Do not ask Codex to build everything in one pass. Use small vertical slices.
 
 ## Recommended implementation order
 
+### September 2026 issue repair pass
+
+- Issues #2–4: shared modal focus containment and restoration; wrapping tag chips; Create task / Cancel task labels and accessible checklist counts. Active badges are omitted only in views whose scope already guarantees active work. Normal priority remains visible because those views do not imply a priority.
+- Issues #6–8: presentation-only Timeline filters, comment jump, selected-view descriptions, and temporary discovery of nonempty hidden task context. Stored history and view query semantics stay intact.
+- Comment actions use distinct labels: Go to comment box navigates to the composer; Add comment saves its text. MCP applicability: desktop wording only, with no change to the existing comment command or MCP contract.
+- Native scrollbar follow-up: the reported window extended beyond the monitor work area, putting the scrollbar off screen. `Program.cs` now invokes the injected `WindowPlacementService` after native window creation to constrain restored bounds to the display with the largest overlap, or nearest remaining display. Valid and maximized placement stays intact. `WindowPlacementServiceTests.cs` covers overflow, disconnected displays, negative monitor origins, and unavailable monitor data. MCP applicability: native window placement is desktop-only presentation; no headless contract changes.
+- Manual check follow-up: give the task form its full content height inside the independently scrolling detail panel, retain bottom space below the comment composer, and make the right-edge scrollbar explicit. Cover actual mouse-wheel scrolling at screenshot-sized, laptop, and stacked viewports with standard/larger text. This is desktop presentation only; existing MCP comment and Timeline operations are unchanged.
+- Issues #9–11: column presets over the existing inventory export, recovery-specific empty Trash, empty detail presentation, and keyboard-accessible offline Help section links.
+- Issue #5 is a design deliverable: see [waiting follow-up design](waiting-follow-up-design.md). No follow-up schema or runtime change is included in this repair pass.
+- MCP applicability: all nine repairs affect desktop navigation, accessibility, visibility, copy, or the choice of columns for existing native-file/clipboard exports. Existing MCP task context, Timeline, relationship, and checklist reads already expose the underlying data. No new headless operation or changed domain query is introduced. Export presets are UI shortcuts over existing column recipes, not new content or generation contracts. The future follow-up capability explicitly requires service, command, MCP, migration, and OKF work described in its design.
+- Validation: service/MCP process tests, browser regressions against disposable databases, JavaScript syntax, and byte-identical normal Release Help output. Native Photino, clipboard destinations, and file dialogs have a separate [interactive check plan](testing/interactive-repository-check.md).
+
+Files changed: `Okf-Todo/wwwroot/js/app.js`, `Okf-Todo/wwwroot/css/app.css`, `Okf-Todo.Tests/TaskServiceTests.cs`, `Okf-Todo.UiTests/NewTaskDialogUiTests.cs`, `Okf-Todo.UiTests/AuditIssueUiTests.cs`, `docs/PRD.md`, `docs/IMPLEMENTATION_PLAN.md`, `docs/help/using-okf-todo.md`, `docs/testing/ui-tests.md`, `docs/testing/interactive-repository-check.md`, and `docs/waiting-follow-up-design.md`. Pre-existing signing-documentation edits are outside this repair pass.
+
+### Original milestone sequence
+
 ```text
 1. Add documentation files
 2. Add SQLite / EF Core model

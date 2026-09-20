@@ -266,9 +266,12 @@ public sealed partial class NewTaskDialogUiTests
         await firstRunOverlay.WaitForAsync();
         await page.Locator("#first-run-skip-button").ClickAsync();
         Assert.True(await firstRunOverlay.IsHiddenAsync());
-        Assert.True(await page.Locator(".app-shell > :not(#first-run-overlay)").EvaluateAllAsync<bool>(
-            "elements => elements.every(element => !element.inert)"));
+        // Preferences is still open beneath first run, so only that dialog becomes interactive.
+        Assert.True(await page.Locator(".app-shell > *").EvaluateAllAsync<bool>(
+            "elements => elements.every(element => element.id === 'settings-overlay' ? !element.inert : element.inert)"));
         await page.Locator("#settings-close-button").ClickAsync();
+        Assert.True(await page.Locator(".app-shell > *").EvaluateAllAsync<bool>(
+            "elements => elements.every(element => !element.inert)"));
         await page.Locator("#new-task-button").ClickAsync();
         await page.Locator("#new-task-cancel-button").ClickAsync();
         Assert.True(await firstRunOverlay.IsHiddenAsync());
@@ -364,7 +367,7 @@ public sealed partial class NewTaskDialogUiTests
         await page.Locator("#lookup-edit-name").FillAsync("Renamed critical issue");
         await page.Locator("#lookup-edit-description").FillAsync("Keep this description");
         await page.Locator("#lookup-reset-colors-button").ClickAsync();
-        Assert.Equal("#b42318", await page.Locator("#lookup-edit-background-color").InputValueAsync());
+        Assert.Equal("#7f1d1d", await page.Locator("#lookup-edit-background-color").InputValueAsync());
         Assert.Equal("#ffffff", await page.Locator("#lookup-edit-foreground-color").InputValueAsync());
         Assert.Equal("Renamed critical issue", await page.Locator("#lookup-edit-name").InputValueAsync());
         Assert.Equal("Keep this description", await page.Locator("#lookup-edit-description").InputValueAsync());
@@ -376,7 +379,7 @@ public sealed partial class NewTaskDialogUiTests
         await page.Locator("#lookup-reset-colors-button").ClickAsync();
         await page.Locator("#lookup-edit-save-button").ClickAsync();
         await shippedEdit.ClickAsync();
-        Assert.Equal("#b42318", await page.Locator("#lookup-edit-background-color").InputValueAsync());
+        Assert.Equal("#7f1d1d", await page.Locator("#lookup-edit-background-color").InputValueAsync());
         Assert.Equal("#ffffff", await page.Locator("#lookup-edit-foreground-color").InputValueAsync());
         Assert.Equal("Renamed critical issue", await page.Locator("#lookup-edit-name").InputValueAsync());
 
@@ -1243,6 +1246,7 @@ public sealed partial class NewTaskDialogUiTests
         await page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
         await page.Locator("#task-title").WaitForAsync();
+        await page.WaitForFunctionAsync("() => document.querySelector('#save-status').textContent === 'Loaded'");
         Assert.False(await page.Locator(".owner-field").IsHiddenAsync());
         Assert.True(await page.Locator(".responsible-field").IsHiddenAsync());
 
@@ -1316,6 +1320,7 @@ public sealed partial class NewTaskDialogUiTests
 
         await page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
+        await page.WaitForFunctionAsync("() => document.querySelector('#save-status').textContent === 'Loaded'");
         Assert.True(await page.Locator(".owner-field").IsHiddenAsync());
         Assert.False(await page.Locator(".responsible-field").IsHiddenAsync());
 
@@ -1512,7 +1517,7 @@ public sealed partial class NewTaskDialogUiTests
             page,
             taskTitle,
             "all",
-            "CANCELLED · VIEWING IN ALL STATUSES",
+            "CANCELLED · VIEWING IN ALL",
             "is-transition-cancelled",
             "Reopen",
             workspaceScrollPosition);
@@ -1729,6 +1734,7 @@ public sealed partial class NewTaskDialogUiTests
             "Current search and filters",
             await page.Locator("#task-export-current-description").TextContentAsync());
         Assert.Equal(0, await page.Locator("input[name='task-export-kind']").CountAsync());
+        await page.Locator("#task-export-customize").ClickAsync();
         while (await page.Locator("#task-export-recipe-list .task-export-remove-field").CountAsync() > 0)
         {
             await page.Locator("#task-export-recipe-list .task-export-remove-field").First.ClickAsync();
@@ -1940,7 +1946,7 @@ public sealed partial class NewTaskDialogUiTests
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#task-list-title').textContent === 'Act now' && document.querySelector('#task-view').value === 'actnow'");
         Assert.Contains(
-            "waiting tasks excluded",
+            "not waiting",
             await page.Locator(".task-view-rail-button[data-task-view='actnow']").GetAttributeAsync("title"));
         Assert.True(await page.Locator("#task-list .task-row").CountAsync() > 0);
         Assert.True(await page.Locator("#task-list .task-row").CountAsync() <= attentionCount);
