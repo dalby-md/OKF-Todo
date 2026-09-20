@@ -1,8 +1,8 @@
 # Product screenshots
 
-Use the six numbered PNGs below for product listings and promotional galleries, in this order. Use the corresponding English captions alongside the images. The README, capture sources, and preview page are supporting files.
+Use the seven numbered PNGs below for product listings and promotional galleries, in this order. Use the corresponding English captions alongside the images. The README, capture sources, and preview page are supporting files.
 
-Each PNG is 1920 × 1080 (16:9). Screenshots show the current application UI with built-in fictional sample tasks, rendered at 120% scale for legibility. There is no desktop, taskbar, browser chrome, added slogan, or decorative frame. The lead screenshot is also saved at the repository's canonical workspace image path, `docs/images/okf-todo-task-workspace.png`.
+Each PNG is 1920 × 1080 (16:9). Screenshots show the application UI with built-in fictional sample tasks, rendered at 120% scale for legibility. Screenshot 7 adds a fictional investigation task to demonstrate Markdown source and live preview. There is no desktop, taskbar, browser chrome, added slogan, or decorative frame. The lead screenshot is also saved at the repository's canonical workspace image path, `docs/images/okf-todo-task-workspace.png`.
 
 | Order | Screenshot | Caption (under 200 characters) |
 | --- | --- | --- |
@@ -12,6 +12,7 @@ Each PNG is 1920 × 1080 (16:9). Screenshots show the current application UI wit
 | 4 | [04-keep-the-details-together.png](04-keep-the-details-together.png) | Keep the evidence with the task. Track checklist progress, attach files and follow the history in the Timeline. |
 | 5 | [05-work-in-dark-mode.png](05-work-in-dark-mode.png) | Choose a workspace that suits you. Switch between light and dark themes while keeping your task context close at hand. |
 | 6 | [06-protect-your-local-work.png](06-protect-your-local-work.png) | Keep control of your local data. Create database backups and restore from a file, with a safety backup before restoration. |
+| 7 | [07-write-with-markdown.png](07-write-with-markdown.png) | Write task notes in Markdown with a live preview. Keep headings, lists, code snippets and investigation notes together. |
 
 ## Presentation choices
 

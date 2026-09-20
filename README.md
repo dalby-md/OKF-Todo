@@ -4,7 +4,9 @@
 
 An open-source, offline To-Do application for developers and supporters built with SQLite supporting [Open Knowledge Format (OKF)](docs/what-is-okf.md) and MCP.
 
-[![OKF Todo task workspace showing task views, rich task details, tags, waiting status, Markdown editing, and a checklist](docs/images/okf-todo-task-workspace.png)](docs/images/okf-todo-task-workspace.png)
+[![OKF Todo task workspace showing task views, rich-text editing, tags, waiting status, and a checklist](docs/images/okf-todo-task-workspace.png)](docs/images/okf-todo-task-workspace.png)
+
+[See Markdown editing with a live preview](docs/images/screenshots/07-write-with-markdown.png).
 
 <sub>Data was created by Codex directly.</sub>
 

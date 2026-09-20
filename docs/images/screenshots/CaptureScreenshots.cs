@@ -7,6 +7,73 @@ namespace Okf_Todo.UiTests;
 public sealed partial class NewTaskDialogUiTests
 {
     [Fact]
+    public async Task CaptureMarkdownEditorScreenshot()
+    {
+        var output = Environment.GetEnvironmentVariable("OKF_SCREENSHOT_OUTPUT")
+            ?? throw new InvalidOperationException("Set OKF_SCREENSHOT_OUTPUT to the screenshot directory.");
+        Directory.CreateDirectory(output);
+        await using var fixture = await UiAppFixture.CreateAsync(seedSampleTasks: true);
+        await fixture.SendBridgeAsync("editor.preference.save", new
+        {
+            bodyFormatCode = "MARKDOWN", markdownEditType = "MARKDOWN", editorHeight = 620
+        });
+        const string title = "Investigate API timeouts";
+        await fixture.SendBridgeAsync("task.create", new
+        {
+            title, taskTypeCode = "INVESTIGATION", bodyFormatCode = "MARKDOWN",
+            body = """
+                ## Investigation notes
+
+                **Symptom:** Some requests time out after 30 seconds.
+
+                ### What we know
+                - The API is healthy after a restart.
+                - Failures increase during the nightly import.
+                - Check `connection_timeout` before retrying.
+
+                ### Reproduce
+                ```http
+                GET /api/tasks?status=active
+                X-Correlation-ID: support-042
+                ```
+
+                > Capture the correlation ID with each failed request.
+
+                ### Next step
+                Compare the database trace with the application log.
+                """
+        });
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new()
+        {
+            Channel = "msedge", Headless = true, IgnoreDefaultArgs = ["--hide-scrollbars"]
+        });
+        await using var context = await browser.NewContextAsync(new()
+        {
+            ViewportSize = new() { Width = 1600, Height = 900 },
+            DeviceScaleFactor = 1.2f, Locale = "en-GB", ColorScheme = ColorScheme.Light,
+            ReducedMotion = ReducedMotion.Reduce
+        });
+        await context.AddInitScriptAsync(BridgeAdapterScript);
+        var page = await context.NewPageAsync();
+        await page.GotoAsync($"{fixture.BaseUrl}/index.html");
+        await page.WaitForFunctionAsync("() => document.querySelector('#save-status')?.textContent === 'Loaded'");
+        await page.Locator("#task-selection-coachmark-dismiss").ClickAsync();
+        await page.Locator("#task-list .task-row").Filter(new() { HasText = title }).ClickAsync();
+        await page.Locator("#editor-host .tui-editor-defaultUI").WaitForAsync();
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await page.Locator(".task-editor-panel").EvaluateAsync("panel => { const editor = document.querySelector('#editor-host'); panel.scrollTop += editor.getBoundingClientRect().top - panel.getBoundingClientRect().top - 30; }");
+        await page.Mouse.MoveAsync(1598, 898);
+        await page.EvaluateAsync("document.fonts.ready");
+        await AssertNoHorizontalPageOverflowAsync(page);
+        Assert.Equal(0, await page.Locator(".app-topbar").EvaluateAsync<double>("el => el.getBoundingClientRect().top"));
+        await page.ScreenshotAsync(new()
+        {
+            Path = Path.Combine(output, "07-write-with-markdown.png"), Animations = ScreenshotAnimations.Disabled
+        });
+    }
+
+    [Fact]
     public async Task CaptureProductScreenshots()
     {
         var output = Environment.GetEnvironmentVariable("OKF_SCREENSHOT_OUTPUT")
