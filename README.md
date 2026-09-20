@@ -6,7 +6,7 @@ An open-source, offline To-Do application for developers and supporters built wi
 
 [![OKF Todo task workspace showing task views, rich-text editing, tags, waiting status, and a checklist](docs/images/okf-todo-task-workspace.png)](docs/images/okf-todo-task-workspace.png)
 
-[See Markdown editing with a live preview](docs/images/screenshots/07-write-with-markdown.png).
+[Explore the screenshot gallery](docs/screenshots.md) — task views, Markdown editing, checklists, dark mode, and backups.
 
 <sub>Data was created by Codex directly.</sub>
 
