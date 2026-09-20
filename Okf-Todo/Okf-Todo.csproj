@@ -4,9 +4,9 @@
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0</TargetFramework>
 		<Platforms>AnyCPU</Platforms>
-		<VersionPrefix>1.0.0</VersionPrefix>
-		<AssemblyVersion>1.0.0.0</AssemblyVersion>
-		<FileVersion>1.0.0.0</FileVersion>
+		<VersionPrefix>1.0.1</VersionPrefix>
+		<AssemblyVersion>1.0.1.0</AssemblyVersion>
+		<FileVersion>1.0.1.0</FileVersion>
 		<ApplicationIcon>wwwroot\favicon.ico</ApplicationIcon>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<ImplicitUsings>enable</ImplicitUsings>
