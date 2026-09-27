@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Watch: Excel notes to tasks in OKF Todo</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f2f6f5;color:#193d38;font:17px/1.6 system-ui,sans-serif}main{max-width:1120px;margin:auto;padding:30px 24px 60px}h1{font-size:clamp(25px,4vw,38px);line-height:1.2;margin:8px 0 12px}.eyebrow{color:#2a7464;font-size:13px;letter-spacing:.1em;text-transform:uppercase}p{max-width:900px}video{width:100%;display:block;background:#113a39;border-radius:12px;box-shadow:0 10px 35px #193d3817;max-height:76vh}.chapters{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}button,a{color:#146451}button{font:inherit;background:white;border:1px solid #b8d4ca;border-radius:7px;padding:7px 13px;cursor:pointer}button:hover,button:focus-visible{background:#dcefe7}a{text-underline-offset:3px}.details{margin-top:25px;background:white;border:1px solid #d4e2dc;border-radius:10px;padding:18px 24px;font-size:15px}h2{font-size:19px;margin:0 0 8px}.links{display:flex;flex-wrap:wrap;gap:20px}.status{min-height:1.6em;font-size:14px;color:#577367}
+  </style>
+</head>
+<body><main>
+  <div class="eyebrow">OKF Todo · Fictional example</div>
+  <h1>From an Excel spreadsheet to a task plan</h1>
+  <p>Watch six work notes become two reviewed tasks with checklists. The walkthrough shows the source, Help's copy action, the reviewed proposal, and the saved result in OKF Todo.</p>
+  <p>Requires a separate AI assistant with local tools. Fictional data; planning and approval replayed; actual application captures through a browser test host.</p>
+  <video id="demo" controls playsinline preload="metadata" poster="poster.png" aria-label="Captioned Excel to OKF Todo demonstration">
+    <source src="excel-to-tasks.mp4" type="video/mp4">
+    Your browser cannot play this recording. <a href="excel-to-tasks.mp4">Download the video</a> or <a href="transcript.md">read the transcript</a>.
+  </video>
+  <nav class="chapters" aria-label="Video chapters">
+    <button type="button" data-time="0">1. Spreadsheet</button>
+    <button type="button" data-time="10.1">2. Help setup</button>
+    <button type="button" data-time="20.5">3. Ask for a plan</button>
+    <button type="button" data-time="29.8">4. Review</button>
+    <button type="button" data-time="42">5. Approval</button>
+    <button type="button" data-time="50.2">6. Save</button>
+    <button type="button" data-time="55.4">7. Saved tasks</button>
+  </nav>
+  <p id="status" class="status" role="status">Captioned video with no audio. Use the player controls to pause, seek, or enter fullscreen.</p>
+  <div class="links"><a href="https://github.com/dalby-md/Okf-Todo/releases/latest">Download OKF Todo for Windows</a><a href="../work-notes.xlsx" download>Try the sample spreadsheet</a><a href="https://github.com/dalby-md/Okf-Todo/issues">Give feedback</a></div>
+  <p class="status"><a href="excel-to-tasks.mp4" download>Download video</a> · <a href="../README.md">Setup and prompts</a> · <a href="transcript.md">Read transcript</a></p>
+  <section class="details"><h2>What you are watching</h2><p>This is an edited, captioned walkthrough. The spreadsheet preview contains the actual workbook cells. The prompt, proposal, and prior human approval are replayed from our demonstration. Help and the task views are recordings of the real application frontend served through a local browser test host.</p><p>The approved plan was saved again to a fresh isolated database through the installed application's command interface and read back. Execution waits and page loading were cut. This is not a continuous native Excel/Codex/desktop recording or an independent test of a fresh AI response.</p><p>The captured frontend still displays the Markdown body as literal text. The approved stored text is intact. Native release verification and that formatting check remain open.</p></section>
+</main><script>
+const video=document.getElementById('demo');
+document.querySelectorAll('[data-time]').forEach(button=>button.addEventListener('click',()=>{video.currentTime=Number(button.dataset.time);video.play().catch(()=>{document.getElementById('status').textContent='Select Play in the video controls to continue.';});}));
+video.addEventListener('loadedmetadata',()=>{document.getElementById('status').textContent=`${Math.round(video.duration)} seconds · Captioned video with no audio. Pause or use fullscreen to inspect the details.`;});
+video.addEventListener('error',()=>{document.getElementById('status').textContent='The video could not be loaded. Keep this page beside excel-to-tasks.mp4, or use the download link.';});
+</script></body></html>
+

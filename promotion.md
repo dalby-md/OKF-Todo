@@ -111,9 +111,12 @@ Prepare a short recording, provisionally 60–90 seconds, plus a written walkthr
   - Partial evidence: [2026-09-27 technical rehearsal](demonstratio-kit/rehearsal-2026-09-27.md) passed Help Copy prompt, approved saving, complete read-back, and browser-harness frontend/comment verification. Tasks 1 and 2 and six unchecked checklist items match the proposal. P05 stays open for a native released-app run and a Markdown presentation issue found before recording.
 - [ ] P06 — Record the demonstration and produce a readable before/after example.
   - [x] Prepare the written before/after example: [From Excel notes to a task plan](docs/source-to-plan.md), with all six sources mapped to the two verified tasks and explicit rehearsal limitations.
+  - [x] Produce a captioned viewing copy: [MP4 walkthrough](demonstratio-kit/video/excel-to-tasks.mp4), [player](demonstratio-kit/video/watch.html), and [transcript](demonstratio-kit/video/transcript.md). Workbook data, proposal/approval replay, real Help and saved-task captures; fresh isolated save/read-back verified. This does not complete native recording or an independent AI trial.
   - [ ] Record and review the native desktop demonstration after checking body formatting.
 - [ ] P07 — Verify a newcomer can install, use Help's resolved paths and copy actions to give the assistant context/access, and reproduce the example using the linked instructions.
 - [ ] P08 — Check public destination pages for consistent positioning, platform claims, working download links, and a clear feedback route. Record necessary edits before undertaking a separate website change.
+  - [x] Prepare the repository presentation: README introduction, linked 83-second video preview, visible replay disclosure, and download/sample/feedback links. The local player uses the same presentation. Repository-relative media links do not depend on the local preview server.
+  - [ ] Publish the reviewed documentation and video files together, then verify the video/download/sample links on the public repository. Local preparation does not establish a live public video URL.
 - [ ] P09 — Choose the first site and reserve time to answer responses.
 
 Use the existing [screenshot gallery](docs/screenshots.md) and [captions](docs/images/screenshots/README.md) as supporting material. A workspace screenshot alone does not establish the source-to-plan workflow. The source icon is `Okf-Todo/Resources/Okf-Todo-icon.png`; the canonical workspace screenshot is `docs/images/okf-todo-task-workspace.png`. Check that artwork matches the promoted release.

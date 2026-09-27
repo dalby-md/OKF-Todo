@@ -4,6 +4,8 @@ OKF Todo is a free, open-source desktop task manager for development and support
 
 **[Install on Windows](../README.md#install-on-windows)** · **[Download the example workbook](../demonstratio-kit/work-notes.xlsx)** · **[Follow the demonstration guide](../demonstratio-kit/README.md)**
 
+**[Watch the captioned walkthrough](../demonstratio-kit/video/excel-to-tasks.mp4)**: actual workbook data, a labeled replay of the reviewed proposal and approval, and real browser-hosted application captures. This viewing copy is not a continuous native Excel/Codex recording. [Transcript](../demonstratio-kit/video/transcript.md).
+
 ## Before: six notes about two pieces of work
 
 This example uses a fictional spreadsheet. It contains related actions, a repeated report, an unanswered request, and separate release work. No real customer data is involved.

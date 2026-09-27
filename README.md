@@ -6,15 +6,19 @@ Turn existing work notes into a task plan with your AI assistant, then manage th
 
 Start with an Excel spreadsheet, a screenshot of existing tasks, or other material your assistant can read. Ask it to propose tasks and checklists, review the plan, then approve saving it to OKF Todo. The assistant interprets the source; OKF Todo stores the resulting work in a local SQLite database.
 
-**[See the Excel-to-task-plan example](docs/source-to-plan.md)** · **[Install on Windows](#install-on-windows)** · **[Give feedback](https://github.com/dalby-md/Okf-Todo/issues)**
-
 AI-assisted planning requires a separate assistant with access to local tools and the ability to read your chosen input. OKF Todo does not include an AI model or an automatic spreadsheet/email importer. The desktop app also works offline without an assistant; an external AI service has its own account, pricing, and data-handling rules.
 
-[![OKF Todo task workspace showing task views, rich-text editing, tags, waiting status, and a checklist](docs/images/okf-todo-task-workspace.png)](docs/images/okf-todo-task-workspace.png)
+## Watch: Excel notes to an OKF Todo plan — 83 seconds
 
-[Explore the screenshot gallery](docs/screenshots.md) — task views, Markdown editing, checklists, dark mode, and backups.
+[![Preview of the six fictional spreadsheet notes used in the demonstration. Select to open the MP4.](demonstratio-kit/video/poster.png)](demonstratio-kit/video/excel-to-tasks.mp4?raw=true)
 
-<sub>Data was created by Codex directly.</sub>
+[**Watch or download the video**](demonstratio-kit/video/excel-to-tasks.mp4?raw=true) · [Read the worked example and transcript](docs/source-to-plan.md)
+
+Fictional data; planning and approval replayed; actual application captures through a browser test host. Captioned, with no audio. [Capture details and current limitations](demonstratio-kit/video/transcript.md#capture-details).
+
+- **[Download OKF Todo for Windows](#install-on-windows)**
+- **[Try the sample spreadsheet](demonstratio-kit/README.md)** — workbook, setup, and prompts.
+- **[Give feedback](https://github.com/dalby-md/Okf-Todo/issues)** — tell us what you tried and where the workflow helped or got in the way.
 
 
 ## From source material to saved tasks
@@ -54,6 +58,10 @@ Planned improvements:
 It is designed for the work that often falls between formal systems: production errors, support cases, deployment checks, investigations, ideas, notes, requests, and follow-up tasks. The application runs locally, requires no account or cloud service, and keeps tasks, history, images, and attachments together in one SQLite database.
 
 ## Product Highlights
+
+[![OKF Todo task workspace showing task views, rich-text editing, tags, waiting status, and a checklist](docs/images/okf-todo-task-workspace.png)](docs/images/okf-todo-task-workspace.png)
+
+[Explore the screenshot gallery](docs/screenshots.md) — task views, Markdown editing, checklists, dark mode, and backups.
 
 - Fast task capture with only a title and task type required.
 - Active, ready, urgent, waiting, overdue, completed, and all-task views.

@@ -1,0 +1,47 @@
+[
+  {
+    "name": "01-source",
+    "start": 0,
+    "duration": 10.012
+  },
+  {
+    "name": "02-help",
+    "start": 10.01,
+    "duration": 10.417
+  },
+  {
+    "name": "03-request",
+    "start": 20.43,
+    "duration": 9.298
+  },
+  {
+    "name": "04-proposal",
+    "start": 29.73,
+    "duration": 12.201
+  },
+  {
+    "name": "05-approval",
+    "start": 41.93,
+    "duration": 8.165
+  },
+  {
+    "name": "06-saving",
+    "start": 50.09,
+    "duration": 5.202
+  },
+  {
+    "name": "07-investigation",
+    "start": 55.3,
+    "duration": 10.275
+  },
+  {
+    "name": "08-release",
+    "start": 65.57,
+    "duration": 9.287
+  },
+  {
+    "name": "09-finish",
+    "start": 74.86,
+    "duration": 9.201
+  }
+]

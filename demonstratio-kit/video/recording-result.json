@@ -1,0 +1,208 @@
+[
+  {
+    "task": {
+      "id": 1,
+      "title": "Investigate invoice export timeout (DEMO-17)",
+      "taskListId": 1,
+      "taskListName": "Default list",
+      "isStarred": false,
+      "starredAt": null,
+      "deletedAt": null,
+      "body": "## Facts\n- Invoice export was reported to time out after an upgrade. The cause is unknown.\n- Export logs have not been checked yet.\n- Maria has already been asked for a failing example. No reply or promised date is recorded.\n- A second note repeats the same DEMO-17 report; it does not establish a separate failure.\n\n## Proposed next steps\n- Check available export logs for timeout details.\n- Obtain the example already requested from Maria.\n- Reproduce and investigate the timeout when enough evidence is available.\n\n## Open questions\n- What do the logs show, and which input reproduces the timeout?\n- Who owns the investigation, and is there a deadline?\n\n## Source\nFictional example: work-notes.xlsx, Work notes, SRC-01, SRC-02, SRC-03, SRC-05.\nThe investigation remains Active with an unresolved wait for Maria's example.\nLog inspection can proceed while that response is outstanding.",
+      "bodyFormatCode": "MARKDOWN",
+      "taskTypeCode": "INVESTIGATION",
+      "taskTypeName": "Investigation",
+      "taskStatusCode": "ACTIVE",
+      "taskStatusName": "Active",
+      "taskPriorityCode": "NORMAL",
+      "taskPriorityName": "Normal",
+      "taskSourceCode": null,
+      "taskSourceName": null,
+      "sourceReference": "DEMO-17",
+      "sourceUrl": null,
+      "owner": null,
+      "responsible": null,
+      "deadline": null,
+      "tags": [],
+      "activeWaitingFor": {
+        "id": 1,
+        "label": "Maria — failing example for DEMO-17",
+        "waitingSince": "2026-09-27T13:28:47.4517652"
+      },
+      "createdAt": "2026-09-27T13:28:47.4517652",
+      "updatedAt": "2026-09-27T13:28:50.6845071"
+    },
+    "checklist": [
+      {
+        "id": 1,
+        "text": "Check available export logs for timeout details.",
+        "sortOrder": 10,
+        "isCompleted": false,
+        "completedAt": null,
+        "createdAt": "2026-09-27T13:28:48.6465449",
+        "updatedAt": "2026-09-27T13:28:48.6465449"
+      },
+      {
+        "id": 2,
+        "text": "Obtain the failing example already requested from Maria.",
+        "sortOrder": 20,
+        "isCompleted": false,
+        "completedAt": null,
+        "createdAt": "2026-09-27T13:28:49.6589531",
+        "updatedAt": "2026-09-27T13:28:49.6589531"
+      },
+      {
+        "id": 3,
+        "text": "Reproduce and investigate the timeout when enough evidence is available.",
+        "sortOrder": 30,
+        "isCompleted": false,
+        "completedAt": null,
+        "createdAt": "2026-09-27T13:28:50.6845071",
+        "updatedAt": "2026-09-27T13:28:50.6845071"
+      }
+    ],
+    "timeline": [
+      {
+        "kind": "log",
+        "id": 4,
+        "text": "Checklist item added: Reproduce and investigate the timeout when enough evidence is available.",
+        "logTypeCode": "CHECKLIST_ITEM_ADDED",
+        "oldValue": null,
+        "newValue": "Reproduce and investigate the timeout when enough evidence is available.",
+        "createdAt": "2026-09-27T13:28:50.6845071",
+        "canDelete": false
+      },
+      {
+        "kind": "log",
+        "id": 3,
+        "text": "Checklist item added: Obtain the failing example already requested from Maria.",
+        "logTypeCode": "CHECKLIST_ITEM_ADDED",
+        "oldValue": null,
+        "newValue": "Obtain the failing example already requested from Maria.",
+        "createdAt": "2026-09-27T13:28:49.6589531",
+        "canDelete": false
+      },
+      {
+        "kind": "log",
+        "id": 2,
+        "text": "Checklist item added: Check available export logs for timeout details.",
+        "logTypeCode": "CHECKLIST_ITEM_ADDED",
+        "oldValue": null,
+        "newValue": "Check available export logs for timeout details.",
+        "createdAt": "2026-09-27T13:28:48.6465449",
+        "canDelete": false
+      },
+      {
+        "kind": "log",
+        "id": 1,
+        "text": "Task created",
+        "logTypeCode": "TASK_CREATED",
+        "oldValue": null,
+        "newValue": null,
+        "createdAt": "2026-09-27T13:28:47.4517652",
+        "canDelete": false
+      }
+    ]
+  },
+  {
+    "task": {
+      "id": 2,
+      "title": "Prepare release checklist",
+      "taskListId": 1,
+      "taskListName": "Default list",
+      "isStarred": false,
+      "starredAt": null,
+      "deletedAt": null,
+      "body": "## Facts\n- Release preparation is separate from the DEMO-17 investigation.\n- The checklist must include rollback and verification steps.\n- Release version, date, owner, and deployment procedure have not been decided.\n\n## Proposed next steps\n- Agree the release version and deployment procedure.\n- Define rollback steps.\n- Define post-deployment verification steps.\n\n## Open questions\n- Which release and procedure should the checklist cover?\n- Who is responsible, and when is it needed?\n\n## Source\nFictional example: work-notes.xlsx, Work notes, SRC-04 and SRC-06.\nDEMO-RELEASE is an identifier for this demonstration, not a real release number.",
+      "bodyFormatCode": "MARKDOWN",
+      "taskTypeCode": "REQUEST",
+      "taskTypeName": "Request",
+      "taskStatusCode": "ACTIVE",
+      "taskStatusName": "Active",
+      "taskPriorityCode": "NORMAL",
+      "taskPriorityName": "Normal",
+      "taskSourceCode": null,
+      "taskSourceName": null,
+      "sourceReference": "DEMO-RELEASE",
+      "sourceUrl": null,
+      "owner": null,
+      "responsible": null,
+      "deadline": null,
+      "tags": [],
+      "activeWaitingFor": null,
+      "createdAt": "2026-09-27T13:28:54.2632836",
+      "updatedAt": "2026-09-27T13:28:57.7078467"
+    },
+    "checklist": [
+      {
+        "id": 4,
+        "text": "Agree the release version and deployment procedure.",
+        "sortOrder": 10,
+        "isCompleted": false,
+        "completedAt": null,
+        "createdAt": "2026-09-27T13:28:55.6030809",
+        "updatedAt": "2026-09-27T13:28:55.6030809"
+      },
+      {
+        "id": 5,
+        "text": "Define rollback steps.",
+        "sortOrder": 20,
+        "isCompleted": false,
+        "completedAt": null,
+        "createdAt": "2026-09-27T13:28:56.6954865",
+        "updatedAt": "2026-09-27T13:28:56.6954865"
+      },
+      {
+        "id": 6,
+        "text": "Define post-deployment verification steps.",
+        "sortOrder": 30,
+        "isCompleted": false,
+        "completedAt": null,
+        "createdAt": "2026-09-27T13:28:57.7078467",
+        "updatedAt": "2026-09-27T13:28:57.7078467"
+      }
+    ],
+    "timeline": [
+      {
+        "kind": "log",
+        "id": 8,
+        "text": "Checklist item added: Define post-deployment verification steps.",
+        "logTypeCode": "CHECKLIST_ITEM_ADDED",
+        "oldValue": null,
+        "newValue": "Define post-deployment verification steps.",
+        "createdAt": "2026-09-27T13:28:57.7078467",
+        "canDelete": false
+      },
+      {
+        "kind": "log",
+        "id": 7,
+        "text": "Checklist item added: Define rollback steps.",
+        "logTypeCode": "CHECKLIST_ITEM_ADDED",
+        "oldValue": null,
+        "newValue": "Define rollback steps.",
+        "createdAt": "2026-09-27T13:28:56.6954865",
+        "canDelete": false
+      },
+      {
+        "kind": "log",
+        "id": 6,
+        "text": "Checklist item added: Agree the release version and deployment procedure.",
+        "logTypeCode": "CHECKLIST_ITEM_ADDED",
+        "oldValue": null,
+        "newValue": "Agree the release version and deployment procedure.",
+        "createdAt": "2026-09-27T13:28:55.6030809",
+        "canDelete": false
+      },
+      {
+        "kind": "log",
+        "id": 5,
+        "text": "Task created",
+        "logTypeCode": "TASK_CREATED",
+        "oldValue": null,
+        "newValue": null,
+        "createdAt": "2026-09-27T13:28:54.2632836",
+        "canDelete": false
+      }
+    ]
+  }
+]
