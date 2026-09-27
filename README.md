@@ -2,7 +2,13 @@
 
 > **Version 1.0.0.** The first stable release is packaged for Windows. The application applies pending database migrations at startup when necessary.
 
-An open-source, offline To-Do application for developers and supporters built with SQLite supporting [Open Knowledge Format (OKF)](docs/what-is-okf.md) and MCP.
+Turn existing work notes into a task plan with your AI assistant, then manage the tasks in OKF Todo—a free, open-source desktop application for development and support work.
+
+Start with an Excel spreadsheet, a screenshot of existing tasks, or other material your assistant can read. Ask it to propose tasks and checklists, review the plan, then approve saving it to OKF Todo. The assistant interprets the source; OKF Todo stores the resulting work in a local SQLite database.
+
+**[See the Excel-to-task-plan example](docs/source-to-plan.md)** · **[Install on Windows](#install-on-windows)** · **[Give feedback](https://github.com/dalby-md/Okf-Todo/issues)**
+
+AI-assisted planning requires a separate assistant with access to local tools and the ability to read your chosen input. OKF Todo does not include an AI model or an automatic spreadsheet/email importer. The desktop app also works offline without an assistant; an external AI service has its own account, pricing, and data-handling rules.
 
 [![OKF Todo task workspace showing task views, rich-text editing, tags, waiting status, and a checklist](docs/images/okf-todo-task-workspace.png)](docs/images/okf-todo-task-workspace.png)
 
@@ -11,7 +17,11 @@ An open-source, offline To-Do application for developers and supporters built wi
 <sub>Data was created by Codex directly.</sub>
 
 
-## AI-First Data
+## From source material to saved tasks
+
+Open **Help → OKF layer → Copy prompt** in the running app. The prompt includes the actual instruction-file and active database paths for your installation, including a custom database. Give your assistant access to those locations, then provide the source material. [See the setup guide](docs/ai-assistants.md).
+
+The [Open Knowledge Format (OKF)](docs/what-is-okf.md) instructions describe how to work with the task data. The optional MCP server and CLI commands let the assistant act through application services.
 
 OKF Todo is designed to help an [AI assistant with access to local tools](docs/ai-assistants.md) turn unstructured work into practical artifacts. Give Codex, Claude Code, or another compatible assistant a customer email thread, support transcript, meeting notes, diagnostic output, or similar source material and ask it to prepare an internal task, investigation plan, customer reply, handover, status update, or another useful artifact.
 
