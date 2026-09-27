@@ -15,7 +15,7 @@
   <p>Requires a separate AI assistant with local tools. Fictional data; planning and approval replayed; actual application captures through a browser test host.</p>
   <video id="demo" controls playsinline preload="metadata" poster="poster.png" aria-label="Captioned Excel to OKF Todo demonstration">
     <source src="excel-to-tasks.mp4" type="video/mp4">
-    Your browser cannot play this recording. <a href="excel-to-tasks.mp4">Download the video</a> or <a href="transcript.md">read the transcript</a>.
+    Your browser cannot play this recording. <a href="https://youtu.be/cXIRZgOagrA">Watch on YouTube</a> or <a href="transcript.md">read the transcript</a>.
   </video>
   <nav class="chapters" aria-label="Video chapters">
     <button type="button" data-time="0">1. Spreadsheet</button>
@@ -28,12 +28,12 @@
   </nav>
   <p id="status" class="status" role="status">Captioned video with no audio. Use the player controls to pause, seek, or enter fullscreen.</p>
   <div class="links"><a href="https://github.com/dalby-md/Okf-Todo/releases/latest">Download OKF Todo for Windows</a><a href="../work-notes.xlsx" download>Try the sample spreadsheet</a><a href="https://github.com/dalby-md/Okf-Todo/issues">Give feedback</a></div>
-  <p class="status"><a href="excel-to-tasks.mp4" download>Download video</a> · <a href="../README.md">Setup and prompts</a> · <a href="transcript.md">Read transcript</a></p>
+  <p class="status"><a href="https://youtu.be/cXIRZgOagrA">Watch on YouTube</a> · <a href="../README.md">Setup and prompts</a> · <a href="transcript.md">Read transcript</a></p>
   <section class="details"><h2>What you are watching</h2><p>This is an edited, captioned walkthrough. The spreadsheet preview contains the actual workbook cells. The prompt, proposal, and prior human approval are replayed from our demonstration. Help and the task views are recordings of the real application frontend served through a local browser test host.</p><p>The approved plan was saved again to a fresh isolated database through the installed application's command interface and read back. Execution waits and page loading were cut. This is not a continuous native Excel/Codex/desktop recording or an independent test of a fresh AI response.</p><p>The captured frontend still displays the Markdown body as literal text. The approved stored text is intact. Native release verification and that formatting check remain open.</p></section>
 </main><script>
 const video=document.getElementById('demo');
 document.querySelectorAll('[data-time]').forEach(button=>button.addEventListener('click',()=>{video.currentTime=Number(button.dataset.time);video.play().catch(()=>{document.getElementById('status').textContent='Select Play in the video controls to continue.';});}));
 video.addEventListener('loadedmetadata',()=>{document.getElementById('status').textContent=`${Math.round(video.duration)} seconds · Captioned video with no audio. Pause or use fullscreen to inspect the details.`;});
-video.addEventListener('error',()=>{document.getElementById('status').textContent='The video could not be loaded. Keep this page beside excel-to-tasks.mp4, or use the download link.';});
+video.addEventListener('error',()=>{document.getElementById('status').textContent='The video could not be loaded. Keep this page beside excel-to-tasks.mp4, or use the YouTube link.';});
 </script></body></html>
 

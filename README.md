@@ -10,9 +10,9 @@ AI-assisted planning requires a separate assistant with access to local tools an
 
 ## Watch: Excel notes to an OKF Todo plan — 83 seconds
 
-[![Preview of the six fictional spreadsheet notes used in the demonstration. Select to open the MP4.](demonstratio-kit/video/poster.png)](demonstratio-kit/video/excel-to-tasks.mp4?raw=true)
+[![Preview of the six fictional spreadsheet notes used in the demonstration. Select to watch on YouTube.](demonstratio-kit/video/poster.png)](https://youtu.be/cXIRZgOagrA)
 
-[**Watch or download the video**](demonstratio-kit/video/excel-to-tasks.mp4?raw=true) · [Read the worked example and transcript](docs/source-to-plan.md)
+[**Watch on YouTube**](https://youtu.be/cXIRZgOagrA) · [Read the worked example and transcript](docs/source-to-plan.md)
 
 Fictional data; planning and approval replayed; actual application captures through a browser test host. Captioned, with no audio. [Capture details and current limitations](demonstratio-kit/video/transcript.md#capture-details).
 

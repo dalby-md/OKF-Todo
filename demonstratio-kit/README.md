@@ -4,7 +4,7 @@ This demonstration uses fictional work notes. It is a new example of the workflo
 
 For a short explanation before running the example, read [From Excel notes to a task plan](../docs/source-to-plan.md). This page is the detailed reproduction guide.
 
-**[Watch the captioned demonstration](video/excel-to-tasks.mp4)** or open [the local video player](video/watch.html) for chapter navigation. The viewing copy combines the actual workbook contents, a labeled replay of the reviewed plan and approval, and real application captures. It is not a continuous native Excel/Codex recording. [Transcript and capture details](video/transcript.md).
+**[Watch the captioned demonstration on YouTube](https://youtu.be/cXIRZgOagrA)** or open [the local video player](video/watch.html) for chapter navigation. The viewing copy combines the actual workbook contents, a labeled replay of the reviewed plan and approval, and real application captures. It is not a continuous native Excel/Codex recording. [Transcript and capture details](video/transcript.md).
 
 ## Files
 
