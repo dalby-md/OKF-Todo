@@ -104,7 +104,6 @@ The [desktop application](docs/help/using-okf-todo.md), [OKF](docs/help/okf-laye
 Planned improvements:
 
 - Calculation of initial editor height based on screen resolution. 
-- Possible inspiration points from MS To Do: Lists, flags and stars. 
 - Packaged installers for macOS and Linux. Version 1.0 provides packaged installers for Windows; macOS and Linux can run from source.
 
 
@@ -116,7 +115,7 @@ It is designed for the work that often falls between formal systems: production 
 
 [Explore the screenshot gallery](docs/screenshots.md) — task views, Markdown editing, checklists, dark mode, and backups.
 
-- Fast task capture with only a title and task type required.
+- Fast task capture with a title, task type, and preselected task list.
 - Active, ready, urgent, waiting, overdue, completed, and all-task views.
 - HTML and Markdown-capable rich-text editors.
 - Paste, drop, or select images for task bodies.
@@ -169,8 +168,10 @@ Installing, updating, or removing OKF Todo never overwrites or removes the datab
 Packaged installation is available for Windows. Source builds require:
 
 - Windows 10 or later, macOS 10.15 or later, or a current Linux desktop distribution.
-- The [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
+- A [.NET SDK](https://dotnet.microsoft.com/download) that supports `.slnx` solutions (9.0.200 or later), plus the [.NET 8 runtime](https://dotnet.microsoft.com/download/dotnet/8.0) for running this `net8.0` application from source.
 - The platform webview used by Photino: WebView2 on Windows, the system WebKit view on macOS, or GTK/WebKit on Linux.
+
+The application targets .NET 8; the solution format requires the newer SDK. See [Microsoft’s SLNX tooling requirements](https://devblogs.microsoft.com/dotnet/introducing-slnx-support-dotnet-cli/). Packaged Windows installations include their runtime.
 
 Windows is the packaged and tested platform for version 1.0. The application architecture and Photino shell are cross-platform, but macOS and Linux packaging and release verification are still in progress.
 
@@ -204,63 +205,26 @@ On later releases, pending EF Core migrations are applied automatically before t
 
 ## Connect an MCP client
 
-Build the OKF Todo executable in the repository root:
+Start OKF Todo, open **Help → MCP server**, and select **Copy configuration**.
+The running application supplies the configuration for your installation or
+source checkout. Follow the [MCP setup and usage guide](docs/help/mcp-server.md#connect-it-once).
 
-```powershell
-dotnet build .\Okf-Todo\Okf-Todo.csproj -c Release
-```
-
-Then configure an MCP client to start the built stdio server. For example:
-
-```json
-{
-  "mcpServers": {
-    "okf-todo": {
-      "command": "dotnet",
-      "args": [
-        "C:\\git\\Okf-Todo\\Okf-Todo\\bin\\Release\\net8.0\\Okf-Todo.dll",
-        "--mcp"
-      ]
-    }
-  }
-}
-```
-
-Adjust the absolute DLL path for your checkout. By default, the server uses the same platform-specific database as the desktop application. It exposes these tools:
-
-| Tool | Purpose |
-| --- | --- |
-| `task_list` | List tasks by view. |
-| `task_list_lists` | Discover concrete task lists and task counts. |
-| `task_get` | Read one task. |
-| `task_create` | Create a task with explicit or inferred list ownership. |
-| `task_update` | Replace a task's editable fields, including list ownership when requested. |
-| `task_move_to_list` | Move existing tasks to a concrete list. |
-| `task_get_timeline` | Read comments and automatic task history. |
-
-`task_update` has full-replacement semantics for editable fields. Call `task_get` first and include every value that must be preserved; omitted optional fields are cleared.
-
-For development or isolated tests, start the server with a different database:
-
-```powershell
-dotnet run --project .\Okf-Todo\Okf-Todo.csproj -- --mcp --database-path C:\temp\okf-todo-mcp.db
-```
-
-The MCP protocol uses standard output. Server and framework logs are written to standard error so they do not corrupt the protocol stream.
+MCP supports task discovery, partial edits, lifecycle actions, comments,
+checklists, relationships, attachments, reversible Trash, and task-list management.
+See the [complete tool reference](docs/help/mcp-server.md#complete-tool-reference)
+for available operations and their safety boundaries. Prefer `task_patch` for
+partial changes; `task_update` deliberately replaces editable fields.
 
 ## Back up and restore data
 
-Open **Setup**, then select **Back up database**. Choose a destination in the native save dialog. The application creates and validates a complete SQLite backup before replacing the selected destination.
-
-The backup includes task lists, tasks, body images, attachments, lookups, tags, relationships, comments, checklists, and history. Interface preferences such as layout, selected list scope, and color scheme are stored separately and are not included.
-
-Use **Settings → Data → Restore from a file** to validate a backup, create a
-safety copy, and prepare the restore. Close and restart OKF Todo when prompted.
-Never replace the active database manually while the application is running.
+Use [Protect and maintain your data](docs/help/using-okf-todo.md#protect-and-maintain-your-data)
+for backup, restore, sample-data, and reset instructions. The guide describes
+what a backup includes and the validation, safety-copy, and restart steps for
+restoring it. Never replace the active database manually while the app is running.
 
 ## Data and Privacy
 
-OKF Todo is a single-user, local-first application. It has no authentication, cloud synchronization, application telemetry, or external task-system integration. Application data stays in the local SQLite database unless you create a backup or save an attachment copy yourself.
+OKF Todo is a single-user, local-first application. It has no authentication, cloud synchronization, application telemetry, or external task-system integration. Task data is stored in the local SQLite database. You can copy it out through backups, exports, the clipboard, saved attachments, or tools you authorize to access it. An AI assistant may send supplied material or tool results to its model provider; review its privacy settings before sharing sensitive information.
 
 ## Current Limitations
 
@@ -282,11 +246,14 @@ Build the solution:
 dotnet build -c Release
 ```
 
-Run the test suite:
+Run the service and MCP tests:
 
 ```powershell
 dotnet test .\Okf-Todo.Tests\Okf-Todo.Tests.csproj -c Release
 ```
+
+For browser coverage, follow the [UI test guide](docs/testing/ui-tests.md).
+Installed-product tests have [separate prerequisites](Okf-Todo.InstalledContractTests/README.md).
 
 Restore the repository-local EF Core tool and add a migration after changing the physical model:
 
@@ -297,7 +264,7 @@ dotnet tool run dotnet-ef migrations add <MigrationName> --project .\Okf-Todo\Ok
 
 Commit the generated migration and model snapshot with the model change. The application applies pending migrations automatically at startup.
 
-Product and architecture documentation is available in [`docs`](docs/).
+Product and architecture documentation is listed in the [documentation index](docs/README.md).
 
 ### Build the Windows installer
 
@@ -309,4 +276,4 @@ OKF Todo is built using Codex but is not tied to Codex. It uses AGENTS.md, skill
 
 ## Testing the installed Windows application
 
-See [Installed contract tests](Okf-Todo.InstalledContractTests/README.md) for the command and requirements for testing the installed GUI, MCP server, OKF bundle, and isolated SQLite databases.
+See [Installed contract tests](Okf-Todo.InstalledContractTests/README.md) for the command and requirements for testing the installed MCP server, command adapter, OKF bundle, and isolated SQLite databases. Use the [interactive check plan](docs/testing/interactive-repository-check.md) for native desktop behavior.

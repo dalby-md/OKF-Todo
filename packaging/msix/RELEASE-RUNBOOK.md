@@ -6,17 +6,9 @@ MSIX prototype.
 
 ## Fixed product information
 
-Do not change these values unless Partner Center explicitly assigns replacements:
-
-| Property | Value |
-| --- | --- |
-| Product display name | `OKF Todo` |
-| Store ID | `9PP5FM2933BR` |
-| Package identity name | `SrenDalby.OKF-Todo` |
-| Publisher | `CN=663443C5-B2D3-4685-B52C-3CBCB8B68071` |
-| Package family name | `SrenDalby.OKF-Todo_0h80bfdm231km` |
-| Execution alias | `okf-todo.exe` |
-| Public Store page | <https://apps.microsoft.com/detail/9PP5FM2933BR> |
+Use the [reserved Store identity](STORE.md#reserved-store-identity) and the values
+in `store-identity.psd1`. Do not change package identity values unless Partner
+Center explicitly assigns replacements. The public product name is **OKF Todo**.
 
 The identity and publisher are public package metadata, not secrets. Passwords,
 Microsoft account recovery details, Partner Center session data, access tokens,
@@ -57,16 +49,13 @@ when the corresponding name is reserved in Partner Center.
 1. Keep access to the Microsoft account that owns the Partner Center developer
    account. Do not put its password or recovery information in this repository.
 2. Install the .NET SDK required by the solution.
-3. Install Microsoft's Windows App Development CLI:
-
-   ```powershell
-   winget install -e --id Microsoft.WinAppCli --source winget
-   ```
+3. Install the Windows App Development CLI as described in the
+   [Store build prerequisites](STORE.md#build-the-store-artifact).
 
 4. Install the Windows SDK component containing the Windows App Certification
    Kit when local certification testing is required.
-5. Keep at least one suitable desktop screenshot available under `docs/images`
-   or another version-controlled artwork directory.
+5. Refresh `docs/images/okf-todo-task-workspace.png` for the current released
+   workspace and confirm it contains no private task data.
 
 The Store upload package is intentionally unsigned. Microsoft signs it after
 certification, so the Store path does not require a purchased code-signing
@@ -98,32 +87,11 @@ dotnet test .\Okf-Todo.Tests\Okf-Todo.Tests.csproj -c Release
 When an installed-package change is involved, also run the applicable installed
 contract tests described in `Okf-Todo.InstalledContractTests/README.md`.
 
-Build the Store package with the selected version:
+Build the selected version using the [Store package build procedure](STORE.md#build-the-store-artifact).
+That guide owns the build command, output location, and package identity.
 
-```powershell
-.\packaging\msix\build-msix-store.ps1 -Version 1.0.0.0
-```
-
-Expected upload artifact:
-
-```text
-artifacts\msix-store\output\Okf-Todo-1.0.0.0-win-x64-store.msix
-```
-
-The build script publishes a self-contained `win-x64` application, copies the
-desktop UI, canonical offline Help, OKF bundle, and MCP configuration, validates
-the immutable Store identity and `okf-todo.exe` alias, and fails if a SQLite
-database enters the package.
-
-Do not install the unsigned Store artifact locally. Use the signed prototype
-package for local install and upgrade testing:
-
-```powershell
-.\packaging\msix\build-msix-prototype.ps1 -Version 1.0.0.0 -Install
-.\packaging\msix\start-msix-prototype.ps1
-```
-
-The prototype uses an isolated database and is not the Store product.
+For local installation and upgrade testing, follow the [MSIX prototype guide](README.md).
+The prototype uses an isolated database and is not the Store artifact.
 
 Before every public Store submission, run the Windows App Certification Kit
 against the exact Store MSIX that will be uploaded. Run it from an elevated
@@ -200,7 +168,9 @@ Cancel only for a serious problem because resubmission restarts certification.
 Watch the certification report and preserve the exact failure message if the
 submission is rejected.
 
-When certification succeeds, keep the submission unpublished until the tested
+Prepare the signed Inno installer and GitHub draft using the
+[coordinated release procedure](../../docs/installer-build-and-signing.md#coordinate-a-store-and-github-release).
+When certification succeeds, keep the submission unpublished until that tested
 GitHub draft and its Inno Setup asset are ready. Then publish the Store
 submission and immediately publish the GitHub draft as **Latest**. Record both
 publication times and verify both public listings.

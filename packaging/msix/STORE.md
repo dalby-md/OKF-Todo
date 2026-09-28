@@ -65,10 +65,10 @@ WindowsApps path while retaining the complete MCP interface.
 
 ## Before submission
 
-1. Install the Windows SDK component that contains the Windows App Certification Kit.
-2. Run the Certification Kit against a locally installable development build.
-3. Create a Partner Center submission and upload the generated Store `.msix`.
-4. Complete properties, age ratings, availability, privacy declarations, and Store listing artwork/text.
-5. Submit for certification. Microsoft signs the accepted Store package; no purchased code-signing certificate is required for this path.
+Follow the [release runbook's build, test, and certification gate](RELEASE-RUNBOOK.md#2-build-and-test).
+It requires certification of the exact Store MSIX that will be uploaded;
+a successful test of the development prototype does not validate that artifact.
+Continue through the runbook for Partner Center metadata, coordinated publication,
+and post-publication checks.
 
 The reserved product page is <https://apps.microsoft.com/detail/9PP5FM2933BR>.

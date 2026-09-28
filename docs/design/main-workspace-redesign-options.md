@@ -1,5 +1,10 @@
 # Main workspace redesign options
 
+Historical design record. The concept images were removed from the repository
+on 11 August 2026; the text below preserves the options and decision. The images
+remain available in Git history before commit `4f94caa`. For the current product,
+see the [screenshot gallery](../screenshots.md) and [user guide](../help/using-okf-todo.md).
+
 These three design directions are stable references for future OKF Todo work. The
 option numbers and names should not be reused for different concepts.
 
@@ -16,8 +21,6 @@ directions, not product renames.
 | 3. Document Studio | Maximum attention on the artifact | Long-form writing, review, and handover work |
 
 ## Option 1 — Quiet Workbench
-
-![Option 1 — Quiet Workbench](../images/design-options/okf-todo-workspace-option-1-quiet-workbench.png)
 
 Quiet Workbench keeps the familiar task-list and task-detail split while making
 the whole application feel calmer and more deliberate.
@@ -42,8 +45,6 @@ Use this option when the product should feel more polished without changing the
 mental model of the workspace.
 
 ## Option 2 — Triage Command
-
-![Option 2 — Triage Command](../images/design-options/okf-todo-workspace-option-2-triage-command.png)
 
 Triage Command is a three-zone workbench designed for people who repeatedly move
 between queues while keeping one task open.
@@ -83,8 +84,6 @@ while the compact and stacked modes preserve the same capabilities rather than
 shrinking the large layout until controls are truncated.
 
 ## Option 3 — Document Studio
-
-![Option 3 — Document Studio](../images/design-options/okf-todo-workspace-option-3-document-studio.png)
 
 Document Studio treats the task body as the primary artifact and moves supporting
 task data into a quieter property system.

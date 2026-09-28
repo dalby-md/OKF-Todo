@@ -40,6 +40,22 @@ The OKF layer helps an AI assistant understand how OKF Todo organizes work. You 
 
 The AI harness does the reading and writing. The OKF layer supplies structured context, terminology, database relationships, and rules for working with OKF Todo. The harness can combine that knowledge with direct access to the SQLite database to read existing tasks and perform changes that you explicitly approve.
 
+## Choose how approved changes are saved
+
+The examples on this page use direct SQLite access. Approve that access method
+as well as the exact proposed change. The assistant must maintain the documented
+integrity, timestamp, and history rules itself because raw SQL bypasses the
+application services.
+
+You can instead use the [MCP server](mcp-server.md), or the command adapter
+described in the installed OKF bundle, to apply changes through the application's
+validation and automatic history. When you choose either interface, the
+assistant should use it for the approved write and verification. It should not
+switch to direct SQL without your explicit approval.
+
+Whichever route you choose, draft first, review the proposal, approve the exact
+write, and read back the saved result.
+
 ## Start with the result you want
 
 A useful session normally has five steps:

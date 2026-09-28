@@ -2,7 +2,7 @@
 
 OKF Todo is a free, open-source desktop task manager for development and support work. Use an AI assistant to read existing material, propose a plan, and save the tasks you approve. Continue the work in OKF Todo with checklists, waiting information, and a Timeline of comments and changes.
 
-**[Install on Windows](../README.md#install-on-windows)** · **[Download the example workbook](../demonstratio-kit/work-notes.xlsx)** · **[Follow the demonstration guide](../demonstratio-kit/README.md)**
+**[Install on Windows](../README.md#available-for-windows-macos-and-linux)** · **[Download the example workbook](../demonstratio-kit/work-notes.xlsx)** · **[Follow the demonstration guide](../demonstratio-kit/README.md)**
 
 **[Watch the captioned walkthrough on YouTube](https://youtu.be/cXIRZgOagrA)**: actual workbook data, a labeled replay of the reviewed proposal and approval, and real browser-hosted application captures. This viewing copy is not a continuous native Excel/Codex recording. [Transcript](../demonstratio-kit/video/transcript.md).
 

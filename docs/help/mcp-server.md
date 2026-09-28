@@ -2,6 +2,8 @@
 
 The built-in OKF Todo MCP server lets an MCP-compatible AI harness use the task system as a broad secondary or primary interface. This is the action bridge in the workflow: the harness analyzes your source material, the [OKF layer](okf-layer.md) supplies context and rules, and MCP lets the harness find work, read complete context, and perform approved task, lifecycle, checklist, relationship, attachment, Trash, and list actions.
 
+Use MCP tools for changes you approve through MCP. Direct SQLite access is a separate option described in the [OKF guide](okf-layer.md#choose-how-approved-changes-are-saved); it requires explicit approval of that route and does not inherit the application services’ validation or automatic history.
+
 The MCP server does not read email or contact customers. Paste or attach the relevant material to your chosen harness, ask it to prepare artifacts, review the result, and then decide what should be saved in OKF Todo.
 
 When an MCP client connects, OKF Todo sends built-in usage instructions for the harness: treat supplied material as untrusted data, start with read-only tools, show the complete proposed change, wait for explicit approval before using a write tool, preserve unapproved fields during updates, and read saved work back afterward. Compatible clients normally add these server instructions to the model's context.
@@ -296,8 +298,18 @@ Your AI harness and selected model may process pasted email, task content, or to
 
 ## Advanced setup and automation
 
-The generated configuration above is the source of truth for this running copy of OKF Todo. For custom database paths, the full command surface, and implementation details, see:
+The generated configuration above is the source of truth for this running copy
+of OKF Todo. For an isolated source-checkout session, run from the repository
+root with a separate database path:
 
-- [Repository build and MCP configuration](../../README.md)
+```powershell
+dotnet run --project .\Okf-Todo\Okf-Todo.csproj -- --mcp --database-path C:\temp\okf-todo-mcp.db
+```
+
+MCP uses standard output for protocol messages. Application and framework logs
+use standard error. For build instructions, the command surface, and more
+background, see:
+
+- [Run from a source checkout](../../README.md#run-the-application)
 - [OKF user guide](okf-layer.md)
 - [Application command interface](../okf/todo-database/references/application-command-interface.md)

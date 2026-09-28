@@ -6,6 +6,14 @@ Build the system incrementally from the existing Photino prototype.
 
 Do not ask Codex to build everything in one pass. Use small vertical slices.
 
+## How to read this plan
+
+Milestones record implementation history. Later milestones may extend or
+supersede earlier scope; superseded boundaries are marked below. Use the
+[documentation index](README.md) to find current product, Help, and reference
+owners. Implementation status is separate from validation of a particular
+installed release or publication in an external store.
+
 ## Recommended implementation order
 
 ### September 2026 issue repair pass
@@ -621,7 +629,15 @@ The command appends the curated dataset without changing existing tasks, wraps t
 
 ## Milestone 15 — Installed MCP and OKF contract tests
 
-Status: planned.
+Status: partially implemented. The separate project exists with seven business
+cases covering MCP initialization, task insertion and replacement updates,
+command-based attachments, and direct SQLite/history boundaries. See the
+[installed test guide](../Okf-Todo.InstalledContractTests/README.md).
+
+The acceptance criteria below remain the target scope. Dedicated restart,
+invalid-input, not-found, and cross-interface equivalence coverage still needs
+reconciliation or expansion before this milestone is marked complete. Running
+the source tests does not validate an installed release.
 
 Scope:
 
@@ -695,7 +711,7 @@ Scope:
 - Guarantee at least one list at startup and before task creation.
 - Centralize explicit, task-context, named-default, manual-order, and zero-list resolution for desktop commands, MCP, and documented OKF-guided writes.
 - Add the responsive header list switcher, synthetic **All lists**, list manager, first task metadata field, global list pills/search, scoped queries, list-aware creation, bulk move with Undo, Trash restrictions, and cross-list relationship navigation.
-- Add MCP list discovery, explicit/inferred task creation assignment, and task moves without exposing master-list administration.
+- Add MCP list discovery, explicit/inferred task creation assignment, and task moves. The original exclusion of list administration was superseded by [Milestone 19](#milestone-19--broad-mcp-task-interface), which exposes safe list creation, rename, reorder, and deletion.
 - Record every list move in the task Timeline.
 
 Acceptance criteria:
@@ -798,7 +814,7 @@ Acceptance criteria:
 
 ## Milestone 21 — Microsoft Store production package
 
-Status: implemented; Partner Center submission pending.
+Status: packaging implementation complete. Partner Center certification and publication are release-specific external state; verify them using the [release runbook](../packaging/msix/RELEASE-RUNBOOK.md) for each submission.
 
 Scope:
 

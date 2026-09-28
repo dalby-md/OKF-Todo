@@ -5,7 +5,7 @@ Certum certificate for public distribution.
 
 > These scripts create the Inno Setup installer, not the Microsoft Store MSIX
 > package. Partner Center signs the Store package separately.
-> 
+
 Run the commands on this page from the repository root. See the
 [README requirements](../README.md#requirements) for source-build prerequisites.
 
@@ -55,23 +55,42 @@ The desktop application, OKF command adapter, and MCP server are provided by the
 
 ## Build a signed installer
 
-First ensure SimplySign Desktop is running and connected. Then supply both the
-SignTool path and certificate thumbprint:
+First ensure SimplySign Desktop is running and connected. Use the SignTool path
+installed on this machine and the thumbprint of your current signing certificate.
+The SDK path below is an example; see [Remember the thumbprint](#remember-the-thumbprint)
+for saving your certificate selection. Set the version for the release being built:
 
 ```powershell
-cd C:\git\Okf-Todo
-
+$version = '1.0.0'
 $signTool = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe'
-$thumbprint = '4C7319FF0FDFC7778CDAC36A40154CA82C1D1B37'
+$thumbprint = [Environment]::GetEnvironmentVariable(
+  'OKF_TODO_SIGNING_CERTIFICATE_THUMBPRINT',
+  'User')
+if ([string]::IsNullOrWhiteSpace($thumbprint)) {
+  throw 'The signing certificate thumbprint is not configured.'
+}
 
 .\installer\build-installer.ps1 `
-  -Version 1.0.0 `
+  -Version $version `
   -SignToolPath $signTool `
   -CertificateThumbprint $thumbprint `
   -TimestampUrl 'http://time.certum.pl'
 ```
 
-This signs both `Okf-Todo.exe` and the completed installer.
+This signs both `Okf-Todo.exe` and the completed installer. Verify the setup
+signature before publishing it:
+
+```powershell
+$installerPath = ".\artifacts\installer\Okf-Todo-$version-win-x64-setup.exe"
+$signature = Get-AuthenticodeSignature -LiteralPath $installerPath
+if ($signature.Status -ne 'Valid' -or
+    $signature.SignerCertificate.Thumbprint -ne $thumbprint) {
+  throw 'The installer does not have a valid signature from the selected certificate.'
+}
+```
+
+The publisher creates a checksum but does not enforce this signature check;
+complete it before creating a public release.
 
 ## Use `update_release_exe.ps1`
 
@@ -89,13 +108,9 @@ Install and authenticate the GitHub CLI before publishing:
 gh auth login
 ```
 
-To build and publish the next alpha release:
+For a public alpha, use [Publish with the Certum certificate](#publish-with-the-certum-certificate). Omit `-Tag` in that signed command to select the next alpha patch automatically.
 
-```powershell
-.\installer\update_release_exe.ps1
-```
-
-With no parameters, the script finds the highest existing `v<major>.<minor>.<patch>-alpha` release, increments its patch number, builds that installer version, copies it to the stable `<major>.<minor>` asset name, creates the new release, and marks it as GitHub's latest release. For example, `v0.1.4-alpha` produces `v0.1.5-alpha`, builds `Okf-Todo-0.1.5-win-x64-setup.exe`, and uploads it as `Okf-Todo-0.1-win-x64-setup.exe`.
+When `-Tag` is omitted, the script finds the highest existing `v<major>.<minor>.<patch>-alpha` release, increments its patch number, builds that installer version, copies it to the stable `<major>.<minor>` asset name, creates the new release, and marks it as GitHub's latest release. For example, `v0.1.4-alpha` produces `v0.1.5-alpha`, builds `Okf-Todo-0.1.5-win-x64-setup.exe`, and uploads it as `Okf-Todo-0.1-win-x64-setup.exe`.
 
 The tag and title identify the build as alpha, but the GitHub release is intentionally not flagged as a prerelease. GitHub excludes prereleases from `/releases/latest`, so marking it as a prerelease would break the stable installer URL linked from the [README](../README.md#available-for-windows-macos-and-linux).
 
@@ -173,7 +188,7 @@ private key. Save it once as a user environment variable:
 ```powershell
 [Environment]::SetEnvironmentVariable(
   'OKF_TODO_SIGNING_CERTIFICATE_THUMBPRINT',
-  '4C7319FF0FDFC7778CDAC36A40154CA82C1D1B37',
+  '<your-current-certificate-thumbprint>',
   'User')
 ```
 
@@ -200,11 +215,13 @@ outside the repository.
 
 ## Coordinate a Store and GitHub release
 
-For a coordinated Store and GitHub launch, build the tested installer once and
-create a GitHub draft for the exact release commit:
+For a coordinated Store and GitHub launch, first complete [Build a signed
+installer](#build-a-signed-installer), including its signature verification, for
+the chosen version. Run the applicable [installed contract tests](../Okf-Todo.InstalledContractTests/README.md)
+against the installed build. The example below assumes that version is `1.0.0`.
+Create the GitHub draft from the exact source commit used for that build:
 
 ```powershell
-.\installer\build-installer.ps1 -Version 1.0.0
 .\installer\publish-github-release.ps1 `
   -Version 1.0.0 `
   -Tag v1.0.0 `
@@ -226,43 +243,14 @@ the Store submission, publish that tested draft as GitHub's latest release:
 ```
 
 Do not run `update_release_exe.ps1` and the coordinated draft workflow for the
-same release.
+same release. Follow the [Store release runbook](../packaging/msix/RELEASE-RUNBOOK.md)
+for certification of the exact Store artifact and coordinated publication.
 
-## Build the local MSIX feasibility prototype
+## Other Windows package formats
 
-The experimental MSIX path is independent of Inno Setup and never publishes to
-Microsoft Store. It reuses the same self-contained `win-x64` payload, signs it
-with a local-only development certificate, and launches against an isolated
-prototype database.
+Use the [MSIX prototype guide](../packaging/msix/README.md) for isolated local
+installation and upgrade testing. Use the [Microsoft Store package guide](../packaging/msix/STORE.md)
+for package identity and build details, and the [Store release runbook](../packaging/msix/RELEASE-RUNBOOK.md)
+for certification and publication. Those pages own their procedures.
 
-Both installer builds fail if a database file enters their staged payload. The
-MSIX and Inno installers contain application files only and never install over
-the user's database.
-
-Install Microsoft's lightweight Windows App Development CLI, then build and
-install the package:
-
-```powershell
-winget install -e --id Microsoft.WinAppCli --source winget
-.\packaging\msix\build-msix-prototype.ps1 -Version 1.0.0.0 -Install
-.\packaging\msix\start-msix-prototype.ps1
-```
-
-See [the MSIX prototype guide](../packaging/msix/README.md) for upgrade, sample-data,
-and cleanup commands. The Inno installer remains the direct-download packaging
-path.
-
-## Build the Microsoft Store package
-
-The Store build is separate from the local MSIX prototype and uses the immutable
-identity reserved in Partner Center. It produces an unsigned `.msix`; Microsoft
-signs the package after Store certification, so this path does not require a
-purchased code-signing certificate.
-
-```powershell
-.\packaging\msix\build-msix-store.ps1 -Version 1.0.0.0
-```
-
-The artifact is written under `artifacts\msix-store\output`. See the
-[Microsoft Store package guide](../packaging/msix/STORE.md) for the exact identity,
-validation, versioning, data-safety, MCP-alias, and Partner Center handoff rules.
+All package paths keep application payloads separate from user databases.

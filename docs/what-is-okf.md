@@ -47,21 +47,12 @@ In a source checkout, the same entry point is
 uses its own installation path. You should not guess that path; the running
 application reports the correct one.
 
-## OKF Todo finds the paths for you
+## Set up OKF access
 
-Open OKF Todo, select **Help**, and choose **OKF layer**. The application knows
-the exact OKF entry-file path and active database path for the running copy,
-including a custom database location.
-
-The **Ready-to-use prompt** already contains both paths and the safe working
-instructions. Select **Copy prompt**, paste it into your assistant, and approve
-access to the displayed files or folders when the assistant asks.
-
-[![The OKF Todo Ready-to-use prompt showing the resolved OKF entry file, active database path, safe-write instructions, and Copy prompt button](images/okf-path.png)](images/okf-path.png)
-
-The paths in this screenshot are an example from an installation. OKF Todo
-fills in the correct paths for your operating system, installation, and active
-database.
+Follow the [OKF layer guide](help/okf-layer.md) for the current setup steps,
+ready-to-use prompt, and approval rules. The running application's Help supplies
+the exact OKF entry-file and active database paths, including a custom database.
+For application-service access, use the [MCP guide](help/mcp-server.md).
 
 ## How a typical OKF session works
 

@@ -7,18 +7,18 @@ tags:
   - okf
   - todo
   - commands
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-09-28T00:00:00Z
 ---
 
 # Task Application Command Interface
 
 ## Purpose
 
-OKF is a descriptive Markdown knowledge format and does not execute commands itself. An agent that consumes this bundle must invoke the application's `--okf-command` adapter when it needs to read or mutate task data.
+OKF describes the application and does not execute commands. This reference defines the `--okf-command` adapter, one way for an authorized assistant to read and change task data. MCP provides another application-service route. Direct SQLite access is also possible when the user explicitly approves that route and the exact change; see [Direct SQLite capability and boundary](#direct-sqlite-capability-and-boundary).
 
 The adapter and the Photino JavaScript bridge both dispatch through `ApplicationCommandService`. Task mutations therefore use the same validation, lifecycle, timestamp, relationship, and automatic history-log behavior as the desktop UI.
 
-Do not write directly to [TaskItems](../tables/task-items.md), [TaskLogEntries](../tables/task-log-entries.md), or related tables.
+When using the command or MCP route, perform approved mutations through that interface rather than switching to raw SQL. Approval of a task change through application tools does not by itself authorize bypassing those tools with direct database writes.
 
 ## Invocation
 
@@ -92,7 +92,7 @@ Supported task mutation commands include:
 
 Use `task.timeline.get` to verify the resulting automatic history entries.
 
-List discovery and desktop list administration commands are:
+List discovery and administration commands are:
 
 - `taskList.list`
 - `taskList.create`
@@ -102,7 +102,7 @@ List discovery and desktop list administration commands are:
 - `taskList.moveTasks`
 - `taskList.undoMove`
 
-MCP exposes discovery and task assignment/moves, but deliberately does not expose add, rename, reorder, or delete for the master list in this version.
+MCP also exposes list discovery, creation, renaming, reordering, safe deletion, task moves, and move undo. Deleting a populated list requires a destination for its tasks; the final list cannot be deleted. The in-app MCP Help contains the complete tool reference.
 
 ## Required list ownership and resolution
 

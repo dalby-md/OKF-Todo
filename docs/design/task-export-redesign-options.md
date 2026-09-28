@@ -1,22 +1,21 @@
 # Task export redesign options
 
+Historical design record. The concept images were removed from the repository
+on 11 August 2026; the text below preserves the options and decision. The images
+remain available in Git history before commit `4f94caa`. For the current product,
+see the [screenshot gallery](../screenshots.md) and [user guide](../help/using-okf-todo.md).
+
 These concepts were generated on 2026-08-03 to rethink export field selection, column order, and row sorting.
 
 ## Option 1 — Ordered canvas
-
-![Ordered canvas](../images/design-options/task-export-option-1-ordered-canvas.png)
 
 A single ordered field list makes column position and optional recipe sorting visible in one compact surface.
 
 ## Option 2 — Export runway
 
-![Export runway](../images/design-options/task-export-option-2-export-runway.png)
-
 A horizontal sequence emphasizes the exported table from left to right and adds a larger live preview.
 
 ## Option 3 — Export recipe
-
-![Export recipe](../images/design-options/task-export-option-3-export-recipe.png)
 
 A two-pane composer separates the field library from the selected export recipe. The recipe is the authoritative column order. **Sort by recipe** explicitly opts into using that same sequence as a composite row sort.
 
