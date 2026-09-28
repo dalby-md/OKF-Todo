@@ -1,12 +1,65 @@
 # OKF Todo
 
-> **Version 1.0.0.** The first stable release is packaged for Windows. The application applies pending database migrations at startup when necessary.
+OKF Todo is a free, open-source, local-first todo application designed for developers, supporters and other users who want AI to help turn unstructured information into structured work.
 
-Turn existing work notes into a task plan with your AI assistant, then manage the tasks in OKF Todo—a free, open-source desktop application for development and support work.
+Typical input can be:
 
-Start with an Excel spreadsheet, a screenshot of existing tasks, or other material your assistant can read. Ask it to propose tasks and checklists, review the plan, then approve saving it to OKF Todo. The assistant interprets the source; OKF Todo stores the resulting work in a local SQLite database.
+- emails
+- notes and lists
+- Excel sheets
+- screenshots
+- exported data
+- other semi-structured information
 
-AI-assisted planning requires a separate assistant with access to local tools and the ability to read your chosen input. OKF Todo does not include an AI model or an automatic spreadsheet/email importer. The desktop app also works offline without an assistant; an external AI service has its own account, pricing, and data-handling rules.
+The goal is to let an AI take this material and turn it into a properly structured plan that can then be reviewed and processed in OKF Todo.
+
+## AI integration
+
+OKF Todo stores its data locally in SQLite.
+
+AI can work with the application in two ways:
+
+1. Through the included MCP server.
+2. By accessing the SQLite database directly while using the accompanying OKF knowledge model to understand the database structure and semantics.
+
+This makes it possible for an AI assistant to understand not only the database schema, but also what the data represents and how it should be used.
+
+## Local-first by design
+
+OKF Todo is intentionally different from many modern todo applications.
+
+It does not require:
+
+- a cloud account
+- a central database
+- a web server
+- a subscription
+- a multi-user backend
+
+The application and its data can remain on your own computer.
+
+This also makes the project useful as an experiment in giving AI controlled access to a small, understandable local application and its data.
+
+## Who is it for?
+
+The original use case is developers and support staff who frequently receive information in different formats and need to convert it into actionable tasks.
+
+For example, an AI could be given:
+
+- an email thread
+- a screenshot of an error
+- an Excel list
+- a meeting note
+
+and be asked to create or update the corresponding tasks in OKF Todo.
+
+## Project direction
+
+The current architecture is deliberately simple and local-first.
+
+An open question is whether OKF Todo should remain that way or evolve toward optional multi-user/server functionality, for example with a .NET backend or another server-side database.
+
+Feedback on that direction is very welcome.
 
 ## Watch: Excel notes to an OKF Todo plan — 83 seconds
 
