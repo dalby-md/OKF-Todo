@@ -69,7 +69,7 @@ Feedback on that direction is very welcome.
 
 Fictional data; planning and approval replayed; actual application captures through a browser test host. Captioned, with no audio. [Capture details and current limitations](demonstratio-kit/video/transcript.md#capture-details).
 
-- **[Download OKF Todo for Windows](#install-on-windows)**
+- **[Download OKF Todo for Windows](#available-for-windows-macos-and-linux)**
 - **[Try the sample spreadsheet](demonstratio-kit/README.md)** — workbook, setup, and prompts.
 - **[Give feedback](https://github.com/dalby-md/Okf-Todo/issues)** — tell us what you tried and where the workflow helped or got in the way.
 
@@ -105,7 +105,7 @@ Planned improvements:
 
 - Calculation of initial editor height based on screen resolution. 
 - Possible inspiration points from MS To Do: Lists, flags and stars. 
-- Packaged installers for macOS and Linux. Version 1.0 remains Windows-only.
+- Packaged installers for macOS and Linux. Version 1.0 provides packaged installers for Windows; macOS and Linux can run from source.
 
 
 It is designed for the work that often falls between formal systems: production errors, support cases, deployment checks, investigations, ideas, notes, requests, and follow-up tasks. The application runs locally, requires no account or cloud service, and keeps tasks, history, images, and attachments together in one SQLite database.
@@ -131,14 +131,24 @@ It is designed for the work that often falls between formal systems: production 
 - Complete database backup from inside the application.
 - Offline in-app Help for the desktop application, OKF layer, and optional MCP server.
 
-## Install on Windows
+## Available for Windows, macOS, and Linux
 
 Windows users can [get OKF Todo from Microsoft Store](https://apps.microsoft.com/detail/9PP5FM2933BR) or download the signed Inno Setup installer from the [latest GitHub release](https://github.com/dalby-md/OKF-Todo/releases/latest).
 
 The GitHub-hosted installer is Authenticode signed by Open Source Developer
 Søren Dalby. The Microsoft Store package is signed by Microsoft after
 certification. Packaged installers are not yet available for macOS or Linux;
-those platforms remain source-build targets.
+macOS and Linux users can run the app from a source checkout with `dotnet run`:
+
+```bash
+dotnet run --project ./Okf-Todo/Okf-Todo.csproj
+```
+
+See [Requirements](#requirements) and [Run the application](#run-the-application)
+for prerequisites and clone instructions. Windows remains the packaged and
+release-tested platform.
+
+[Read the user guide](docs/help/using-okf-todo.md) · [Set up your AI assistant](docs/ai-assistants.md)
 
 ## Database file
 The database is stored under the operating system's local application-data directory:
