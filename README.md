@@ -277,3 +277,7 @@ OKF Todo is built using Codex but is not tied to Codex. It uses AGENTS.md, skill
 ## Testing the installed Windows application
 
 See [Installed contract tests](Okf-Todo.InstalledContractTests/README.md) for the command and requirements for testing the installed MCP server, command adapter, OKF bundle, and isolated SQLite databases. Use the [interactive check plan](docs/testing/interactive-repository-check.md) for native desktop behavior.
+
+## License
+
+OKF Todo is licensed under the [MIT License](LICENSE). Bundled third-party components retain their own licenses; see the notices included with those components.
