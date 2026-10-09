@@ -111,11 +111,10 @@ try {
     $minor = [int]$tagMatch.Groups['minor'].Value
     $patch = [int]$tagMatch.Groups['patch'].Value
     $version = "$major.$minor.$patch"
-    $stableVersion = "$major.$minor"
     $versionedInstallerPath = Join-Path `
         $artifactRoot `
         "Okf-Todo-$version-win-x64-setup.exe"
-    $stableAssetName = "Okf-Todo-$stableVersion-win-x64-setup.exe"
+    $stableAssetName = 'Okf-Todo-win-x64-setup.exe'
     $stableAssetPath = Join-Path $artifactRoot $stableAssetName
     $stableInstallerUrl = `
         "https://github.com/dalby-md/OKF-Todo/releases/latest/download/$stableAssetName"
@@ -181,7 +180,7 @@ try {
         -Force
 
     if ($ReplaceExistingAsset) {
-        & gh release upload $Tag $stableAssetPath --clobber
+        & gh release upload $Tag $versionedInstallerPath $stableAssetPath --clobber
         if ($LASTEXITCODE -ne 0) {
             throw "GitHub release asset replacement failed with exit code $LASTEXITCODE."
         }
@@ -191,6 +190,7 @@ try {
     else {
         & gh release create `
             $Tag `
+            $versionedInstallerPath `
             $stableAssetPath `
             --title "OKF Todo $version alpha" `
             --notes 'Windows installer.' `

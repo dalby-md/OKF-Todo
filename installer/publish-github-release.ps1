@@ -25,6 +25,8 @@ $installerPath = Join-Path `
     $repoRoot `
     "artifacts\installer\Okf-Todo-$Version-win-x64-setup.exe"
 $checksumPath = "$installerPath.sha256"
+$stableInstallerPath = Join-Path (Split-Path -Parent $installerPath) 'Okf-Todo-win-x64-setup.exe'
+$stableChecksumPath = "$stableInstallerPath.sha256"
 
 if ($Draft -and $PublishDraft) {
     throw 'Draft and PublishDraft cannot be used together.'
@@ -49,6 +51,16 @@ if ($null -eq (Get-Command gh -ErrorAction SilentlyContinue)) {
 Push-Location $repoRoot
 try {
     if ($PublishDraft) {
+        $draftJson = & gh release view $tag --json assets
+        if ($LASTEXITCODE -ne 0) {
+            throw "Could not inspect draft release $tag."
+        }
+        $draftAssets = ($draftJson -join [Environment]::NewLine | ConvertFrom-Json).assets.name
+        foreach ($requiredAsset in @('Okf-Todo-win-x64-setup.exe', 'Okf-Todo-win-x64-setup.exe.sha256')) {
+            if ($draftAssets -notcontains $requiredAsset) {
+                throw "Draft release $tag is missing $requiredAsset. Upload the stable installer and checksum before publishing."
+            }
+        }
         $editArguments = @('release', 'edit', $tag, '--draft=false')
         if ($Latest) {
             $editArguments += '--latest'
@@ -101,10 +113,19 @@ try {
         "$installerHash  $installerName$([Environment]::NewLine)",
         [System.Text.UTF8Encoding]::new($false))
 
+    # Copy the signed installer unchanged; the stable alias has the same SHA-256.
+    Copy-Item -LiteralPath $installerPath -Destination $stableInstallerPath -Force
+    [System.IO.File]::WriteAllText(
+        $stableChecksumPath,
+        "$installerHash  $(Split-Path -Leaf $stableInstallerPath)$([Environment]::NewLine)",
+        [System.Text.UTF8Encoding]::new($false))
+
     $createArguments = @(
         'release', 'create', $tag,
         $installerPath,
         $checksumPath,
+        $stableInstallerPath,
+        $stableChecksumPath,
         '--target', $targetCommit,
         '--title', $releaseTitle,
         '--fail-on-no-commits'
