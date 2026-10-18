@@ -7,6 +7,7 @@ public sealed class ExternalLinkServiceTests
 {
     [Theory]
     [InlineData("https://github.com/dalby-md/Okf-Todo")]
+    [InlineData("https://dalby.md")]
     public void Open_LaunchesSupportedProjectLink(string url)
     {
         var launcher = new RecordingExternalLinkLauncher();

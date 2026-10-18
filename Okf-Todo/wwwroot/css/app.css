@@ -3011,6 +3011,7 @@ body.is-resizing-editor * {
 
 .app-brand-links {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   margin-top: 3px;

@@ -9,7 +9,8 @@ public sealed class ExternalLinkService(
 {
     private static readonly HashSet<string> SupportedUrls = new(StringComparer.Ordinal)
     {
-        "https://github.com/dalby-md/Okf-Todo"
+        "https://github.com/dalby-md/Okf-Todo",
+        "https://dalby.md"
     };
 
     public ExternalLinkOpenResult Open(ExternalLinkOpenRequest request)
@@ -55,7 +56,7 @@ public sealed class SystemExternalLinkLauncher : IExternalLinkLauncher
 
         if (process is null)
         {
-            throw new InvalidOperationException("The operating system did not start a browser process.");
+            throw new InvalidOperationException("The operating system did not start an application for the link.");
         }
     }
 }
