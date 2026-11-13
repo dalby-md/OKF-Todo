@@ -1,28 +1,14 @@
 # OKF Todo
 
-OKF Todo is a free, open-source, local-first todo application designed for developers, supporters and other users who want AI to help turn unstructured information into structured work.
+When a bug report comes in, create an investigation task in OKF Todo. Attach the error screenshot, write down what you found, and add a checklist for the next steps. When you return to the task, the checklist shows what is left and the Timeline shows what changed.
 
-Typical input can be:
+OKF Todo is a free, open-source desktop task manager for developers and support staff. It keeps tasks, evidence, and history in a local SQLite database.
 
-- emails
-- notes and lists
-- Excel sheets
-- screenshots
-- exported data
-- other semi-structured information
+[**Get it from Microsoft Store**](https://apps.microsoft.com/detail/9PP5FM2933BR) · [**Download the Windows installer**](https://github.com/dalby-md/OKF-Todo/releases/latest)
 
-The goal is to let an AI take this material and turn it into a properly structured plan that can then be reviewed and processed in OKF Todo.
+[![OKF Todo task workspace showing task views, rich-text editing, tags, waiting status, and a checklist](docs/images/okf-todo-task-workspace.png)](docs/images/okf-todo-task-workspace.png)
 
-## AI integration
-
-OKF Todo stores its data locally in SQLite.
-
-AI can work with the application in two ways:
-
-1. Through the included MCP server.
-2. By accessing the SQLite database directly while using the accompanying OKF knowledge model to understand the database structure and semantics.
-
-This makes it possible for an AI assistant to understand not only the database schema, but also what the data represents and how it should be used.
+[Explore the screenshot gallery](docs/screenshots.md) · [Read the user guide](docs/help/using-okf-todo.md)
 
 ## Local-first by design
 
@@ -40,18 +26,9 @@ The application and its data can remain on your own computer.
 
 This also makes the project useful as an experiment in giving AI controlled access to a small, understandable local application and its data.
 
-## Who is it for?
+## Day-to-day work
 
-The original use case is developers and support staff who frequently receive information in different formats and need to convert it into actionable tasks.
-
-For example, an AI could be given:
-
-- an email thread
-- a screenshot of an error
-- an Excel list
-- a meeting note
-
-and be asked to create or update the corresponding tasks in OKF Todo.
+Use OKF Todo to track bug reports, support cases, deployment checks, and follow-ups. Record what you are waiting for and use **Act now** to find urgent or overdue tasks you can move forward.
 
 ## Project direction
 
@@ -61,20 +38,11 @@ An open question is whether OKF Todo should remain that way or evolve toward opt
 
 Feedback on that direction is very welcome.
 
-## Watch: Excel notes to an OKF Todo plan — 83 seconds
-
-[![Preview of the six fictional spreadsheet notes used in the demonstration. Select to watch on YouTube.](demonstratio-kit/video/poster.png)](https://youtu.be/cXIRZgOagrA)
-
-[**Watch on YouTube**](https://youtu.be/cXIRZgOagrA) · [Read the worked example and transcript](docs/source-to-plan.md)
-
-Fictional data; planning and approval replayed; actual application captures through a browser test host. Captioned, with no audio. [Capture details and current limitations](demonstratio-kit/video/transcript.md#capture-details).
-
-- **[Download OKF Todo for Windows](#available-for-windows-macos-and-linux)**
-- **[Try the sample spreadsheet](demonstratio-kit/README.md)** — workbook, setup, and prompts.
-- **[Give feedback](https://github.com/dalby-md/Okf-Todo/issues)** — tell us what you tried and where the workflow helped or got in the way.
-
+<a id="ai-integration"></a>
 
 ## From source material to saved tasks
+
+If you use an AI assistant, you can ask it to draft an investigation checklist from incident notes, then review and approve what it saves in OKF Todo. You can also start with an email, a screenshot, a spreadsheet, or meeting notes.
 
 Open **Help → OKF layer → Copy prompt** in the running app. The prompt includes the actual instruction-file and active database paths for your installation, including a custom database. Give your assistant access to those locations, then provide the source material. [See the setup guide](docs/ai-assistants.md).
 
@@ -98,6 +66,13 @@ The desktop interface, CLI, and MCP server use the same application services, so
 
 The [desktop application](docs/help/using-okf-todo.md), [OKF](docs/help/okf-layer.md), and [MCP](docs/help/mcp-server.md) Markdown guides are also the source for the offline in-app Help. The desktop build copies and renders them locally so repository and application guidance stay synchronized.
 
+### Optional AI walkthrough
+
+Follow the written example to see how six spreadsheet notes become reviewed tasks and checklists. The sample includes the workbook, setup instructions, and prompts. [Written walkthrough and transcript](docs/source-to-plan.md) · [Sample spreadsheet](demonstratio-kit/README.md)
+
+The 83-second video uses fictional data and replays planning and approval. The application footage comes from a browser test host. The video has captions and no audio. [Watch on YouTube](https://youtu.be/cXIRZgOagrA) · [Capture details](demonstratio-kit/video/transcript.md#capture-details)
+
+[Share feedback on GitHub](https://github.com/dalby-md/Okf-Todo/issues) about where the workflow helped or got in the way.
 
 ## Coming Next
 
@@ -110,10 +85,6 @@ Planned improvements:
 It is designed for the work that often falls between formal systems: production errors, support cases, deployment checks, investigations, ideas, notes, requests, and follow-up tasks. The application runs locally, requires no account or cloud service, and keeps tasks, history, images, and attachments together in one SQLite database.
 
 ## Product Highlights
-
-[![OKF Todo task workspace showing task views, rich-text editing, tags, waiting status, and a checklist](docs/images/okf-todo-task-workspace.png)](docs/images/okf-todo-task-workspace.png)
-
-[Explore the screenshot gallery](docs/screenshots.md) — task views, Markdown editing, checklists, dark mode, and backups.
 
 - Fast task capture with a title, task type, and preselected task list.
 - Active, ready, urgent, waiting, overdue, completed, and all-task views.

@@ -129,6 +129,28 @@ Treat MCP as a broad secondary or primary way to use OKF Todo. Every new or chan
 - Keep local data portable.
 - Avoid introducing integrations before the local core works.
 
+## Git Ownership
+
+Only the user may commit or push changes. Agents must leave changes
+uncommitted for the user to review.
+
+## Agent skills
+
+### Issue tracker
+
+Use GitHub Issues for work tickets. Before reading or writing tickets,
+read `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the five default triage labels. Before triaging issues,
+read `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Use a single-context layout. Before exploring the codebase,
+read `docs/agents/domain.md`.
+
 ## When Finishing A Task
 
 Report:
