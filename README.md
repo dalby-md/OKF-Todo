@@ -6,7 +6,7 @@ OKF Todo is a free, open-source desktop task manager for developers and support 
 
 [**Get it from Microsoft Store**](https://apps.microsoft.com/detail/9PP5FM2933BR) · [**Download the Windows installer**](https://github.com/dalby-md/OKF-Todo/releases/latest)
 
-[![OKF Todo task workspace showing task views, rich-text editing, tags, waiting status, and a checklist](docs/images/okf-todo-task-workspace.png)](docs/images/okf-todo-task-workspace.png)
+[![OKF Todo task workspace showing checklist progress, attached files, and Timeline history for a failed deployment](docs/images/screenshots/04-keep-the-details-together.png)](docs/images/screenshots/04-keep-the-details-together.png)
 
 [Explore the screenshot gallery](docs/screenshots.md) · [Read the user guide](docs/help/using-okf-todo.md)
 
