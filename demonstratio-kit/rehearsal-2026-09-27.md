@@ -32,7 +32,7 @@ Generated evidence is retained under the ignored `artifacts/promotion-rehearsal/
 - `source-notes.json`: the six extracted source records.
 - `01-lists.json`, `02-lookups.json`, `03-empty-tasks.json`: successful command responses before any task writes.
 - `help-demo.png`: genuine frontend screenshot showing Help and the resolved demonstration paths after copying the prompt. This is a browser-harness capture, not a native desktop capture.
-- `commands.py` and `host/`: local rehearsal tooling; not public demonstration inputs.
+- The rehearsal tooling now lives under [tools/promotion-demo](../tools/promotion-demo/README.md).
 
 Machine-specific paths appear in local evidence. Public demonstration material should use a clearly labeled fictional example and a reviewed capture from the intended release.
 

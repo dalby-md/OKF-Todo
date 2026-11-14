@@ -171,3 +171,5 @@ The [2026-09-27 technical rehearsal](rehearsal-2026-09-27.md) passed source read
 - [ ] Record the real workflow and review it before publication.
 
 Preparation validation: the workbook was rendered and visually inspected, and all six exported source records were read back and compared with the authored records. This does not validate a save to OKF Todo. This example adds no application or MCP behavior; it uses existing Help and access routes.
+
+[Reproduce the promotion video and rehearsal](../tools/promotion-demo/README.md).

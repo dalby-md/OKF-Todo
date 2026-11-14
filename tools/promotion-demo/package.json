@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "record": "node record-batch.js"
+  },
+  "devDependencies": {
+    "playwright": "1.61.0"
+  }
+}

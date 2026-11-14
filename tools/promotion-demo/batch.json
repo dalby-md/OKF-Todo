@@ -1,0 +1,86 @@
+[
+  {
+    "name": "01-source",
+    "scene": "source",
+    "seconds": 10.012,
+    "step": "01 / SOURCE",
+    "title": "Start with the work you already have",
+    "subtitle": "Fictional Excel notes → reviewed plan → saved tasks",
+    "caption": "The same case appears in several rows. A useful plan should bring those notes together."
+  },
+  {
+    "name": "02-help",
+    "scene": "application",
+    "seconds": 10.417,
+    "step": "02 / HELP",
+    "title": "Use the instructions for this installation",
+    "subtitle": "Help → OKF layer → Copy prompt",
+    "caption": "Help includes the database and OKF paths for this demonstration.",
+    "action": "help"
+  },
+  {
+    "name": "03-request",
+    "scene": "request",
+    "seconds": 9.298,
+    "step": "03 / REQUEST",
+    "title": "Ask for a plan before saving",
+    "subtitle": "The assistant reads the Work notes worksheet",
+    "caption": "Group related work, preserve source IDs and leave missing facts open."
+  },
+  {
+    "name": "04-proposal",
+    "scene": "proposal",
+    "seconds": 12.201,
+    "step": "04 / REVIEW",
+    "title": "Review the proposed tasks",
+    "subtitle": "One investigation and a separate release checklist",
+    "caption": "Keep the outstanding response from Maria and leave owners and deadlines unset."
+  },
+  {
+    "name": "05-approval",
+    "scene": "approval",
+    "seconds": 8.165,
+    "step": "05 / APPROVAL",
+    "title": "Decide what gets saved",
+    "subtitle": "Replay of the reviewed two-task proposal",
+    "caption": "The user approved the plan before OKF Todo saved it."
+  },
+  {
+    "name": "06-saving",
+    "scene": "saving",
+    "seconds": 5.202,
+    "step": "06 / SAVE",
+    "title": "Save and read back the approved tasks",
+    "subtitle": "OKF Todo application command interface",
+    "caption": "Read back both tasks and check the saved fields, checklists and waiting label."
+  },
+  {
+    "name": "07-investigation",
+    "scene": "application",
+    "seconds": 10.275,
+    "step": "07 / CONTINUE",
+    "title": "Continue the investigation in OKF Todo",
+    "subtitle": "Investigation · DEMO-17",
+    "caption": "The checklist remains open while Maria's example is outstanding.",
+    "action": "task1"
+  },
+  {
+    "name": "08-release",
+    "scene": "application",
+    "seconds": 9.287,
+    "step": "07 / CONTINUE",
+    "title": "Keep release work in a separate task",
+    "subtitle": "Release checklist",
+    "caption": "The release task keeps deployment, rollback and verification together.",
+    "action": "task2"
+  },
+  {
+    "name": "09-finish",
+    "scene": "finish",
+    "seconds": 9,
+    "step": "07 / CONTINUE",
+    "title": "Keep working with the reviewed plan",
+    "subtitle": "Free, open-source desktop task management",
+    "caption": "Use your own assistant to turn source material into a plan. Review it, save it, then continue in OKF Todo."
+  }
+]
