@@ -2,6 +2,8 @@
 
 Your to-do app probably has an account, a cloud and a subscription. Does a to-do app need all that?
 
+OKF Todo runs on your computer and keeps your tasks there.
+
 OKF Todo is a free, open-source desktop task manager for developers and support staff. It keeps tasks, evidence, and history in a local SQLite database.
 
 [**Get it from Microsoft Store**](https://apps.microsoft.com/detail/9PP5FM2933BR) · [**Download the Windows installer**](https://github.com/dalby-md/OKF-Todo/releases/latest)
