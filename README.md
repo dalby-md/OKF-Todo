@@ -1,6 +1,6 @@
 # OKF Todo
 
-When a bug report comes in, create an investigation task in OKF Todo. Attach the error screenshot, write down what you found, and add a checklist for the next steps. When you return to the task, the checklist shows what is left and the Timeline shows what changed.
+Your to-do app probably has an account, a cloud and a subscription. Does a to-do app need all that?
 
 OKF Todo is a free, open-source desktop task manager for developers and support staff. It keeps tasks, evidence, and history in a local SQLite database.
 
@@ -27,6 +27,8 @@ The application and its data can remain on your own computer.
 This also makes the project useful as an experiment in giving AI controlled access to a small, understandable local application and its data.
 
 ## Day-to-day work
+
+When a bug report comes in, create an investigation task in OKF Todo. Attach the error screenshot, write down what you found, and add a checklist for the next steps. When you return to the task, the checklist shows what is left and the Timeline shows what changed.
 
 Use OKF Todo to track bug reports, support cases, deployment checks, and follow-ups. Record what you are waiting for and use **Act now** to find urgent or overdue tasks you can move forward.
 
