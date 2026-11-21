@@ -1,46 +1,14 @@
 # OKF Todo
 
-Your to-do app probably has an account, a cloud and a subscription. Does a to-do app need all that?
+Turn emails, notes and spreadsheets into tasks with your own AI assistant. Your data stays on your computer.
 
-OKF Todo runs on your computer and keeps your tasks there.
-
-OKF Todo is a free, open-source desktop task manager for developers and support staff. It keeps tasks, evidence, and history in a local SQLite database.
+OKF Todo is a free, open-source desktop task manager for developers and support staff. Its included [MCP server](docs/help/mcp-server.md) lets Claude Code, Codex, and other compatible assistants propose tasks and checklists that you approve before anything is saved. It also works on its own, offline, and keeps tasks, evidence, and history in a local SQLite database.
 
 [**Get it from Microsoft Store**](https://apps.microsoft.com/detail/9PP5FM2933BR) · [**Download the Windows installer**](https://github.com/dalby-md/OKF-Todo/releases/latest)
 
 [![OKF Todo task workspace showing checklist progress, attached files, and Timeline history for a failed deployment](docs/images/screenshots/04-keep-the-details-together.png)](docs/images/screenshots/04-keep-the-details-together.png)
 
 [Explore the screenshot gallery](docs/screenshots.md) · [Read the user guide](docs/help/using-okf-todo.md)
-
-## Local-first by design
-
-OKF Todo is intentionally different from many modern todo applications.
-
-It does not require:
-
-- a cloud account
-- a central database
-- a web server
-- a subscription
-- a multi-user backend
-
-The application and its data can remain on your own computer.
-
-This also makes the project useful as an experiment in giving AI controlled access to a small, understandable local application and its data.
-
-## Day-to-day work
-
-When a bug report comes in, create an investigation task in OKF Todo. Attach the error screenshot, write down what you found, and add a checklist for the next steps. When you return to the task, the checklist shows what is left and the Timeline shows what changed.
-
-Use OKF Todo to track bug reports, support cases, deployment checks, and follow-ups. Record what you are waiting for and use **Act now** to find urgent or overdue tasks you can move forward.
-
-## Project direction
-
-The current architecture is deliberately simple and local-first.
-
-An open question is whether OKF Todo should remain that way or evolve toward optional multi-user/server functionality, for example with a .NET backend or another server-side database.
-
-Feedback on that direction is very welcome.
 
 <a id="ai-integration"></a>
 
@@ -78,13 +46,42 @@ The 83-second video uses fictional data and replays planning and approval. The a
 
 [Share feedback on GitHub](https://github.com/dalby-md/Okf-Todo/issues) about where the workflow helped or got in the way.
 
+## Day-to-day work
+
+When a bug report comes in, create an investigation task in OKF Todo. Attach the error screenshot, write down what you found, and add a checklist for the next steps. When you return to the task, the checklist shows what is left and the Timeline shows what changed.
+
+Use OKF Todo to track bug reports, support cases, deployment checks, and follow-ups. Record what you are waiting for and use **Act now** to find urgent or overdue tasks you can move forward.
+
+## Local-first by design
+
+OKF Todo is intentionally different from many modern todo applications.
+
+It does not require:
+
+- a cloud account
+- a central database
+- a web server
+- a subscription
+- a multi-user backend
+
+The application and its data can remain on your own computer.
+
+This also makes the project useful as an experiment in giving AI controlled access to a small, understandable local application and its data.
+
+## Project direction
+
+The current architecture is deliberately simple and local-first.
+
+An open question is whether OKF Todo should remain that way or evolve toward optional multi-user/server functionality, for example with a .NET backend or another server-side database.
+
+Feedback on that direction is very welcome.
 
 ## Product Highlights
 
 - Fast task capture with a title, task type, and preselected task list.
 - Active, ready, urgent, waiting, overdue, completed, and all-task views.
 - HTML and Markdown-capable rich-text editors.
-F- Paste, drop, or select images for task bodies.
+- Paste, drop, or select images for task bodies.
 - Priorities, deadlines, waiting targets, tags, and optional source references.
 - Checklists with progress shown in the task list.
 - User-managed task lists with a persistent list switcher, global **All lists** scope, safe deletion, and bulk moves with Undo.

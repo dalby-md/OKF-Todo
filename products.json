@@ -2,7 +2,7 @@
   {
     "name": "OKF Todo",
     "url": "https://dalby.md/projects/okf-todo",
-    "description": "Gratis open source-opgavestyring til udviklere og supportmedarbejdere med data gemt lokalt. Brug din egen AI-assistent til at omsætte mails, noter og regneark til opgaveforslag",
-    "alternatives": ["Todoist", "Microsoft To Do"]
+    "description": "OKF Todo is a free, open-source desktop task manager whose included MCP server lets Claude Code, Codex and other compatible assistants propose tasks and checklists that you approve before anything is saved.",
+    "alternatives": ["Taskwarrior", "Linear", "GitHub Issues"]
   }
 ]

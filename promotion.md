@@ -1,14 +1,18 @@
 # OKF Todo promotion plan
 
-Last updated 2026-11-14.
+Last updated 2026-11-21.
 
 OKF Todo has been shared on LinkedIn and Reddit, listed on AlternativeTo, introduced on DEV Community, and launched on Product Hunt. Søren has sent the Console.dev pitch for editorial review.
 
 ## Message and material
 
-Lead with the app's everyday use. **Keep each investigation and its follow-up in one local workspace.** A developer can create a task for a reported bug, attach the error screenshot, add a checklist, and use the Timeline to see what has changed when they return to it.
+**Headline:** Turn emails, notes and spreadsheets into tasks with your own AI assistant.
 
-Use optional AI assistance as the second point. A compatible assistant can turn incident notes into a proposed investigation checklist. The developer reviews it and approves what the assistant saves through the included MCP server, then continues in the desktop app. The built-in Help explains how to connect an assistant.
+**Pitch:** OKF Todo is a free, open-source desktop task manager whose included MCP server lets Claude Code, Codex and other compatible assistants propose tasks and checklists that you approve before anything is saved.
+
+Use the headline and pitch unchanged on the project page, the README, `products.json` and external listings. Where a second line fits, add "Your data stays on your computer."
+
+Use the bug investigation as the example, not the headline. **Keep each investigation and its follow-up in one local workspace.** A developer can ask an assistant to turn incident notes into a proposed investigation checklist, review and approve what it saves, then attach the error screenshot and use the Timeline to see what has changed when they return to the task. The app also works on its own, offline. The built-in Help explains how to connect an assistant.
 
 Assistant capabilities, accounts, costs, and data handling depend on the chosen service. Windows has packaged installers. macOS and Linux can run from source. The current repository uses the [MIT License](LICENSE).
 
