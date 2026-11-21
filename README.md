@@ -78,22 +78,13 @@ The 83-second video uses fictional data and replays planning and approval. The a
 
 [Share feedback on GitHub](https://github.com/dalby-md/Okf-Todo/issues) about where the workflow helped or got in the way.
 
-## Coming Next
-
-Planned improvements:
-
-- Calculation of initial editor height based on screen resolution. 
-- Packaged installers for macOS and Linux. Version 1.0 provides packaged installers for Windows; macOS and Linux can run from source.
-
-
-It is designed for the work that often falls between formal systems: production errors, support cases, deployment checks, investigations, ideas, notes, requests, and follow-up tasks. The application runs locally, requires no account or cloud service, and keeps tasks, history, images, and attachments together in one SQLite database.
 
 ## Product Highlights
 
 - Fast task capture with a title, task type, and preselected task list.
 - Active, ready, urgent, waiting, overdue, completed, and all-task views.
 - HTML and Markdown-capable rich-text editors.
-- Paste, drop, or select images for task bodies.
+F- Paste, drop, or select images for task bodies.
 - Priorities, deadlines, waiting targets, tags, and optional source references.
 - Checklists with progress shown in the task list.
 - User-managed task lists with a persistent list switcher, global **All lists** scope, safe deletion, and bulk moves with Undo.
@@ -137,7 +128,7 @@ Do not delete this file unless you intentionally want to remove all application 
 
 Installing, updating, or removing OKF Todo never overwrites or removes the database. Database replacement is available only through the application's explicit restore and reset workflows.
 
-
+ 
 ## Requirements
 
 Packaged installation is available for Windows. Source builds require:
@@ -147,8 +138,6 @@ Packaged installation is available for Windows. Source builds require:
 - The platform webview used by Photino: WebView2 on Windows, the system WebKit view on macOS, or GTK/WebKit on Linux.
 
 The application targets .NET 8; the solution format requires the newer SDK. See [Microsoft’s SLNX tooling requirements](https://devblogs.microsoft.com/dotnet/introducing-slnx-support-dotnet-cli/). Packaged Windows installations include their runtime.
-
-Windows is the packaged and tested platform for version 1.0. The application architecture and Photino shell are cross-platform, but macOS and Linux packaging and release verification are still in progress.
 
 ## Run the application
 
@@ -201,17 +190,6 @@ restoring it. Never replace the active database manually while the app is runnin
 
 OKF Todo is a single-user, local-first application. It has no authentication, cloud synchronization, application telemetry, or external task-system integration. Task data is stored in the local SQLite database. You can copy it out through backups, exports, the clipboard, saved attachments, or tools you authorize to access it. An AI assistant may send supplied material or tool results to its model provider; review its privacy settings before sharing sensitive information.
 
-## Current Limitations
-
-Version 1.0 is the first stable Windows release:
-
-- Windows is packaged and release-tested. macOS and Linux remain source-build targets without packaged installers.
-- The direct Windows installer does not provide automatic updates; Microsoft Store installations use Store updates.
-- There is no cloud sync or multi-user collaboration.
-- Database downgrades are not supported; back up the database before installing an older application version.
-- Deep integrations with email, ServiceDesk, Teams, and Azure DevOps are not included.
-
-Use the in-application backup command regularly.
 
 ## Development
 
