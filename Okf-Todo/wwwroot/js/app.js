@@ -218,6 +218,8 @@
   let confirmationDialogResolve = null
   let dirtyTrackingSuppressions = 0
   let taskEditorLoadsInProgress = 0
+  let taskEditorLoadGeneration = 0
+  let taskListLoadGeneration = 0
   let activeHelpTopic = 'using-okf-todo'
   let activePreferenceSection = 'appearance'
   let databaseStatus = {
@@ -6147,7 +6149,10 @@
       starredFinishedExpanded = false
       syncTaskSortControl()
       renderTaskListOptions()
-      loadTasks({ selectFirst: true }).catch(showFatalError)
+      // A failed view switch keeps the workspace; only startup failures are fatal.
+      loadTasks({ selectFirst: true }).catch(function (error) {
+        setStatus(getErrorMessage(error, 'Could not load this view'), 'error')
+      })
     })
   }
 
@@ -6818,6 +6823,13 @@
     // editor, relationships, checklist, attachments and timeline have all loaded.
     taskEditorLoadsInProgress += 1
     $('#task-form').attr('aria-busy', 'true')
+    // A load is outdated once another task load starts, or once this task stops being
+    // the current task (for example because it was deleted while it was loading).
+    // An outdated load stops quietly instead of rendering stale data or failing.
+    const loadGeneration = ++taskEditorLoadGeneration
+    const isOutdated = function () {
+      return loadGeneration !== taskEditorLoadGeneration || currentTask?.id !== task.id
+    }
 
     try {
       if (currentTask?.id !== task.id) {
@@ -6852,18 +6864,26 @@
       renderTaskHeaderAndActions(task)
 
       await initializeEditorForTask(task)
+      if (isOutdated()) return
       isDirty = false
       setCleanTaskSnapshot()
       window.Editor.markClean()
       await loadRelationships(task.id)
+      if (isOutdated()) return
       await loadChecklist(task.id)
+      if (isOutdated()) return
       await loadAttachments(task.id)
+      if (isOutdated()) return
       await loadTimeline(task.id)
+      if (isOutdated()) return
       applyCurrentTaskEditability()
       if (!hasUnsavedChanges()) {
         setStatus(task.id && !isTaskEditable(task) ? 'Read only' : task.id ? 'Loaded' : 'Draft', 'ready')
       }
       renderTaskList()
+    } catch (error) {
+      if (isOutdated()) return
+      throw error
     } finally {
       releaseDirtyTracking()
       taskEditorLoadsInProgress = Math.max(0, taskEditorLoadsInProgress - 1)
@@ -6973,14 +6993,28 @@
     const selectFirst = options && options.selectFirst
     const revealTaskId = options && Number(options.revealTaskId)
     const focusRevealRow = !options || options.focusRevealRow !== false
-    tasks = await sendBridgeMessage('task.list', {
-      view: currentView,
-      taskListId: getEffectiveTaskListId()
-    })
-    if (currentView === 'active' && tasks.length === 0) {
-      await loadDatabaseStatus()
+    // When views change quickly, an older response can arrive after a newer one.
+    // Only the latest load may update the list. The list is marked busy until then.
+    const loadGeneration = ++taskListLoadGeneration
+    const isOutdated = function () { return loadGeneration !== taskListLoadGeneration }
+    $('#task-list').attr('aria-busy', 'true')
+    try {
+      const loadedTasks = await sendBridgeMessage('task.list', {
+        view: currentView,
+        taskListId: getEffectiveTaskListId()
+      })
+      if (isOutdated()) return null
+      tasks = loadedTasks
+      if (currentView === 'active' && tasks.length === 0) {
+        await loadDatabaseStatus()
+        if (isOutdated()) return null
+      }
+      renderTaskList()
+    } finally {
+      if (!isOutdated()) {
+        $('#task-list').removeAttr('aria-busy')
+      }
     }
-    renderTaskList()
 
     if (keepSelection && currentTask && currentTask.id) {
       const stillVisible = tasks.some(function (task) {
