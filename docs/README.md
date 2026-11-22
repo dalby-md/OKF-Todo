@@ -7,6 +7,8 @@ other pages summarize it and link there instead of keeping another walkthrough.
 | --- | --- |
 | Use the desktop application, including backup and restore | [Using OKF Todo](help/using-okf-todo.md) |
 | Understand what an AI assistant needs | [AI assistants](ai-assistants.md) |
+| Set up Codex for work on this repository | [Codex setup](codex-setup.md) |
+| Set up Claude Code for work on this repository | [Claude Code setup](claude-setup.md) |
 | Understand the context layer | [What is OKF?](what-is-okf.md) |
 | Set up and approve direct SQLite work | [OKF layer](help/okf-layer.md) |
 | Set up MCP and discover its complete tool surface | [MCP server](help/mcp-server.md) |

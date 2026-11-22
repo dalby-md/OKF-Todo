@@ -151,6 +151,16 @@ read `docs/agents/triage-labels.md`.
 Use a single-context layout. Before exploring the codebase,
 read `docs/agents/domain.md`.
 
+### Repository skill copy
+
+`.agents/skills` is the source of truth for repository skills. `.claude/skills`
+is a committed copy for Claude Code.
+
+- Never edit `.claude/skills` directly.
+- After every change under `.agents/skills`, run `.\tools\sync-claude-skills.ps1`
+  in the same change.
+- Before finishing, confirm that `.\tools\sync-claude-skills.ps1 -Check` passes.
+
 ## When Finishing A Task
 
 Report:

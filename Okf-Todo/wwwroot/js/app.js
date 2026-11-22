@@ -217,6 +217,7 @@
   let completeWaitDialogResolve = null
   let confirmationDialogResolve = null
   let dirtyTrackingSuppressions = 0
+  let taskEditorLoadsInProgress = 0
   let activeHelpTopic = 'using-okf-todo'
   let activePreferenceSection = 'appearance'
   let databaseStatus = {
@@ -6813,6 +6814,10 @@
 
   async function renderTaskEditor(task) {
     const releaseDirtyTracking = suppressDirtyTracking()
+    // Tell assistive technology (and UI tests) that the form is not ready until the
+    // editor, relationships, checklist, attachments and timeline have all loaded.
+    taskEditorLoadsInProgress += 1
+    $('#task-form').attr('aria-busy', 'true')
 
     try {
       if (currentTask?.id !== task.id) {
@@ -6861,6 +6866,10 @@
       renderTaskList()
     } finally {
       releaseDirtyTracking()
+      taskEditorLoadsInProgress = Math.max(0, taskEditorLoadsInProgress - 1)
+      if (taskEditorLoadsInProgress === 0) {
+        $('#task-form').removeAttr('aria-busy')
+      }
     }
   }
 

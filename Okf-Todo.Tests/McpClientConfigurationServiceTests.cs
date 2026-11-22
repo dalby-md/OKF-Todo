@@ -39,7 +39,7 @@ public sealed class McpClientConfigurationServiceTests : IDisposable
                 "--",
                 "--mcp"
             ],
-            server.GetProperty("args").EnumerateArray().Select(value => value.GetString()).ToArray());
+            server.GetProperty("args").EnumerateArray().Select(value => value.GetString()!).ToArray());
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public sealed class McpClientConfigurationServiceTests : IDisposable
         Assert.Equal(executablePath, server.GetProperty("command").GetString());
         Assert.Equal(
             ["--mcp"],
-            server.GetProperty("args").EnumerateArray().Select(value => value.GetString()).ToArray());
+            server.GetProperty("args").EnumerateArray().Select(value => value.GetString()!).ToArray());
         Assert.Equal("installed executable", result.LaunchDescription);
     }
 

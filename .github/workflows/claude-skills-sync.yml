@@ -1,0 +1,33 @@
+# Fails when .claude/skills no longer matches .agents/skills.
+# .agents/skills is the source of truth. Fix a failure by running
+# .\tools\sync-claude-skills.ps1 and committing the result.
+name: Claude skills sync
+
+on:
+  push:
+    paths:
+      - ".agents/skills/**"
+      - ".claude/skills/**"
+      - "tools/sync-claude-skills.ps1"
+      - ".github/workflows/claude-skills-sync.yml"
+  pull_request:
+    paths:
+      - ".agents/skills/**"
+      - ".claude/skills/**"
+      - "tools/sync-claude-skills.ps1"
+      - ".github/workflows/claude-skills-sync.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that .claude/skills matches .agents/skills
+        shell: powershell
+        run: .\tools\sync-claude-skills.ps1 -Check

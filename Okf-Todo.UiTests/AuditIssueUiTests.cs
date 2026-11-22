@@ -29,6 +29,9 @@ public sealed partial class NewTaskDialogUiTests
             await page.Locator("#new-task-title-input").FillAsync("CHECK — scrolling to comments");
             await page.Locator("#new-task-save-button").ClickAsync();
             await page.Locator("#new-task-overlay").WaitForAsync(new() { State = WaitForSelectorState.Hidden });
+            // The dialog closes before the app reloads the task list. Wait until creation
+            // has finished, so that reload cannot redraw the checklist under the test.
+            await page.WaitForFunctionAsync("() => document.querySelector('#save-status')?.textContent === 'Saved'");
             foreach (var item in new[] { "One", "Two" })
             {
                 await page.Locator("#checklist-new-text").FillAsync(item);

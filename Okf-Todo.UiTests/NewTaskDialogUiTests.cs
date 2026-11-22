@@ -858,9 +858,11 @@ public sealed partial class NewTaskDialogUiTests
         await page.WaitForFunctionAsync("() => document.querySelectorAll('#task-type option').length > 0");
 
         var links = page.Locator(".app-brand-link");
-        Assert.Equal(1, await links.CountAsync());
+        Assert.Equal(2, await links.CountAsync());
         Assert.Equal("GitHub", await links.Nth(0).TextContentAsync());
         Assert.Equal("https://github.com/dalby-md/Okf-Todo", await links.Nth(0).GetAttributeAsync("href"));
+        Assert.Equal("dalby.md", await links.Nth(1).TextContentAsync());
+        Assert.Equal("https://dalby.md", await links.Nth(1).GetAttributeAsync("href"));
         Assert.Equal(0, await page.Locator(".app-brand-mark").CountAsync());
 
         var taglineFontSize = await page.Locator(".app-brand-tagline").EvaluateAsync<string>(
@@ -1954,8 +1956,10 @@ public sealed partial class NewTaskDialogUiTests
         var actNowTaskId = await page.Locator("#task-list .task-row").First.GetAttributeAsync("data-task-id");
         var actNowTaskTitle = await page.Locator("#task-list .task-row-title").First.TextContentAsync();
         await page.Locator("#task-list .task-row").First.ClickAsync();
+        // The title is filled in before the rest of the task loads. The final load step
+        // re-renders the waiting field, so wait until the form is no longer busy.
         await page.WaitForFunctionAsync(
-            "title => document.querySelector('#task-title')?.value === title",
+            "title => { const form = document.querySelector('#task-form'); return document.querySelector('#task-title')?.value === title && form && !form.hasAttribute('aria-busy'); }",
             actNowTaskTitle);
         Assert.True(await page.Locator("#waiting-clear-button").IsHiddenAsync());
         await page.Locator("#waiting-text").FillAsync("Temporary wait");
@@ -1963,7 +1967,7 @@ public sealed partial class NewTaskDialogUiTests
         await page.Locator("#waiting-clear-button").ClickAsync();
         Assert.Equal("", await page.Locator("#waiting-text").InputValueAsync());
         Assert.True(await page.Locator("#waiting-clear-button").IsHiddenAsync());
-        Assert.Equal("waiting-text", await page.EvaluateAsync<string>("document.activeElement.id"));
+        await page.WaitForFunctionAsync("() => document.activeElement?.id === 'waiting-text'");
         await page.Locator("#waiting-text").FillAsync("External response");
         await page.Locator("#save-button").ClickAsync();
         await page.WaitForFunctionAsync(
@@ -2217,6 +2221,10 @@ public sealed partial class NewTaskDialogUiTests
             {
                 State = WaitForSelectorState.Hidden
             });
+            // The dialog closes before the app reloads the task list. Wait until creation
+            // has finished before starting the next task.
+            await page.WaitForFunctionAsync(
+                "() => document.querySelector('#save-status')?.textContent === 'Saved'");
         }
 
         var starredShell = page.Locator(".task-row-shell").Filter(new LocatorFilterOptions
@@ -2236,7 +2244,11 @@ public sealed partial class NewTaskDialogUiTests
         await page.Locator(".task-view-rail-button[data-task-view='starred']").ClickAsync();
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#task-list-title')?.textContent === 'Starred'");
-        await page.Locator(".task-row").Filter(new LocatorFilterOptions { HasText = starredTaskTitle }).WaitForAsync();
+        // The title changes before the list is re-rendered, and the starred task was
+        // already in the previous list. Wait for the filtered list itself.
+        await page.WaitForFunctionAsync(
+            "title => { const rows = document.querySelectorAll('#task-list .task-row'); return rows.length === 1 && rows[0].textContent.includes(title); }",
+            starredTaskTitle);
         Assert.Single(await page.Locator("#task-list .task-row").AllAsync());
 
         await starredShell.Locator(".task-row-more").ClickAsync();
