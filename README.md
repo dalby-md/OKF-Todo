@@ -40,9 +40,7 @@ The [desktop application](docs/help/using-okf-todo.md), [OKF](docs/help/okf-laye
 
 ### Optional AI walkthrough
 
-Follow the written example to see how six spreadsheet notes become reviewed tasks and checklists. The sample includes the workbook, setup instructions, and prompts. [Written walkthrough and transcript](docs/source-to-plan.md) · [Sample spreadsheet](demonstratio-kit/README.md)
-
-The 83-second video uses fictional data and replays planning and approval. The application footage comes from a browser test host. The video has captions and no audio. [Watch on YouTube](https://youtu.be/cXIRZgOagrA) · [Capture details](demonstratio-kit/video/transcript.md#capture-details)
+Follow the written example to see how six spreadsheet notes become reviewed tasks and checklists. The sample includes the workbook, setup instructions, and prompts. [Written walkthrough](docs/source-to-plan.md) · [Sample spreadsheet](demonstratio-kit/README.md)
 
 [Share feedback on GitHub](https://github.com/dalby-md/Okf-Todo/issues) about where the workflow helped or got in the way.
 
@@ -222,7 +220,7 @@ See [Windows installer: build, sign, and publish](docs/installer-build-and-signi
 for Inno Setup builds, signing, GitHub releases, and Microsoft Store/MSIX packaging.
 
 ## AI harness
-OKF Todo is built using Codex but is not tied to Codex. It uses AGENTS.md, skills, and other cross-platform designs.
+OKF Todo is built with Codex and Claude Code and is not tied to either. It uses AGENTS.md, skills, and other cross-platform designs.
 
 ## Testing the installed Windows application
 

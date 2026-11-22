@@ -20,7 +20,7 @@ Read these before implementing product changes:
 
 Those files are authoritative for product behavior, data model rules, lifecycle behavior, lookup behavior, and implementation sequence.
 
-Keep `AGENTS.md` focused on how Codex should work in this repo. Do not duplicate detailed product requirements here unless they are needed as stable repo operating constraints.
+Keep `AGENTS.md` focused on how coding agents such as Codex and Claude Code should work in this repo. Do not duplicate detailed product requirements here unless they are needed as stable repo operating constraints.
 
 ## Help Audience — Hard Rule
 

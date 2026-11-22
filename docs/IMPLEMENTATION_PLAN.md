@@ -4,7 +4,7 @@
 
 Build the system incrementally from the existing Photino prototype.
 
-Do not ask Codex to build everything in one pass. Use small vertical slices.
+Do not ask a coding agent such as Codex or Claude Code to build everything in one pass. Use small vertical slices.
 
 ## How to read this plan
 
@@ -66,7 +66,7 @@ Add:
 Purpose:
 
 - Make product decisions explicit.
-- Give Codex stable context.
+- Give coding agents stable context.
 - Reduce repeated explanation.
 - Avoid rebuilding the wrong thing.
 
@@ -117,7 +117,7 @@ Acceptance criteria:
 - Unused non-system lookup rows can be hard-deleted.
 - System lookup codes are stable.
 
-Suggested Codex prompt:
+Suggested agent prompt:
 
 ```text
 Read /docs/PRD.md and /docs/DATA_MODEL.md.
@@ -159,7 +159,7 @@ Acceptance criteria:
 - Reopening a task changes status to `ACTIVE` and logs reopening.
 - Cancelling a task sets `CancelledAt` and logs cancellation.
 
-Suggested Codex prompt:
+Suggested agent prompt:
 
 ```text
 Read /docs/PRD.md and /docs/DATA_MODEL.md.
@@ -225,7 +225,7 @@ Acceptance criteria:
 - Changes update `UpdatedAt`.
 - Meaningful changes create log entries where appropriate.
 
-Suggested Codex prompt:
+Suggested agent prompt:
 
 ```text
 Add a minimal task list and task create/edit screen using the existing Photino application style.
@@ -262,7 +262,7 @@ Acceptance criteria:
 - Existing task body loads correctly when editing.
 - Switching tasks or views with unsaved HTML or Markdown changes requires Save, Discard, or Cancel; Save persists before navigation and Cancel retains the current task.
 
-Suggested Codex prompt:
+Suggested agent prompt:
 
 ```text
 Integrate the existing HTML/Markdown editor prototype into the task edit screen.
@@ -291,7 +291,7 @@ Acceptance criteria:
 - Only one active wait target is allowed per task.
 - Do not add waiting type, URL, follow-up date, or other structured waiting fields.
 
-Suggested Codex prompt:
+Suggested agent prompt:
 
 ```text
 Add waiting target UI to the task edit screen.
@@ -322,7 +322,7 @@ Acceptance criteria:
 - Timeline clearly distinguishes comments from automatic logs.
 - Logs are append-only in normal UI.
 
-Suggested Codex prompt:
+Suggested agent prompt:
 
 ```text
 Add a task timeline showing both TaskComment and TaskLogEntry.
@@ -352,7 +352,7 @@ Acceptance criteria:
 - Reopened items clear `CompletedAt`.
 - Task list can show `3/5 done`.
 
-Suggested Codex prompt:
+Suggested agent prompt:
 
 ```text
 Add checklist items to tasks.
@@ -388,7 +388,7 @@ Acceptance criteria:
 - Unused tags can be hard-deleted.
 - Used tags can be merged into another tag, moving all task associations without duplicates and deleting the source tag.
 
-Suggested Codex prompt:
+Suggested agent prompt:
 
 ```text
 Add string-only multi-value tags using TaskTag and TaskTaskTag.
@@ -415,7 +415,7 @@ Acceptance criteria:
 - Add log entries for attachment added/removed.
 - No filesystem path dependency.
 
-Suggested Codex prompt:
+Suggested agent prompt:
 
 ```text
 Add task attachments stored in SQLite as BLOBs.
@@ -451,7 +451,7 @@ Acceptance criteria:
 - Add log entries for relation added/removed.
 - Relationships are hidden by default and can be shown through a persisted user preference.
 
-Suggested Codex prompt:
+Suggested agent prompt:
 
 ```text
 Add task relationships.
@@ -488,7 +488,7 @@ Acceptance criteria:
 - Inactive values are not offered for new selections.
 - Source, relationship type, body format, and log type values are not exposed as editable preference groups.
 
-Suggested Codex prompt:
+Suggested agent prompt:
 
 ```text
 Add lookup management UI.
@@ -587,7 +587,7 @@ Acceptance criteria:
 - Sample attachments are deterministic, sanitized, harmless, stored as SQLite BLOBs, and collectively small. Worked histories include attachment removal, checklist reopening, waiting resolution, field changes, and task reopen/completion behavior.
 - Sample removal deletes internally marked sample tasks and related content while preserving every personal task.
 
-## Recommended first real Codex task
+## Recommended first real agent task
 
 Start with:
 

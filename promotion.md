@@ -16,15 +16,14 @@ Use the bug investigation as the example, not the headline. **Keep each investig
 
 Assistant capabilities, accounts, costs, and data handling depend on the chosen service. Windows has packaged installers. macOS and Linux can run from source. The current repository uses the [MIT License](LICENSE).
 
-Give readers a direct way to evaluate the app. Show one screenshot of the workspace with a task and its checklist. Link to the project page for the overview and Windows install options, or to GitHub for source and setup. Use the written example when explaining the AI workflow. Keep the video available as optional supporting material.
+Give readers a direct way to evaluate the app. Show one screenshot of the workspace with a task and its checklist. Link to the project page for the overview and Windows install options, or to GitHub for source and setup. Use the written example when explaining the AI workflow.
 
 - [Project page](https://dalby.md/projects/okf-todo)
 - [Screenshot tour](https://dalby.md/projects/okf-todo/screenshots)
 - [GitHub repository](https://github.com/dalby-md/OKF-Todo)
 - [Written walkthrough](docs/source-to-plan.md) and [sample files](demonstratio-kit/README.md)
-- [Optional 83-second video](https://youtu.be/cXIRZgOagrA)
 
-When sharing the video, disclose that it uses fictional input, replayed planning and approval, and application captures from a browser test host.
+The 83-second Excel-to-tasks video was retired on 2026-11-22 and removed from dalby.md and this repository's guides. It replayed planning and approval and showed the frontend in a browser test host, not a native run. Do not share it. Still to do outside the repositories: unlist or remove it on YouTube and remove it from the AlternativeTo listing. Record a replacement from a real run in the installed desktop application with a live Codex or Claude Code session.
 
 ## Console.dev pitch
 
